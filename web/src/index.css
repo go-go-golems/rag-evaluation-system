@@ -131,6 +131,78 @@ body {
     0 0 0 1px var(--mac-accent);
 }
 
+.mac-fieldset {
+  border: 1px solid var(--mac-border-dark);
+  box-shadow: inset 1px 1px 0 var(--mac-border-light);
+  padding: 8px;
+  min-width: 0;
+}
+
+.mac-fieldset legend {
+  font-family: var(--font-system);
+  font-weight: bold;
+  padding: 0 4px;
+}
+
+.mac-form-row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.mac-form-row span,
+.mac-checkbox-row span {
+  font-family: var(--font-system);
+}
+
+.mac-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+
+.mac-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0;
+}
+
+.mac-help-text {
+  color: #666666;
+  font-size: 12px;
+  margin: 4px 0;
+}
+
+.mac-stat-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 8px;
+  margin: 0;
+}
+
+.mac-stat-list dt {
+  font-family: var(--font-system);
+}
+
+.mac-stat-list dd {
+  margin: 0;
+  text-align: right;
+}
+
+.mac-error-box {
+  background: #FFFFFF;
+  border: 1px solid #CC0000;
+  color: #CC0000;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  overflow: auto;
+  padding: 6px;
+  white-space: pre-wrap;
+}
+
 /* ===== Retro Select ===== */
 .mac-select {
   border: 1px solid var(--mac-border-dark);
