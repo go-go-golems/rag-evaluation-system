@@ -97,3 +97,16 @@ Completed Phase 3.0 research plan for Geppetto/Pinocchio embedding integration b
 
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/05/27/RAGEVAL-001--rag-evaluation-system-workflow-driven-document-indexing-with-interactive-playground/analysis/02-phase-3-embedding-integration-plan.md — Phase 3 embedding integration plan
 
+
+## 2026-05-27
+
+Implemented Phase 3 provider resolver and embedding compute service with Geppetto provider construction, Pinocchio/profile resolution support, vector encoding, batching, text_hash freshness checks, and fake-provider SQLite tests (commits d204a5e, 785462b).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/db/queries.go — Chunk embedding query/upsert helpers
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/services/embedding/provider.go — Geppetto/Pinocchio embedding provider resolver
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/services/embedding/service.go — Embedding compute service with batching and staleness checks
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/services/embedding/service_test.go — Fake-provider SQLite tests for embedding persistence
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/services/embedding/vector.go — Float32 vector BLOB encoding helpers
+

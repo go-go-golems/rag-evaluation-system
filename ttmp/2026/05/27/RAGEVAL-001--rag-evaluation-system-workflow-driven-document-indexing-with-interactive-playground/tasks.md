@@ -55,7 +55,7 @@
 - [x] Phase 2.7: Add temporary-SQLite service tests for document list/get/chunks defaults and validation
 - [x] Phase 2.8: Add migration test for upgrading legacy chunks table without strategy_id
 - [x] Phase 3.0: Research current Geppetto embedding/profile APIs and write a small integration plan before coding
-- [ ] Phase 3.1a: Implement embedding provider factory using Geppetto plus Pinocchio/profile configuration
-- [ ] Phase 3.1b: Implement embedding service with batching, text_hash staleness checks, and bounded memory
+- [x] Phase 3.1a: Implement embedding provider factory using Geppetto plus Pinocchio/profile configuration
+- [x] Phase 3.1b: Implement embedding service with batching, text_hash staleness checks, and bounded memory
 - [ ] Phase 3.1c: Add Glazed embedding commands in lockstep with HTTP endpoints
 - [ ] Phase 3.1d: Add embedding API endpoints and frontend Embedding Inspector first functional slice

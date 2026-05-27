@@ -464,3 +464,108 @@ The migration test required constructing a partial legacy database by hand, then
 
 - Completed task IDs: 48, 49, 50, 51.
 - Added Phase 3 continuation task IDs: 52-56.
+
+---
+
+## Step 6: Phase 3 Start — Embedding Plan, Provider Resolver, and Compute Service
+
+I moved into Phase 3 only after adding service-layer and migration tests. The first Phase 3 step was intentionally split into research/planning, provider construction, and service-level embedding persistence so no CLI or HTTP adapter could hide core behavior problems.
+
+The embedding implementation now has a Geppetto-backed provider resolver, Pinocchio/profile-registry support following the Geppetto smoke-test pattern, vector BLOB encoding helpers, and a compute service that batches chunks, skips fresh embeddings using `text_hash`, validates dimensions, and upserts into SQLite.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 5)
+
+**Assistant interpretation:** Continue executing detailed tasks in order, committing after coherent validated units and updating the diary.
+
+**Inferred user intent:** Proceed into embeddings only after documenting and validating the backend foundation.
+
+**Commit (docs):** da55bd9 — "docs: add Phase 3 embedding integration plan"
+**Commit (code):** d204a5e — "feat: add Geppetto embedding provider resolver"
+**Commit (code):** 785462b — "feat: add embedding compute service with staleness checks"
+
+### What I did
+
+- Read Geppetto embedding/provider APIs:
+  - `geppetto/pkg/embeddings/embeddings.go`
+  - `geppetto/pkg/embeddings/settings_factory.go`
+  - `geppetto/pkg/embeddings/settings_validation.go`
+  - `geppetto/cmd/examples/embedding-profile-smoke/main.go`
+  - `geppetto/pkg/steps/ai/settings/settings-inference.go`
+- Wrote `analysis/02-phase-3-embedding-integration-plan.md`.
+- Implemented `internal/services/embedding/provider.go`:
+  - direct config resolution,
+  - profile-backed resolution via Geppetto engineprofiles,
+  - default Pinocchio profile registry path,
+  - validation through `embeddings.ValidateInferenceSettingsForEmbeddings`,
+  - provider construction via `embeddings.NewSettingsFactoryFromInferenceSettings`.
+- Implemented `internal/services/embedding/vector.go` for deterministic little-endian float32 vector encoding/decoding.
+- Added DB helpers for chunk embedding staleness checks and upsert persistence.
+- Implemented `internal/services/embedding/service.go`:
+  - list chunks by strategy,
+  - compute text hashes,
+  - skip fresh embeddings unless forced,
+  - batch calls to the provider,
+  - verify vector dimensions,
+  - upsert embedding blobs.
+- Added fake-provider SQLite tests for the embedding service.
+
+### Why
+
+The original requirement was to use Geppetto for embeddings and Pinocchio at least for profile configuration. The safest way to satisfy that is to use Geppetto's provider interface and settings factory while keeping network calls out of unit tests.
+
+### What worked
+
+- Geppetto already exposes the right seam: `embeddings.Provider` with single and batch generation plus model metadata.
+- The `embedding-profile-smoke` example provided a clear pattern for profile registry resolution and base-profile overlays.
+- Fake-provider tests let us verify batching, staleness, vector dimensions, and SQLite persistence without OpenAI/Ollama.
+
+### What didn't work
+
+- This step does not yet expose embeddings through CLI or HTTP; it deliberately stops at the provider/service layer.
+- The provider resolver constructs real OpenAI/Ollama providers, but live requests are not tested here and should remain opt-in smoke tests.
+
+### What I learned
+
+- OpenAI profile validation should fail early if no `openai-api-key` is configured.
+- Ollama provider construction does not require a network call; the network call happens when embeddings are generated.
+- Keeping `ProviderType` explicit in the compute request avoids ambiguity in the `chunk_embeddings` identity key.
+
+### What was tricky to build
+
+Profile-backed resolution has three modes: explicit profile, base profile plus embedding overlay, and direct config. The implementation keeps these separate so errors remain understandable. It also returns a `Close` function for profile registry chains, mirroring the Geppetto smoke-test pattern.
+
+The other tricky part was staleness: the service must compare `text_hash` for the exact `(chunk_id, strategy_id, provider, model, dimensions)` identity, not just by chunk ID.
+
+### What warrants a second pair of eyes
+
+- `internal/services/embedding/provider.go`: profile/base-profile merge behavior should be reviewed against real Pinocchio profile files.
+- `internal/services/embedding/service.go`: confirm the primary key and staleness semantics before adding search indexes.
+- `internal/db/queries.go`: embedding upsert shape should be reviewed before adding vector search or export tooling.
+
+### What should be done in the future
+
+- Add Glazed `embedding compute` and `embedding similarity` commands using the service.
+- Add HTTP embedding endpoints as adapters over the same service.
+- Add an opt-in live smoke command for Ollama/OpenAI, but do not run it in unit tests.
+- Add frontend Embedding Inspector only after CLI/HTTP contracts are stable.
+
+### Code review instructions
+
+- Start with `ttmp/.../analysis/02-phase-3-embedding-integration-plan.md`.
+- Then review:
+  - `internal/services/embedding/provider.go`
+  - `internal/services/embedding/service.go`
+  - `internal/services/embedding/service_test.go`
+  - `internal/db/queries.go`
+- Validate with:
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go test ./internal/db ./internal/ingest ./internal/chunking ./internal/services/source ./internal/services/chunking ./internal/services/document ./internal/services/embedding -count=1 -timeout 60s`
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go build ./cmd/rag-eval`
+
+### Technical details
+
+- Completed task IDs: 52, 53, 54.
+- New Geppetto dependency added to `go.mod`/`go.sum`.
+- Embeddings are encoded as little-endian float32 BLOBs.
+- Unit tests use fake providers and temporary SQLite databases; no network calls are made.
