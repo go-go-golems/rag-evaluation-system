@@ -110,3 +110,22 @@ Implemented Phase 3 provider resolver and embedding compute service with Geppett
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/services/embedding/service_test.go — Fake-provider SQLite tests for embedding persistence
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/services/embedding/vector.go — Float32 vector BLOB encoding helpers
 
+
+## 2026-05-27
+
+Added Glazed embedding compute command backed by the embedding provider resolver and compute service (commit c0d4bd2).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/cmd/rag-eval/cmds/embedding/compute.go — Glazed embedding compute command
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/cmd/rag-eval/main.go — Registered embedding command group
+
+
+## 2026-05-27
+
+Added HTTP POST /api/v1/embeddings/compute backed by the embedding provider resolver and compute service (commit 2a1f752).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/api/handlers.go — Embedding compute HTTP endpoint
+

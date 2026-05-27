@@ -569,3 +569,80 @@ The other tricky part was staleness: the service must compare `text_hash` for th
 - New Geppetto dependency added to `go.mod`/`go.sum`.
 - Embeddings are encoded as little-endian float32 BLOBs.
 - Unit tests use fake providers and temporary SQLite databases; no network calls are made.
+
+---
+
+## Step 7: Embedding Adapters — Glazed Compute Command and HTTP Compute Endpoint
+
+After the embedding service was tested, I added the first CLI and HTTP adapters. Both adapters resolve a Geppetto embedding provider, call the shared embedding compute service, and emit bounded summary output rather than vectors.
+
+This keeps the lockstep principle intact: the CLI and HTTP paths are wrappers around the same service, not independent implementations.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 5)
+
+**Assistant interpretation:** Continue stepwise from the detailed task list, committing each adapter slice after validation.
+
+**Inferred user intent:** Make embeddings usable from operator tooling and HTTP while preserving the shared-service architecture.
+
+**Commit (code):** c0d4bd2 — "feat: add Glazed embedding compute command"
+**Commit (code):** 2a1f752 — "feat: add embedding compute HTTP endpoint"
+
+### What I did
+
+- Added `cmd/rag-eval/cmds/embedding/root.go`.
+- Added `cmd/rag-eval/cmds/embedding/compute.go`.
+- Registered `rag-eval embedding compute` in the root command.
+- Added `POST /api/v1/embeddings/compute`.
+- Added task 57 for the CLI compute command and task 58 for the HTTP endpoint.
+- Marked tasks 57 and 58 complete.
+
+### Why
+
+The embedding service is only useful if operators and the web UI can call it. The CLI command provides a scriptable operator surface; the HTTP endpoint is the backend contract for the future Embedding Inspector.
+
+### What worked
+
+- The CLI help renders correctly with Glazed output flags.
+- The HTTP endpoint can construct an Ollama provider and return a zero-work summary for a missing/empty strategy without making a provider network call.
+- Both adapters route through `internal/services/embedding.Service`.
+
+### What didn't work
+
+- No live embedding provider smoke test was run. That is intentional: live OpenAI/Ollama calls should be explicit and opt-in.
+- `embedding similarity` is not implemented yet, so the broader task 55 remains open.
+- The frontend Embedding Inspector is not implemented yet, so task 56 remains open.
+
+### What I learned
+
+- For a strategy with no chunks, the service returns a valid summary without provider batch calls. This is useful for HTTP smoke testing without requiring Ollama/OpenAI availability.
+- The CLI adapter should remain summary-oriented; vectors are persisted, not printed.
+
+### What was tricky to build
+
+The adapter has many provider/profile flags. To avoid duplicating semantics, all provider resolution is delegated to `internal/services/embedding.ResolveProvider`. The command only translates Glazed settings into `ProviderConfig` and emits the result summary.
+
+### What warrants a second pair of eyes
+
+- HTTP error mapping is still coarse: provider-resolution errors are 400, compute errors are 500. Typed service errors would improve this.
+- The CLI flag names should be reviewed before they become public API.
+
+### What should be done in the future
+
+- Add `embedding similarity` once vector retrieval helpers exist.
+- Add frontend Embedding Inspector first slice.
+- Add optional live smoke documentation for Ollama/OpenAI.
+
+### Code review instructions
+
+- Review `cmd/rag-eval/cmds/embedding/compute.go` and `internal/api/handlers.go`.
+- Validate with:
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go build ./cmd/rag-eval`
+  - `./rag-eval embedding compute --help`
+  - HTTP smoke against an empty strategy using direct Ollama config.
+
+### Technical details
+
+- Completed task IDs: 57, 58.
+- Broader tasks 55 and 56 remain open because similarity and frontend work are not complete.
