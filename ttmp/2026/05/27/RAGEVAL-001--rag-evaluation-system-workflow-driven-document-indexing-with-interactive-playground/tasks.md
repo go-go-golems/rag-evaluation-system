@@ -27,7 +27,7 @@
 - [ ] Phase 2.4: Add GET /api/v1/documents/{id}/chunks and chunk detail view
 - [ ] Phase 3.1: Add geppetto as Go dependency, implement profile bootstrap
 - [ ] Phase 3.2: Add chunk_embeddings table, implement embedding service wrapping Geppetto
-- [ ] Phase 3.3: Add POST /api/v1/embeddings/compute and /api/v1/embeddings/similarity
+- [x] Phase 3.3: Add POST /api/v1/embeddings/compute and /api/v1/embeddings/similarity
 - [ ] Phase 3.4: Embedding Inspector view: SimilarityHeatmap, PairwiseCompare, ModelComparison
 - [ ] Phase 4.1: Implement Bleve text-only mapping and BM25 search
 - [ ] Phase 4.2: Add search_indexes table, index build/rebuild commands
@@ -57,7 +57,7 @@
 - [x] Phase 3.0: Research current Geppetto embedding/profile APIs and write a small integration plan before coding
 - [x] Phase 3.1a: Implement embedding provider factory using Geppetto plus Pinocchio/profile configuration
 - [x] Phase 3.1b: Implement embedding service with batching, text_hash staleness checks, and bounded memory
-- [ ] Phase 3.1c: Add Glazed embedding commands in lockstep with HTTP endpoints
+- [x] Phase 3.1c: Add Glazed embedding commands in lockstep with HTTP endpoints
 - [ ] Phase 3.1d: Add embedding API endpoints and frontend Embedding Inspector first functional slice
 - [x] Phase 3.1c.1: Add Glazed embedding compute command backed by embedding service
 - [x] Phase 3.1d.1: Add HTTP embedding compute endpoint backed by embedding service

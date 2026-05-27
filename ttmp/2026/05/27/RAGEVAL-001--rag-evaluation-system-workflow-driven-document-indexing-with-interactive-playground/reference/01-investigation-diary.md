@@ -1,13 +1,27 @@
 ---
-title: "Investigation diary"
-doc_type: reference
-status: active
-intent: long-term
-topics: [rag, embeddings, evaluation, workflow, playground, search]
-ticket: RAGEVAL-001
-created_at: 2026-05-27
-updated_at: 2026-05-27
+Title: ""
+Ticket: ""
+Status: ""
+Topics: []
+DocType: ""
+Intent: ""
+Owners: []
+RelatedFiles:
+    - Path: cmd/rag-eval/cmds/embedding/similarity.go
+      Note: Glazed similarity command added in Step 8
+    - Path: internal/api/handlers.go
+      Note: HTTP similarity endpoint added in Step 8
+    - Path: internal/services/embedding/similarity.go
+      Note: Stored embedding similarity service added in Step 8
+    - Path: internal/services/embedding/similarity_test.go
+      Note: Temporary-SQLite similarity regression tests added in Step 8
+ExternalSources: []
+Summary: ""
+LastUpdated: 0001-01-01T00:00:00Z
+WhatFor: ""
+WhenToUse: ""
 ---
+
 
 # Diary
 
@@ -646,3 +660,106 @@ The adapter has many provider/profile flags. To avoid duplicating semantics, all
 
 - Completed task IDs: 57, 58.
 - Broader tasks 55 and 56 remain open because similarity and frontend work are not complete.
+
+---
+
+## Step 8: Stored Embedding Similarity — Service, Glazed Command, and HTTP Endpoint
+
+This step made the stored embeddings inspectable. The compute path can now write vectors into SQLite, and the similarity path can read those vectors back, decode them, validate their dimensions, and compute cosine similarity without calling a live embedding provider.
+
+This is the first point where backend embedding functionality is ready for operator smoke testing: after ingesting, chunking, and computing embeddings, a tester can compare two chunks or ask for bounded nearest stored candidates inside a strategy/provider/model identity.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue. let me know when i can stsasrt testing things. Continue keeping a detailed workflow"
+
+**Assistant interpretation:** Continue the Phase 3 embedding slice, keep diary/task/changelog bookkeeping detailed, and call out when a useful manual testing surface exists.
+
+**Inferred user intent:** Reach a stable checkpoint where the user can begin validating the system through CLI/HTTP flows instead of waiting for the full frontend.
+
+**Commit (code):** f0cc6a177d46631ce0ee4629fc6407b7145d47ce — "feat: add embedding similarity service and adapters"
+
+### What I did
+
+- Added `internal/db.GetChunkEmbedding` to fetch a stored vector and joined chunk metadata for one `(chunk_id, strategy_id, provider, model, dimensions)` identity.
+- Added `internal/db.ListChunkEmbeddingsForStrategy` to fetch a bounded candidate set for one strategy/provider/model identity.
+- Added `internal/services/embedding/similarity.go` with:
+  - `SimilarityRequest` / `SimilarityResult` types.
+  - pairwise chunk similarity when `ChunkIDB` is supplied.
+  - bounded strategy-candidate similarity when `ChunkIDB` is omitted.
+  - cosine similarity with dimension and zero-vector validation.
+  - preview truncation for CLI/API inspection surfaces.
+- Added `internal/services/embedding/similarity_test.go` with temporary-SQLite tests for pairwise similarity, sorted bounded candidate results, missing embeddings, invalid dimensions, and zero vectors.
+- Added `rag-eval embedding similarity` in `cmd/rag-eval/cmds/embedding/similarity.go` and registered it in `cmd/rag-eval/cmds/embedding/root.go`.
+- Added `POST /api/v1/embeddings/similarity` in `internal/api/handlers.go`.
+- Marked tasks 25 and 55 complete because both compute and similarity now exist across CLI/HTTP boundaries.
+- Updated the ticket changelog.
+
+### Why
+
+Embedding computation alone does not give an operator much to inspect. The system also needs a way to retrieve stored vectors, check that their identity matches the intended provider/model/dimension tuple, and compare chunks without recomputing embeddings or contacting a provider.
+
+Adding similarity now gives the frontend a stable contract for the first Embedding Inspector slice and gives the CLI a backend testing surface before search is implemented.
+
+### What worked
+
+- The embedding tests pass with fake vectors and temporary SQLite databases; no live OpenAI/Ollama calls are made.
+- The service can perform direct pairwise comparison and bounded candidate comparison using the same stored-vector retrieval helpers.
+- The CLI and HTTP adapters both call `internal/services/embedding.Service.Similarity`, keeping the lockstep adapter rule intact.
+- Validation passed:
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go test ./internal/db ./internal/ingest ./internal/chunking ./internal/services/source ./internal/services/chunking ./internal/services/document ./internal/services/embedding -count=1 -timeout 60s`
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go build ./cmd/rag-eval`
+
+### What didn't work
+
+- I did not run a live embedding provider smoke test. That remains intentionally opt-in because local Ollama/OpenAI credentials may not be available and unit tests should not depend on external providers.
+- I did not build the frontend Embedding Inspector yet. The backend contract is now ready for that slice, but the UI still needs implementation.
+
+### What I learned
+
+- Similarity should be a stored-vector operation, not a provider operation. It should not require profile resolution or a network call.
+- The embedding identity tuple must be supplied by the caller: strategy, provider type, model, and dimensions. Without that tuple, the same chunk may have several valid stored vectors.
+- Bounded candidate loading is needed even before real vector indexing exists; otherwise an innocent inspection command could load every vector in a large database.
+
+### What was tricky to build
+
+The subtle part was separating pairwise comparison from strategy-wide candidate comparison while keeping both bounded and explicit. Pairwise comparison should fail if either exact embedding identity is missing. Candidate comparison should load only a configured number of stored embeddings, skip the source chunk, sort by score, and emit only the requested result limit.
+
+Dimension validation also has two layers: the SQL query filters by the requested `dimensions`, and the decoded BLOB length is checked again. The second check guards against corrupted or manually inserted vector blobs.
+
+### What warrants a second pair of eyes
+
+- `internal/services/embedding/similarity.go`: confirm that zero-vector errors are the right behavior rather than returning score `0`.
+- `cmd/rag-eval/cmds/embedding/similarity.go`: review flag names before they become stable operator API.
+- `internal/api/handlers.go`: HTTP similarity currently maps all service errors to `400`; typed errors would allow better `404` vs `400` distinctions.
+- `internal/db/queries.go`: the candidate query is bounded by `candidate-limit`, but it is not approximate nearest-neighbor search. Large-scale retrieval still needs a real vector index later.
+
+### What should be done in the future
+
+- Add frontend Embedding Inspector first slice using the compute and similarity endpoints.
+- Add manual smoke-test documentation for ingest → chunk → compute → similarity.
+- Add search/BM25 next only after the embedding inspector can show stored vector coverage and pairwise comparisons.
+- Later, replace bounded full candidate scans with a vector index when the project adds vector search.
+
+### Code review instructions
+
+- Start with `internal/services/embedding/similarity.go` and `internal/services/embedding/similarity_test.go`.
+- Then review:
+  - `internal/db/queries.go`
+  - `cmd/rag-eval/cmds/embedding/similarity.go`
+  - `internal/api/handlers.go`
+- Validate with:
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go test ./internal/db ./internal/ingest ./internal/chunking ./internal/services/source ./internal/services/chunking ./internal/services/document ./internal/services/embedding -count=1 -timeout 60s`
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go build ./cmd/rag-eval`
+- Manual backend testing can start now for CLI/HTTP ingestion, chunking, embedding compute, and stored similarity. Live embedding compute requires a configured provider such as Ollama or OpenAI; stored similarity can be tested after embeddings exist in SQLite.
+
+### Technical details
+
+- Completed task IDs: 25, 55.
+- Pairwise CLI shape:
+  - `rag-eval embedding similarity --strategy-id fixed-300-50 --provider-type ollama --model nomic-embed-text --dimensions 768 --chunk-id-a <chunk-a> --chunk-id-b <chunk-b>`
+- Bounded candidate CLI shape:
+  - `rag-eval embedding similarity --strategy-id fixed-300-50 --provider-type ollama --model nomic-embed-text --dimensions 768 --chunk-id-a <chunk-a> --limit 10 --candidate-limit 200`
+- HTTP shape:
+  - `POST /api/v1/embeddings/similarity`
+  - body fields: `strategy_id`, `provider_type`, `model`, `dimensions`, `chunk_id_a`, optional `chunk_id_b`, `limit`, `candidate_limit`, `preview_runes`.

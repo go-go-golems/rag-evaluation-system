@@ -129,3 +129,14 @@ Added HTTP POST /api/v1/embeddings/compute backed by the embedding provider reso
 
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/api/handlers.go — Embedding compute HTTP endpoint
 
+
+## 2026-05-27
+
+Phase 3.1c/3.3: added stored embedding similarity retrieval, cosine service tests, Glazed embedding similarity command, and POST /api/v1/embeddings/similarity endpoint.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/cmd/rag-eval/cmds/embedding/similarity.go — Glazed embedding similarity command
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/api/handlers.go — HTTP embedding similarity endpoint
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/services/embedding/similarity.go — Embedding similarity service and cosine similarity implementation
+
