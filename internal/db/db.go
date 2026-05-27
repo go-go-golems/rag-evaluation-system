@@ -3,12 +3,20 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 // OpenDB opens a SQLite database in read-write mode with WAL enabled
 func OpenDB(dbPath string) (*sql.DB, error) {
+	// Ensure parent directory exists before SQLite creates the DB and WAL files.
+	dir := filepath.Dir(dbPath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create database directory %s: %w", dir, err)
+	}
+
 	db, err := sql.Open("sqlite3", dbPath+"?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=on")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/go-go-golems/glazed/pkg/cmds/logging"
+	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/chunk"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/document"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/serve"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/source"
@@ -26,6 +27,7 @@ func main() {
 
 	// Add command groups
 	rootCmd.AddCommand(source.NewCommand())
+	rootCmd.AddCommand(chunk.NewCommand())
 	rootCmd.AddCommand(document.NewCommand())
 	rootCmd.AddCommand(serve.NewCommand())
 

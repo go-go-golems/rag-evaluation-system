@@ -3,8 +3,10 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
+	"github.com/go-go-golems/rag-evaluation-system/internal/chunking"
 	"github.com/go-go-golems/rag-evaluation-system/internal/db"
 	"github.com/go-go-golems/rag-evaluation-system/internal/ingest"
 )
@@ -28,6 +30,10 @@ func RegisterHandlers(mux *http.ServeMux, database *sql.DB) {
 
 	// Source scan (ingest files from a directory)
 	mux.HandleFunc("POST /api/v1/sources/{id}/scan", h.handleScanSource)
+
+	// Chunking
+	mux.HandleFunc("POST /api/v1/documents/{id}/chunk", h.handleChunkDocument)
+	mux.HandleFunc("GET /api/v1/chunking-strategies", h.handleListChunkingStrategies)
 }
 
 type handler struct {
@@ -108,8 +114,8 @@ func (h *handler) handleScanSource(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"source_id":     sourceID,
-		"documents":     docIDs,
+		"source_id":      sourceID,
+		"documents":      docIDs,
 		"document_count": len(docIDs),
 	})
 }
@@ -172,9 +178,105 @@ func (h *handler) handleListChunks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"items":        chunks,
-		"document_id":  docID,
-		"chunk_count":  len(chunks),
+		"items":       chunks,
+		"document_id": docID,
+		"chunk_count": len(chunks),
+	})
+}
+
+// --- Chunking ---
+
+func (h *handler) handleChunkDocument(w http.ResponseWriter, r *http.Request) {
+	docID := r.PathValue("id")
+
+	var req struct {
+		Strategy  string `json:"strategy"`
+		ChunkSize int    `json:"chunk_size"`
+		Overlap   int    `json:"overlap"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
+		return
+	}
+	if req.Strategy == "" {
+		req.Strategy = "fixed"
+	}
+	if req.ChunkSize == 0 {
+		req.ChunkSize = 500
+	}
+
+	content, err := h.queries.GetDocumentContent(docID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "query_failed", err.Error())
+		return
+	}
+	if content == "" {
+		writeError(w, http.StatusNotFound, "no_content", "document has no content")
+		return
+	}
+
+	strategyID := fmt.Sprintf("%s-%d-%d", req.Strategy, req.ChunkSize, req.Overlap)
+
+	chunker, err := chunking.NewChunkerFromType(req.Strategy, req.ChunkSize, req.Overlap, strategyID)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_strategy", err.Error())
+		return
+	}
+
+	chunks, err := chunker.Chunk(docID, content)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "chunk_failed", err.Error())
+		return
+	}
+
+	// Store chunks
+	for _, ch := range chunks {
+		boundariesJSON, _ := json.Marshal(map[string]interface{}{"strategy_id": strategyID})
+		h.queries.InsertChunk(ch.ID, ch.DocumentID, ch.ChunkIndex, ch.Text,
+			ch.TokenCount, ch.StartOffset, ch.EndOffset, string(boundariesJSON))
+	}
+
+	h.queries.UpdateDocumentStatus(docID, "chunked")
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"document_id": docID,
+		"strategy":    strategyID,
+		"chunk_count": len(chunks),
+		"chunks":      chunks,
+	})
+}
+
+func (h *handler) handleListChunkingStrategies(w http.ResponseWriter, r *http.Request) {
+	rows, err := h.queries.DB().QueryContext(r.Context(), `
+		SELECT id, name, type, description, created_at
+		FROM chunking_strategies ORDER BY created_at DESC
+	`)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "query_failed", err.Error())
+		return
+	}
+	defer rows.Close()
+
+	type strategy struct {
+		ID          string `json:"id"`
+		Name        string `json:"name"`
+		Type        string `json:"type"`
+		Description string `json:"description"`
+		CreatedAt   string `json:"created_at"`
+	}
+
+	var strategies []strategy
+	for rows.Next() {
+		var s strategy
+		if err := rows.Scan(&s.ID, &s.Name, &s.Type, &s.Description, &s.CreatedAt); err != nil {
+			writeError(w, http.StatusInternalServerError, "scan_failed", err.Error())
+			return
+		}
+		strategies = append(strategies, s)
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"items": strategies,
 	})
 }
 
@@ -190,7 +292,7 @@ func writeError(w http.ResponseWriter, status int, code, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"error":  code,
+		"error":   code,
 		"message": message,
 	})
 }
