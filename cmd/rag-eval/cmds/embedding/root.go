@@ -11,5 +11,6 @@ func NewCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(newComputeCommand())
+	cmd.AddCommand(newSimilarityCommand())
 	return cmd
 }

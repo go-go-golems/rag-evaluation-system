@@ -298,6 +298,64 @@ func (q *Queries) GetChunkEmbeddingTextHash(chunkID, strategyID, provider, model
 	return textHash, true, nil
 }
 
+// GetChunkEmbedding returns one stored embedding vector plus joined chunk metadata.
+func (q *Queries) GetChunkEmbedding(chunkID, strategyID, provider, model string, dimensions int) (*ChunkEmbedding, bool, error) {
+	var e ChunkEmbedding
+	err := q.db.QueryRow(`
+		SELECT ce.chunk_id, c.document_id, ce.strategy_id, c.chunk_index, c.text,
+		       ce.provider, ce.model, ce.dimensions, ce.text_hash, ce.embedding, ce.created_at, ce.updated_at
+		FROM chunk_embeddings ce
+		JOIN chunks c ON c.id = ce.chunk_id AND c.strategy_id = ce.strategy_id
+		WHERE ce.chunk_id = ? AND ce.strategy_id = ? AND ce.provider = ? AND ce.model = ? AND ce.dimensions = ?
+	`, chunkID, strategyID, provider, model, dimensions).Scan(
+		&e.ChunkID, &e.DocumentID, &e.StrategyID, &e.ChunkIndex, &e.Text,
+		&e.Provider, &e.Model, &e.Dimensions, &e.TextHash, &e.Embedding, &e.CreatedAt, &e.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, err
+	}
+	return &e, true, nil
+}
+
+// ListChunkEmbeddingsForStrategy returns stored embeddings for one strategy/provider/model identity.
+func (q *Queries) ListChunkEmbeddingsForStrategy(strategyID, provider, model string, dimensions, limit int) ([]ChunkEmbedding, error) {
+	query := `
+		SELECT ce.chunk_id, c.document_id, ce.strategy_id, c.chunk_index, c.text,
+		       ce.provider, ce.model, ce.dimensions, ce.text_hash, ce.embedding, ce.created_at, ce.updated_at
+		FROM chunk_embeddings ce
+		JOIN chunks c ON c.id = ce.chunk_id AND c.strategy_id = ce.strategy_id
+		WHERE ce.strategy_id = ? AND ce.provider = ? AND ce.model = ? AND ce.dimensions = ?
+		ORDER BY c.document_id, c.chunk_index
+	`
+	args := []interface{}{strategyID, provider, model, dimensions}
+	if limit > 0 {
+		query += ` LIMIT ?`
+		args = append(args, limit)
+	}
+
+	rows, err := q.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var embeddings []ChunkEmbedding
+	for rows.Next() {
+		var e ChunkEmbedding
+		if err := rows.Scan(
+			&e.ChunkID, &e.DocumentID, &e.StrategyID, &e.ChunkIndex, &e.Text,
+			&e.Provider, &e.Model, &e.Dimensions, &e.TextHash, &e.Embedding, &e.CreatedAt, &e.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		embeddings = append(embeddings, e)
+	}
+	return embeddings, rows.Err()
+}
+
 // UpsertChunkEmbedding stores an embedding vector blob for a chunk identity.
 func (q *Queries) UpsertChunkEmbedding(chunkID, strategyID, provider, model string, dimensions int, textHash string, embedding []byte) error {
 	_, err := q.db.Exec(`
@@ -351,4 +409,20 @@ type Chunk struct {
 	StartOffset int    `json:"start_offset"`
 	EndOffset   int    `json:"end_offset"`
 	CreatedAt   string `json:"created_at"`
+}
+
+// ChunkEmbedding is a stored embedding plus the chunk metadata needed for inspection.
+type ChunkEmbedding struct {
+	ChunkID    string `json:"chunk_id"`
+	DocumentID string `json:"document_id"`
+	StrategyID string `json:"strategy_id"`
+	ChunkIndex int    `json:"chunk_index"`
+	Text       string `json:"text,omitempty"`
+	Provider   string `json:"provider"`
+	Model      string `json:"model"`
+	Dimensions int    `json:"dimensions"`
+	TextHash   string `json:"text_hash"`
+	Embedding  []byte `json:"-"`
+	CreatedAt  string `json:"created_at"`
+	UpdatedAt  string `json:"updated_at"`
 }

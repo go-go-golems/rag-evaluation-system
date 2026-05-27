@@ -39,6 +39,7 @@ func RegisterHandlers(mux *http.ServeMux, database *sql.DB) {
 
 	// Embeddings
 	mux.HandleFunc("POST /api/v1/embeddings/compute", h.handleComputeEmbeddings)
+	mux.HandleFunc("POST /api/v1/embeddings/similarity", h.handleEmbeddingSimilarity)
 }
 
 type handler struct {
@@ -348,6 +349,52 @@ func (h *handler) handleComputeEmbeddings(w http.ResponseWriter, r *http.Request
 		"computed":          result.Computed,
 		"skipped_fresh":     result.SkippedFresh,
 	})
+}
+
+func (h *handler) handleEmbeddingSimilarity(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		StrategyID     string `json:"strategy_id"`
+		ProviderType   string `json:"provider_type"`
+		Model          string `json:"model"`
+		Dimensions     int    `json:"dimensions"`
+		ChunkIDA       string `json:"chunk_id_a"`
+		ChunkIDB       string `json:"chunk_id_b"`
+		Limit          int    `json:"limit"`
+		CandidateLimit int    `json:"candidate_limit"`
+		PreviewRunes   int    `json:"preview_runes"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
+		return
+	}
+	if req.Limit == 0 {
+		req.Limit = 20
+	}
+	if req.CandidateLimit == 0 {
+		req.CandidateLimit = 200
+	}
+	if req.PreviewRunes == 0 {
+		req.PreviewRunes = 120
+	}
+
+	service := embeddingservice.NewService(h.queries)
+	result, err := service.Similarity(r.Context(), embeddingservice.SimilarityRequest{
+		StrategyID:     req.StrategyID,
+		ProviderType:   req.ProviderType,
+		Model:          req.Model,
+		Dimensions:     req.Dimensions,
+		ChunkIDA:       req.ChunkIDA,
+		ChunkIDB:       req.ChunkIDB,
+		Limit:          req.Limit,
+		CandidateLimit: req.CandidateLimit,
+		PreviewRunes:   req.PreviewRunes,
+	})
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "similarity_failed", err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, result)
 }
 
 // --- Chunking strategies ---
