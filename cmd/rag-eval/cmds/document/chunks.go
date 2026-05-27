@@ -13,6 +13,7 @@ import (
 	"github.com/go-go-golems/glazed/pkg/settings"
 	"github.com/go-go-golems/glazed/pkg/types"
 	cmds2 "github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds"
+	documentservice "github.com/go-go-golems/rag-evaluation-system/internal/services/document"
 	"github.com/spf13/cobra"
 )
 
@@ -121,7 +122,8 @@ func (c *ChunksCommand) RunIntoGlazeProcessor(
 	}
 	defer queries.Close()
 
-	chunks, err := queries.ListChunks(s.DocID)
+	service := documentservice.NewService(queries)
+	chunks, err := service.Chunks(ctx, documentservice.ChunksRequest{DocumentID: s.DocID})
 	if err != nil {
 		return err
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/go-go-golems/glazed/pkg/settings"
 	"github.com/go-go-golems/glazed/pkg/types"
 	cmds2 "github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds"
+	documentservice "github.com/go-go-golems/rag-evaluation-system/internal/services/document"
 	"github.com/spf13/cobra"
 )
 
@@ -99,7 +100,8 @@ func (c *GetCommand) RunIntoGlazeProcessor(
 	}
 	defer queries.Close()
 
-	doc, err := queries.GetDocument(s.DocID)
+	service := documentservice.NewService(queries)
+	doc, err := service.Get(ctx, s.DocID)
 	if err != nil {
 		return err
 	}

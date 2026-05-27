@@ -8,6 +8,7 @@ import (
 	chunkcore "github.com/go-go-golems/rag-evaluation-system/internal/chunking"
 	"github.com/go-go-golems/rag-evaluation-system/internal/db"
 	chunkservice "github.com/go-go-golems/rag-evaluation-system/internal/services/chunking"
+	documentservice "github.com/go-go-golems/rag-evaluation-system/internal/services/document"
 	sourceservice "github.com/go-go-golems/rag-evaluation-system/internal/services/source"
 )
 
@@ -111,7 +112,8 @@ func (h *handler) handleScanSource(w http.ResponseWriter, r *http.Request) {
 // --- Documents ---
 
 func (h *handler) handleListDocuments(w http.ResponseWriter, r *http.Request) {
-	docs, err := h.queries.ListDocuments(50, 0)
+	service := documentservice.NewService(h.queries)
+	docs, err := service.List(r.Context(), documentservice.ListRequest{Limit: 50, Offset: 0})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "query_failed", err.Error())
 		return
@@ -126,7 +128,8 @@ func (h *handler) handleListDocuments(w http.ResponseWriter, r *http.Request) {
 func (h *handler) handleGetDocument(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	doc, err := h.queries.GetDocument(id)
+	service := documentservice.NewService(h.queries)
+	doc, err := service.Get(r.Context(), id)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "query_failed", err.Error())
 		return
@@ -159,7 +162,8 @@ func (h *handler) handleGetDocument(w http.ResponseWriter, r *http.Request) {
 func (h *handler) handleListChunks(w http.ResponseWriter, r *http.Request) {
 	docID := r.PathValue("id")
 
-	chunks, err := h.queries.ListChunks(docID)
+	service := documentservice.NewService(h.queries)
+	chunks, err := service.Chunks(r.Context(), documentservice.ChunksRequest{DocumentID: docID})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "query_failed", err.Error())
 		return
