@@ -62,3 +62,4 @@
 - [x] Phase 3.1c.1: Add Glazed embedding compute command backed by embedding service
 - [x] Phase 3.1d.1: Add HTTP embedding compute endpoint backed by embedding service
 - [x] Testing corpus: add Defuddle downloader for The Tree Center guides/blog posts and seed local guide corpus
+- [x] Testing: verify OpenAI embedding compute through Pinocchio profile on The Tree Center guide corpus

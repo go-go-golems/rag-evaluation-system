@@ -7,6 +7,12 @@ DocType: ""
 Intent: ""
 Owners: []
 RelatedFiles:
+    - Path: ../../../../../../../../../../code/wesen/2026-05-21--readwise-viewer/README.md
+      Note: Known-good profile-backed embedding usage referenced in Step 11
+    - Path: ../../../../../../../../../../code/wesen/2026-05-21--readwise-viewer/cmd/readwise-viewer/cmds/embeddings.go
+      Note: Readwise embedding command implementation referenced in Step 11
+    - Path: cmd/rag-eval/cmds/embedding/compute.go
+      Note: RAG eval OpenAI profile smoke command path used in Step 11
     - Path: cmd/rag-eval/cmds/embedding/similarity.go
       Note: Glazed similarity command added in Step 8
     - Path: internal/api/handlers.go
@@ -29,6 +35,7 @@ LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -966,3 +973,128 @@ Another subtle point is that the downloader should not be coupled to the RAG dat
   - 226 chunks across 19 documents
 - Full post corpus command, not yet run:
   - `ttmp/2026/05/27/RAGEVAL-001--rag-evaluation-system-workflow-driven-document-indexing-with-interactive-playground/scripts/03-download-thetreecenter.py --types posts --delay 1.0`
+
+---
+
+## Step 11: Full The Tree Center Corpus Survey and OpenAI Profile Embedding Smoke
+
+I surveyed the complete public The Tree Center WordPress sitemap and verified that the RAG evaluation app can compute embeddings through the existing Pinocchio profile setup. I also inspected the successful Readwise Viewer embedding path and confirmed it uses the same profile names and profile registry convention.
+
+This step is important because it proves the current app can use the real `~/.config/pinocchio/profiles.yaml` embedding profiles rather than only direct Ollama/OpenAI flags. It also establishes corpus scale before we decide how much content to download and embed.
+
+### Prompt Context
+
+**User prompt (verbatim):** "what's the full corpus? Can you run the openai embeddings using the pinocchio profiles? or look how it's done in ~/code/wesen/2026-05-21--readwise-viewer/ which I think was successful?"
+
+**Assistant interpretation:** Quantify the full The Tree Center sitemap corpus and verify a small OpenAI embedding run using the existing Pinocchio/Geppetto embedding profiles, cross-checking with Readwise Viewer.
+
+**Inferred user intent:** Determine how large the realistic test corpus can become and confirm that paid/provider-backed embeddings work through the same configuration pattern used by a known-good project.
+
+### What I did
+
+- Queried all sitemap partitions from `https://www.thetreecenter.com/wp-sitemap.xml`.
+- Inspected `~/code/wesen/2026-05-21--readwise-viewer` for embedding/profile usage.
+- Inspected `~/.config/pinocchio/profiles.yaml` with secret values redacted.
+- Found embedding profiles:
+  - `openai-embedding-small`: `text-embedding-3-small`, 1536 dimensions.
+  - `openai-embedding-large`: `text-embedding-3-large`, 3072 dimensions.
+  - `ollama-nomic-embedding`: `nomic-embed-text`, 768 dimensions.
+  - `ollama-all-minilm-embedding`: `all-minilm`, 384 dimensions.
+- Ran a no-chunk provider resolution smoke with `openai-embedding-small`.
+- Ran a live OpenAI embedding compute for 5 The Tree Center guide chunks:
+  - strategy `fixed-1200-150`
+  - profile `openai-embedding-small`
+  - registry `~/.config/pinocchio/profiles.yaml`
+  - batch size 5
+  - limit 5
+- Re-ran the same compute to verify `text_hash` freshness skipping.
+- Ran stored cosine similarity over the 5 OpenAI-embedded guide chunks.
+
+### Why
+
+The project needs to support the same Geppetto/Pinocchio configuration style as Readwise Viewer. Direct CLI flags are useful, but real usage should be profile-backed so API keys and provider settings remain centralized.
+
+The corpus survey is also needed before scaling up. Embedding 19 guide pages is small. Embedding all public posts is moderate. Embedding products and taxonomy pages is much larger and should not be done accidentally.
+
+### What worked
+
+- The profile resolution smoke succeeded without generating embeddings:
+  - `provider_type=openai`
+  - `model=text-embedding-3-small`
+  - `dimensions=1536`
+  - `effective_profile=openai-embedding-small`
+- Live OpenAI embedding compute succeeded for 5 chunks:
+  - `computed=5`
+  - `considered=5`
+  - `skipped_fresh=0`
+- The second run correctly skipped all 5 fresh embeddings:
+  - `computed=0`
+  - `considered=5`
+  - `skipped_fresh=5`
+- SQLite now contains 5 OpenAI embedding rows for `fixed-1200-150`:
+  - `openai|text-embedding-3-small|1536|5`
+- Stored similarity returned sensible descending scores across the five `plant-bamboo-trees` chunks.
+
+### What didn't work
+
+- I did not run embeddings for all 226 guide chunks or the full 483-post blog corpus. The live provider path is now verified, but scaling it should be a deliberate next command because it spends API quota.
+- I did not change the app to mount Geppetto's full CLI middleware exactly like Readwise Viewer. The current resolver works for our use case, but Readwise Viewer has a richer command pattern that may be worth copying later.
+
+### What I learned
+
+- The public The Tree Center sitemap contains 3,431 URL entries total across posts, pages, products, guides, and taxonomy pages.
+- The content corpus most relevant for RAG article/guide testing is 502 URLs: 483 blog posts plus 19 guide pages.
+- Readwise Viewer documents and implements the same expected profiles: `openai-embedding-small`, `openai-embedding-large`, `ollama-nomic-embedding`, and `ollama-all-minilm-embedding`.
+- Our command can use `--profile openai-embedding-small --profile-registries ~/.config/pinocchio/profiles.yaml` successfully.
+
+### What was tricky to build
+
+The main tricky point is distinguishing provider resolution from provider calls. Resolving `openai-embedding-small` can be tested safely against an empty strategy because no chunks means no batch embedding request. A real compute test must be deliberately limited with `--limit` and `--batch-size`.
+
+Another subtle point is dimensions. OpenAI `text-embedding-3-small` stores under 1536 dimensions, so similarity commands must use `--dimensions 1536`, not the 768 dimension used by the earlier Ollama examples.
+
+### What warrants a second pair of eyes
+
+- Review whether `rag-eval embedding compute` should adopt Readwise Viewer's full Geppetto CLI middleware style before the CLI is considered stable.
+- Review cost controls before running all 483 posts or all 226 guide chunks through OpenAI.
+- Confirm whether the full corpus should include product pages; there are 2,604 product URLs, which are probably not the first evaluation target.
+
+### What should be done in the future
+
+- Add a dedicated `embedding profile-test` command like Readwise Viewer's `embeddings test --print-inference-settings`.
+- Add an embedding coverage endpoint/command so we can see missing/fresh/stale counts before running large batches.
+- Download a bounded post sample, for example `--types posts --max 25`, before crawling all 483 posts.
+- Decide whether products belong in the RAG evaluation corpus or should remain out of scope.
+
+### Code review instructions
+
+- Read the known-good Readwise Viewer references:
+  - `/home/manuel/code/wesen/2026-05-21--readwise-viewer/README.md`
+  - `/home/manuel/code/wesen/2026-05-21--readwise-viewer/cmd/readwise-viewer/cmds/embeddings.go`
+- Compare against current resolver:
+  - `internal/services/embedding/provider.go`
+  - `cmd/rag-eval/cmds/embedding/compute.go`
+- Reproduce the safe resolution smoke:
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB ./rag-eval embedding compute --strategy-id no-such-strategy --profile openai-embedding-small --profile-registries ~/.config/pinocchio/profiles.yaml --limit 1 --output json`
+- Reproduce the limited live smoke only if OpenAI quota use is acceptable:
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB ./rag-eval embedding compute --strategy-id fixed-1200-150 --profile openai-embedding-small --profile-registries ~/.config/pinocchio/profiles.yaml --batch-size 5 --limit 5 --output json`
+
+### Technical details
+
+Full public The Tree Center sitemap partition counts:
+
+- Posts: 483
+- Pages: 120
+- Products: 2,604 across two product sitemap partitions
+- Guides: 19
+- Categories: 23
+- Post tags: 21
+- Product categories: 145
+- Product tags: 16
+- Total sitemap URL entries: 3,431
+
+Recommended RAG prose corpus definition:
+
+- Guides + blog posts: 502 URLs total.
+- Already downloaded locally: 19 guide pages.
+- Not downloaded yet: 483 blog posts.

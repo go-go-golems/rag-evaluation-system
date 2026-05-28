@@ -160,3 +160,13 @@ Testing corpus: added a rate-limited Defuddle downloader for The Tree Center gui
 
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/05/27/RAGEVAL-001--rag-evaluation-system-workflow-driven-document-indexing-with-interactive-playground/scripts/03-download-thetreecenter.py — Rate-limited Defuddle corpus downloader
 
+
+## 2026-05-28
+
+Testing: surveyed The Tree Center sitemap corpus sizes and verified OpenAI text-embedding-3-small through Pinocchio profile openai-embedding-small on 5 fixed-1200-150 guide chunks; rerun skipped all 5 fresh rows and stored similarity worked.
+
+### Related Files
+
+- /home/manuel/.config/pinocchio/profiles.yaml — Embedding profiles openai-embedding-small/openai-embedding-large/ollama-nomic-embedding used for profile-backed smoke test
+- /home/manuel/code/wesen/2026-05-21--readwise-viewer/README.md — Readwise Viewer documents the same profile-backed embedding pattern
+
