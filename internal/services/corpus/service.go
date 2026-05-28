@@ -315,6 +315,7 @@ func (s *Service) DocumentDetail(ctx context.Context, documentID string, identit
 
 	// Parse metadata JSON
 	d.Document.Metadata = make(map[string]interface{})
+	d.Chunks = []CorpusChunk{} // initialize as empty so JSON is [] not null
 	if metadataJSON.Valid && metadataJSON.String != "" {
 		_ = json.Unmarshal([]byte(metadataJSON.String), &d.Document.Metadata)
 	}

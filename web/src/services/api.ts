@@ -268,6 +268,10 @@ export const ragApi = createApi({
           ...filterIdentityParams(args),
         },
       }),
+      transformResponse: (response: CorpusDocumentDetail) => ({
+        ...response,
+        chunks: response.chunks ?? [],
+      }),
       providesTags: ['Corpus'],
     }),
   }),

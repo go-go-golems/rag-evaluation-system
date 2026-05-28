@@ -16,11 +16,12 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
   const [activeTab, setActiveTab] = useState<'overview' | 'text' | 'chunks' | 'coverage'>('overview');
   const [selectedChunkIdx, setSelectedChunkIdx] = useState<number | null>(null);
 
+  const safeChunks = chunks ?? [];
   const doc = detail.document;
   const metaKeys = Object.keys(doc.metadata || {});
 
-  const embeddedCount = chunks.filter((c) => c.embedding?.present).length;
-  const missingCount = chunks.length - embeddedCount;
+  const embeddedCount = safeChunks.filter((c) => c.embedding?.present).length;
+  const missingCount = safeChunks.length - embeddedCount;
 
   const identityLabel = `${identity.provider_type || '?'}/${identity.model || '?'} @ ${identity.dimensions || '?'}`;
 
@@ -61,11 +62,11 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
               <span className="stat-label">Words</span>
               <span className="stat-value">{doc.word_count.toLocaleString()}</span>
               <span className="stat-label">Chunks</span>
-              <span className="stat-value">{chunks.length}</span>
+              <span className="stat-value">{safeChunks.length}</span>
               <span className="stat-label">Embedded</span>
               <span className="stat-value">
-                <span className={embeddedCount === chunks.length && chunks.length > 0 ? 'accent-green' : embeddedCount > 0 ? 'accent-amber' : ''}>
-                  {embeddedCount}/{chunks.length}
+                <span className={embeddedCount === safeChunks.length && safeChunks.length > 0 ? 'accent-green' : embeddedCount > 0 ? 'accent-amber' : ''}>
+                  {embeddedCount}/{safeChunks.length}
                 </span>
               </span>
               <span className="stat-label">Status</span>
@@ -102,11 +103,11 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
         {activeTab === 'chunks' && (
           <>
             <div className="section-title">
-              Chunks ({chunks.length}) — {embeddedCount} embedded, {missingCount} missing
+              Chunks ({safeChunks.length}) — {embeddedCount} embedded, {missingCount} missing
             </div>
 
             <ChunkTimelineBar
-              chunks={chunks}
+              chunks={safeChunks}
               selectedIdx={selectedChunkIdx}
               onSelect={setSelectedChunkIdx}
             />
@@ -122,7 +123,7 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
                 </tr>
               </thead>
               <tbody>
-                {chunks.map((chunk, idx) => (
+                {safeChunks.map((chunk, idx) => (
                   <tr
                     key={chunk.id}
                     className={`selectable ${selectedChunkIdx === idx ? 'selected' : ''}`}
@@ -153,13 +154,13 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
               </tbody>
             </table>
 
-            {selectedChunkIdx !== null && chunks[selectedChunkIdx] && (
+            {selectedChunkIdx !== null && safeChunks[selectedChunkIdx] && (
               <div style={{ marginTop: 6 }}>
                 <div className="section-title">
-                  Chunk #{chunks[selectedChunkIdx].chunk_index} — {chunks[selectedChunkIdx].token_count} tokens
+                  Chunk #{safeChunks[selectedChunkIdx].chunk_index} — {safeChunks[selectedChunkIdx].token_count} tokens
                 </div>
                 <div className="text-content">
-                  {chunks[selectedChunkIdx].text}
+                  {safeChunks[selectedChunkIdx].text}
                 </div>
               </div>
             )}
@@ -173,20 +174,20 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
             </div>
             <div className="stat-grid" style={{ marginBottom: 8 }}>
               <span className="stat-label">Total</span>
-              <span className="stat-value">{chunks.length}</span>
+              <span className="stat-value">{safeChunks.length}</span>
               <span className="stat-label">Embedded</span>
               <span className="stat-value accent-green">{embeddedCount}</span>
               <span className="stat-label">Missing</span>
               <span className="stat-value accent-amber">{missingCount}</span>
               <span className="stat-label">Coverage</span>
               <span className="stat-value">
-                {chunks.length > 0 ? Math.round((embeddedCount / chunks.length) * 100) : 0}%
+                {safeChunks.length > 0 ? Math.round((embeddedCount / safeChunks.length) * 100) : 0}%
               </span>
             </div>
 
             <div className="section-title">Per-chunk status</div>
             <div className="coverage-strip">
-              {chunks.map((chunk) => (
+              {safeChunks.map((chunk) => (
                 <span
                   key={chunk.id}
                   className={`coverage-dot ${chunk.embedding?.present ? 'present' : 'missing'}`}
@@ -211,7 +212,7 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
                     </tr>
                   </thead>
                   <tbody>
-                    {chunks.filter((c) => !c.embedding?.present).map((chunk) => (
+                    {safeChunks.filter((c) => !c.embedding?.present).map((chunk) => (
                       <tr key={chunk.id}>
                         <td className="mono">{chunk.chunk_index}</td>
                         <td className="mono">{chunk.start_offset}–{chunk.end_offset}</td>
