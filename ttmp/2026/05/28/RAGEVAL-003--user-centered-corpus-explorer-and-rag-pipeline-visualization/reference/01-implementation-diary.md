@@ -365,3 +365,88 @@ The design guide specified a Corpus Explorer centered on user intents (learn, in
 - Bugfix commit: 7934e0a (SQL parameter ordering)
 - New files: `internal/services/corpus/service.go`, `web/src/components/corpus/CorpusExplorerView.tsx`
 - Modified files: `internal/api/handlers.go`, `web/src/index.css`, `web/src/services/api.ts`, `web/src/App.tsx`, `web/src/components/pipeline/PipelineView.tsx`, `web/src/components/embeddings/EmbeddingsView.tsx`, `web/src/components/search/SearchView.tsx`, `web/src/components/evaluation/EvaluationView.tsx`
+
+---
+
+## Step 5: Component Split, Search/Pagination, and Corpus Service Tests
+
+I split the monolithic CorpusExplorerView into separate component files, added a search filter and pagination to the document browser, and wrote 8 unit tests for the corpus service.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Go ahead."
+
+**Assistant interpretation:** Continue with follow-up improvements: split components, add search/pagination, write corpus service tests.
+
+**Inferred user intent:** Polish and harden the Corpus Explorer implementation.
+
+**Commit (code):** 32f7d71 — "refactor(corpus): split CorpusExplorerView into components, add search/pagination and tests"
+
+### What I did
+
+- Split `CorpusExplorerView.tsx` (500+ lines) into 6 files:
+  - `CorpusExplorerView.tsx` — main layout, state, data flow (~130 lines)
+  - `IdentityBar.tsx` — embedding identity controls
+  - `SourcePanel.tsx` — source list with coverage items
+  - `DocumentBrowser.tsx` — document table with search and pagination
+  - `DocumentInspector.tsx` — 4-tab inspector (overview/text/chunks/coverage)
+  - `ChunkTimelineBar.tsx` — proportional chunk position visualization
+- Added search filter in DocumentBrowser: filters by title or ID substring
+- Added pagination: loads 100 docs per page with "Load more (N remaining)" button
+- Fixed coverage tab to use actual identity props instead of hardcoded label
+- Wrote 8 corpus service unit tests in `internal/services/corpus/service_test.go`:
+  - `TestSourceSummaries_NoIdentity`
+  - `TestSourceSummaries_WithIdentity`
+  - `TestDocumentBrowser`
+  - `TestDocumentBrowser_Pagination`
+  - `TestDocumentDetail`
+  - `TestDocumentDetail_NotFound`
+  - `TestDocumentDetail_NoText`
+  - `TestDocumentDetail_NoStrategy`
+
+### Why
+
+The monolithic component was hard to maintain. Separate files make each piece independently improvable. Search and pagination are essential for the TTC corpus (483 articles). Tests prevent regressions in the SQL query construction.
+
+### What worked
+
+- All 8 tests pass on first run.
+- TypeScript compiles cleanly after the split.
+- Search filters 100 docs to matching results instantly (client-side filter on loaded data).
+- Pagination correctly loads 100 → 200 docs on "Load more" click.
+- The Go server needs a rebuild after frontend changes since it embeds the SPA.
+
+### What didn't work
+
+- Initially forgot to rebuild the Go binary after the frontend refactor. The Playwright browser was still seeing the old embedded frontend. Fixed by rebuilding `go build ./cmd/rag-eval` and restarting the server.
+
+### What I learned
+
+- The Go binary embeds the frontend at build time via `go:embed`. After any `web/` change, the full build sequence is: `cd web && npm run build && cd .. && go build ./cmd/rag-eval`.
+- Client-side search is fast enough for up to 1000 loaded documents. Server-side search would only be needed for much larger corpora.
+
+### What was tricky to build
+
+- The pagination approach uses a growing `pageLimit` state variable rather than traditional offset-based pagination. This avoids re-fetching already-loaded data and simplifies the RTK Query cache, but means the query parameter changes (limit grows) which triggers a refetch of all data.
+
+### What warrants a second pair of eyes
+
+- The search filter is purely client-side on the loaded page. If a user searches for something in the first 100 docs that doesn't match, but the matching doc is at position 150, they won't find it until they load more. This is a known tradeoff.
+
+### What should be done in the future
+
+- Add server-side search endpoint for very large sources (2500+ docs).
+- Add keyboard navigation (arrow keys in source list and document table).
+- Consider virtual scrolling for very large document lists.
+
+### Code review instructions
+
+- Review the component split: each file should have a single responsibility.
+- Check the test seed data covers the key scenarios (embedded/not embedded, with/without strategy, pagination).
+- Verify the search filter works in the browser.
+
+### Technical details
+
+- Commit: 32f7d71
+- New files: `IdentityBar.tsx`, `SourcePanel.tsx`, `DocumentBrowser.tsx`, `DocumentInspector.tsx`, `ChunkTimelineBar.tsx`, `service_test.go`
+- Rewritten: `CorpusExplorerView.tsx` (from 500+ to ~130 lines)
