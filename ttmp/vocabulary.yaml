@@ -17,6 +17,12 @@ topics:
       description: Full-text and vector search
     - slug: workflow
       description: Durable workflow orchestration
+    - slug: ingestion
+      description: Document and data ingestion pipelines
+    - slug: database
+      description: Database schemas, migrations, imports, and exports
+    - slug: corpus
+      description: Text corpus acquisition, normalization, and evaluation datasets
 docTypes:
     - slug: design-doc
       description: Structured rationale and architecture notes
