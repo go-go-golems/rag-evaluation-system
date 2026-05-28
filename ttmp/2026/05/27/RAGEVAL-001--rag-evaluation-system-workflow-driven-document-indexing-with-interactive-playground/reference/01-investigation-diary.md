@@ -13,10 +13,16 @@ RelatedFiles:
       Note: Readwise embedding command implementation referenced in Step 11
     - Path: cmd/rag-eval/cmds/embedding/compute.go
       Note: RAG eval OpenAI profile smoke command path used in Step 11
+    - Path: cmd/rag-eval/cmds/embedding/coverage.go
+      Note: Coverage command recorded in Step 12
     - Path: cmd/rag-eval/cmds/embedding/similarity.go
       Note: Glazed similarity command added in Step 8
     - Path: internal/api/handlers.go
-      Note: HTTP similarity endpoint added in Step 8
+      Note: |-
+        HTTP similarity endpoint added in Step 8
+        Embedding coverage endpoint and source_ids compute support recorded in Step 12
+    - Path: internal/services/embedding/service.go
+      Note: Source-aware compute and coverage recorded in Step 12
     - Path: internal/services/embedding/similarity.go
       Note: Stored embedding similarity service added in Step 8
     - Path: internal/services/embedding/similarity_test.go
@@ -35,6 +41,7 @@ LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -1098,3 +1105,116 @@ Recommended RAG prose corpus definition:
 - Guides + blog posts: 502 URLs total.
 - Already downloaded locally: 19 guide pages.
 - Not downloaded yet: 483 blog posts.
+
+---
+
+## Step 12: Source-Aware Embedding Coverage and Bounded TTC Dump Embedding Smoke
+
+After importing the TTC dump corpus, the embedding compute command still selected chunks only by strategy. That was too coarse for corpus-scale testing because `fixed-1200-150` now spans scraped guides and dump-derived articles, guides, and products. I added source filters and an embedding coverage command so live provider work can be scoped before spending API quota.
+
+I then ran a bounded OpenAI smoke over the TTC dump mixed sample: 10 guide chunks, 10 article chunks, and 10 product chunks using `openai-embedding-small`. The coverage command now shows exactly what is embedded and what remains missing by source.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead."
+
+**Assistant interpretation:** Continue with the next identified step: make embedding tests source/kind-aware and run a limited mixed-corpus OpenAI embedding smoke.
+
+**Inferred user intent:** Validate that the newly imported TTC dump corpus can be embedded safely and selectively rather than only as one large strategy-wide job.
+
+**Commit (code):** 8216a5b — "feat: add source-aware embedding coverage and compute"
+
+### What I did
+
+- Added `db.ListChunksForStrategySources` to restrict chunk selection by document source IDs.
+- Added `db.ListEmbeddingCoverageBySource` to count total/stored/missing embeddings per source.
+- Extended `embedding.ComputeRequest` with `SourceIDs`.
+- Added `embedding.Service.Coverage`.
+- Extended `rag-eval embedding compute` with `--source-ids`.
+- Added `rag-eval embedding coverage`.
+- Added HTTP `POST /api/v1/embeddings/coverage`.
+- Extended HTTP `POST /api/v1/embeddings/compute` with `source_ids`.
+- Added service tests for source-filtered compute and coverage counts.
+- Ran validation:
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go test ./internal/db ./internal/ingest ./internal/chunking ./internal/services/source ./internal/services/chunking ./internal/services/document ./internal/services/embedding -count=1 -timeout 60s`
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go build ./cmd/rag-eval`
+- Ran OpenAI embeddings for the TTC dump sample:
+  - 10 chunks from `ttc-dump-guides`
+  - 10 chunks from `ttc-dump-articles`
+  - 10 chunks from `ttc-dump-products`
+- Ran stored similarity against an OpenAI-embedded article chunk.
+
+### Why
+
+The corpus now has several source IDs sharing the same chunking strategy. A strategy-only compute command can accidentally work across a much larger dataset than intended. Source filtering and coverage make live embedding jobs inspectable and bounded.
+
+### What worked
+
+- Coverage before the mixed smoke showed:
+  - `thetreecenter-guides`: 226 chunks, 5 embedded, 221 missing.
+  - `ttc-dump-articles`: 162 chunks, 0 embedded, 162 missing.
+  - `ttc-dump-guides`: 42 chunks, 0 embedded, 42 missing.
+  - `ttc-dump-products`: 51 chunks, 0 embedded, 51 missing.
+- Source-filtered OpenAI compute succeeded for all three TTC dump sources:
+  - `ttc-dump-guides`: considered 10, computed 10.
+  - `ttc-dump-articles`: considered 10, computed 10.
+  - `ttc-dump-products`: considered 10, computed 10.
+- Coverage after the mixed smoke showed:
+  - `ttc-dump-articles`: 10 embedded, 152 missing.
+  - `ttc-dump-guides`: 10 embedded, 32 missing.
+  - `ttc-dump-products`: 10 embedded, 41 missing.
+- Similarity over stored OpenAI vectors returned ranked results for `Crape Myrtle Varieties and Guide` chunks.
+
+### What didn't work
+
+- I did not add frontend coverage UI in this step. The backend and CLI surfaces are ready; the Embedding Inspector can be updated later to show source-level coverage.
+- Coverage counts stored embeddings but does not detect stale embeddings by recomputing `text_hash` in SQL. Staleness is still enforced by compute before provider calls.
+
+### What I learned
+
+- The imported TTC dump sample creates enough chunks per source that source-aware limits are necessary immediately.
+- The current `fixed-1200-150` strategy now contains both scraped and dump-derived sources. Coverage by source is the right mental model for operators.
+- Source-filtered compute provides a simple cost-control mechanism without introducing a full job scheduler yet.
+
+### What was tricky to build
+
+The tricky part was keeping the behavior shared across CLI and HTTP while changing the service contract. The DB helper now joins chunks to documents and optionally adds a dynamic `IN` clause for source IDs. Tests cover that the excluded source does not receive an embedding row.
+
+Coverage also had to be modeled as a stored-vector count, not a live provider operation. It does not call OpenAI or Ollama, so it can be used safely before live compute.
+
+### What warrants a second pair of eyes
+
+- Review dynamic SQL placeholder construction in `internal/db/queries.go`.
+- Review whether coverage should include stale-count detection in Go by loading chunk text and comparing hashes.
+- Review whether `--source-ids` should accept repeated flags, comma-separated values, or both via Glazed conventions.
+
+### What should be done in the future
+
+- Add source-level coverage to the Embedding Inspector frontend.
+- Add a `--missing-only` or `--source-ids` aware batch planning command that prints estimated provider calls before compute.
+- Add product text enrichment so product metadata becomes searchable text, not only metadata.
+
+### Code review instructions
+
+- Review:
+  - `internal/db/queries.go`
+  - `internal/services/embedding/service.go`
+  - `internal/services/embedding/service_test.go`
+  - `cmd/rag-eval/cmds/embedding/coverage.go`
+  - `cmd/rag-eval/cmds/embedding/compute.go`
+  - `internal/api/handlers.go`
+- Validate coverage:
+  - `./rag-eval embedding coverage --strategy-id fixed-1200-150 --provider-type openai --model text-embedding-3-small --dimensions 1536 --output table`
+- Validate source-filtered compute with a tiny limit:
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB ./rag-eval embedding compute --strategy-id fixed-1200-150 --source-ids ttc-dump-products --profile openai-embedding-small --profile-registries ~/.config/pinocchio/profiles.yaml --batch-size 2 --limit 2 --output table`
+
+### Technical details
+
+- New CLI command:
+  - `rag-eval embedding coverage`
+- New compute flag:
+  - `--source-ids`
+- New HTTP endpoint:
+  - `POST /api/v1/embeddings/coverage`
+- HTTP compute request now accepts:
+  - `source_ids: string[]`

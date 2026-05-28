@@ -63,3 +63,4 @@
 - [x] Phase 3.1d.1: Add HTTP embedding compute endpoint backed by embedding service
 - [x] Testing corpus: add Defuddle downloader for The Tree Center guides/blog posts and seed local guide corpus
 - [x] Testing: verify OpenAI embedding compute through Pinocchio profile on The Tree Center guide corpus
+- [x] Phase 3.1e: Add source-aware embedding coverage and compute filters for corpus-scale testing

@@ -170,3 +170,14 @@ Testing: surveyed The Tree Center sitemap corpus sizes and verified OpenAI text-
 - /home/manuel/.config/pinocchio/profiles.yaml — Embedding profiles openai-embedding-small/openai-embedding-large/ollama-nomic-embedding used for profile-backed smoke test
 - /home/manuel/code/wesen/2026-05-21--readwise-viewer/README.md — Readwise Viewer documents the same profile-backed embedding pattern
 
+
+## 2026-05-28
+
+Phase 3.1e: added source-aware embedding compute filters, embedding coverage command/API, and ran OpenAI text-embedding-3-small on 10 guide, 10 article, and 10 product chunks from the TTC dump sample.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/cmd/rag-eval/cmds/embedding/coverage.go — Glazed embedding coverage command
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/api/handlers.go — HTTP embedding coverage endpoint and compute source filters
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/services/embedding/service.go — Source-aware compute and coverage service
+
