@@ -26,6 +26,7 @@ var _ cmds.GlazeCommand = (*ComputeCommand)(nil)
 type ComputeSettings struct {
 	DB                string   `glazed:"db"`
 	StrategyID        string   `glazed:"strategy-id"`
+	SourceIDs         []string `glazed:"source-ids"`
 	ProfileRegistries []string `glazed:"profile-registries"`
 	Profile           string   `glazed:"profile"`
 	BaseProfile       string   `glazed:"base-profile"`
@@ -85,6 +86,9 @@ Examples:
 				),
 				fields.New("strategy-id", fields.TypeString,
 					fields.WithHelp("Chunking strategy ID whose chunks should be embedded"),
+				),
+				fields.New("source-ids", fields.TypeStringList,
+					fields.WithHelp("Optional source IDs to restrict chunks, for example ttc-dump-guides,ttc-dump-products"),
 				),
 				fields.New("profile-registries", fields.TypeStringList,
 					fields.WithHelp("Profile registry sources (yaml/sqlite/sqlite-dsn); defaults to ~/.config/pinocchio/profiles.yaml when using profiles"),
@@ -181,6 +185,7 @@ func (c *ComputeCommand) RunIntoGlazeProcessor(
 	service := embeddingservice.NewService(queries)
 	result, err := service.Compute(ctx, embeddingservice.ComputeRequest{
 		StrategyID:   s.StrategyID,
+		SourceIDs:    s.SourceIDs,
 		Provider:     resolved.Provider,
 		ProviderType: resolved.ProviderType,
 		BatchSize:    s.BatchSize,
@@ -193,6 +198,7 @@ func (c *ComputeCommand) RunIntoGlazeProcessor(
 
 	row := types.NewRow(
 		types.MRP("strategy_id", result.StrategyID),
+		types.MRP("source_ids", strings.Join(result.SourceIDs, ",")),
 		types.MRP("provider_type", result.ProviderType),
 		types.MRP("model", result.Model),
 		types.MRP("dimensions", result.Dimensions),

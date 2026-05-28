@@ -20,6 +20,7 @@ func NewService(queries *db.Queries) *Service {
 
 type ComputeRequest struct {
 	StrategyID   string
+	SourceIDs    []string
 	Provider     embeddings.Provider
 	ProviderType string
 	BatchSize    int
@@ -28,13 +29,36 @@ type ComputeRequest struct {
 }
 
 type ComputeResult struct {
-	StrategyID   string `json:"strategy_id"`
-	ProviderType string `json:"provider_type"`
-	Model        string `json:"model"`
-	Dimensions   int    `json:"dimensions"`
-	Considered   int    `json:"considered"`
-	Computed     int    `json:"computed"`
-	SkippedFresh int    `json:"skipped_fresh"`
+	StrategyID   string   `json:"strategy_id"`
+	SourceIDs    []string `json:"source_ids,omitempty"`
+	ProviderType string   `json:"provider_type"`
+	Model        string   `json:"model"`
+	Dimensions   int      `json:"dimensions"`
+	Considered   int      `json:"considered"`
+	Computed     int      `json:"computed"`
+	SkippedFresh int      `json:"skipped_fresh"`
+}
+
+type CoverageRequest struct {
+	StrategyID   string
+	ProviderType string
+	Model        string
+	Dimensions   int
+}
+
+type CoverageResult struct {
+	StrategyID   string                   `json:"strategy_id"`
+	ProviderType string                   `json:"provider_type"`
+	Model        string                   `json:"model"`
+	Dimensions   int                      `json:"dimensions"`
+	Items        []db.EmbeddingCoverage   `json:"items"`
+	Totals       EmbeddingCoverageSummary `json:"totals"`
+}
+
+type EmbeddingCoverageSummary struct {
+	ChunkCount    int `json:"chunk_count"`
+	EmbeddedCount int `json:"embedded_count"`
+	MissingCount  int `json:"missing_count"`
 }
 
 func (s *Service) Compute(ctx context.Context, req ComputeRequest) (*ComputeResult, error) {
@@ -56,12 +80,13 @@ func (s *Service) Compute(ctx context.Context, req ComputeRequest) (*ComputeResu
 		return nil, fmt.Errorf("embedding provider returned invalid model metadata: %#v", model)
 	}
 
-	chunks, err := s.queries.ListChunksForStrategy(req.StrategyID, req.Limit)
+	chunks, err := s.queries.ListChunksForStrategySources(req.StrategyID, req.SourceIDs, req.Limit)
 	if err != nil {
 		return nil, err
 	}
 	result := &ComputeResult{
 		StrategyID:   req.StrategyID,
+		SourceIDs:    req.SourceIDs,
 		ProviderType: req.ProviderType,
 		Model:        model.Name,
 		Dimensions:   model.Dimensions,
@@ -130,6 +155,44 @@ func (s *Service) Compute(ctx context.Context, req ComputeRequest) (*ComputeResu
 		}
 	}
 
+	return result, nil
+}
+
+func (s *Service) Coverage(ctx context.Context, req CoverageRequest) (*CoverageResult, error) {
+	if req.StrategyID == "" {
+		return nil, fmt.Errorf("strategy id is required")
+	}
+	if req.ProviderType == "" {
+		return nil, fmt.Errorf("provider type is required")
+	}
+	if req.Model == "" {
+		return nil, fmt.Errorf("model is required")
+	}
+	if req.Dimensions <= 0 {
+		return nil, fmt.Errorf("dimensions must be positive")
+	}
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	items, err := s.queries.ListEmbeddingCoverageBySource(req.StrategyID, req.ProviderType, req.Model, req.Dimensions)
+	if err != nil {
+		return nil, err
+	}
+	result := &CoverageResult{
+		StrategyID:   req.StrategyID,
+		ProviderType: req.ProviderType,
+		Model:        req.Model,
+		Dimensions:   req.Dimensions,
+		Items:        items,
+	}
+	for _, item := range items {
+		result.Totals.ChunkCount += item.ChunkCount
+		result.Totals.EmbeddedCount += item.EmbeddedCount
+		result.Totals.MissingCount += item.MissingCount
+	}
 	return result, nil
 }
 

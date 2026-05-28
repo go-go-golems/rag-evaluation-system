@@ -166,3 +166,63 @@ func TestComputeEmbeddingsRejectsDimensionMismatch(t *testing.T) {
 		t.Fatal("expected dimension mismatch to fail")
 	}
 }
+
+func TestComputeEmbeddingsCanFilterBySourceID(t *testing.T) {
+	ctx := context.Background()
+	queries := openEmbeddingTestQueries(t)
+	if err := queries.InsertSource("a", "A", "test", "{}"); err != nil {
+		t.Fatalf("insert source a: %v", err)
+	}
+	if err := queries.InsertSource("b", "B", "test", "{}"); err != nil {
+		t.Fatalf("insert source b: %v", err)
+	}
+	if err := queries.InsertDocument("doc-a", "a", "a.md", "A", "", "", "text", "alpha text", "alpha text", "", 2, "en", "extracted"); err != nil {
+		t.Fatalf("insert doc a: %v", err)
+	}
+	if err := queries.InsertDocument("doc-b", "b", "b.md", "B", "", "", "text", "beta text", "beta text", "", 2, "en", "extracted"); err != nil {
+		t.Fatalf("insert doc b: %v", err)
+	}
+	if err := queries.InsertChunkingStrategy("fixed-test", "fixed-test", "fixed", "{}", "test"); err != nil {
+		t.Fatalf("insert strategy: %v", err)
+	}
+	if err := queries.InsertChunk("chunk-a", "doc-a", "fixed-test", 0, "alpha text", 2, 0, 10, "{}"); err != nil {
+		t.Fatalf("insert chunk a: %v", err)
+	}
+	if err := queries.InsertChunk("chunk-b", "doc-b", "fixed-test", 0, "beta text", 2, 0, 9, "{}"); err != nil {
+		t.Fatalf("insert chunk b: %v", err)
+	}
+
+	provider := &fakeProvider{dimensions: 4}
+	service := NewService(queries)
+	result, err := service.Compute(ctx, ComputeRequest{StrategyID: "fixed-test", SourceIDs: []string{"b"}, Provider: provider, ProviderType: "fake"})
+	if err != nil {
+		t.Fatalf("compute: %v", err)
+	}
+	if result.Considered != 1 || result.Computed != 1 {
+		t.Fatalf("expected only source b to be considered/computed, got %#v", result)
+	}
+	if _, ok, err := queries.GetChunkEmbeddingTextHash("chunk-a", "fixed-test", "fake", "fake-embedding", 4); err != nil || ok {
+		t.Fatalf("expected chunk-a to remain unembedded, ok=%v err=%v", ok, err)
+	}
+	if _, ok, err := queries.GetChunkEmbeddingTextHash("chunk-b", "fixed-test", "fake", "fake-embedding", 4); err != nil || !ok {
+		t.Fatalf("expected chunk-b embedding, ok=%v err=%v", ok, err)
+	}
+}
+
+func TestEmbeddingCoverageBySource(t *testing.T) {
+	ctx := context.Background()
+	queries := openEmbeddingTestQueries(t)
+	strategyID := seedChunkedStrategy(t, queries)
+	provider := &fakeProvider{dimensions: 4}
+	service := NewService(queries)
+	if _, err := service.Compute(ctx, ComputeRequest{StrategyID: strategyID, Provider: provider, ProviderType: "fake", Limit: 1}); err != nil {
+		t.Fatalf("compute one: %v", err)
+	}
+	coverage, err := service.Coverage(ctx, CoverageRequest{StrategyID: strategyID, ProviderType: "fake", Model: "fake-embedding", Dimensions: 4})
+	if err != nil {
+		t.Fatalf("coverage: %v", err)
+	}
+	if coverage.Totals.ChunkCount == 0 || coverage.Totals.EmbeddedCount != 1 || coverage.Totals.MissingCount != coverage.Totals.ChunkCount-1 {
+		t.Fatalf("unexpected coverage: %#v", coverage)
+	}
+}

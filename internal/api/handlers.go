@@ -39,6 +39,7 @@ func RegisterHandlers(mux *http.ServeMux, database *sql.DB) {
 
 	// Embeddings
 	mux.HandleFunc("POST /api/v1/embeddings/compute", h.handleComputeEmbeddings)
+	mux.HandleFunc("POST /api/v1/embeddings/coverage", h.handleEmbeddingCoverage)
 	mux.HandleFunc("POST /api/v1/embeddings/similarity", h.handleEmbeddingSimilarity)
 }
 
@@ -271,6 +272,7 @@ func (h *handler) handleChunkDocument(w http.ResponseWriter, r *http.Request) {
 func (h *handler) handleComputeEmbeddings(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		StrategyID        string   `json:"strategy_id"`
+		SourceIDs         []string `json:"source_ids"`
 		ProfileRegistries []string `json:"profile_registries"`
 		Profile           string   `json:"profile"`
 		BaseProfile       string   `json:"base_profile"`
@@ -328,6 +330,7 @@ func (h *handler) handleComputeEmbeddings(w http.ResponseWriter, r *http.Request
 	service := embeddingservice.NewService(h.queries)
 	result, err := service.Compute(r.Context(), embeddingservice.ComputeRequest{
 		StrategyID:   req.StrategyID,
+		SourceIDs:    req.SourceIDs,
 		Provider:     resolved.Provider,
 		ProviderType: resolved.ProviderType,
 		BatchSize:    req.BatchSize,
@@ -341,6 +344,7 @@ func (h *handler) handleComputeEmbeddings(w http.ResponseWriter, r *http.Request
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"strategy_id":       result.StrategyID,
+		"source_ids":        result.SourceIDs,
 		"provider_type":     result.ProviderType,
 		"model":             result.Model,
 		"dimensions":        result.Dimensions,
@@ -349,6 +353,33 @@ func (h *handler) handleComputeEmbeddings(w http.ResponseWriter, r *http.Request
 		"computed":          result.Computed,
 		"skipped_fresh":     result.SkippedFresh,
 	})
+}
+
+func (h *handler) handleEmbeddingCoverage(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		StrategyID   string `json:"strategy_id"`
+		ProviderType string `json:"provider_type"`
+		Model        string `json:"model"`
+		Dimensions   int    `json:"dimensions"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
+		return
+	}
+
+	service := embeddingservice.NewService(h.queries)
+	result, err := service.Coverage(r.Context(), embeddingservice.CoverageRequest{
+		StrategyID:   req.StrategyID,
+		ProviderType: req.ProviderType,
+		Model:        req.Model,
+		Dimensions:   req.Dimensions,
+	})
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "coverage_failed", err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, result)
 }
 
 func (h *handler) handleEmbeddingSimilarity(w http.ResponseWriter, r *http.Request) {

@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 // Queries provides typed database operations
@@ -253,12 +254,26 @@ func (q *Queries) ListChunks(documentID string) ([]Chunk, error) {
 
 // ListChunksForStrategy returns chunks for one chunking strategy across documents.
 func (q *Queries) ListChunksForStrategy(strategyID string, limit int) ([]Chunk, error) {
+	return q.ListChunksForStrategySources(strategyID, nil, limit)
+}
+
+// ListChunksForStrategySources returns chunks for one strategy, optionally restricted to source IDs.
+func (q *Queries) ListChunksForStrategySources(strategyID string, sourceIDs []string, limit int) ([]Chunk, error) {
 	query := `
-		SELECT id, document_id, strategy_id, chunk_index, text, token_count,
-		       COALESCE(start_offset, 0), COALESCE(end_offset, 0), created_at
-		FROM chunks WHERE strategy_id = ? ORDER BY document_id, chunk_index
+		SELECT c.id, c.document_id, c.strategy_id, c.chunk_index, c.text, c.token_count,
+		       COALESCE(c.start_offset, 0), COALESCE(c.end_offset, 0), c.created_at
+		FROM chunks c
+		JOIN documents d ON d.id = c.document_id
+		WHERE c.strategy_id = ?
 	`
 	args := []interface{}{strategyID}
+	if len(sourceIDs) > 0 {
+		query += ` AND d.source_id IN (` + placeholders(len(sourceIDs)) + `)`
+		for _, sourceID := range sourceIDs {
+			args = append(args, sourceID)
+		}
+	}
+	query += ` ORDER BY d.source_id, c.document_id, c.chunk_index`
 	if limit > 0 {
 		query += ` LIMIT ?`
 		args = append(args, limit)
@@ -280,6 +295,47 @@ func (q *Queries) ListChunksForStrategy(strategyID string, limit int) ([]Chunk, 
 		chunks = append(chunks, c)
 	}
 	return chunks, rows.Err()
+}
+
+// ListEmbeddingCoverageBySource returns stored embedding coverage grouped by document source.
+func (q *Queries) ListEmbeddingCoverageBySource(strategyID, provider, model string, dimensions int) ([]EmbeddingCoverage, error) {
+	rows, err := q.db.Query(`
+		SELECT d.source_id,
+		       COUNT(c.id) AS chunk_count,
+		       SUM(CASE WHEN ce.chunk_id IS NULL THEN 0 ELSE 1 END) AS embedded_count
+		FROM chunks c
+		JOIN documents d ON d.id = c.document_id
+		LEFT JOIN chunk_embeddings ce ON ce.chunk_id = c.id
+		  AND ce.strategy_id = c.strategy_id
+		  AND ce.provider = ?
+		  AND ce.model = ?
+		  AND ce.dimensions = ?
+		WHERE c.strategy_id = ?
+		GROUP BY d.source_id
+		ORDER BY d.source_id
+	`, provider, model, dimensions, strategyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var coverage []EmbeddingCoverage
+	for rows.Next() {
+		var c EmbeddingCoverage
+		if err := rows.Scan(&c.SourceID, &c.ChunkCount, &c.EmbeddedCount); err != nil {
+			return nil, err
+		}
+		c.MissingCount = c.ChunkCount - c.EmbeddedCount
+		coverage = append(coverage, c)
+	}
+	return coverage, rows.Err()
+}
+
+func placeholders(n int) string {
+	if n <= 0 {
+		return ""
+	}
+	return strings.TrimRight(strings.Repeat("?,", n), ",")
 }
 
 // GetChunkEmbeddingTextHash returns the stored text hash for an embedding identity.
@@ -425,4 +481,12 @@ type ChunkEmbedding struct {
 	Embedding  []byte `json:"-"`
 	CreatedAt  string `json:"created_at"`
 	UpdatedAt  string `json:"updated_at"`
+}
+
+// EmbeddingCoverage is stored-vector coverage grouped by source for a strategy/model identity.
+type EmbeddingCoverage struct {
+	SourceID      string `json:"source_id"`
+	ChunkCount    int    `json:"chunk_count"`
+	EmbeddedCount int    `json:"embedded_count"`
+	MissingCount  int    `json:"missing_count"`
 }
