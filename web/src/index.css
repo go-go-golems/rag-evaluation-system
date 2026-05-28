@@ -1,217 +1,355 @@
 @import "tailwindcss";
 
-/* ===== Retro macOS Design Tokens ===== */
+/* ===== Classic Mac OS 1 — Monochrome ===== */
 :root {
-  /* Classic Mac Colors */
-  --mac-platinum: #DDDDDD;
-  --mac-window-white: #EEEEEE;
-  --mac-border-dark: #000000;
-  --mac-border-light: #FFFFFF;
-  --mac-text: #000000;
-  --mac-text-bg: #FFFFFF;
-  --mac-button-face: #CCCCCC;
-  --mac-button-highlight: #FFFFFF;
-  --mac-button-shadow: #808080;
-  --mac-accent: #0000CC;
-
-  /* Typography */
-  --font-system: 'Chicago', 'Geneva', 'Monaco', 'Courier', monospace;
-  --font-body: 'Geneva', 'Helvetica Neue', 'Arial', sans-serif;
-  --font-mono: 'Monaco', 'Courier New', monospace;
+  /* Palette: pure monochrome + accent */
+  --mac-bg:        #FFFFFF;
+  --mac-bg-dark:   #000000;
+  --mac-stripe:    #000000;
+  --mac-text:      #000000;
+  --mac-text-dim:  #666666;
+  --mac-text-inv:  #FFFFFF;
+  --mac-border:    #000000;
+  --mac-surface:   #FFFFFF;
+  --mac-surface-2: #EEEEEE;
+  --mac-accent:    #0000CC;
+  --mac-accent-2:  #CC0000;
+  --mac-green:     #007722;
+  --mac-amber:     #AA7700;
+  --mac-mono:      'Chicago', 'Geneva', 'Monaco', 'Courier', monospace;
+  --font-body:     'Geneva', 'Helvetica Neue', 'Arial', sans-serif;
+  --font-mono:     'Monaco', 'Courier New', monospace;
 }
 
-/* ===== Global Resets ===== */
+/* ===== Global ===== */
+* { box-sizing: border-box; }
+
 body {
   font-family: var(--font-body);
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.45;
   color: var(--mac-text);
-  background: var(--mac-platinum);
+  background: var(--mac-bg);
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: none;
 }
 
-/* ===== Retro Mac Window Chrome ===== */
-.mac-window {
-  border: 1px solid var(--mac-border-dark);
-  box-shadow:
-    inset 1px 1px 0 var(--mac-border-light),
-    inset -1px -1px 0 var(--mac-button-shadow);
-  background: var(--mac-window-white);
-  margin: 4px;
-}
-
-.mac-title-bar {
-  background: linear-gradient(to bottom, #FFFFFF 0%, #CCCCCC 100%);
-  border-bottom: 1px solid var(--mac-border-dark);
-  box-shadow: inset 0 1px 0 var(--mac-border-light);
-  padding: 2px 4px;
+/* ===== Navigation (no chrome) ===== */
+.nav-strip {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  font-family: var(--font-system);
+  align-items: baseline;
+  gap: 0;
+  padding: 6px 16px 4px;
+  border-bottom: 1px solid var(--mac-border);
+  background: var(--mac-bg);
+  font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: bold;
-  min-height: 20px;
   user-select: none;
 }
 
-.mac-title-bar-text {
-  flex: 1;
-  text-align: center;
+.nav-brand {
+  font-weight: bold;
+  letter-spacing: -0.5px;
+  margin-right: 16px;
+  padding-right: 16px;
+  border-right: 1px solid var(--mac-border);
+  cursor: default;
+}
+
+.nav-item {
+  cursor: pointer;
+  padding: 2px 10px;
+  border: 1px solid transparent;
+  transition: none;
+}
+
+.nav-item:hover {
+  border: 1px solid var(--mac-border);
+}
+
+.nav-item.active {
+  background: var(--mac-bg-dark);
+  color: var(--mac-text-inv);
+  border: 1px solid var(--mac-border);
+}
+
+/* ===== Content Panels (no window chrome) ===== */
+.panel {
+  border: 1px solid var(--mac-border);
+  background: var(--mac-surface);
+  padding: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.panel-header {
+  background: var(--mac-bg-dark);
+  color: var(--mac-text-inv);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--mac-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-header-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.panel-body {
+  padding: 8px;
+}
+
+.panel-body-condensed {
+  padding: 4px 6px;
+}
+
+/* ===== Sections ===== */
+.section-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--mac-border);
+  padding-bottom: 2px;
+  margin-bottom: 6px;
+  color: var(--mac-text-dim);
+}
+
+/* ===== Data Tables ===== */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.data-table th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px 2px 0;
+  border-bottom: 1px solid var(--mac-border);
+  color: var(--mac-text-dim);
+  user-select: none;
   white-space: nowrap;
 }
 
-/* ===== Close/Zoom/Shade Boxes ===== */
-.mac-window-button {
-  width: 13px;
-  height: 13px;
-  border: 1px solid var(--mac-border-dark);
-  box-shadow:
-    inset 1px 1px 0 var(--mac-border-light),
-    inset -1px -1px 0 var(--mac-button-shadow);
-  background: var(--mac-button-face);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.data-table td {
+  padding: 3px 8px 3px 0;
+  border-bottom: 1px dotted #CCCCCC;
+  vertical-align: top;
+}
+
+.data-table tr:hover td {
+  background: var(--mac-surface-2);
+}
+
+.data-table tr.selectable {
   cursor: pointer;
-  font-size: 8px;
-  line-height: 1;
 }
 
-.mac-window-button:active {
-  box-shadow:
-    inset -1px -1px 0 var(--mac-border-light),
-    inset 1px 1px 0 var(--mac-button-shadow);
+.data-table tr.selectable:hover td {
+  background: #CCCCFF;
 }
 
-/* ===== Retro Buttons ===== */
-.mac-btn {
-  border: 1px solid var(--mac-border-dark);
-  box-shadow:
-    inset 1px 1px 0 var(--mac-border-light),
-    inset -1px -1px 0 var(--mac-button-shadow);
-  background: var(--mac-button-face);
+.data-table tr.selected td {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.data-table td.mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.data-table td.num {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* ===== Status Colors (foreground only) ===== */
+.status-done   { color: var(--mac-green); }
+.status-partial { color: var(--mac-amber); }
+.status-pending { color: var(--mac-text-dim); }
+.status-failed { color: var(--mac-accent-2); }
+
+/* ===== Accent Colors (foreground only) ===== */
+.accent { color: var(--mac-accent); }
+.accent-green { color: var(--mac-green); }
+.accent-amber { color: var(--mac-amber); }
+.accent-red { color: var(--mac-accent-2); }
+.accent-dim { color: var(--mac-text-dim); }
+
+/* ===== Buttons ===== */
+.btn {
+  border: 1px solid var(--mac-border);
+  background: var(--mac-surface);
   padding: 2px 12px;
-  font-family: var(--font-system);
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   cursor: pointer;
-  user-select: none;
 }
 
-.mac-btn:active {
-  box-shadow:
-    inset -1px -1px 0 var(--mac-border-light),
-    inset 1px 1px 0 var(--mac-button-shadow);
+.btn:hover {
+  background: var(--mac-surface-2);
 }
 
-.mac-btn-primary {
-  border: 2px solid var(--mac-border-dark);
-  font-weight: bold;
+.btn:active {
+  background: var(--mac-bg-dark);
+  color: var(--mac-text-inv);
 }
 
-/* ===== Retro Input Fields ===== */
-.mac-input {
-  border: 1px solid var(--mac-border-dark);
-  box-shadow:
-    inset 1px 1px 0 var(--mac-button-shadow);
-  background: var(--mac-text-bg);
-  padding: 2px 4px;
+.btn-primary {
+  background: var(--mac-bg-dark);
+  color: var(--mac-text-inv);
+}
+
+.btn-primary:hover {
+  background: #333333;
+}
+
+.btn:disabled {
+  color: var(--mac-text-dim);
+  cursor: not-allowed;
+}
+
+/* ===== Inputs ===== */
+.input {
+  border: 1px solid var(--mac-border);
+  background: var(--mac-surface);
+  padding: 2px 6px;
   font-family: var(--font-body);
   font-size: 12px;
   outline: none;
 }
 
-.mac-input:focus {
-  box-shadow:
-    inset 1px 1px 0 var(--mac-button-shadow),
-    0 0 0 1px var(--mac-accent);
+.input:focus {
+  outline: 1px solid var(--mac-accent);
+  outline-offset: -1px;
 }
 
-.mac-fieldset {
-  border: 1px solid var(--mac-border-dark);
-  box-shadow: inset 1px 1px 0 var(--mac-border-light);
-  padding: 8px;
-  min-width: 0;
-}
-
-.mac-fieldset legend {
-  font-family: var(--font-system);
-  font-weight: bold;
-  padding: 0 4px;
-}
-
-.mac-form-row {
-  display: grid;
-  grid-template-columns: 120px minmax(0, 1fr);
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-}
-
-.mac-form-row span,
-.mac-checkbox-row span {
-  font-family: var(--font-system);
-}
-
-.mac-form-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 4px;
-}
-
-.mac-checkbox-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 6px 0;
-}
-
-.mac-help-text {
-  color: #666666;
-  font-size: 12px;
-  margin: 4px 0;
-}
-
-.mac-stat-list {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 4px 8px;
-  margin: 0;
-}
-
-.mac-stat-list dt {
-  font-family: var(--font-system);
-}
-
-.mac-stat-list dd {
-  margin: 0;
-  text-align: right;
-}
-
-.mac-error-box {
-  background: #FFFFFF;
-  border: 1px solid #CC0000;
-  color: #CC0000;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  overflow: auto;
-  padding: 6px;
-  white-space: pre-wrap;
-}
-
-/* ===== Retro Select ===== */
-.mac-select {
-  border: 1px solid var(--mac-border-dark);
-  box-shadow:
-    inset 1px 1px 0 var(--mac-button-shadow);
-  background: var(--mac-text-bg);
+.select {
+  border: 1px solid var(--mac-border);
+  background: var(--mac-surface);
   padding: 2px 4px;
   font-family: var(--font-body);
   font-size: 12px;
+  cursor: pointer;
+}
+
+/* ===== Coverage Strip ===== */
+.coverage-strip {
+  display: flex;
+  gap: 1px;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.coverage-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+}
+
+.coverage-dot.present {
+  background: var(--mac-bg-dark);
+}
+
+.coverage-dot.missing {
+  background: var(--mac-surface);
+  border: 1px solid var(--mac-border);
+  width: 7px;
+  height: 7px;
+}
+
+/* ===== Chunk Timeline ===== */
+.chunk-bar-container {
+  position: relative;
+  height: 28px;
+  background: var(--mac-surface);
+  border: 1px solid var(--mac-border);
+  overflow: hidden;
+}
+
+.chunk-bar {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-right: 1px solid #CCCCCC;
+  cursor: pointer;
+}
+
+.chunk-bar.embedded {
+  background: var(--mac-bg-dark);
+}
+
+.chunk-bar.not-embedded {
+  background: var(--mac-surface-2);
+}
+
+.chunk-bar.selected {
+  outline: 2px solid var(--mac-accent);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+/* ===== Fieldset ===== */
+.fieldset {
+  border: 1px solid var(--mac-border);
+  padding: 6px 8px;
+  min-width: 0;
+}
+
+.fieldset legend {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 4px;
+  color: var(--mac-text-dim);
+}
+
+/* ===== Text Styles ===== */
+.text-mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.text-dim {
+  color: var(--mac-text-dim);
+}
+
+.text-small {
+  font-size: 11px;
+}
+
+.text-bold {
+  font-weight: bold;
+}
+
+.text-content {
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--mac-border);
+  padding: 8px;
+  background: var(--mac-surface);
+  font-family: var(--font-body);
 }
 
 /* ===== Scrollbars (retro thick style) ===== */
@@ -221,102 +359,136 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--mac-platinum);
-  border: 1px solid var(--mac-button-shadow);
+  background: var(--mac-surface);
+  border: 1px solid #CCCCCC;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--mac-button-face);
-  border: 1px solid var(--mac-border-dark);
-  box-shadow:
-    inset 1px 1px 0 var(--mac-border-light),
-    inset -1px -1px 0 var(--mac-button-shadow);
+  background: var(--mac-surface-2);
+  border: 1px solid var(--mac-border);
+}
+
+/* ===== Divider ===== */
+.divider {
+  border: none;
+  border-top: 1px solid var(--mac-border);
+  margin: 4px 0;
+}
+
+/* ===== Metadata key-value ===== */
+.meta-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1px 12px;
+  font-size: 12px;
+}
+
+.meta-key {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--mac-text-dim);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.meta-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  word-break: break-all;
 }
 
 /* ===== Tab Bar ===== */
-.mac-tab-bar {
+.tab-bar {
   display: flex;
-  border-bottom: 1px solid var(--mac-border-dark);
-  background: var(--mac-platinum);
-  padding: 0 4px;
+  gap: 0;
+  border-bottom: 1px solid var(--mac-border);
 }
 
-.mac-tab {
-  border: 1px solid var(--mac-border-dark);
-  border-bottom: none;
-  box-shadow:
-    inset 1px 1px 0 var(--mac-border-light);
-  background: var(--mac-button-face);
-  padding: 2px 12px;
-  font-family: var(--font-system);
-  font-size: 12px;
+.tab-item {
+  padding: 3px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   cursor: pointer;
-  margin-right: -1px;
-  position: relative;
+  border: 1px solid transparent;
+  border-bottom: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.mac-tab.active {
-  background: var(--mac-window-white);
-  border-bottom: 1px solid var(--mac-window-white);
+.tab-item:hover {
+  border-color: var(--mac-border);
+}
+
+.tab-item.active {
+  border: 1px solid var(--mac-border);
+  border-bottom: 1px solid var(--mac-surface);
+  background: var(--mac-surface);
   margin-bottom: -1px;
-  z-index: 1;
+  font-weight: bold;
 }
 
-/* ===== Menu Bar ===== */
-.mac-menu-bar {
-  background: var(--mac-platinum);
-  border-bottom: 1px solid var(--mac-border-dark);
-  box-shadow: inset 0 1px 0 var(--mac-border-light);
-  padding: 2px 8px;
+/* ===== Error ===== */
+.error-box {
+  background: var(--mac-surface);
+  border: 1px solid var(--mac-accent-2);
+  color: var(--mac-accent-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  overflow: auto;
+  padding: 6px;
+  white-space: pre-wrap;
+}
+
+/* ===== Stat list ===== */
+.stat-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1px 12px;
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--mac-text-dim);
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* ===== Copy button ===== */
+.copy-btn {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--mac-text-dim);
+  padding: 0 2px;
+}
+
+.copy-btn:hover {
+  color: var(--mac-accent);
+}
+
+/* ===== Utility ===== */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.no-select {
+  user-select: none;
+}
+
+/* ===== Checkbox ===== */
+.checkbox-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-family: var(--font-system);
-  font-size: 12px;
-  min-height: 22px;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
-
-.mac-menu-item {
-  cursor: pointer;
-  padding: 1px 6px;
-  user-select: none;
-}
-
-.mac-menu-item:hover {
-  background: var(--mac-accent);
-  color: white;
-}
-
-/* ===== Data Tables ===== */
-.mac-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-
-.mac-table th {
-  background: var(--mac-button-face);
-  border: 1px solid var(--mac-border-dark);
-  box-shadow: inset 1px 1px 0 var(--mac-border-light);
-  padding: 2px 8px;
-  font-family: var(--font-system);
-  font-weight: bold;
-  text-align: left;
-  user-select: none;
-}
-
-.mac-table td {
-  border: 1px solid var(--mac-button-shadow);
-  padding: 2px 8px;
-  background: var(--mac-text-bg);
-}
-
-.mac-table tr:hover td {
-  background: #CCCCFF;
-}
-
-/* ===== Status indicators ===== */
-.status-pending { color: #999; }
-.status-running { color: #0000CC; font-weight: bold; }
-.status-done { color: #006600; }
-.status-failed { color: #CC0000; }
