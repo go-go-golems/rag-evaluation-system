@@ -46,6 +46,7 @@ require (
 	github.com/clipperhouse/uax29/v2 v2.5.0 // indirect
 	github.com/go-go-golems/go-emrichen v0.0.10 // indirect
 	github.com/go-go-golems/logcopter v0.1.0 // indirect
+	github.com/go-go-golems/scraper v0.0.0
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-openapi/errors v0.22.0 // indirect
 	github.com/go-openapi/strfmt v0.23.0 // indirect
@@ -110,3 +111,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/client-go v0.33.2 // indirect
 )
+
+replace github.com/go-go-golems/scraper => ../scraper
+
+replace github.com/go-go-golems/go-go-goja => github.com/go-go-golems/go-go-goja v0.4.16

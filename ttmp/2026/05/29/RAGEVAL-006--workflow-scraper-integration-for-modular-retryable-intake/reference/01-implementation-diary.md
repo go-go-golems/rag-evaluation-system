@@ -16,6 +16,14 @@ RelatedFiles:
       Note: Queue policy reference used for LLM and embedding op pacing recommendations
     - Path: ../../../../../../../scraper/pkg/doc/topics/scraper-runtime-model.md
       Note: Scraper runtime reference used to distinguish submit verbs and execution ops
+    - Path: go.mod
+      Note: Phase 0 scraper and go-go-goja dependency compatibility wiring
+    - Path: internal/workflow/constants.go
+      Note: Phase 0 runner kind and queue constants
+    - Path: internal/workflow/echo_runner.go
+      Note: Phase 0 custom scraper runner spike
+    - Path: internal/workflow/echo_runner_test.go
+      Note: Phase 0 scheduler/store integration tests
     - Path: ttmp/2026/05/29/RAGEVAL-006--workflow-scraper-integration-for-modular-retryable-intake/design-doc/01-workflow-scraper-intake-integration-design-and-implementation-guide.md
       Note: Primary design guide produced in Step 1
 ExternalSources: []
@@ -24,6 +32,7 @@ LastUpdated: 2026-05-29T18:30:00Z
 WhatFor: Track the design investigation, evidence, decisions, and delivery steps for scraper-backed modular retryable intake.
 WhenToUse: Read before implementing workflow orchestration, LLM preprocessing, chunk enrichment, or scraper runner integration in rag-eval.
 ---
+
 
 
 # Diary
@@ -157,3 +166,121 @@ Another tricky point is LLM preprocessing storage. Overwriting `documents.conten
 - Recommended first workflow scope: two `ttc-dump-guides` documents, `fixed-1200-150`, first one or two chunks enriched, embedding limit around 10, BM25 smoke index only.
 - Recommended new table: `document_processing_artifacts`.
 - Recommended existing table to wire: `chunk_enrichments`.
+
+---
+
+## Step 2: Phase 0 Dependency Boundary and Echo Runner Spike
+
+I expanded the ticket tasks into explicit implementation phases before coding, then started Phase 0. The goal was deliberately small: prove that rag-eval can import scraper engine packages, register a custom Go-native runner, create a workflow in a scraper engine SQLite database, and execute one op through the scraper scheduler.
+
+This step does not implement production intake operations yet. It creates the compatibility seam and a tested `internal/workflow` package skeleton so Phase 1 can replace the echo operation with real service-backed operations.
+
+### Prompt Context
+
+**User prompt (verbatim):** "ok, add detailed phases and for each phases tasks, and then work on them step by step, keeping a diary as you work, committing at appropriate intervals."
+
+**Assistant interpretation:** Expand RAGEVAL-006 into detailed phased implementation tasks, then begin executing those phases incrementally with diary updates and focused commits.
+
+**Inferred user intent:** Move from design to implementation while keeping the workflow integration disciplined, inspectable, and easy to review.
+
+### What I did
+
+- Rewrote `tasks.md` with detailed phases 0 through 7 and per-phase task checklists.
+- Added a local development dependency on scraper in `go.mod`:
+  - `require github.com/go-go-golems/scraper v0.0.0`
+  - `replace github.com/go-go-golems/scraper => ../scraper`
+- Added a compatibility replacement for `go-go-goja`:
+  - `replace github.com/go-go-golems/go-go-goja => github.com/go-go-golems/go-go-goja v0.4.16`
+- Created `internal/workflow/constants.go` with:
+  - runner kind `rag-eval/intake`
+  - queue names `rag-eval:cpu`, `rag-eval:llm`, `rag-eval:embedding`, `rag-eval:index`
+- Added `internal/workflow/echo_runner.go`:
+  - `EchoRunner` implements scraper's `runner.Runner` interface;
+  - operation `echo` returns compact JSON data;
+  - unknown operations return non-retryable `model.OpError` with code `unknown_operation`.
+- Added `internal/workflow/echo_runner_test.go`:
+  - creates a temporary scraper engine SQLite store;
+  - registers `EchoRunner` in a scraper runner registry;
+  - creates a workflow with one op;
+  - runs `scheduler.RunOnce`;
+  - asserts the op result exists and the workflow reaches `succeeded`;
+  - tests unknown-operation non-retryable error behavior.
+
+### Why
+
+Before implementing real workflow intake ops, we need to know whether scraper can be embedded in the rag-eval Go module at all. A minimal custom runner is the smallest useful proof. It validates the dependency boundary, the scheduler/store/runner path, and the shape of future Go-native operations without touching production intake behavior.
+
+### What worked
+
+- `EchoRunner` successfully implements scraper's `runner.Runner` interface.
+- A scraper workflow can be created and run from a rag-eval test.
+- The scheduler leases and executes the op, persists the result, and updates workflow status to `succeeded`.
+- Focused validation passed:
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go test ./internal/workflow -count=1 -timeout 60s`
+- Broader relevant validation passed:
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go test ./internal/db ./internal/ingest ./internal/chunking ./internal/services/source ./internal/services/chunking ./internal/services/document ./internal/services/embedding ./internal/services/search ./internal/workflow -count=1 -timeout 120s`
+- Build passed:
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go build ./cmd/rag-eval`
+
+### What didn't work
+
+- The first focused `go test ./internal/workflow` failed after adding the scraper dependency:
+
+```text
+# github.com/go-go-golems/scraper/pkg/sites/registry
+../scraper/pkg/sites/registry/registry.go:23:38: undefined: gggengine.ModuleSpec
+../scraper/pkg/sites/registry/registry.go:31:38: undefined: gggengine.RuntimeModuleRegistrar
+# github.com/go-go-golems/scraper/pkg/js/runtime
+../scraper/pkg/js/runtime/executor.go:32:38: undefined: gggengine.ModuleSpec
+../scraper/pkg/js/runtime/executor.go:33:38: undefined: gggengine.RuntimeModuleRegistrar
+../scraper/pkg/js/runtime/executor.go:64:3: gggengine.NewBuilder().WithRequireOptions(require.WithLoader(loader)).WithModules(e.config.Modules...).WithRuntimeModuleRegistrars undefined (type *engine.FactoryBuilder has no field or method WithRuntimeModuleRegistrars)
+FAIL	github.com/go-go-golems/rag-evaluation-system/internal/workflow [build failed]
+```
+
+- Cause: rag-eval's existing dependency graph selected `github.com/go-go-golems/go-go-goja v0.6.0`, while the local scraper code expects the older module-composition API present in the 0.4.x line.
+- Fix for the spike: add a replace to `github.com/go-go-golems/go-go-goja v0.4.16`.
+- This is acceptable for Phase 0 but must be reviewed before treating the scraper integration as stable.
+
+### What I learned
+
+- Importing scraper as a Go library is possible, but dependency compatibility is a real implementation concern.
+- Scraper's runner package compiles all runner files, including JS runner code, so even a Go-native custom runner test is affected by scraper's go-go-goja API expectations.
+- The custom runner seam is still the right integration point: the scheduler/store path works once the module version conflict is resolved.
+
+### What was tricky to build
+
+The tricky part was that the compile failure did not come from the custom runner code. It came from scraper's JS/site packages being compiled as part of the scraper runner package dependency graph. The immediate solution was a module replacement, but the longer-term solution should be a deliberate dependency decision: either keep the replacement, update scraper to the newer go-go-goja API, or isolate the engine/runner packages so Go-native runner usage does not require compiling JS site integration code.
+
+### What warrants a second pair of eyes
+
+- Review the `go-go-goja` replacement before merging widely. It may affect Geppetto or Pinocchio code paths outside the tested package set.
+- Review whether scraper should be updated to work with `go-go-goja v0.6.0` instead of pinning rag-eval lower.
+- Review whether the scraper engine should expose a smaller package boundary that does not compile JS site integration for Go-native runners.
+- Review the `EchoRunner` result/error shape before Phase 1 turns it into a real dispatch runner.
+
+### What should be done in the future
+
+- Complete Phase 0 commit.
+- In Phase 1, replace the echo-only runner with typed operation dispatch for real service calls.
+- Add a dependency compatibility note to the design guide if the `go-go-goja` replacement remains necessary.
+- Consider opening a scraper-side cleanup ticket to decouple engine runner interfaces from JS runner dependencies.
+
+### Code review instructions
+
+- Start with `go.mod` and inspect the two replace directives.
+- Review `internal/workflow/constants.go` for runner kind and queue naming.
+- Review `internal/workflow/echo_runner.go` for the custom runner shape.
+- Review `internal/workflow/echo_runner_test.go` for the temporary engine DB + scheduler integration path.
+- Validate with:
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go test ./internal/workflow -count=1 -timeout 60s`
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go test ./internal/db ./internal/ingest ./internal/chunking ./internal/services/source ./internal/services/chunking ./internal/services/document ./internal/services/embedding ./internal/services/search ./internal/workflow -count=1 -timeout 120s`
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go build ./cmd/rag-eval`
+
+### Technical details
+
+- New package: `internal/workflow`.
+- Runner kind: `rag-eval/intake`.
+- Phase 0 runner operation: `echo`.
+- Temporary engine DB: created under `t.TempDir()` in tests.
+- Scraper store: `github.com/go-go-golems/scraper/pkg/engine/store/sqlite`.
+- Scraper scheduler: `github.com/go-go-golems/scraper/pkg/engine/scheduler`.

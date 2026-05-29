@@ -14,13 +14,13 @@
 
 Goal: prove rag-eval can import scraper engine packages and run a tiny custom runner without touching production intake behavior.
 
-- [ ] Add a local development dependency on `github.com/go-go-golems/scraper` using a temporary `replace ../scraper` entry if needed.
-- [ ] Create `internal/workflow` package skeleton with constants for runner kind and queue names.
-- [ ] Implement a no-op or echo custom runner that satisfies scraper's `runner.Runner` interface.
-- [ ] Add a temporary-SQLite integration test that creates a scraper engine store, registers the custom runner, creates a workflow with one op, runs `scheduler.RunOnce`, and asserts workflow success.
-- [ ] Add a second test for retry classification or non-retryable unknown operations if the runner dispatch layer exists.
-- [ ] Validate with focused `go test ./internal/workflow -count=1` and then broader `go test ./internal/...` if dependency resolution is stable.
-- [ ] Commit Phase 0 as a focused dependency/spike commit.
+- [x] Add a local development dependency on `github.com/go-go-golems/scraper` using a temporary `replace ../scraper` entry if needed.
+- [x] Create `internal/workflow` package skeleton with constants for runner kind and queue names.
+- [x] Implement a no-op or echo custom runner that satisfies scraper's `runner.Runner` interface.
+- [x] Add a temporary-SQLite integration test that creates a scraper engine store, registers the custom runner, creates a workflow with one op, runs `scheduler.RunOnce`, and asserts workflow success.
+- [x] Add a second test for retry classification or non-retryable unknown operations if the runner dispatch layer exists.
+- [x] Validate with focused `go test ./internal/workflow -count=1` and then broader `go test ./internal/...` if dependency resolution is stable.
+- [x] Commit Phase 0 as a focused dependency/spike commit.
 
 ## Phase 1 — Go-native `rag-eval/intake` runner over existing services
 
