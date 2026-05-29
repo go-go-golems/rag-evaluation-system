@@ -4,10 +4,12 @@ import { EmbeddingsView } from './components/embeddings/EmbeddingsView';
 import { SearchView } from './components/search/SearchView';
 import { EvaluationView } from './components/evaluation/EvaluationView';
 import { CorpusExplorerView } from './components/corpus/CorpusExplorerView';
+import { WorkflowsView } from './components/workflows/WorkflowsView';
 
 const views = [
   { id: 'search', label: 'Search' },
   { id: 'corpus', label: 'Corpus' },
+  { id: 'workflows', label: 'Workflows' },
   { id: 'pipeline', label: 'Pipeline' },
   { id: 'embeddings', label: 'Embeddings' },
   { id: 'evaluation', label: 'Evaluation' },
@@ -44,6 +46,8 @@ export const App: React.FC = () => {
     switch (activeView) {
       case 'corpus':
         return <CorpusExplorerView initialTarget={chunkTarget} onTargetConsumed={handleChunkTargetConsumed} />;
+      case 'workflows':
+        return <WorkflowsView />;
       case 'pipeline':
         return <PipelineView />;
       case 'embeddings':

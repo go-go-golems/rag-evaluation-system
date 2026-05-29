@@ -287,7 +287,7 @@ function filterIdentityParams(args: CorpusIdentityArgs): Record<string, string |
 export const ragApi = createApi({
   reducerPath: 'ragApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/v1' }),
-  tagTypes: ['Sources', 'Documents', 'Chunks', 'Strategies', 'Embeddings', 'Corpus'],
+  tagTypes: ['Sources', 'Documents', 'Chunks', 'Strategies', 'Embeddings', 'Corpus', 'Workflows'],
   endpoints: (builder) => ({
     listSources: builder.query<Source[], void>({
       query: () => 'sources',
@@ -374,8 +374,158 @@ export const ragApi = createApi({
       }),
       providesTags: ['Corpus'],
     }),
+    // --- Workflow endpoints ---
+    listWorkflows: builder.query<WorkflowListResponse, { status?: string; limit?: number; offset?: number }>({
+      query: (params) => ({
+        url: 'workflows',
+        params: { status: params.status, limit: params.limit ?? 50, offset: params.offset ?? 0 },
+      }),
+      providesTags: ['Workflows'],
+    }),
+    getWorkflow: builder.query<WorkflowSummary, string>({
+      query: (id) => `workflows/${id}`,
+      providesTags: ['Workflows'],
+    }),
+    getWorkflowOps: builder.query<WorkflowOpsResponse, string>({
+      query: (id) => `workflows/${id}/ops`,
+      providesTags: ['Workflows'],
+    }),
+    submitIntakeWorkflow: builder.mutation<SubmitIntakeResponse, SubmitIntakeRequest>({
+      query: (body) => ({ url: 'workflows/intake', method: 'POST', body }),
+      invalidatesTags: ['Workflows'],
+    }),
+    retryOp: builder.mutation<void, { workflowId: string; opId: string }>({
+      query: ({ workflowId, opId }) => ({
+        url: `workflows/${workflowId}/retry/${opId}`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Workflows'],
+    }),
+    cancelWorkflow: builder.mutation<void, string>({
+      query: (id) => ({ url: `workflows/${id}/cancel`, method: 'POST' }),
+      invalidatesTags: ['Workflows'],
+    }),
+    listQueues: builder.query<QueueStatus[], void>({
+      query: () => 'queues',
+      transformResponse: (response: { queues: QueueStatus[] }) => response.queues ?? [],
+      providesTags: ['Workflows'],
+    }),
   }),
 });
+
+// --- Workflow Types ---
+
+export interface WorkflowListItem {
+  workflow: {
+    ID: string;
+    Site: string;
+    Name: string;
+    Status: string;
+    Input: Record<string, unknown>;
+    Metadata: Record<string, string> | null;
+    CreatedAt: string;
+    UpdatedAt: string;
+  };
+  opTotal: number;
+  opDone: number;
+}
+
+export interface WorkflowListResponse {
+  workflows: WorkflowListItem[];
+  total: number;
+}
+
+export interface WorkflowOp {
+  op: {
+    ID: string;
+    WorkflowID: string;
+    Kind: string;
+    Queue: string;
+    DedupKey: string;
+    Input: Record<string, unknown>;
+    DependsOn: Array<{ OpID: string; Required: boolean }>;
+    Retry: { MaxAttempts: number; BackoffKind: string; InitialBackoff: number };
+    RetryState: { Attempt: number; NextAttemptAt: string | null; LastError: string };
+    Metadata: Record<string, string> | null;
+  };
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkflowOpGroup {
+  operation: string;
+  queue: string;
+  status: string;
+  count: number;
+  sample?: WorkflowOp;
+}
+
+export interface WorkflowOpsResponse {
+  workflow_id: string;
+  total: number;
+  groups: WorkflowOpGroup[];
+}
+
+export interface WorkflowSummary {
+  workflow: WorkflowListItem['workflow'];
+  stats: {
+    Total: number;
+    Pending: number;
+    Ready: number;
+    Running: number;
+    Succeeded: number;
+    Failed: number;
+    Canceled: number;
+  };
+}
+
+export interface QueueStatus {
+  site: string;
+  queue: string;
+  pending: number;
+  ready: number;
+  running: number;
+  succeeded: number;
+  failed: number;
+  inFlight: number;
+  maxInFlight: number;
+  tokens?: number;
+  ratePerSecond?: number;
+}
+
+export interface SubmitIntakeRequest {
+  db_path?: string;
+  workflow_id?: string;
+  name?: string;
+  source_ids?: string[];
+  document_ids?: string[];
+  document_limit?: number;
+  strategy?: string;
+  chunk_size?: number;
+  overlap?: number;
+  skip_embeddings?: boolean;
+  skip_bm25?: boolean;
+  profile?: string;
+  base_profile?: string;
+  embeddings_type?: string;
+  embeddings_engine?: string;
+  embeddings_dimensions?: number;
+  batch_size?: number;
+  force_embeddings?: boolean;
+  index_id?: string;
+  index_root?: string;
+  force_index?: boolean;
+}
+
+export interface SubmitIntakeResponse {
+  workflow_id: string;
+  engine_db: string;
+  db_path: string;
+  document_ids: string[];
+  strategy_id: string;
+  op_ids: string[];
+}
 
 export const {
   useListSourcesQuery,
@@ -393,4 +543,12 @@ export const {
   useSearchVectorMutation,
   useSearchHybridMutation,
   useEmbeddingCoverageMutation,
+  // Workflow endpoints
+  useListWorkflowsQuery,
+  useGetWorkflowQuery,
+  useGetWorkflowOpsQuery,
+  useSubmitIntakeWorkflowMutation,
+  useRetryOpMutation,
+  useCancelWorkflowMutation,
+  useListQueuesQuery,
 } = ragApi;

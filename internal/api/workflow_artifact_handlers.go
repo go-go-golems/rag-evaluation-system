@@ -47,7 +47,45 @@ func (h *handler) handleWorkflowOps(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "workflow_ops_query_failed", err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"items": result, "workflow_id": r.PathValue("id")})
+	if result == nil {
+		result = []engineview.WorkflowOp{}
+	}
+	// Summarize: group by operation+status, return sample + counts
+	type opGroup struct {
+		Operation string `json:"operation"`
+		Queue     string `json:"queue"`
+		Status    string `json:"status"`
+		Count     int    `json:"count"`
+		Sample    *engineview.WorkflowOp `json:"sample,omitempty"`
+	}
+	groups := map[string]*opGroup{}
+	order := []string{}
+	for i := range result {
+		input := result[i].Op.Input
+		var opInput map[string]any
+		_ = json.Unmarshal(input, &opInput)
+		operation, _ := opInput["operation"].(string)
+		key := operation + "|" + string(result[i].Status)
+		if _, ok := groups[key]; !ok {
+			groups[key] = &opGroup{
+				Operation: operation,
+				Queue:     string(result[i].Op.Queue),
+				Status:    string(result[i].Status),
+				Sample:    &result[i],
+			}
+			order = append(order, key)
+		}
+		groups[key].Count++
+	}
+	summary := make([]opGroup, 0, len(groups))
+	for _, key := range order {
+		summary = append(summary, *groups[key])
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"workflow_id": r.PathValue("id"),
+		"total":       len(result),
+		"groups":      summary,
+	})
 }
 
 func (h *handler) handleGetOpResult(w http.ResponseWriter, r *http.Request) {
