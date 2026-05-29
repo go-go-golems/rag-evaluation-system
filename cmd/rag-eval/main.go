@@ -8,6 +8,7 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/search"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/serve"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/source"
+	workflowcmd "github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/workflow"
 	"github.com/spf13/cobra"
 )
 
@@ -33,6 +34,7 @@ func main() {
 	rootCmd.AddCommand(document.NewCommand())
 	rootCmd.AddCommand(embedding.NewCommand())
 	rootCmd.AddCommand(search.NewCommand())
+	rootCmd.AddCommand(workflowcmd.NewCommand())
 	rootCmd.AddCommand(serve.NewCommand())
 
 	cobra.CheckErr(rootCmd.Execute())

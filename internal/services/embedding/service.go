@@ -21,6 +21,7 @@ func NewService(queries *db.Queries) *Service {
 type ComputeRequest struct {
 	StrategyID   string
 	SourceIDs    []string
+	DocumentIDs  []string
 	Provider     embeddings.Provider
 	ProviderType string
 	BatchSize    int
@@ -31,6 +32,7 @@ type ComputeRequest struct {
 type ComputeResult struct {
 	StrategyID   string   `json:"strategy_id"`
 	SourceIDs    []string `json:"source_ids,omitempty"`
+	DocumentIDs  []string `json:"document_ids,omitempty"`
 	ProviderType string   `json:"provider_type"`
 	Model        string   `json:"model"`
 	Dimensions   int      `json:"dimensions"`
@@ -80,13 +82,14 @@ func (s *Service) Compute(ctx context.Context, req ComputeRequest) (*ComputeResu
 		return nil, fmt.Errorf("embedding provider returned invalid model metadata: %#v", model)
 	}
 
-	chunks, err := s.queries.ListChunksForStrategySources(req.StrategyID, req.SourceIDs, req.Limit)
+	chunks, err := s.queries.ListChunksForStrategySourcesDocuments(req.StrategyID, req.SourceIDs, req.DocumentIDs, req.Limit)
 	if err != nil {
 		return nil, err
 	}
 	result := &ComputeResult{
 		StrategyID:   req.StrategyID,
 		SourceIDs:    req.SourceIDs,
+		DocumentIDs:  req.DocumentIDs,
 		ProviderType: req.ProviderType,
 		Model:        model.Name,
 		Dimensions:   model.Dimensions,

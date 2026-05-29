@@ -102,6 +102,7 @@ func (r *IntakeRunner) runComputeEmbeddings(ctx context.Context, runCtx runner.R
 	result, err := embeddingservice.NewService(queries).Compute(ctx, embeddingservice.ComputeRequest{
 		StrategyID:   input.StrategyID,
 		SourceIDs:    input.SourceIDs,
+		DocumentIDs:  input.DocumentIDs,
 		Provider:     resolved.Provider,
 		ProviderType: resolved.ProviderType,
 		BatchSize:    input.BatchSize,
@@ -115,6 +116,7 @@ func (r *IntakeRunner) runComputeEmbeddings(ctx context.Context, runCtx runner.R
 	data, err := json.Marshal(ComputeEmbeddingsOutput{
 		StrategyID:   result.StrategyID,
 		SourceIDs:    result.SourceIDs,
+		DocumentIDs:  result.DocumentIDs,
 		ProviderType: result.ProviderType,
 		Model:        result.Model,
 		Dimensions:   result.Dimensions,
@@ -140,11 +142,12 @@ func (r *IntakeRunner) runBuildBM25(ctx context.Context, runCtx runner.RunContex
 		indexRoot = r.IndexRoot
 	}
 	result, err := searchservice.NewService(queries, indexRoot).BuildBM25(ctx, searchservice.BuildIndexRequest{
-		IndexID:    input.IndexID,
-		StrategyID: input.StrategyID,
-		SourceIDs:  input.SourceIDs,
-		Force:      input.Force,
-		Limit:      input.Limit,
+		IndexID:     input.IndexID,
+		StrategyID:  input.StrategyID,
+		SourceIDs:   input.SourceIDs,
+		DocumentIDs: input.DocumentIDs,
+		Force:       input.Force,
+		Limit:       input.Limit,
 	})
 	if err != nil {
 		return opErrorResult(runCtx.Op.ID, "build_bm25_failed", err.Error(), false, map[string]any{"strategy_id": input.StrategyID, "index_id": input.IndexID}), nil
@@ -154,6 +157,7 @@ func (r *IntakeRunner) runBuildBM25(ctx context.Context, runCtx runner.RunContex
 		IndexID:       result.IndexID,
 		StrategyID:    result.StrategyID,
 		SourceIDs:     result.SourceIDs,
+		DocumentIDs:   result.DocumentIDs,
 		IndexPath:     result.IndexPath,
 		ChunkCount:    result.ChunkCount,
 		DocumentCount: result.DocumentCount,

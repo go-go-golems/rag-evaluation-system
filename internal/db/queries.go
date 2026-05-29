@@ -259,6 +259,11 @@ func (q *Queries) ListChunksForStrategy(strategyID string, limit int) ([]Chunk, 
 
 // ListChunksForStrategySources returns chunks for one strategy, optionally restricted to source IDs.
 func (q *Queries) ListChunksForStrategySources(strategyID string, sourceIDs []string, limit int) ([]Chunk, error) {
+	return q.ListChunksForStrategySourcesDocuments(strategyID, sourceIDs, nil, limit)
+}
+
+// ListChunksForStrategySourcesDocuments returns chunks for one strategy, optionally restricted to source IDs and document IDs.
+func (q *Queries) ListChunksForStrategySourcesDocuments(strategyID string, sourceIDs []string, documentIDs []string, limit int) ([]Chunk, error) {
 	query := `
 		SELECT c.id, c.document_id, c.strategy_id, c.chunk_index, c.text, c.token_count,
 		       COALESCE(c.start_offset, 0), COALESCE(c.end_offset, 0), c.created_at
@@ -271,6 +276,12 @@ func (q *Queries) ListChunksForStrategySources(strategyID string, sourceIDs []st
 		query += ` AND d.source_id IN (` + placeholders(len(sourceIDs)) + `)`
 		for _, sourceID := range sourceIDs {
 			args = append(args, sourceID)
+		}
+	}
+	if len(documentIDs) > 0 {
+		query += ` AND c.document_id IN (` + placeholders(len(documentIDs)) + `)`
+		for _, documentID := range documentIDs {
+			args = append(args, documentID)
 		}
 	}
 	query += ` ORDER BY d.source_id, c.document_id, c.chunk_index`

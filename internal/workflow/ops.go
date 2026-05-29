@@ -21,7 +21,8 @@ type IntakeOpInput struct {
 	StrategyName string `json:"strategy_name,omitempty"`
 	Description  string `json:"description,omitempty"`
 
-	SourceIDs []string `json:"source_ids,omitempty"`
+	SourceIDs   []string `json:"source_ids,omitempty"`
+	DocumentIDs []string `json:"document_ids,omitempty"`
 
 	ProfileRegistries []string `json:"profile_registries,omitempty"`
 	Profile           string   `json:"profile,omitempty"`
@@ -50,6 +51,7 @@ type ChunkDocumentOutput struct {
 type ComputeEmbeddingsOutput struct {
 	StrategyID   string   `json:"strategy_id"`
 	SourceIDs    []string `json:"source_ids,omitempty"`
+	DocumentIDs  []string `json:"document_ids,omitempty"`
 	ProviderType string   `json:"provider_type"`
 	Model        string   `json:"model"`
 	Dimensions   int      `json:"dimensions"`
@@ -62,6 +64,7 @@ type BuildBM25Output struct {
 	IndexID       string   `json:"index_id"`
 	StrategyID    string   `json:"strategy_id"`
 	SourceIDs     []string `json:"source_ids,omitempty"`
+	DocumentIDs   []string `json:"document_ids,omitempty"`
 	IndexPath     string   `json:"index_path"`
 	ChunkCount    int      `json:"chunk_count"`
 	DocumentCount int      `json:"document_count"`

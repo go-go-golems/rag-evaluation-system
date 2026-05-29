@@ -16,14 +16,30 @@ RelatedFiles:
       Note: Queue policy reference used for LLM and embedding op pacing recommendations
     - Path: ../../../../../../../scraper/pkg/doc/topics/scraper-runtime-model.md
       Note: Scraper runtime reference used to distinguish submit verbs and execution ops
+    - Path: cmd/rag-eval/cmds/workflow/root.go
+      Note: Phase 2 workflow CLI root
+    - Path: cmd/rag-eval/main.go
+      Note: Registers workflow CLI command group
     - Path: go.mod
       Note: Phase 0 scraper and go-go-goja dependency compatibility wiring
+    - Path: internal/db/queries.go
+      Note: Supports document-scoped chunk selection for workflow embeddings
+    - Path: internal/db/search_queries.go
+      Note: Supports document-scoped chunk selection for workflow BM25
+    - Path: internal/services/embedding/service.go
+      Note: Propagates document IDs in compute requests
+    - Path: internal/services/search/bm25.go
+      Note: Uses document IDs when building workflow-scoped BM25 indexes
+    - Path: internal/services/search/service.go
+      Note: Includes document IDs in BM25 request/result contracts
     - Path: internal/workflow/constants.go
       Note: Phase 0 runner kind and queue constants
     - Path: internal/workflow/echo_runner.go
       Note: Phase 0 custom scraper runner spike
     - Path: internal/workflow/echo_runner_test.go
       Note: Phase 0 scheduler/store integration tests
+    - Path: internal/workflow/engine.go
+      Note: Phase 2 worker scheduler construction
     - Path: internal/workflow/intake_runner.go
       Note: |-
         Phase 1 Go-native intake runner and chunk_document dispatch
@@ -36,6 +52,10 @@ RelatedFiles:
       Note: |-
         Phase 1 typed intake op contracts
         Completed Phase 1 op contracts for chunking embeddings and BM25
+    - Path: internal/workflow/submit.go
+      Note: Phase 2 workflow submission service
+    - Path: internal/workflow/submit_test.go
+      Note: Phase 2 fake-provider smoke workflow test
     - Path: ttmp/2026/05/29/RAGEVAL-006--workflow-scraper-integration-for-modular-retryable-intake/design-doc/01-workflow-scraper-intake-integration-design-and-implementation-guide.md
       Note: Primary design guide produced in Step 1
 ExternalSources: []
@@ -44,6 +64,8 @@ LastUpdated: 2026-05-29T18:30:00Z
 WhatFor: Track the design investigation, evidence, decisions, and delivery steps for scraper-backed modular retryable intake.
 WhenToUse: Read before implementing workflow orchestration, LLM preprocessing, chunk enrichment, or scraper runner integration in rag-eval.
 ---
+
+
 
 
 
@@ -504,3 +526,121 @@ The main subtlety was preserving compact workflow results. The embedding service
 - Dependency-chain tests:
   - chunk → embed → fresh-check embed;
   - chunk → BM25 index.
+
+---
+
+## Step 5: Complete Phase 2 — Operator-Facing Workflow CLI
+
+I added the first operator-facing CLI layer for the scraper-backed intake workflow. The CLI can now submit durable intake workflows, run a local worker cycle or continuous worker, and inspect workflow status and operation state from the scraper engine database.
+
+This phase turns the Phase 1 programmatic workflow runner into something an operator can actually use. The commands intentionally keep direct service commands available: if a workflow op fails, the same chunking, embedding, or search services can still be exercised through existing non-workflow command paths.
+
+### Prompt Context
+
+**User prompt (verbatim):** "phase 2 entirely"
+
+**Assistant interpretation:** Implement all Phase 2 tasks, including workflow CLI registration, submission, worker execution, status/ops inspection, smoke coverage, diary/task updates, and a focused commit.
+
+**Inferred user intent:** Move from internal workflow runner tests to an operator-usable prototype that can create, run, and inspect durable intake workflows.
+
+### What I did
+
+- Added `internal/workflow/submit.go`:
+  - `SubmitIntakeRequest`
+  - `SubmitIntakeResult`
+  - `SubmitIntakeWorkflow`
+  - document selection by explicit document IDs or source IDs plus limit;
+  - workflow creation with chunk ops per document and optional embedding/BM25 downstream ops.
+- Added `internal/workflow/engine.go`:
+  - `WorkerConfig`
+  - `NewIntakeScheduler`
+  - shared scheduler construction for CLI and tests.
+- Added `cmd/rag-eval/cmds/workflow` command package:
+  - `workflow submit-intake`
+  - `workflow run-once`
+  - `workflow run-worker`
+  - `workflow status`
+  - `workflow ops`
+- Registered the workflow command group from `cmd/rag-eval/main.go`.
+- Added `internal/workflow/submit_test.go` as a smoke/integration test:
+  - submits a workflow against temporary rag-eval and scraper engine databases;
+  - runs scheduler cycles with a fake embedding provider seam;
+  - verifies the workflow reaches `succeeded`.
+- Added document-ID filtering through embedding and BM25 service paths so explicitly selected workflow documents do not accidentally trigger downstream work over every chunk with the same strategy.
+- Marked Phase 2 tasks complete.
+
+### Why
+
+Phase 1 proved that scraper can orchestrate rag-eval service operations. Phase 2 needed to expose that capability through stable commands so a local operator can submit intake work, run workers, and inspect status without writing test code or manually manipulating the scraper engine database.
+
+### What worked
+
+- `rag-eval workflow --help` shows the new command group and subcommands.
+- The workflow submit helper can create a full chunk → embedding/BM25 workflow.
+- The worker helper registers the `rag-eval/intake` runner and runs scraper scheduler cycles.
+- Status and ops commands reuse scraper's `engineview` read service rather than duplicating read-side SQL.
+- Validation passed:
+
+```text
+GOMAXPROCS=2 GOMEMLIMIT=1024MiB go test ./internal/workflow -count=1 -timeout 60s
+GOMAXPROCS=2 GOMEMLIMIT=1024MiB go test ./internal/db ./internal/ingest ./internal/chunking ./internal/services/source ./internal/services/chunking ./internal/services/document ./internal/services/embedding ./internal/services/search ./internal/workflow ./cmd/rag-eval/cmds/workflow -count=1 -timeout 120s
+GOMAXPROCS=2 GOMEMLIMIT=1024MiB go build ./cmd/rag-eval
+go run ./cmd/rag-eval workflow --help
+```
+
+### What didn't work
+
+- I did not run a live provider workflow from the CLI. The smoke coverage uses a fake provider via the internal scheduler seam so tests stay deterministic and credential-free.
+- `workflow status` and `workflow ops` currently emit JSON only. This is useful for debugging and automation but not yet as nice as the Glazed table output used by other commands.
+
+### What I learned
+
+- Scraper's `engineview` package already provides enough read-side functionality for first-pass status and op inspection.
+- Keeping scheduler construction in `internal/workflow` avoids duplicating runner registration logic between CLI commands and tests.
+- The submission layer is the right place to encode workflow topology: one chunk op per document, followed by aggregate embedding and BM25 ops that depend on all chunk ops.
+
+### What was tricky to build
+
+The tricky part was drawing the boundary between reusable workflow logic and CLI logic. A second sharp edge was downstream scoping: embedding and BM25 services originally filtered only by strategy/source, which was too broad for explicit `--document-ids` workflows, so I added document-ID filters to the shared service/query layer rather than special-casing workflow code.
+
+The broader reusable boundary remains important: The durable workflow topology belongs in `internal/workflow/submit.go`, because tests and future APIs should use the same shape as the CLI. Cobra files should only parse flags, call the service layer, and print JSON. Worker construction follows the same pattern: the CLI should not know the runner registration details beyond the engine DB and worker tuning flags.
+
+### What warrants a second pair of eyes
+
+- The default workflow ID uses timestamp seconds. That is human-readable, but rapid repeated submissions in the same second could collide unless the user provides `--workflow-id`.
+- Embedding and BM25 ops currently depend directly on all chunk ops. For very large document sets, this is simple but may create very large dependency lists.
+- `submit-intake` uses selected documents ordered by word count when `--document-ids` is omitted. This is useful for bounded smoke runs but should be reviewed for production default behavior.
+- CLI output is raw JSON rather than Glazed output.
+
+### What should be done in the future
+
+- Add Glazed/table output for `workflow status` and `workflow ops`.
+- Add a `--dry-run` mode to print the workflow topology without creating it.
+- Add a safer unique default workflow ID with sub-second precision or a short random suffix.
+- Consider source-level workflow fan-out for large corpora.
+
+### Code review instructions
+
+- Start with `internal/workflow/submit.go` to review the workflow topology and document/source scoping.
+- Then review `internal/workflow/engine.go` for scheduler/runner registration.
+- Review `internal/db/queries.go`, `internal/db/search_queries.go`, `internal/services/embedding/service.go`, and `internal/services/search/bm25.go` for document-ID filter propagation.
+- Then review `cmd/rag-eval/cmds/workflow/*.go` for flag mapping and command behavior.
+- Validate with the commands listed in `What worked`.
+
+### Technical details
+
+New commands:
+
+```text
+rag-eval workflow submit-intake
+rag-eval workflow run-once
+rag-eval workflow run-worker
+rag-eval workflow status
+rag-eval workflow ops
+```
+
+The submit command maps to existing direct-debug paths:
+
+- `chunk_document` ↔ `rag-eval chunk apply`
+- `compute_embeddings` ↔ `rag-eval embedding compute`
+- `build_bm25` ↔ `rag-eval search index bm25`

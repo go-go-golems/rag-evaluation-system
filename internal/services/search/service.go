@@ -34,17 +34,19 @@ func NewService(queries *db.Queries, indexRoot string) *Service {
 }
 
 type BuildIndexRequest struct {
-	IndexID    string
-	StrategyID string
-	SourceIDs  []string
-	Force      bool
-	Limit      int
+	IndexID     string
+	StrategyID  string
+	SourceIDs   []string
+	DocumentIDs []string
+	Force       bool
+	Limit       int
 }
 
 type BuildIndexResult struct {
 	IndexID       string   `json:"index_id"`
 	StrategyID    string   `json:"strategy_id"`
 	SourceIDs     []string `json:"source_ids,omitempty"`
+	DocumentIDs   []string `json:"document_ids,omitempty"`
 	IndexPath     string   `json:"index_path"`
 	ChunkCount    int      `json:"chunk_count"`
 	DocumentCount int      `json:"document_count"`

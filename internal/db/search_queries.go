@@ -62,6 +62,12 @@ type ChunkEmbeddingWithContext struct {
 // ListChunksWithDocumentContext returns chunks for a strategy, optionally
 // restricted to source IDs, with document metadata needed for search indexing.
 func (q *Queries) ListChunksWithDocumentContext(strategyID string, sourceIDs []string, limit int) ([]ChunkWithDocument, error) {
+	return q.ListChunksWithDocumentContextFiltered(strategyID, sourceIDs, nil, limit)
+}
+
+// ListChunksWithDocumentContextFiltered returns chunks for a strategy, optionally
+// restricted to source IDs and document IDs, with document metadata needed for search indexing.
+func (q *Queries) ListChunksWithDocumentContextFiltered(strategyID string, sourceIDs []string, documentIDs []string, limit int) ([]ChunkWithDocument, error) {
 	query := `
 		SELECT c.id, c.document_id, d.source_id, d.title, COALESCE(d.url, ''),
 		       c.strategy_id, c.chunk_index, c.text, c.token_count,
@@ -75,6 +81,12 @@ func (q *Queries) ListChunksWithDocumentContext(strategyID string, sourceIDs []s
 		query += ` AND d.source_id IN (` + placeholders(len(sourceIDs)) + `)`
 		for _, sourceID := range sourceIDs {
 			args = append(args, sourceID)
+		}
+	}
+	if len(documentIDs) > 0 {
+		query += ` AND c.document_id IN (` + placeholders(len(documentIDs)) + `)`
+		for _, documentID := range documentIDs {
+			args = append(args, documentID)
 		}
 	}
 	query += ` ORDER BY d.source_id, c.document_id, c.chunk_index`

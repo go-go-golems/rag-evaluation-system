@@ -40,13 +40,13 @@ Goal: turn existing idempotent services into durable workflow operations while p
 
 Goal: give operators a rag-eval-native way to submit and run bounded intake workflows.
 
-- [ ] Add `cmd/rag-eval/cmds/workflow/root.go` and register it from `cmd/rag-eval/main.go`.
-- [ ] Add `rag-eval workflow submit-intake` with explicit source/document/chunk/embedding/BM25 limits.
-- [ ] Add `rag-eval workflow run-worker` or `run-once` for local worker cycles over the scraper engine DB.
-- [ ] Add `rag-eval workflow status` and `rag-eval workflow ops` for basic inspection.
-- [ ] Ensure every workflow op can be reproduced by an equivalent existing direct command or documented service call.
-- [ ] Smoke-test a workflow over one or two existing TTC guide documents with fake providers.
-- [ ] Commit Phase 2 as the operator-facing workflow prototype.
+- [x] Add `cmd/rag-eval/cmds/workflow/root.go` and register it from `cmd/rag-eval/main.go`.
+- [x] Add `rag-eval workflow submit-intake` with explicit source/document/chunk/embedding/BM25 limits.
+- [x] Add `rag-eval workflow run-worker` or `run-once` for local worker cycles over the scraper engine DB.
+- [x] Add `rag-eval workflow status` and `rag-eval workflow ops` for basic inspection.
+- [x] Ensure every workflow op can be reproduced by an equivalent existing direct command or documented service call.
+- [x] Smoke-test a workflow over one or two existing TTC guide documents with fake providers.
+- [x] Commit Phase 2 as the operator-facing workflow prototype.
 
 ## Phase 3 — Document preprocessing artifacts
 

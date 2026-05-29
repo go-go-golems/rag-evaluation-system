@@ -41,7 +41,7 @@ func (s *Service) BuildBM25(ctx context.Context, req BuildIndexRequest) (*BuildI
 		return nil, fmt.Errorf("stat index path: %w", err)
 	}
 
-	chunks, err := s.queries.ListChunksWithDocumentContext(req.StrategyID, sourceIDs, req.Limit)
+	chunks, err := s.queries.ListChunksWithDocumentContextFiltered(req.StrategyID, sourceIDs, req.DocumentIDs, req.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -135,6 +135,7 @@ func (s *Service) BuildBM25(ctx context.Context, req BuildIndexRequest) (*BuildI
 		IndexID:       indexID,
 		StrategyID:    req.StrategyID,
 		SourceIDs:     sourceIDs,
+		DocumentIDs:   req.DocumentIDs,
 		IndexPath:     indexPath,
 		ChunkCount:    len(chunks),
 		DocumentCount: len(documentIDs),

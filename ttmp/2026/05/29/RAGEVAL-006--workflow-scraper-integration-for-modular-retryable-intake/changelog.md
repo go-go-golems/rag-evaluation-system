@@ -66,3 +66,26 @@ Completed Phase 1 by adding compute_embeddings and build_bm25 workflow operation
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/workflow/intake_runner_test.go — Added workflow dependency-chain tests for embedding freshness and BM25 metadata
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/workflow/ops.go — Expanded workflow op contracts for embeddings and BM25
 
+
+## 2026-05-29
+
+Completed Phase 2 by adding workflow submission, worker, status, and ops CLI commands plus fake-provider smoke coverage.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/cmd/rag-eval/cmds/workflow/root.go — Adds operator-facing workflow command group
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/workflow/engine.go — Centralizes scheduler construction and runner registration
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/workflow/submit.go — Builds durable intake workflow topology for chunking embeddings and BM25
+
+
+## 2026-05-29
+
+Tightened Phase 2 downstream scoping by propagating document ID filters through embedding and BM25 service paths.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/db/queries.go — Adds chunk listing filter by document IDs for workflow-scoped embeddings
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/db/search_queries.go — Adds document ID filter for workflow-scoped BM25 indexing
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/services/embedding/service.go — Accepts document IDs in embedding compute requests
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/services/search/bm25.go — Passes document IDs into BM25 chunk selection
+
