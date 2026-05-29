@@ -15,6 +15,8 @@ RelatedFiles:
       Note: Glazed CLI command for BM25 index builds
     - Path: cmd/rag-eval/cmds/search/query.go
       Note: Glazed CLI command for BM25 queries
+    - Path: cmd/rag-eval/cmds/search/vector.go
+      Note: Glazed CLI command for vector query search
     - Path: internal/api/handlers.go
       Note: BM25 search HTTP endpoints added in Step 4
     - Path: internal/db/search_queries.go
@@ -23,6 +25,8 @@ RelatedFiles:
       Note: Phase 1 BM25 build/query implementation
     - Path: internal/services/search/service.go
       Note: Shared search service types and defaults
+    - Path: internal/services/search/vector.go
+      Note: Query-vector retrieval implementation
     - Path: ttmp/2026/05/28/RAGEVAL-004--end-to-end-search-retrieval-foundation/design-doc/01-end-to-end-search-retrieval-implementation-guide.md
       Note: Design guide authored in Step 1
 ExternalSources: []
@@ -31,6 +35,7 @@ LastUpdated: 2026-05-28T00:00:00Z
 WhatFor: Track why RAGEVAL-004 focuses on base retrieval functionality before benchmark design.
 WhenToUse: Read before implementing BM25, vector search, hybrid retrieval, or smoke-query checks.
 ---
+
 
 
 
@@ -408,4 +413,112 @@ Example smoke request:
   "limit": 3,
   "preview_runes": 100
 }
+```
+
+---
+
+## Step 5: Query-Vector Search over Stored Embeddings
+
+I implemented query-vector retrieval: the system can now embed a user query through the existing Geppetto/Pinocchio provider resolver, load stored chunk embeddings from SQLite, compute cosine similarity, and return ranked chunk evidence with source/document context.
+
+This is the second standalone retrieval path. BM25 can now be tested independently from vector retrieval, which is required before implementing hybrid search.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 3)
+
+**Assistant interpretation:** Continue implementing RAGEVAL-004 in small tested slices.
+
+**Inferred user intent:** Add the next retrieval building block while keeping provider calls explicit and bounded.
+
+**Commit (code):** pending — vector search implementation will be committed after this diary/changelog update.
+
+### What I did
+
+- Added source-filtered embedding context query:
+  - `ListChunkEmbeddingsForStrategySourcesWithContext`
+  - `ChunkEmbeddingWithContext`
+- Added vector retrieval service:
+  - `internal/services/search/vector.go`
+- Added unit tests with a fake embedding provider:
+  - query vector ranks closest stored vector first;
+  - source filters restrict candidate embeddings.
+- Added CLI command:
+  - `rag-eval search vector`
+- Added HTTP endpoint:
+  - `POST /api/v1/search/vector`
+- Reused existing provider resolution from `internal/services/embedding/provider.go`.
+- Ran a live OpenAI profile smoke query over existing embedded TTC chunks:
+  - query: `which trees make a good privacy screen`
+  - top result: `Leyland Cypress` product chunk;
+  - additional result: `Crape Myrtle Varieties and Guide` screening-related chunk.
+
+### Why
+
+Chunk-to-chunk similarity was already implemented, but real RAG search needs user-query-to-chunk retrieval. Vector query search validates provider resolution, query embedding, stored vector decoding, cosine scoring, source filtering, and result rendering as one bounded path.
+
+### What worked
+
+- Tests/build passed:
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go test ./internal/services/search ./internal/db ./internal/api -count=1 -timeout 60s`
+  - `GOMAXPROCS=2 GOMEMLIMIT=1024MiB go build ./cmd/rag-eval`
+- Live OpenAI smoke succeeded:
+  - `./rag-eval search vector --query "which trees make a good privacy screen" --strategy-id fixed-1200-150 --source-ids ttc-dump-articles,ttc-dump-guides,ttc-dump-products,thetreecenter-guides --profile openai-embedding-small --profile-registries ~/.config/pinocchio/profiles.yaml --limit 5 --candidate-limit 80 --preview-runes 140 --output table`
+- Results were plausible: Leyland Cypress screening/product chunks ranked at the top.
+
+### What didn't work
+
+- Vector search only searches chunks that already have stored embeddings. Current coverage is intentionally sparse, so results are useful as plumbing validation but not full corpus retrieval quality.
+- HTTP vector endpoint was not live-smoked to avoid extra provider calls; service/CLI path and API build validation passed.
+
+### What I learned
+
+- The existing OpenAI-embedded product sample is already useful for semantic product discovery queries.
+- Source-balanced embedding coverage is important: vector retrieval cannot find documents that are not embedded.
+- Candidate limits must remain explicit because the first implementation scans SQLite-stored embeddings rather than a native vector index.
+
+### What was tricky to build
+
+The vector path needs richer metadata than `chunk_embeddings` alone provides. I added a DB helper that joins embeddings to chunks and documents so vector results can include `source_id`, title, URL, chunk index, and preview text without extra per-result lookups.
+
+The API/CLI also need to expose provider configuration without running live calls in tests. Unit tests use a fake provider; live provider calls remain explicit smoke commands.
+
+### What warrants a second pair of eyes
+
+- Review whether HTTP should accept full provider credentials/options or whether vector search should require named profiles only.
+- Review whether `candidate_limit` should default to 500 or lower while coverage is sparse.
+- Review whether vector result previews should use stored chunk text directly or a shared preview helper with the Corpus Explorer.
+
+### What should be done in the future
+
+- Implement hybrid retrieval by merging BM25 and vector results.
+- Add a smoke query file to compare BM25/vector/hybrid behavior.
+- Consider a native vector index only after full-corpus embedding scale demands it.
+
+### Code review instructions
+
+- Start with:
+  - `internal/services/search/vector.go`
+  - `internal/db/search_queries.go`
+  - `internal/services/search/service_test.go`
+- Then inspect adapters:
+  - `cmd/rag-eval/cmds/search/vector.go`
+  - `internal/api/handlers.go`
+- Validate with fake-provider tests, then optionally a live smoke query using `openai-embedding-small`.
+
+### Technical details
+
+The live smoke command used bounded parameters:
+
+```bash
+GOMAXPROCS=2 GOMEMLIMIT=1024MiB ./rag-eval search vector \
+  --query "which trees make a good privacy screen" \
+  --strategy-id fixed-1200-150 \
+  --source-ids ttc-dump-articles,ttc-dump-guides,ttc-dump-products,thetreecenter-guides \
+  --profile openai-embedding-small \
+  --profile-registries ~/.config/pinocchio/profiles.yaml \
+  --limit 5 \
+  --candidate-limit 80 \
+  --preview-runes 140 \
+  --output table
 ```

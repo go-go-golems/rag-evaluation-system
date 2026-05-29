@@ -39,6 +39,26 @@ type SearchIndex struct {
 	UpdatedAt     string `json:"updated_at,omitempty"`
 }
 
+// ChunkEmbeddingWithContext is a stored embedding plus document/source context
+// needed to render retrieval results.
+type ChunkEmbeddingWithContext struct {
+	ChunkID    string `json:"chunk_id"`
+	DocumentID string `json:"document_id"`
+	SourceID   string `json:"source_id"`
+	Title      string `json:"title"`
+	URL        string `json:"url,omitempty"`
+	StrategyID string `json:"strategy_id"`
+	ChunkIndex int    `json:"chunk_index"`
+	Text       string `json:"text,omitempty"`
+	Provider   string `json:"provider"`
+	Model      string `json:"model"`
+	Dimensions int    `json:"dimensions"`
+	TextHash   string `json:"text_hash"`
+	Embedding  []byte `json:"-"`
+	CreatedAt  string `json:"created_at"`
+	UpdatedAt  string `json:"updated_at"`
+}
+
 // ListChunksWithDocumentContext returns chunks for a strategy, optionally
 // restricted to source IDs, with document metadata needed for search indexing.
 func (q *Queries) ListChunksWithDocumentContext(strategyID string, sourceIDs []string, limit int) ([]ChunkWithDocument, error) {
@@ -80,6 +100,52 @@ func (q *Queries) ListChunksWithDocumentContext(strategyID string, sourceIDs []s
 		chunks = append(chunks, c)
 	}
 	return chunks, rows.Err()
+}
+
+// ListChunkEmbeddingsForStrategySourcesWithContext returns stored chunk embeddings
+// with document context, optionally restricted to source IDs.
+func (q *Queries) ListChunkEmbeddingsForStrategySourcesWithContext(strategyID string, sourceIDs []string, provider, model string, dimensions, limit int) ([]ChunkEmbeddingWithContext, error) {
+	query := `
+		SELECT ce.chunk_id, c.document_id, d.source_id, d.title, COALESCE(d.url, ''),
+		       ce.strategy_id, c.chunk_index, c.text,
+		       ce.provider, ce.model, ce.dimensions, ce.text_hash, ce.embedding, ce.created_at, ce.updated_at
+		FROM chunk_embeddings ce
+		JOIN chunks c ON c.id = ce.chunk_id AND c.strategy_id = ce.strategy_id
+		JOIN documents d ON d.id = c.document_id
+		WHERE ce.strategy_id = ? AND ce.provider = ? AND ce.model = ? AND ce.dimensions = ?
+	`
+	args := []interface{}{strategyID, provider, model, dimensions}
+	if len(sourceIDs) > 0 {
+		query += ` AND d.source_id IN (` + placeholders(len(sourceIDs)) + `)`
+		for _, sourceID := range sourceIDs {
+			args = append(args, sourceID)
+		}
+	}
+	query += ` ORDER BY d.source_id, c.document_id, c.chunk_index`
+	if limit > 0 {
+		query += ` LIMIT ?`
+		args = append(args, limit)
+	}
+
+	rows, err := q.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("list chunk embeddings with context: %w", err)
+	}
+	defer rows.Close()
+
+	var embeddings []ChunkEmbeddingWithContext
+	for rows.Next() {
+		var e ChunkEmbeddingWithContext
+		if err := rows.Scan(
+			&e.ChunkID, &e.DocumentID, &e.SourceID, &e.Title, &e.URL,
+			&e.StrategyID, &e.ChunkIndex, &e.Text,
+			&e.Provider, &e.Model, &e.Dimensions, &e.TextHash, &e.Embedding, &e.CreatedAt, &e.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan chunk embedding with context: %w", err)
+		}
+		embeddings = append(embeddings, e)
+	}
+	return embeddings, rows.Err()
 }
 
 // UpsertSearchIndex records metadata for a derived search index.

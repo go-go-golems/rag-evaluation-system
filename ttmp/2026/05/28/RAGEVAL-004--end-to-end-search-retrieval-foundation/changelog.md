@@ -44,3 +44,14 @@ Added BM25 HTTP endpoints for search index builds and lexical query execution, v
 
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/api/handlers.go — Search HTTP route registration and handlers
 
+
+## 2026-05-28
+
+Implemented query-vector search over stored embeddings with CLI/API adapters, fake-provider tests, source filtering, and a bounded live OpenAI smoke query.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/cmd/rag-eval/cmds/search/vector.go — Vector search CLI
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/db/search_queries.go — Embedding-with-context query helper
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/services/search/vector.go — Vector retrieval service
+

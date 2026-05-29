@@ -5,9 +5,12 @@ import (
 	"database/sql"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/go-go-golems/geppetto/pkg/embeddings"
 	"github.com/go-go-golems/rag-evaluation-system/internal/db"
+	embeddingservice "github.com/go-go-golems/rag-evaluation-system/internal/services/embedding"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -132,3 +135,92 @@ func TestQueryBM25MissingIndexReturnsError(t *testing.T) {
 		t.Fatal("expected missing index error")
 	}
 }
+
+func TestQueryVectorRanksClosestStoredEmbedding(t *testing.T) {
+	_, queries := setupSearchTestDB(t)
+	must := func(err error) {
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	must(queries.UpsertChunkEmbedding("chk-arb-1", "fixed-100-20", "fake", "fake-2d", 2, "h1", embeddingservice.EncodeFloat32Vector([]float32{1, 0})))
+	must(queries.UpsertChunkEmbedding("chk-hyd-1", "fixed-100-20", "fake", "fake-2d", 2, "h2", embeddingservice.EncodeFloat32Vector([]float32{0, 1})))
+
+	svc := NewService(queries, t.TempDir())
+	result, err := svc.QueryVector(context.Background(), VectorQueryRequest{
+		Query:          "plant arborvitae",
+		StrategyID:     "fixed-100-20",
+		Provider:       fakeProvider{model: embeddings.EmbeddingModel{Name: "fake-2d", Dimensions: 2}},
+		ProviderType:   "fake",
+		Limit:          2,
+		CandidateLimit: 10,
+	})
+	if err != nil {
+		t.Fatalf("QueryVector: %v", err)
+	}
+	if len(result.Items) != 2 {
+		t.Fatalf("expected 2 vector results, got %d", len(result.Items))
+	}
+	if result.Items[0].ChunkID != "chk-arb-1" {
+		t.Fatalf("expected arborvitae chunk first, got %#v", result.Items[0])
+	}
+	if result.Items[0].SourceID != "src-guides" || result.Items[0].Title == "" {
+		t.Fatalf("expected document context, got %#v", result.Items[0])
+	}
+}
+
+func TestQueryVectorSourceFilter(t *testing.T) {
+	_, queries := setupSearchTestDB(t)
+	must := func(err error) {
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	must(queries.UpsertChunkEmbedding("chk-arb-1", "fixed-100-20", "fake", "fake-2d", 2, "h1", embeddingservice.EncodeFloat32Vector([]float32{1, 0})))
+	must(queries.UpsertChunkEmbedding("chk-prod-1", "fixed-100-20", "fake", "fake-2d", 2, "h3", embeddingservice.EncodeFloat32Vector([]float32{1, 0})))
+
+	svc := NewService(queries, t.TempDir())
+	result, err := svc.QueryVector(context.Background(), VectorQueryRequest{
+		Query:          "plant arborvitae",
+		StrategyID:     "fixed-100-20",
+		SourceIDs:      []string{"src-products"},
+		Provider:       fakeProvider{model: embeddings.EmbeddingModel{Name: "fake-2d", Dimensions: 2}},
+		ProviderType:   "fake",
+		Limit:          5,
+		CandidateLimit: 10,
+	})
+	if err != nil {
+		t.Fatalf("QueryVector: %v", err)
+	}
+	if len(result.Items) != 1 {
+		t.Fatalf("expected 1 product result, got %d", len(result.Items))
+	}
+	if result.Items[0].SourceID != "src-products" {
+		t.Fatalf("expected product source filter, got %#v", result.Items[0])
+	}
+}
+
+type fakeProvider struct {
+	model embeddings.EmbeddingModel
+}
+
+func (f fakeProvider) GenerateEmbedding(_ context.Context, text string) ([]float32, error) {
+	if strings.Contains(strings.ToLower(text), "hydrangea") {
+		return []float32{0, 1}, nil
+	}
+	return []float32{1, 0}, nil
+}
+
+func (f fakeProvider) GenerateBatchEmbeddings(ctx context.Context, texts []string) ([][]float32, error) {
+	vectors := make([][]float32, len(texts))
+	for i, text := range texts {
+		v, err := f.GenerateEmbedding(ctx, text)
+		if err != nil {
+			return nil, err
+		}
+		vectors[i] = v
+	}
+	return vectors, nil
+}
+
+func (f fakeProvider) GetModel() embeddings.EmbeddingModel { return f.model }

@@ -11,5 +11,6 @@ func NewCommand() *cobra.Command {
 	}
 	cmd.AddCommand(newIndexCommand())
 	cmd.AddCommand(newQueryCommand())
+	cmd.AddCommand(newVectorCommand())
 	return cmd
 }
