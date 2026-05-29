@@ -25,3 +25,5 @@ Thumbs.db
 internal/web/dist/assets/
 internal/web/dist/favicon.svg
 internal/web/dist/icons.svg
+.playwright-mcp/
+*.png

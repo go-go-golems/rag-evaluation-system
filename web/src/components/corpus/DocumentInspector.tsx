@@ -10,11 +10,16 @@ interface DocumentInspectorProps {
   detail: CorpusDocumentDetail;
   chunks: CorpusChunk[];
   identity: CorpusIdentityArgs;
+  highlightChunkId?: string | null;
 }
 
-export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, chunks, identity }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'text' | 'chunks' | 'coverage'>('overview');
-  const [selectedChunkIdx, setSelectedChunkIdx] = useState<number | null>(null);
+export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, chunks, identity, highlightChunkId }) => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'text' | 'chunks' | 'coverage'>(highlightChunkId ? 'chunks' : 'overview');
+  const [selectedChunkIdx, setSelectedChunkIdx] = useState<number | null>(() => {
+    if (!highlightChunkId) return null;
+    const idx = (chunks ?? []).findIndex(c => c.id === highlightChunkId);
+    return idx >= 0 ? idx : null;
+  });
 
   const safeChunks = chunks ?? [];
   const doc = detail.document;

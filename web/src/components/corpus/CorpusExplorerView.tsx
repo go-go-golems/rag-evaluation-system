@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   useListCorpusSourcesQuery,
   useListCorpusDocumentsQuery,
@@ -11,6 +11,17 @@ import { SourcePanel } from './SourcePanel';
 import { DocumentBrowser } from './DocumentBrowser';
 import { DocumentInspector } from './DocumentInspector';
 
+export interface ChunkNavigationTarget {
+  documentId: string;
+  chunkId: string;
+  sourceId: string;
+}
+
+interface CorpusExplorerViewProps {
+  initialTarget?: ChunkNavigationTarget | null;
+  onTargetConsumed?: () => void;
+}
+
 const DEFAULT_IDENTITY: CorpusIdentityArgs = {
   strategy_id: 'fixed-1200-150',
   provider_type: 'openai',
@@ -20,11 +31,22 @@ const DEFAULT_IDENTITY: CorpusIdentityArgs = {
 
 const PAGE_SIZE = 100;
 
-export const CorpusExplorerView: React.FC = () => {
+export const CorpusExplorerView: React.FC<CorpusExplorerViewProps> = ({ initialTarget, onTargetConsumed }) => {
   const [identity, setIdentity] = useState<CorpusIdentityArgs>(DEFAULT_IDENTITY);
   const [sourceId, setSourceId] = useState('');
   const [documentId, setDocumentId] = useState('');
+  const [highlightChunkId, setHighlightChunkId] = useState<string | null>(null);
   const [pageLimit, setPageLimit] = useState(PAGE_SIZE);
+
+  // Handle navigation from Search workbench
+  useEffect(() => {
+    if (initialTarget) {
+      setSourceId(initialTarget.sourceId);
+      setDocumentId(initialTarget.documentId);
+      setHighlightChunkId(initialTarget.chunkId);
+      onTargetConsumed?.();
+    }
+  }, [initialTarget, onTargetConsumed]);
 
   const { data: strategies = [] } = useListChunkingStrategiesQuery();
   const { data: sources = [], isLoading: sourcesLoading } = useListCorpusSourcesQuery(identity);
@@ -50,11 +72,13 @@ export const CorpusExplorerView: React.FC = () => {
   const handleSelectSource = useCallback((id: string) => {
     setSourceId(id);
     setDocumentId('');
+    setHighlightChunkId(null);
     setPageLimit(PAGE_SIZE);
   }, []);
 
   const handleSelectDocument = useCallback((id: string) => {
     setDocumentId(id);
+    setHighlightChunkId(null);
   }, []);
 
   const handleLoadMore = useCallback(() => {
@@ -116,7 +140,7 @@ export const CorpusExplorerView: React.FC = () => {
             ) : detailLoading ? (
               <span className="text-dim text-mono">Loading...</span>
             ) : detail ? (
-              <DocumentInspector detail={detail} chunks={detail.chunks} identity={identity} />
+              <DocumentInspector detail={detail} chunks={detail.chunks} identity={identity} highlightChunkId={highlightChunkId} />
             ) : (
               <span className="text-dim text-mono">Document not found.</span>
             )}

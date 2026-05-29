@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PipelineView } from './components/pipeline/PipelineView';
 import { EmbeddingsView } from './components/embeddings/EmbeddingsView';
 import { SearchView } from './components/search/SearchView';
@@ -6,20 +6,44 @@ import { EvaluationView } from './components/evaluation/EvaluationView';
 import { CorpusExplorerView } from './components/corpus/CorpusExplorerView';
 
 const views = [
+  { id: 'search', label: 'Search' },
   { id: 'corpus', label: 'Corpus' },
   { id: 'pipeline', label: 'Pipeline' },
   { id: 'embeddings', label: 'Embeddings' },
-  { id: 'search', label: 'Search' },
   { id: 'evaluation', label: 'Evaluation' },
 ];
 
+export interface ChunkNavigationTarget {
+  documentId: string;
+  chunkId: string;
+  sourceId: string;
+}
+
 export const App: React.FC = () => {
-  const [activeView, setActiveView] = useState('corpus');
+  const [activeView, setActiveView] = useState('search');
+  const [chunkTarget, setChunkTarget] = useState<ChunkNavigationTarget | null>(null);
+
+  // Listen for navigation events from SearchView
+  const handleNavigateToChunk = useCallback((e: Event) => {
+    const detail = (e as CustomEvent<ChunkNavigationTarget>).detail;
+    setChunkTarget(detail);
+    setActiveView('corpus');
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('rag:navigate-to-chunk', handleNavigateToChunk);
+    return () => window.removeEventListener('rag:navigate-to-chunk', handleNavigateToChunk);
+  }, [handleNavigateToChunk]);
+
+  // Clear target once consumed
+  const handleChunkTargetConsumed = useCallback(() => {
+    setChunkTarget(null);
+  }, []);
 
   const renderView = () => {
     switch (activeView) {
       case 'corpus':
-        return <CorpusExplorerView />;
+        return <CorpusExplorerView initialTarget={chunkTarget} onTargetConsumed={handleChunkTargetConsumed} />;
       case 'pipeline':
         return <PipelineView />;
       case 'embeddings':
@@ -29,7 +53,7 @@ export const App: React.FC = () => {
       case 'evaluation':
         return <EvaluationView />;
       default:
-        return <CorpusExplorerView />;
+        return <SearchView />;
     }
   };
 

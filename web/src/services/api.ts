@@ -189,6 +189,92 @@ export interface CorpusDocumentDetailArgs extends CorpusIdentityArgs {
   include_text?: boolean;
 }
 
+// --- Search Types ---
+
+export interface RetrievalComponent {
+  rank: number;
+  score: number;
+}
+
+export interface RetrievalResult {
+  rank: number;
+  chunk_id: string;
+  document_id: string;
+  source_id: string;
+  title: string;
+  url?: string;
+  strategy_id: string;
+  chunk_index: number;
+  score: number;
+  retriever: string;
+  preview: string;
+  components?: Record<string, RetrievalComponent>;
+}
+
+export interface SearchResult {
+  query: string;
+  index_id?: string;
+  retriever: string;
+  items: RetrievalResult[];
+}
+
+export interface BM25SearchRequest {
+  index_id: string;
+  query: string;
+  limit?: number;
+  preview_runes?: number;
+}
+
+export interface VectorSearchRequest {
+  strategy_id: string;
+  source_ids?: string[];
+  query: string;
+  profile_registries?: string[];
+  profile?: string;
+  base_profile?: string;
+  embeddings_type: string;
+  embeddings_engine: string;
+  embeddings_dimensions: number;
+  api_key?: string;
+  base_url?: string;
+  cache_type?: string;
+  cache_directory?: string;
+  limit?: number;
+  candidate_limit?: number;
+  preview_runes?: number;
+}
+
+export interface HybridSearchRequest extends VectorSearchRequest {
+  index_id: string;
+  bm25_limit?: number;
+  vector_limit?: number;
+  rrf_k?: number;
+}
+
+export interface EmbeddingCoverageRequest {
+  strategy_id: string;
+  provider_type: string;
+  model: string;
+  dimensions: number;
+}
+
+export interface EmbeddingCoverageResult {
+  strategy_id: string;
+  provider_type: string;
+  model: string;
+  dimensions: number;
+  total_chunks: number;
+  embedded_chunks: number;
+  sources?: Array<{
+    source_id: string;
+    source_name: string;
+    total_chunks: number;
+    embedded_chunks: number;
+    coverage_pct: number;
+  missing_chunks: number;
+  }>;
+}
+
 function filterIdentityParams(args: CorpusIdentityArgs): Record<string, string | number | undefined> {
   const params: Record<string, string | number | undefined> = {};
   if (args.strategy_id) params.strategy_id = args.strategy_id;
@@ -236,6 +322,20 @@ export const ragApi = createApi({
     }),
     embeddingSimilarity: builder.mutation<SimilarityResponse, SimilarityRequest>({
       query: (body) => ({ url: 'embeddings/similarity', method: 'POST', body }),
+    }),
+
+    // --- Search ---
+    searchBM25: builder.mutation<SearchResult, BM25SearchRequest>({
+      query: (body) => ({ url: 'search/query', method: 'POST', body }),
+    }),
+    searchVector: builder.mutation<SearchResult, VectorSearchRequest>({
+      query: (body) => ({ url: 'search/vector', method: 'POST', body }),
+    }),
+    searchHybrid: builder.mutation<SearchResult, HybridSearchRequest>({
+      query: (body) => ({ url: 'search/hybrid', method: 'POST', body }),
+    }),
+    embeddingCoverage: builder.mutation<EmbeddingCoverageResult, EmbeddingCoverageRequest>({
+      query: (body) => ({ url: 'embeddings/coverage', method: 'POST', body }),
     }),
 
     // --- Corpus Explorer ---
@@ -289,4 +389,8 @@ export const {
   useListCorpusSourcesQuery,
   useListCorpusDocumentsQuery,
   useGetCorpusDocumentQuery,
+  useSearchBM25Mutation,
+  useSearchVectorMutation,
+  useSearchHybridMutation,
+  useEmbeddingCoverageMutation,
 } = ragApi;
