@@ -725,3 +725,94 @@ N/A for this validation step.
 ### Technical details
 
 Current uncommitted working-tree items are unrelated pre-existing frontend build/screenshot artifacts and were intentionally left untouched.
+
+---
+
+## Step 8: Retrieval Status and UX Follow-Up Report
+
+I wrote a second RAGEVAL-004 design document that captures the current retrieval state after the BM25, vector, hybrid, and smoke-query implementation work. The report records what has been measured, how to interpret those measurements, why the current quality is still limited, and what implementation sequence should improve it.
+
+The same report also translates the backend search state into concrete UX opportunities. It gives the designer and frontend implementer a build order for a Search Workbench, Index Manager, Result Inspector, Smoke Test Dashboard, Corpus Explorer overlays, and a later Benchmark Builder.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Write a report in the ticket about where we are, what we measured, and a detailed implementation guide for these features so that we can remember going forward.
+
+Then, what are things we can now have our ux designer build in the webpage (some parts were still needing build out, but we can also potentially improve current screens to provider better insight into the new search data and idnexing we have done."
+
+**Assistant interpretation:** Add a durable RAGEVAL-004 report that summarizes current search/retrieval status and measurements, then specifies next backend and UX implementation work.
+
+**Inferred user intent:** Preserve the current retrieval knowledge before continuing, and give both engineering and UX collaborators a clear shared plan.
+
+### What I did
+
+- Added `design-doc/02-retrieval-status-measurements-and-ux-implementation-guide.md`.
+- Documented current implemented retrieval capabilities:
+  - BM25;
+  - query-vector search;
+  - hybrid RRF;
+  - smoke checks;
+  - CLI/API surfaces.
+- Recorded measured smoke results and their interpretation.
+- Wrote detailed implementation guidance for:
+  - product text composition;
+  - broader chunk/index coverage;
+  - stricter smoke checks;
+  - source-balanced embedding expansion;
+  - benchmark candidate creation;
+  - result grouping and deduplication.
+- Added a UX build plan for:
+  - Search Workbench;
+  - Index Manager;
+  - Result Inspector;
+  - Smoke Test Dashboard;
+  - coverage-aware search;
+  - Corpus Explorer overlays;
+  - later Benchmark Builder.
+- Related the report to relevant backend and frontend files.
+- Updated the RAGEVAL-004 changelog.
+
+### Why
+
+The retrieval system is now functional enough that the next work needs coordination. The report separates what is known from what is merely suspected, and it prevents smoke-test output from being mistaken for benchmark quality.
+
+### What worked
+
+- `docmgr doctor --ticket RAGEVAL-004 --stale-after 30` passed after the report and file relations were added.
+- The report gives a concrete implementation order for backend work and a separate UX build order for the webpage.
+
+### What didn't work
+
+- N/A. This was a documentation/reporting step.
+
+### What I learned
+
+- The most important next UX value is not a metrics dashboard; it is a Search Workbench plus Result Inspector that makes ranked chunks, retriever components, and corpus context visible.
+- Backend support for index listing and smoke execution should come before a full Benchmark Builder.
+
+### What was tricky to build
+
+The main challenge was separating smoke-test observations from benchmark claims. The report explicitly labels current measurements as diagnostic smoke results, not quality scores, and describes what labels are required before benchmark metrics are meaningful.
+
+### What warrants a second pair of eyes
+
+- Review the proposed UX build order with the designer.
+- Review whether HTTP provider settings should be accepted directly or replaced by named server-side profiles before vector/hybrid search is exposed in the UI.
+- Review how product metadata should be composed into searchable text before full product embeddings are computed.
+
+### What should be done in the future
+
+- Implement `GET /api/v1/search/indexes` and index metadata/source config tracking.
+- Improve product text composition.
+- Build the Search Workbench and Result Inspector first.
+- Strengthen smoke tests before creating benchmark labels.
+
+### Code review instructions
+
+- Start with the new report:
+  - `ttmp/2026/05/28/RAGEVAL-004--end-to-end-search-retrieval-foundation/design-doc/02-retrieval-status-measurements-and-ux-implementation-guide.md`
+- Then inspect related implementation files listed in the report frontmatter relations.
+
+### Technical details
+
+The report is intentionally implementation-oriented and should be used as the continuation guide for both backend retrieval-quality work and frontend UX design.

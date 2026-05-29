@@ -75,3 +75,12 @@ Ran final retrieval-foundation validation: internal package tests, CLI build, an
 
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/05/28/RAGEVAL-004--end-to-end-search-retrieval-foundation/reference/01-implementation-diary.md — Final validation notes
 
+
+## 2026-05-28
+
+Added retrieval status, measurement, next-implementation, and UX design report covering current BM25/vector/hybrid behavior, smoke findings, quality gaps, backend next steps, and webpage opportunities.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/05/28/RAGEVAL-004--end-to-end-search-retrieval-foundation/design-doc/02-retrieval-status-measurements-and-ux-implementation-guide.md — Status and UX implementation report
+
