@@ -548,7 +548,7 @@ This completes the first end-to-end retrieval foundation: lexical search, vector
 
 **Inferred user intent:** Make the system ready for real retrieval validation before formal benchmark design.
 
-**Commit (code):** pending — hybrid/smoke implementation will be committed after this diary/changelog update.
+**Commit (code):** 5fd061a — "feat: add hybrid retrieval and smoke checks"
 
 ### What I did
 
