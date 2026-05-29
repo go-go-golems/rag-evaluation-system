@@ -65,10 +65,15 @@ func RegisterHandlersWithOptions(mux *http.ServeMux, database *sql.DB, opts Opti
 	mux.HandleFunc("POST /api/v1/search/vector", h.handleSearchVector)
 	mux.HandleFunc("POST /api/v1/search/hybrid", h.handleSearchHybrid)
 
-	// Workflow and derived artifact visibility (read-only)
+	// Workflow and derived artifact visibility
 	mux.HandleFunc("GET /api/v1/workflows", h.handleListWorkflows)
 	mux.HandleFunc("GET /api/v1/workflows/{id}", h.handleGetWorkflow)
 	mux.HandleFunc("GET /api/v1/workflows/{id}/ops", h.handleWorkflowOps)
+	mux.HandleFunc("GET /api/v1/workflows/{id}/results/{opId}", h.handleGetOpResult)
+	mux.HandleFunc("POST /api/v1/workflows/{id}/retry/{opId}", h.handleRetryOp)
+	mux.HandleFunc("POST /api/v1/workflows/{id}/cancel", h.handleCancelWorkflow)
+	mux.HandleFunc("POST /api/v1/workflows/intake", h.handleSubmitIntake)
+	mux.HandleFunc("GET /api/v1/queues", h.handleListQueues)
 	mux.HandleFunc("GET /api/v1/artifacts/document-processing/coverage", h.handleDocumentProcessingCoverage)
 	mux.HandleFunc("GET /api/v1/artifacts/chunk-enrichment/coverage", h.handleChunkEnrichmentCoverage)
 	mux.HandleFunc("GET /api/v1/chunks/{id}/enrichments", h.handleChunkEnrichments)

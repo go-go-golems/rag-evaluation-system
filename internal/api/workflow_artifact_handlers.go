@@ -1,11 +1,14 @@
 package api
 
 import (
+	"encoding/json"
+	"net/http"
+
 	"github.com/go-go-golems/rag-evaluation-system/internal/services/chunkenrichment"
 	"github.com/go-go-golems/rag-evaluation-system/internal/services/documentprocessing"
+	"github.com/go-go-golems/rag-evaluation-system/internal/workflow"
 	"github.com/go-go-golems/scraper/pkg/engine/model"
 	"github.com/go-go-golems/scraper/pkg/services/engineview"
-	"net/http"
 )
 
 func (h *handler) handleListWorkflows(w http.ResponseWriter, r *http.Request) {
@@ -45,6 +48,72 @@ func (h *handler) handleWorkflowOps(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": result, "workflow_id": r.PathValue("id")})
+}
+
+func (h *handler) handleGetOpResult(w http.ResponseWriter, r *http.Request) {
+	service := engineview.NewService(h.engineDB)
+	result, found, err := service.GetOpResult(r.Context(), model.WorkflowID(r.PathValue("id")), model.OpID(r.PathValue("opId")))
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "query_failed", err.Error())
+		return
+	}
+	if !found || result == nil {
+		writeError(w, http.StatusNotFound, "not_found", "op result not found")
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
+}
+
+func (h *handler) handleRetryOp(w http.ResponseWriter, r *http.Request) {
+	service := engineview.NewService(h.engineDB)
+	if err := service.RetryOp(r.Context(), model.WorkflowID(r.PathValue("id")), model.OpID(r.PathValue("opId"))); err != nil {
+		writeError(w, http.StatusBadRequest, "retry_failed", err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "retried"})
+}
+
+func (h *handler) handleCancelWorkflow(w http.ResponseWriter, r *http.Request) {
+	service := engineview.NewService(h.engineDB)
+	if err := service.CancelWorkflow(r.Context(), model.WorkflowID(r.PathValue("id"))); err != nil {
+		writeError(w, http.StatusBadRequest, "cancel_failed", err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "canceled"})
+}
+
+func (h *handler) handleSubmitIntake(w http.ResponseWriter, r *http.Request) {
+	var req workflow.SubmitIntakeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
+		return
+	}
+	if req.DBPath == "" {
+		req.DBPath = "data/rag-eval.db"
+	}
+	if req.EngineDB == "" {
+		req.EngineDB = h.engineDB
+	}
+
+	result, err := workflow.SubmitIntakeWorkflow(r.Context(), req)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "submit_failed", err.Error())
+		return
+	}
+	writeJSON(w, http.StatusCreated, result)
+}
+
+func (h *handler) handleListQueues(w http.ResponseWriter, r *http.Request) {
+	service := engineview.NewService(h.engineDB)
+	queues, err := service.ListQueues(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "query_failed", err.Error())
+		return
+	}
+	if queues == nil {
+		queues = []engineview.QueueStatus{}
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{"queues": queues})
 }
 
 func (h *handler) handleDocumentProcessingCoverage(w http.ResponseWriter, r *http.Request) {
