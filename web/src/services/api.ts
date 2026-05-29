@@ -155,6 +155,13 @@ export interface CorpusChunk {
     text_hash?: string;
     updated_at?: string;
   };
+  enrichment?: {
+    present: boolean;
+    prompt_version?: string;
+    short_summary?: string;
+    quality_score?: number;
+  updated_at?: string;
+  };
 }
 
 export interface CorpusDocumentDetail {
@@ -287,7 +294,7 @@ function filterIdentityParams(args: CorpusIdentityArgs): Record<string, string |
 export const ragApi = createApi({
   reducerPath: 'ragApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/v1' }),
-  tagTypes: ['Sources', 'Documents', 'Chunks', 'Strategies', 'Embeddings', 'Corpus', 'Workflows'],
+  tagTypes: ['Sources', 'Documents', 'Chunks', 'Strategies', 'Embeddings', 'Corpus', 'Workflows', 'Artifacts'],
   endpoints: (builder) => ({
     listSources: builder.query<Source[], void>({
       query: () => 'sources',
@@ -410,6 +417,27 @@ export const ragApi = createApi({
       transformResponse: (response: { queues: QueueStatus[] }) => response.queues ?? [],
       providesTags: ['Workflows'],
     }),
+
+    // Artifact coverage endpoints (RAGEVAL-006 Phase 6)
+    getDocumentProcessingCoverage: builder.query<DocumentProcessingCoverageResult, DocumentProcessingCoverageArgs>({
+      query: (args) => `artifacts/document-processing/coverage?artifact_type=${args.artifact_type}&prompt_version=${args.prompt_version}&provider=${args.provider}&model=${args.model}`,
+      providesTags: ['Artifacts'],
+    }),
+
+    getChunkEnrichmentCoverage: builder.query<ChunkEnrichmentCoverageResult, ChunkEnrichmentCoverageArgs>({
+      query: (args) => `artifacts/chunk-enrichment/coverage?strategy_id=${args.strategy_id}&prompt_version=${args.prompt_version}`,
+      providesTags: ['Artifacts'],
+    }),
+
+    getDocumentProcessingArtifacts: builder.query<DocumentProcessingArtifactList, string>({
+      query: (docId) => `documents/${docId}/processing-artifacts`,
+      providesTags: ['Artifacts'],
+    }),
+
+    getChunkEnrichments: builder.query<ChunkEnrichmentList, { chunkId: string; strategyId?: string; promptVersion?: string }>({
+      query: (args) => `chunks/${args.chunkId}/enrichments${args.strategyId ? '?strategy_id=' + args.strategyId : ''}${args.promptVersion ? '&prompt_version=' + args.promptVersion : ''}`,
+      providesTags: ['Artifacts'],
+    }),
   }),
 });
 
@@ -527,6 +555,109 @@ export interface SubmitIntakeResponse {
   op_ids: string[];
 }
 
+// ─── Artifact types (RAGEVAL-006 Phase 6) ─────────────────────────────────
+
+export interface DocumentProcessingCoverageArgs {
+  artifact_type: string;
+  prompt_version: string;
+  provider: string;
+  model: string;
+}
+
+export interface DocumentProcessingCoverageItem {
+  source_id: string;
+  document_count: number;
+  artifact_count: number;
+  fresh_count: number;
+  failed_count: number;
+  missing_count: number;
+}
+
+export interface DocumentProcessingCoverageResult {
+  artifact_type: string;
+  prompt_version: string;
+  provider: string;
+  model: string;
+  items: DocumentProcessingCoverageItem[];
+  totals: {
+    document_count: number;
+    artifact_count: number;
+    fresh_count: number;
+    failed_count: number;
+    missing_count: number;
+  };
+}
+
+export interface ChunkEnrichmentCoverageArgs {
+  strategy_id: string;
+  prompt_version: string;
+}
+
+export interface ChunkEnrichmentCoverageItem {
+  source_id: string;
+  chunk_count: number;
+  enriched_count: number;
+  fresh_count: number;
+  missing_count: number;
+}
+
+export interface ChunkEnrichmentCoverageResult {
+  strategy_id: string;
+  prompt_version: string;
+  items: ChunkEnrichmentCoverageItem[];
+  totals: {
+    chunk_count: number;
+    enriched_count: number;
+    fresh_count: number;
+    missing_count: number;
+  };
+}
+
+export interface DocumentProcessingArtifact {
+  document_id: string;
+  source_id?: string;
+  artifact_type: string;
+  prompt_version: string;
+  provider: string;
+  model: string;
+  input_hash: string;
+  output_text?: string;
+  output_json?: string;
+  status: string;
+  error_code?: string;
+  error_message?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DocumentProcessingArtifactList {
+  document_id: string;
+  items: DocumentProcessingArtifact[];
+}
+
+export interface ChunkEnrichment {
+  chunk_id: string;
+  document_id?: string;
+  strategy_id: string;
+  prompt_version: string;
+  provider: string;
+  model: string;
+  short_summary?: string;
+  long_summary?: string;
+  key_topics_json?: string;
+  entities_json?: string;
+  hypothetical_questions_json?: string;
+  quality_score?: number;
+  text_hash: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChunkEnrichmentList {
+  chunk_id: string;
+  items: ChunkEnrichment[];
+}
+
 export const {
   useListSourcesQuery,
   useCreateSourceMutation,
@@ -551,4 +682,9 @@ export const {
   useRetryOpMutation,
   useCancelWorkflowMutation,
   useListQueuesQuery,
+  // Artifact endpoints (RAGEVAL-006 Phase 6)
+  useGetDocumentProcessingCoverageQuery,
+  useGetChunkEnrichmentCoverageQuery,
+  useGetDocumentProcessingArtifactsQuery,
+  useGetChunkEnrichmentsQuery,
 } = ragApi;

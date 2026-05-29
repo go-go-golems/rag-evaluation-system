@@ -59,6 +59,13 @@ type CorpusChunk struct {
 		TextHash    string `json:"text_hash,omitempty"`
 		UpdatedAt   string `json:"updated_at,omitempty"`
 	} `json:"embedding,omitempty"`
+	Enrichment *struct {
+		Present      bool    `json:"present"`
+		PromptVersion string `json:"prompt_version,omitempty"`
+		ShortSummary  string `json:"short_summary,omitempty"`
+		QualityScore  float64 `json:"quality_score,omitempty"`
+		UpdatedAt     string  `json:"updated_at,omitempty"`
+	} `json:"enrichment,omitempty"`
 }
 
 // CorpusDocumentDetail is the full document detail payload with metadata,
@@ -363,6 +370,13 @@ func (s *Service) DocumentDetail(ctx context.Context, documentID string, identit
 			CAST(NULL AS TEXT) AS updated_at`
 	}
 
+	// Enrichment status join
+	chunkQuery += `,
+		cce.short_summary,
+		cce.prompt_version,
+		cce.quality_score,
+		cce.updated_at AS enrichment_updated_at`
+
 	chunkQuery += `
 		FROM chunks c`
 
@@ -375,6 +389,10 @@ func (s *Service) DocumentDetail(ctx context.Context, documentID string, identit
 			AND ce.dimensions = ?`
 		chunkArgs = append(chunkArgs, identity.ProviderType, identity.Model, identity.Dimensions)
 	}
+
+	// Left join chunk enrichments for enrichment status
+	chunkQuery += `
+		LEFT JOIN chunk_enrichments cce ON cce.chunk_id = c.id AND cce.strategy_id = c.strategy_id`
 
 	chunkQuery += `
 		WHERE c.document_id = ? AND c.strategy_id = ?
@@ -395,9 +413,12 @@ func (s *Service) DocumentDetail(ctx context.Context, documentID string, identit
 	for rows.Next() {
 		var c CorpusChunk
 		var textHash, updatedAt sql.NullString
+		var enrichSummary, enrichVersion, enrichUpdatedAt sql.NullString
+		var enrichScore sql.NullFloat64
 
 		if err := rows.Scan(&c.ID, &c.StrategyID, &c.ChunkIndex, &c.StartOffset,
-			&c.EndOffset, &c.TokenCount, &c.Text, &textHash, &updatedAt); err != nil {
+			&c.EndOffset, &c.TokenCount, &c.Text, &textHash, &updatedAt,
+			&enrichSummary, &enrichVersion, &enrichScore, &enrichUpdatedAt); err != nil {
 			return nil, fmt.Errorf("corpus document detail chunk scan: %w", err)
 		}
 
@@ -416,6 +437,22 @@ func (s *Service) DocumentDetail(ctx context.Context, documentID string, identit
 				Dimensions: identity.Dimensions,
 				TextHash:   textHash.String,
 				UpdatedAt:  updatedAt.String,
+			}
+		}
+
+		if enrichSummary.Valid && enrichSummary.String != "" {
+			c.Enrichment = &struct {
+				Present       bool    `json:"present"`
+				PromptVersion string  `json:"prompt_version,omitempty"`
+				ShortSummary  string  `json:"short_summary,omitempty"`
+				QualityScore  float64 `json:"quality_score,omitempty"`
+				UpdatedAt     string  `json:"updated_at,omitempty"`
+			}{
+				Present:       true,
+				PromptVersion: enrichVersion.String,
+				ShortSummary:  enrichSummary.String,
+				QualityScore:  enrichScore.Float64,
+				UpdatedAt:     enrichUpdatedAt.String,
 			}
 		}
 

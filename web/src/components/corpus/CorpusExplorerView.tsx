@@ -4,7 +4,9 @@ import {
   useListCorpusDocumentsQuery,
   useGetCorpusDocumentQuery,
   useListChunkingStrategiesQuery,
+  useGetDocumentProcessingCoverageQuery,
   CorpusIdentityArgs,
+  DocumentProcessingCoverageItem,
 } from '../../services/api';
 import { IdentityBar } from './IdentityBar';
 import { SourcePanel } from './SourcePanel';
@@ -59,6 +61,21 @@ export const CorpusExplorerView: React.FC<CorpusExplorerViewProps> = ({ initialT
     { skip: !documentId },
   );
 
+  // Preprocessing coverage — uses default identity (fake provider from workflow)
+  const { data: preprocessingCoverageData } = useGetDocumentProcessingCoverageQuery({
+    artifact_type: 'clean_text',
+    prompt_version: 'v1',
+    provider: 'fake',
+    model: 'fake-document-processor',
+  });
+  const preprocessingCoverage = useMemo(() => {
+    const map: Record<string, DocumentProcessingCoverageItem> = {};
+    for (const item of preprocessingCoverageData?.items ?? []) {
+      map[item.source_id] = item;
+    }
+    return map;
+  }, [preprocessingCoverageData]);
+
   const selectedSource = useMemo(
     () => sources.find((s) => s.source_id === sourceId),
     [sources, sourceId],
@@ -108,6 +125,7 @@ export const CorpusExplorerView: React.FC<CorpusExplorerViewProps> = ({ initialT
           isLoading={sourcesLoading}
           selectedId={sourceId}
           onSelect={handleSelectSource}
+          preprocessingCoverage={preprocessingCoverage}
         />
 
         <DocumentBrowser

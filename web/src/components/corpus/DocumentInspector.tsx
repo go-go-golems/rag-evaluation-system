@@ -3,8 +3,57 @@ import {
   CorpusChunk,
   CorpusDocumentDetail,
   CorpusIdentityArgs,
+  useGetDocumentProcessingArtifactsQuery,
+  DocumentProcessingArtifact,
 } from '../../services/api';
 import { ChunkTimelineBar } from './ChunkTimelineBar';
+
+function timeAgoShort(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  if (ms < 60000) return `${Math.floor(ms / 1000)}s`;
+  if (ms < 3600000) return `${Math.floor(ms / 60000)}m`;
+  if (ms < 86400000) return `${Math.floor(ms / 3600000)}h`;
+  return `${Math.floor(ms / 86400000)}d`;
+}
+
+const ArtifactDetail: React.FC<{ artifacts: DocumentProcessingArtifact[] }> = ({ artifacts }) => {
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const selected = selectedIdx !== null ? artifacts[selectedIdx] : null;
+
+  return (
+    <>
+      {selected && (
+        <div className="panel" style={{ borderLeft: '3px solid var(--mac-accent)', marginTop: 6 }}>
+          <div className="panel-header">
+            <span>Artifact: {selected.artifact_type} ({selected.prompt_version})</span>
+            <button className="copy-btn" onClick={() => setSelectedIdx(null)}>✕</button>
+          </div>
+          <div className="panel-body-condensed" style={{ fontSize: 12 }}>
+            <div className="meta-grid">
+              <span className="meta-key">Provider</span>
+              <span className="meta-value">{selected.provider}/{selected.model}</span>
+              <span className="meta-key">Status</span>
+              <span className={`status-${selected.status === 'fresh' ? 'done' : selected.status === 'failed' ? 'error' : 'pending'}`}>{selected.status}</span>
+              <span className="meta-key">Hash</span>
+              <span className="meta-value">{selected.input_hash}</span>
+            </div>
+            {selected.output_text && (
+              <fieldset className="form-section" style={{ marginTop: 6 }}>
+                <legend>Output Text</legend>
+                <div className="text-content" style={{ maxHeight: 200 }}>{selected.output_text}</div>
+              </fieldset>
+            )}
+            {selected.error_message && (
+              <div className="error-box" style={{ marginTop: 6 }}>
+                {selected.error_message}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 
 interface DocumentInspectorProps {
   detail: CorpusDocumentDetail;
@@ -14,7 +63,7 @@ interface DocumentInspectorProps {
 }
 
 export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, chunks, identity, highlightChunkId }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'text' | 'chunks' | 'coverage'>(highlightChunkId ? 'chunks' : 'overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'text' | 'chunks' | 'coverage' | 'artifacts'>(highlightChunkId ? 'chunks' : 'overview');
   const [selectedChunkIdx, setSelectedChunkIdx] = useState<number | null>(() => {
     if (!highlightChunkId) return null;
     const idx = (chunks ?? []).findIndex(c => c.id === highlightChunkId);
@@ -30,11 +79,18 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
 
   const identityLabel = `${identity.provider_type || '?'}/${identity.model || '?'} @ ${identity.dimensions || '?'}`;
 
+  // Fetch document processing artifacts when artifacts tab is active
+  const { data: artifactsData, isLoading: artifactsLoading } = useGetDocumentProcessingArtifactsQuery(
+    doc.id,
+    { skip: activeTab !== 'artifacts' },
+  );
+  const artifacts = artifactsData?.items ?? [];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
       {/* Tabs */}
       <div className="tab-bar">
-        {(['overview', 'text', 'chunks', 'coverage'] as const).map((tab) => (
+        {(['overview', 'text', 'chunks', 'coverage', 'artifacts'] as const).map((tab) => (
           <span
             key={tab}
             className={`tab-item ${activeTab === tab ? 'active' : ''}`}
@@ -108,7 +164,7 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
         {activeTab === 'chunks' && (
           <>
             <div className="section-title">
-              Chunks ({safeChunks.length}) — {embeddedCount} embedded, {missingCount} missing
+              Chunks ({safeChunks.length}) — {embeddedCount} embedded, {missingCount} missing · {safeChunks.filter(c => c.enrichment?.present).length} enriched
             </div>
 
             <ChunkTimelineBar
@@ -124,6 +180,7 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
                   <th>Range</th>
                   <th>Tokens</th>
                   <th>Embed</th>
+                  <th>Enrich</th>
                   <th>ID</th>
                 </tr>
               </thead>
@@ -140,6 +197,12 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
                     <td>
                       <span className={chunk.embedding?.present ? 'accent-green' : 'accent-dim'}>
                         {chunk.embedding?.present ? '●' : '○'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={chunk.enrichment?.present ? 'accent-green' : 'accent-dim'}
+                        title={chunk.enrichment?.short_summary ?? ''}>
+                        {chunk.enrichment?.present ? '●' : '○'}
                       </span>
                     </td>
                     <td className="mono">
@@ -228,6 +291,46 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
                   </tbody>
                 </table>
               </>
+            )}
+          </>
+        )}
+
+        {activeTab === 'artifacts' && (
+          <>
+            <div className="section-title">
+              Document Processing Artifacts ({artifacts.length})
+            </div>
+            {artifactsLoading ? (
+              <span className="text-dim text-mono">Loading...</span>
+            ) : artifacts.length === 0 ? (
+              <span className="text-dim text-mono">No preprocessing artifacts for this document.</span>
+            ) : (
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Version</th>
+                    <th>Provider</th>
+                    <th>Status</th>
+                    <th>Age</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {artifacts.map((a: DocumentProcessingArtifact) => (
+                    <tr key={`${a.artifact_type}-${a.prompt_version}-${a.provider}-${a.model}`}>
+                      <td className="mono">{a.artifact_type}</td>
+                      <td className="mono">{a.prompt_version}</td>
+                      <td className="mono" style={{ fontSize: 10 }}>{a.provider}/{a.model}</td>
+                      <td className={a.status === 'fresh' ? 'status-done' : a.status === 'failed' ? 'status-error' : 'status-pending'}>{a.status}</td>
+                      <td className="mono" style={{ fontSize: 10 }}>{timeAgoShort(a.updated_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            {artifacts.length > 0 && (
+              <ArtifactDetail artifacts={artifacts} />
             )}
           </>
         )}
