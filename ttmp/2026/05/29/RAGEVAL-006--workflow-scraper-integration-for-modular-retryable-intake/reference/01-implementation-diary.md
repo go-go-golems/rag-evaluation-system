@@ -24,6 +24,12 @@ RelatedFiles:
       Note: Phase 0 custom scraper runner spike
     - Path: internal/workflow/echo_runner_test.go
       Note: Phase 0 scheduler/store integration tests
+    - Path: internal/workflow/intake_runner.go
+      Note: Phase 1 Go-native intake runner and chunk_document dispatch
+    - Path: internal/workflow/intake_runner_test.go
+      Note: Phase 1 durable chunk_document workflow test
+    - Path: internal/workflow/ops.go
+      Note: Phase 1 typed intake op contracts
     - Path: ttmp/2026/05/29/RAGEVAL-006--workflow-scraper-integration-for-modular-retryable-intake/design-doc/01-workflow-scraper-intake-integration-design-and-implementation-guide.md
       Note: Primary design guide produced in Step 1
 ExternalSources: []
@@ -32,6 +38,7 @@ LastUpdated: 2026-05-29T18:30:00Z
 WhatFor: Track the design investigation, evidence, decisions, and delivery steps for scraper-backed modular retryable intake.
 WhenToUse: Read before implementing workflow orchestration, LLM preprocessing, chunk enrichment, or scraper runner integration in rag-eval.
 ---
+
 
 
 
@@ -284,3 +291,102 @@ The tricky part was that the compile failure did not come from the custom runner
 - Temporary engine DB: created under `t.TempDir()` in tests.
 - Scraper store: `github.com/go-go-golems/scraper/pkg/engine/store/sqlite`.
 - Scraper scheduler: `github.com/go-go-golems/scraper/pkg/engine/scheduler`.
+
+---
+
+## Step 3: Phase 1 First Slice — Typed Intake Runner and `chunk_document` Operation
+
+After the Phase 0 echo runner proved that scraper can execute a rag-eval custom runner, I started Phase 1 with the safest real operation: `chunk_document`. This operation uses the existing chunking service, does not call external providers, and is already rerun-safe for a document/strategy pair.
+
+The result is the first real durable intake op. A scraper workflow can now run `rag-eval/intake` with operation `chunk_document`, open the rag-eval app database, call `internal/services/chunking.Service.Apply`, persist chunks, and store a compact op result containing document ID, strategy ID, and chunk count.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 2)
+
+**Assistant interpretation:** Continue implementing RAGEVAL-006 phase by phase after the detailed task expansion.
+
+**Inferred user intent:** Make steady implementation progress while preserving the ability to review and debug each slice independently.
+
+### What I did
+
+- Added `internal/workflow/ops.go` with first typed intake op input/output structures.
+- Added operation constants:
+  - `echo`
+  - `chunk_document`
+- Added `internal/workflow/intake_runner.go`:
+  - `IntakeRunner` implements scraper's `runner.Runner` interface;
+  - dispatches by `IntakeOpInput.Operation`;
+  - validates missing operation and unknown operations;
+  - opens/migrates the rag-eval app DB from `db_path`;
+  - calls `chunking.Service.Apply` for `chunk_document`;
+  - returns compact `ChunkDocumentOutput` JSON.
+- Added `internal/workflow/intake_runner_test.go`:
+  - seeds a temporary rag-eval app DB with source/document content;
+  - creates a temporary scraper engine DB;
+  - registers `IntakeRunner`;
+  - creates a workflow containing one `chunk_document` op;
+  - runs `scheduler.RunOnce`;
+  - asserts chunks were written to the app DB and workflow status is `succeeded`;
+  - checks missing `db_path` returns a non-retryable op error.
+- Updated Phase 1 tasks to mark the first chunk operation slice complete.
+
+### Why
+
+`chunk_document` is the right first real operation because it validates the main architecture without introducing provider complexity. It proves that a workflow op can mutate rag-eval's canonical SQLite state through an existing service and that workflow results remain compact.
+
+### What worked
+
+- Focused workflow tests pass.
+- The broader intake/search/workflow test set passes.
+- The `rag-eval` binary still builds.
+- The existing chunking service needed no production behavior changes.
+
+Validation commands:
+
+```text
+GOMAXPROCS=2 GOMEMLIMIT=1024MiB go test ./internal/workflow -count=1 -timeout 60s
+GOMAXPROCS=2 GOMEMLIMIT=1024MiB go test ./internal/db ./internal/ingest ./internal/chunking ./internal/services/source ./internal/services/chunking ./internal/services/document ./internal/services/embedding ./internal/services/search ./internal/workflow -count=1 -timeout 120s
+GOMAXPROCS=2 GOMEMLIMIT=1024MiB go build ./cmd/rag-eval
+```
+
+### What didn't work
+
+- The first `chunk_document` workflow test expected `result.Error == nil`, but scraper's result read path returned a non-nil zero-value `OpError` for a successful result. I adjusted the assertion to treat a nil error or an error with empty code as success for now.
+- This deserves a second look in scraper's result storage/read behavior before relying on `result.Error != nil` as the only success test.
+
+### What I learned
+
+- The service-wrapper approach works: workflow ops do not need to duplicate chunking logic.
+- Result shape should be intentionally compact. Returning full chunks through workflow results would duplicate canonical data and make engine rows heavy.
+- Tests that cross scraper engine DB and rag-eval app DB are straightforward enough to use as the main validation pattern for future ops.
+
+### What was tricky to build
+
+The subtle issue was scraper result error decoding. Successful op completion stores no meaningful error, but the retrieved result may still contain a non-nil zero-value error pointer. For this slice, the test avoids failing on an empty error code. A future scraper-side fix or helper should normalize that behavior so result inspection is less surprising.
+
+### What warrants a second pair of eyes
+
+- Review `internal/workflow/intake_runner.go` error classification. `chunk_document_failed` is currently non-retryable. Some SQLite busy/temporary errors may deserve retryable classification later.
+- Review the use of `db_path` in every op input. It is explicit and easy to debug, but repeated DB open/migrate per op may be inefficient.
+- Review scraper result error decoding behavior.
+
+### What should be done in the future
+
+- Add remaining Phase 1 operations: `compute_embeddings`, `build_bm25`, `select_documents`, and `summarize_workflow`.
+- Add dependency-chain tests, especially chunk → embedding.
+- Decide whether to keep `EchoRunner` after `IntakeRunner` fully supports an echo/no-op operation.
+
+### Code review instructions
+
+- Review:
+  - `internal/workflow/ops.go`
+  - `internal/workflow/intake_runner.go`
+  - `internal/workflow/intake_runner_test.go`
+- Validate with the same commands listed above.
+
+### Technical details
+
+- New real operation: `chunk_document`.
+- Output shape: `{document_id, strategy_id, chunk_count}`.
+- DB behavior: per-op open + migrate using `internal/db.OpenDB` and `internal/db.Migrate`.

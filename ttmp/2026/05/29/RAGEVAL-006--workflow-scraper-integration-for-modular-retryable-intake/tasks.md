@@ -26,11 +26,12 @@ Goal: prove rag-eval can import scraper engine packages and run a tiny custom ru
 
 Goal: turn existing idempotent services into durable workflow operations while preserving direct CLI/service debuggability.
 
-- [ ] Define typed op input/output structs for `scan_source`, `select_documents`, `chunk_document`, `compute_embeddings`, `build_bm25`, and `summarize_workflow`.
-- [ ] Implement operation dispatch with strict validation and compact `OpResult.Data` JSON.
-- [ ] Implement `chunk_document` by calling `internal/services/chunking.Service.Apply`.
+- [x] Define typed op input/output structs for the first `chunk_document` slice; leave remaining op structs for later Phase 1 work.
+- [x] Implement initial operation dispatch with strict validation and compact `OpResult.Data` JSON.
+- [x] Implement `chunk_document` by calling `internal/services/chunking.Service.Apply`.
 - [ ] Implement `compute_embeddings` using a fake/test provider seam first, then the existing provider resolver for real profiles.
 - [ ] Implement `build_bm25` by calling `internal/services/search.Service.BuildBM25`.
+- [x] Add temporary rag-eval DB + scraper engine DB integration test for the `chunk_document` workflow op.
 - [ ] Add temporary rag-eval DB + scraper engine DB integration tests for chunk → embedding dependency flow.
 - [ ] Add tests proving retries do not duplicate chunks or fresh embeddings.
 - [ ] Commit Phase 1 as the first real workflow runner slice.

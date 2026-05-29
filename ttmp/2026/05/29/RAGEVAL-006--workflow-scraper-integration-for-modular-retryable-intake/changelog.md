@@ -44,3 +44,14 @@ Phase 0: added scraper dependency spike and custom echo runner with scheduler in
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/workflow/echo_runner.go — Custom scraper runner compatibility spike
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/workflow/echo_runner_test.go — Temporary SQLite scheduler integration tests
 
+
+## 2026-05-29
+
+Phase 1 first slice: added typed intake runner dispatch and durable chunk_document operation over the existing chunking service.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/workflow/intake_runner.go — Intake runner dispatch and chunk_document service wrapper
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/workflow/intake_runner_test.go — Workflow integration tests for chunk_document
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/internal/workflow/ops.go — Typed op input/output structs for first workflow operation
+
