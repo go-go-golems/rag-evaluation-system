@@ -1,17 +1,6 @@
-services:
-  server:
-    command: go run ./cmd/rag-eval
-    env:
-      RAG_EVAL_ADDRESS: "127.0.0.1:8772"
-      RAG_EVAL_DB: "state/devctl/rag-eval.db"
-      RAG_EVAL_LOG_LEVEL: "debug"
-    ready_pattern: "starting RAG evaluation server"
-    working_dir: "."
-
-  web:
-    command: pnpm dev
-    working_dir: "web"
-
-checks:
-  server_health:
-    command: curl -sf http://127.0.0.1:8772/api/v1/health
+plugins:
+  - id: rag-eval
+    path: python3
+    args:
+      - ./plugins/rag-eval.py
+    priority: 10
