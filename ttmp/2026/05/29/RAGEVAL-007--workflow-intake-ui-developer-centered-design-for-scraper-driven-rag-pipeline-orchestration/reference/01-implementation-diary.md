@@ -204,3 +204,57 @@ The raw HTML elements (bare `<button>`, `<input>`, `<fieldset>`) didn't match th
 - Check `web/src/index.css` for the new CSS additions under `/* ===== Progress Bar ===== */` and `/* ===== Op Graph ===== */`
 - Run: `cd web && pnpm build && cd .. && go build ./cmd/rag-eval`
 - Verify: open http://127.0.0.1:8772 → Workflows tab → click workflow → check progress bar + op graph + inspector
+
+## Step 6: devctl plugin with dynamic port allocation
+
+Created a devctl NDJSON v2 plugin that replaces the inline `.devctl.yaml` services with a proper orchestrated pipeline.
+
+### Prompt Context
+**User prompt (verbatim):** "create a devctl setup to run the vite + backend setup"
+**Assistant interpretation:** Create a devctl plugin that orchestrates the Go backend + Vite dev server.
+**Inferred user intent:** Replace manual tmux-based startup with devctl-managed services.
+**Commit (code):** 3216dc2 — "feat(devctl): add plugin with dynamic port allocation"
+
+Follow-up prompt: "find a free port for each process as part of the planning."
+
+### What I did
+1. Created `plugins/rag-eval.py` — a Python NDJSON v2 devctl plugin with:
+   - `config.mutate`: finds free ports using `socket.bind()` (prefers 8772/5173, falls back to OS-allocated)
+   - `validate.run`: checks for go, pnpm, node_modules, state dir
+   - `build.run`: runs `pnpm install` (if needed) → `pnpm build` → `go build` in order
+   - `launch.plan`: launches backend with health check + Vite dev server with `--port` flag
+   - `command.run`: exposes `build` and `web-build` dynamic commands
+2. Rewrote `.devctl.yaml` from inline services to plugin reference
+3. Updated `web/vite.config.ts` to read `RAG_EVAL_BACKEND_PORT` env var for proxy target
+
+### Why
+The existing `.devctl.yaml` used hardcoded ports and inline service definitions. When ports were occupied (e.g. stale processes), Vite would silently pick a different port, breaking the proxy. The plugin approach lets `config.mutate` find free ports and propagate them through the entire pipeline.
+
+### What worked
+- Dynamic port allocation: when 8772/5173 are occupied, falls back to OS-assigned ports and propagates them correctly
+- The merged config flows from `config.mutate` → `launch.plan` via `input.config` with nested structure
+- Vite reads `RAG_EVAL_BACKEND_PORT` env to set proxy target dynamically
+- `pnpm dev --port N` sets the Vite port explicitly (no more silent fallback)
+
+### What didn't work
+- First attempt used `config.get("services.backend.port")` which treats the dotted key as a single dict key — but the config is nested (`{"services": {"backend": {"port": N}}}`). Fixed with a `cfg_get()` helper that traverses dot paths.
+- `artifacts` field in `build.run` was initially an array but devctl expects `map[string]string`. Fixed to `{"rag-eval-bin": "rag-eval", ...}`.
+
+### What was tricky to build
+- The `find_free_port()` function has a TOCTOU window: the port is free when checked but might be taken by the time the service starts. This is inherent to port allocation. The function tries the preferred port first, then asks the OS for any free port via `bind(0)`.
+- The devctl config merge passes nested objects, not flat dotted-key maps. The `input.config` in `launch.plan` has `{"services": {"backend": {"port": N}}}` not `{"services.backend.port": N}`. Required a recursive key traversal helper.
+
+### What warrants a second pair of eyes
+- The TOCTOU window in port allocation — in rare cases both the health checker and the actual backend could race. Not a real issue since devctl starts services sequentially.
+- The `find_free_port` function uses `SO_REUSEADDR` which on Linux allows binding to a port in TIME_WAIT. On macOS this can cause issues.
+
+### What should be done in the future
+- Add `prepare.run` op for running DB migrations
+- Add profile support (e.g. `devctl up -p prod` uses embedded SPA only, no Vite)
+- Persist allocated ports in `.devctl/state.json` for reattach scenarios
+
+### Code review instructions
+- Start at `plugins/rag-eval.py` — review `find_free_port()`, `cfg_get()`, and the `launch.plan` service definitions
+- Check `web/vite.config.ts` — review `RAG_EVAL_BACKEND_PORT` env var reading
+- Run: `devctl plan && devctl up && devctl status && devctl down`
+- Verify: `curl -s http://127.0.0.1:5173/api/v1/health` returns OK
