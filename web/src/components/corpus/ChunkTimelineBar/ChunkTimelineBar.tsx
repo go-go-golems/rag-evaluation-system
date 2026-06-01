@@ -1,5 +1,5 @@
 import React from 'react';
-import { CorpusChunk } from '../../services/api';
+import { CorpusChunk } from '../../../services/api';
 
 interface ChunkTimelineBarProps {
   chunks: CorpusChunk[];

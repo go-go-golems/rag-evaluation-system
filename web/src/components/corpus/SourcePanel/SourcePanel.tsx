@@ -1,10 +1,10 @@
 import React from 'react';
-import { Caption } from '../foundation';
-import { Panel, ScrollRegion } from '../layout';
+import { Caption } from '../../foundation';
+import { Panel, ScrollRegion } from '../../layout';
 import {
   CorpusSourceSummary,
   DocumentProcessingCoverageItem,
-} from '../../services/api';
+} from '../../../services/api';
 import styles from './SourcePanel.module.css';
 
 interface SourcePanelProps {

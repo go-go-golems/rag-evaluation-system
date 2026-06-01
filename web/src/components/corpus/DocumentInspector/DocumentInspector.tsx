@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { Caption, StatusText } from '../foundation';
-import { Panel, ScrollRegion, TabList } from '../layout';
-import { DataTable, MetadataGrid, type DataTableColumn, type MetadataGridItem } from '../molecules';
+import { Caption, StatusText } from '../../foundation';
+import { Panel, ScrollRegion, TabList } from '../../layout';
+import { DataTable, MetadataGrid, type DataTableColumn, type MetadataGridItem } from '../../molecules';
 import {
   CorpusChunk,
   CorpusDocumentDetail,
   CorpusIdentityArgs,
   useGetDocumentProcessingArtifactsQuery,
   DocumentProcessingArtifact,
-} from '../../services/api';
-import { ChunkTimelineBar } from './ChunkTimelineBar';
+} from '../../../services/api';
+import { ChunkTimelineBar } from '../ChunkTimelineBar/ChunkTimelineBar';
 import styles from './DocumentInspector.module.css';
 
 function timeAgoShort(iso: string): string {

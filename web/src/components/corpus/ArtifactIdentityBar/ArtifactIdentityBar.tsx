@@ -4,7 +4,7 @@ import {
   ChunkEnrichmentIdentity,
   DocumentProcessingCoverageArgs,
   ChunkEnrichmentCoverageArgs,
-} from '../../services/api';
+} from '../../../services/api';
 
 // ─── Document Processing Identity Selector ────────────────────────────────
 

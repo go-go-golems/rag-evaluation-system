@@ -45,7 +45,9 @@ RelatedFiles:
         Top-level web app shell
         Root app shell uses AppShell primitive
     - Path: web/src/components/corpus/CorpusExplorerView.tsx
-      Note: Corpus source/document/chunk exploration and artifact coverage workflow
+      Note: |-
+        Corpus source/document/chunk exploration and artifact coverage workflow
+        Corpus widget import organization
     - Path: web/src/components/corpus/DocumentBrowser.module.css
       Note: DocumentBrowser-specific anatomy after primitive adoption
     - Path: web/src/components/corpus/DocumentBrowser.stories.tsx
@@ -146,8 +148,12 @@ RelatedFiles:
       Note: Workflow op result organism
     - Path: web/src/components/organisms/WorkflowSummaryPanel/WorkflowSummaryPanel.tsx
       Note: Workflow summary/progress organism
+    - Path: web/src/components/pages/PipelinePage/PipelinePage.tsx
+      Note: Pipeline page story boundary
     - Path: web/src/components/pages/SearchWorkbenchPage/SearchWorkbenchPage.tsx
       Note: Search Workbench page boundary
+    - Path: web/src/components/pipeline/PipelineOverview.tsx
+      Note: Pipeline design-system presentation boundary
     - Path: web/src/components/search/SearchView.module.css
       Note: Search Workbench page shell CSS ownership
     - Path: web/src/components/search/SearchView.tsx
@@ -170,6 +176,7 @@ LastUpdated: 2026-06-01T00:00:00-04:00
 WhatFor: Use this report before refactoring the RAG Evaluation web UI, extracting design-system primitives, adding Storybook/validators, or authoring DMETA IR for the RAG dashboard.
 WhenToUse: Read when onboarding to the web app or planning the first design-system/DMETA vertical slice for search, corpus, workflow, embedding, or evaluation dashboards.
 ---
+
 
 
 

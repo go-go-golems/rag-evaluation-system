@@ -10,11 +10,11 @@ import {
   DocumentProcessingCoverageArgs,
   DocumentProcessingCoverageItem,
 } from '../../services/api';
-import { IdentityBar } from './IdentityBar';
-import { DocProcessingIdentityBar } from './ArtifactIdentityBar';
-import { SourcePanel } from './SourcePanel';
-import { DocumentBrowser } from './DocumentBrowser';
-import { DocumentInspector } from './DocumentInspector';
+import { IdentityBar } from './IdentityBar/IdentityBar';
+import { DocProcessingIdentityBar } from './ArtifactIdentityBar/ArtifactIdentityBar';
+import { SourcePanel } from './SourcePanel/SourcePanel';
+import { DocumentBrowser } from './DocumentBrowser/DocumentBrowser';
+import { DocumentInspector } from './DocumentInspector/DocumentInspector';
 
 export interface ChunkNavigationTarget {
   documentId: string;

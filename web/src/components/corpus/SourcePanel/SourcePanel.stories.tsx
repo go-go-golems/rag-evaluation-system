@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { SourcePanel } from './SourcePanel';
-import type { CorpusSourceSummary, DocumentProcessingCoverageItem } from '../../services/api';
+import type { CorpusSourceSummary, DocumentProcessingCoverageItem } from '../../../services/api';
 
 const meta = {
   title: 'Component Library/Corpus/SourcePanel',

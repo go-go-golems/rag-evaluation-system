@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Caption, StatusText } from '../foundation';
-import { Panel, ScrollRegion } from '../layout';
-import { DataTable, type DataTableColumn } from '../molecules';
-import { CorpusDocumentRow } from '../../services/api';
+import { Caption, StatusText } from '../../foundation';
+import { Panel, ScrollRegion } from '../../layout';
+import { DataTable, type DataTableColumn } from '../../molecules';
+import { CorpusDocumentRow } from '../../../services/api';
 import styles from './DocumentBrowser.module.css';
 
 interface DocumentBrowserProps {

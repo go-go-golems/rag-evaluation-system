@@ -265,3 +265,15 @@ Refactored EmbeddingsView through shared Panel/FormRow/MetadataGrid/DataTable pr
 - /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/embeddings/EmbeddingsView.module.css — View-specific embeddings anatomy after primitive adoption
 - /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/embeddings/EmbeddingsView.tsx — Embeddings view now composes shared design-system primitives
 
+
+## 2026-06-01
+
+Added storyable PipelineOverview/PipelinePage boundaries and organized Corpus widgets into per-widget directories
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/01/RAG-WEB-DESIGN-SYSTEM-REVIEW--rag-evaluation-web-architecture-and-design-system-review/reference/01-investigation-diary.md — Recorded Pipeline stories and Corpus organization
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/corpus/CorpusExplorerView.tsx — Updated Corpus imports after per-widget folder organization
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/pages/PipelinePage/PipelinePage.tsx — Storyable pipeline page boundary
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/pipeline/PipelineOverview.tsx — Storyable pipeline presentation boundary
+

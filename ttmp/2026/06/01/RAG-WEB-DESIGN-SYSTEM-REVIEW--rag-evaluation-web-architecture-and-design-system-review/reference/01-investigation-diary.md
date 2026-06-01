@@ -38,6 +38,8 @@ RelatedFiles:
         Diary evidence for Redux Provider story fix
     - Path: web/src/components/corpus/DocumentInspector.tsx
       Note: Diary evidence for Corpus inspector primitive adoption
+    - Path: web/src/components/corpus/DocumentInspector/DocumentInspector.stories.tsx
+      Note: Moved Corpus story remains co-located with widget
     - Path: web/src/components/corpus/SourcePanel.stories.tsx
       Note: Diary evidence for Corpus Storybook coverage
     - Path: web/src/components/corpus/SourcePanel.tsx
@@ -96,8 +98,12 @@ RelatedFiles:
       Note: Diary evidence for workflow op result extraction
     - Path: web/src/components/organisms/WorkflowSummaryPanel/WorkflowSummaryPanel.tsx
       Note: Diary evidence for workflow detail extraction
+    - Path: web/src/components/pages/PipelinePage/PipelinePage.stories.tsx
+      Note: Diary evidence for required page story coverage
     - Path: web/src/components/pages/SearchWorkbenchPage/SearchWorkbenchPage.tsx
       Note: Diary evidence for page-boundary extraction
+    - Path: web/src/components/pipeline/PipelineOverview.stories.tsx
+      Note: Diary evidence for required component story coverage
     - Path: web/src/components/search/SearchView.module.css
       Note: Phase 2 layout primitive migration diary evidence
     - Path: web/src/components/search/SearchView.tsx
@@ -121,6 +127,7 @@ LastUpdated: 2026-06-01T00:00:00-04:00
 WhatFor: Use this diary to understand how the RAG web review was investigated, what commands were run, what failed, and how to continue.
 WhenToUse: Read before continuing the RAG web design-system or DMETA IR implementation work.
 ---
+
 
 
 
@@ -2096,6 +2103,115 @@ This keeps the refactor inside the current scope: it improves design-system adop
 
 - Start with `web/src/components/embeddings/EmbeddingsView.tsx` and compare the preserved hooks/effects/handlers against the previous behavior.
 - Review `web/src/components/embeddings/EmbeddingsView.module.css` for view-only CSS ownership.
+- Validate with:
+  - `cd web && pnpm typecheck`
+  - `cd web && pnpm build`
+  - `cd web && pnpm build-storybook`
+
+### Technical details
+
+Validation commands that passed:
+
+```bash
+cd 2026-05-27--rag-evaluation-system/web
+pnpm typecheck
+pnpm build
+pnpm build-storybook
+```
+
+## Step 21: Add Storyable Pipeline Boundaries and Organize Corpus Widgets
+
+I continued the cleanup by converting the lightweight pipeline dashboard from raw global classes into a storyable presentation component and an explicit page boundary. I also applied the user's organizational rule to Corpus widgets: each public widget now lives in its own subdirectory with its component, CSS module, and Storybook story co-located where applicable.
+
+This step also records a strengthened process rule: every reusable extraction or page boundary added from here must get a Storybook story in the same change. For API-heavy views, the pattern is to split a DTO-shaped presentational component/page from the RTK Query container and story the presentational boundary.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue"
+
+**Assistant interpretation:** Continue reducing old global CSS usage and improve design-system/component organization.
+
+**Inferred user intent:** The user wants the refactor to keep progressing systematically through remaining older views.
+
+**User prompt (verbatim):** "add storybook stories as you go, never forget that"
+
+**Assistant interpretation:** Treat Storybook stories as mandatory for every reusable component/page extraction or reorganization step.
+
+**Inferred user intent:** The user wants Storybook to remain the review surface and contract for design-system work, not an afterthought.
+
+**User prompt (verbatim):** "for pages too"
+
+**Assistant interpretation:** Page-level boundaries also need Storybook stories, not only atoms/molecules/organisms.
+
+**Inferred user intent:** The user wants page composition states to be reviewable in Storybook even when the runtime container uses RTK Query.
+
+**User prompt (verbatim):** "organize corpus widgets in subdirectories per widget as well."
+
+**Assistant interpretation:** Move Corpus widgets from a flat directory into per-widget folders, matching the reusable component organization used elsewhere.
+
+**Inferred user intent:** The user wants consistent file organization across component areas so stories, styles, and component code stay co-located.
+
+**Commit (code):** N/A at time of writing — changes pending commit.
+
+### What I did
+
+- Added `web/src/components/pipeline/PipelineOverview.tsx` as a DTO-shaped presentational component.
+- Added `web/src/components/pipeline/PipelineOverview.stories.tsx` with populated/loading/empty states.
+- Added `web/src/components/pages/PipelinePage/PipelinePage.tsx` as an explicit page boundary.
+- Added `web/src/components/pages/PipelinePage/PipelinePage.stories.tsx` with populated/loading/empty states.
+- Updated `PipelineView` to remain the RTK Query container and delegate rendering to `PipelinePage`.
+- Moved Corpus widgets into per-widget directories:
+  - `ArtifactIdentityBar/ArtifactIdentityBar.tsx`
+  - `ChunkTimelineBar/ChunkTimelineBar.tsx`
+  - `DocumentBrowser/DocumentBrowser.tsx`, `.module.css`, `.stories.tsx`
+  - `DocumentInspector/DocumentInspector.tsx`, `.module.css`, `.stories.tsx`
+  - `IdentityBar/IdentityBar.tsx`
+  - `SourcePanel/SourcePanel.tsx`, `.module.css`, `.stories.tsx`
+- Updated imports after the directory move.
+
+### Why
+
+- `PipelineView` was still using raw `panel`, `data-table`, status, and text classes directly.
+- The page-story requirement means API-heavy containers should delegate to storyable presentational/page boundaries.
+- Corpus had already grown enough widgets that a flat folder made ownership harder to scan.
+
+### What worked
+
+- `pnpm typecheck` passed.
+- `pnpm build` passed.
+- `pnpm build-storybook` passed, including the new Pipeline overview/page stories and the moved Corpus stories.
+
+### What didn't work
+
+- `pnpm build` rewrote `internal/web/dist/index.html`; I reverted the generated embed artifact before committing.
+- Storybook still emits the known large iframe chunk warning; build succeeds.
+
+### What I learned
+
+- The container/page/presentational split works well for page stories without introducing API mocking yet.
+- Corpus story files survived the subdirectory move cleanly once service/store import paths were adjusted.
+
+### What was tricky to build
+
+- Moving Corpus widgets required careful relative-import updates because each component moved one directory deeper.
+- The page story needed to avoid live RTK Query dependencies, so `PipelinePage` receives DTO-shaped props and `PipelineView` owns fetching.
+
+### What warrants a second pair of eyes
+
+- Whether `PipelineOverview` should live under `components/pipeline` long-term or under `components/organisms/PipelineOverview` if it becomes reusable outside the page.
+- Whether the Corpus identity bars should also receive Storybook stories and primitive cleanup in a follow-up step.
+
+### What should be done in the future
+
+- Add stories for Corpus identity/artifact bars when they are cleaned up.
+- Continue applying the story-required rule to all future page and component boundaries.
+- Consider adding a SearchWorkbench page story once RTK Query mocking or a presentational page split exists.
+
+### Code review instructions
+
+- Review `web/src/components/pipeline/PipelineOverview.tsx` and its story first.
+- Review `web/src/components/pages/PipelinePage/PipelinePage.tsx` and its story next.
+- Review `web/src/components/corpus/CorpusExplorerView.tsx` import changes and the moved Corpus widget directories.
 - Validate with:
   - `cd web && pnpm typecheck`
   - `cd web && pnpm build`

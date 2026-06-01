@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DocumentBrowser } from './DocumentBrowser';
-import type { CorpusDocumentRow } from '../../services/api';
+import type { CorpusDocumentRow } from '../../../services/api';
 
 const meta = {
   title: 'Component Library/Corpus/DocumentBrowser',

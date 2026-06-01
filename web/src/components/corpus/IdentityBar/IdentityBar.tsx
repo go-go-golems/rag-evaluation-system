@@ -1,5 +1,5 @@
 import React from 'react';
-import { CorpusIdentityArgs } from '../../services/api';
+import { CorpusIdentityArgs } from '../../../services/api';
 
 interface IdentityBarProps {
   identity: CorpusIdentityArgs;
