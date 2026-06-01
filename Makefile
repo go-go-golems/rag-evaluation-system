@@ -1,4 +1,4 @@
-.PHONY: build run test clean web-build web-dev dmeta-validate
+.PHONY: build run test clean web-build web-dev
 
 BINARY := rag-eval
 DB_PATH ?= data/rag-eval.db
@@ -26,8 +26,6 @@ web-dev:
 web-build:
 	cd web && pnpm build
 
-dmeta-validate:
-	python3 scripts/validate-dmeta-ir.py
 
 # Build Go binary with embedded SPA
 build-full: web-build

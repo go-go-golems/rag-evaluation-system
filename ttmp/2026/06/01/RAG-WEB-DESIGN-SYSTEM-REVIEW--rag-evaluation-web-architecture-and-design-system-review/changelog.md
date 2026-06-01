@@ -100,3 +100,15 @@ Added a local dmeta-ir validator and Makefile target for YAML parsing, manifest 
 - /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/scripts/validate-dmeta-ir.py — Local validator for RAG DMETA IR seed catalog
 - /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/01/RAG-WEB-DESIGN-SYSTEM-REVIEW--rag-evaluation-web-architecture-and-design-system-review/reference/01-investigation-diary.md — Recorded validator implementation and initial false positives
 
+
+## 2026-06-01
+
+Adjusted scope to documentation-only DMETA IR through Phase 5; removed premature Phase 7 validator tooling and deferred scaffolds/validators
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/dmeta-ir/README.md — Documents that the RAG DMETA IR catalog is documentation-only for current scope
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/dmeta-ir/instantiations/rag-evaluation-dashboard.yaml — Clarifies no validation or generated React scaffolds are required now
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/01/RAG-WEB-DESIGN-SYSTEM-REVIEW--rag-evaluation-web-architecture-and-design-system-review/reference/01-investigation-diary.md — Records scope correction and validator removal
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/01/RAG-WEB-DESIGN-SYSTEM-REVIEW--rag-evaluation-web-architecture-and-design-system-review/tasks.md — Aligns task list with phases 3-5 and defers phases 6-7
+

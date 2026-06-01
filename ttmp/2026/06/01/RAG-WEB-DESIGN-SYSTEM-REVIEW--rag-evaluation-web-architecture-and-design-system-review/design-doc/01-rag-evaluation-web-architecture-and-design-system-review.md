@@ -12,8 +12,6 @@ DocType: design-doc
 Intent: long-term
 Owners: []
 RelatedFiles:
-    - Path: Makefile
-      Note: Expose DMETA IR validation as make dmeta-validate
     - Path: cmd/rag-eval/cmds/serve/server.go
       Note: HTTP server wiring for API handlers and embedded SPA
     - Path: dmeta-ir/README.md
@@ -36,8 +34,6 @@ RelatedFiles:
       Note: Workflow
     - Path: internal/db/db.go
       Note: SQLite schema for sources
-    - Path: scripts/validate-dmeta-ir.py
-      Note: Executable validation for the new RAG DMETA IR catalog
     - Path: web/.storybook/main.ts
       Note: Storybook React Vite configuration
     - Path: web/.storybook/preview.ts
@@ -102,6 +98,7 @@ LastUpdated: 2026-06-01T00:00:00-04:00
 WhatFor: Use this report before refactoring the RAG Evaluation web UI, extracting design-system primitives, adding Storybook/validators, or authoring DMETA IR for the RAG dashboard.
 WhenToUse: Read when onboarding to the web app or planning the first design-system/DMETA vertical slice for search, corpus, workflow, embedding, or evaluation dashboards.
 ---
+
 
 
 

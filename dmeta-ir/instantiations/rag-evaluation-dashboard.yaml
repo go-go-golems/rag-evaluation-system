@@ -33,7 +33,8 @@ instance:
     - rag.retrieval_results_panel
     - rag.result_inspector_panel
   human_notes: >
-    This instantiation is documentation/catalog seed work. Generation tooling and
-    duplicate-ID validation should be added in a later phase.
+    This instantiation is documentation/catalog seed work only. It records the
+    intended Search Workbench slice without requiring validation or generated React
+    scaffolds in the current scope.
   non_goals:
     - Does not model corpus explorer or workflow monitor templates yet.

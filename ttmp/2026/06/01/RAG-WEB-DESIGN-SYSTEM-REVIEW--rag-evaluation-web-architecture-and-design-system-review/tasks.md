@@ -26,14 +26,15 @@
 
 ## TODO
 
-- [x] Phase 2 follow-up: extract `SearchControlsPanel` with interactive and loading Storybook stories.
-- [x] Phase 2 follow-up: extract `RetrievalResultsPanel` with empty, loading, hybrid results, and error Storybook stories.
-- [x] Phase 2 follow-up: extract `CoveragePanel` with complete and sparse coverage Storybook stories.
-- [x] Phase 2 follow-up: extract `QueryPresetList` with TTC query Storybook story.
-- [x] Phase 2 follow-up: refactor `SearchView.tsx` to compose extracted controls/results/coverage/preset components while preserving behavior.
-- [x] Phase 2 follow-up: extract `ResultInspectorPanel` and add stories for detail/BM25/document-loading inspector states.
-- [x] Phase 2 follow-up: migrate Search Workbench page shell from inline flex layout to `DashboardGrid`/`Stack` plus `SearchView.module.css`.
-- [ ] Phase 2 follow-up: expand `ResultInspectorPanel` stories with explicit chunk-tab, document-tab, and no-document states once tab state can be controlled externally or via story interactions.
-- [x] Phase 3: add initial `dmeta-ir` core/interaction/Web MDS YAML for the Search Workbench vertical slice.
-- [x] Phase 3 follow-up: add a repository script that validates duplicate IDs, manifest references, required human-readable YAML fields, and key representation/action/template references.
-- [ ] Phase 3 follow-up: add generated React scaffold output and promotion metadata once RAG DMETA generation tooling exists.
+- [x] Phase 3: extract `SearchControlsPanel` with interactive and loading Storybook stories.
+- [x] Phase 3: extract `RetrievalResultsPanel` with empty, loading, hybrid results, and error Storybook stories.
+- [x] Phase 3: extract `CoveragePanel` with complete and sparse coverage Storybook stories.
+- [x] Phase 3: extract `QueryPresetList` with TTC query Storybook story.
+- [x] Phase 3: refactor `SearchView.tsx` to compose extracted controls/results/coverage/preset components while preserving behavior.
+- [x] Phase 3: extract `ResultInspectorPanel` and add stories for detail/BM25/document-loading inspector states.
+- [x] Phase 3: migrate Search Workbench page shell from inline flex layout to `DashboardGrid`/`Stack` plus `SearchView.module.css`.
+- [x] Phase 4: add Storybook review surfaces for the Search Workbench organisms/molecules extracted so far.
+- [ ] Phase 4 optional follow-up: expand `ResultInspectorPanel` stories with explicit chunk-tab, document-tab, and no-document states once tab state can be controlled externally or via story interactions.
+- [x] Phase 5: add initial documentation-only `dmeta-ir` core/interaction/Web MDS YAML for the Search Workbench vertical slice.
+- [ ] Deferred beyond requested scope (Phase 6): generated React scaffold output and promotion metadata.
+- [ ] Deferred beyond requested scope (Phase 7): executable validators for the documentation-only IR catalog.

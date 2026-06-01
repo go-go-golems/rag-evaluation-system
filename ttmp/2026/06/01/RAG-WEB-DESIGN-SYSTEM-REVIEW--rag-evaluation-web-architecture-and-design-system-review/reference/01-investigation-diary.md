@@ -12,8 +12,6 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
-    - Path: Makefile
-      Note: Phase 3 validator command diary evidence
     - Path: dmeta-ir/README.md
       Note: Phase 3 diary evidence for catalog boundary
     - Path: dmeta-ir/core-model/archetypes/10-search-workbench.yaml
@@ -22,8 +20,6 @@ RelatedFiles:
       Note: Phase 3 Interaction IR diary evidence
     - Path: dmeta-ir/meta-design-systems/web/widgets/search-workbench.yaml
       Note: Phase 3 Web MDS diary evidence
-    - Path: scripts/validate-dmeta-ir.py
-      Note: Phase 3 validator diary evidence
     - Path: ttmp/2026/06/01/RAG-WEB-DESIGN-SYSTEM-REVIEW--rag-evaluation-web-architecture-and-design-system-review/design-doc/01-rag-evaluation-web-architecture-and-design-system-review.md
       Note: Primary report produced by the investigation
     - Path: web/package.json
@@ -62,6 +58,7 @@ LastUpdated: 2026-06-01T00:00:00-04:00
 WhatFor: Use this diary to understand how the RAG web review was investigated, what commands were run, what failed, and how to continue.
 WhenToUse: Read before continuing the RAG web design-system or DMETA IR implementation work.
 ---
+
 
 
 
@@ -825,4 +822,92 @@ Validation output:
 ```text
 python3 scripts/validate-dmeta-ir.py
 DMETA IR validation passed (15 YAML files, 36 IDs)
+```
+
+## Step 8: Restrict the Current Scope to Documentation-Only IR Through Phase 5
+
+I adjusted the work after the user clarified that the IR is currently documentation-only and should not be validated or used for generated scaffolds. The implementation now stops at the Phase 5 outcome: a hand-authored Search Workbench DMETA-style YAML catalog that documents the intended core, interaction, and Web MDS layers.
+
+This step deliberately removes the executable IR validator added in the prior step and leaves Phase 6 scaffolding plus Phase 7 validation as deferred, out-of-scope work. The diary keeps the earlier validator attempt as historical context because it explains what was tried and why it was backed out.
+
+### Prompt Context
+
+**User prompt (verbatim):** "no need to validate or scaffold from the IR< currently we are just creating the yaml as documentation purposes. 
+
+do up to phase 5 (included), but none of phase 6 and 7"
+
+**Assistant interpretation:** Keep the RAG DMETA IR as documentation only, complete work through the report's Phase 5, and avoid Phase 6 generated scaffolds and Phase 7 validators.
+
+**Inferred user intent:** The user wants useful YAML documentation and design-system/component extraction, but does not want premature tooling around the IR yet.
+
+**Commit (code):** N/A at time of writing — scope correction pending commit.
+
+### What I did
+
+- Removed `scripts/validate-dmeta-ir.py`.
+- Removed the `make dmeta-validate` target from `Makefile`.
+- Updated `dmeta-ir/README.md` to state that the catalog is documentation-only for now.
+- Updated `dmeta-ir/instantiations/rag-evaluation-dashboard.yaml` to state that no validation or generated scaffolds are required in the current scope.
+- Updated `tasks.md` so:
+  - Search component extraction maps to Phase 3,
+  - Storybook review surfaces map to Phase 4,
+  - documentation-only `dmeta-ir` maps to Phase 5,
+  - generated scaffolds are deferred as Phase 6,
+  - executable validators are deferred as Phase 7.
+- Removed stale docmgr related-file entries for the deleted validator script and Makefile validator target.
+
+### Why
+
+- The user's scope clarification supersedes the previous validator follow-up.
+- The YAML files are meant to document design intent right now, not drive code generation or enforce repository contracts.
+- Removing premature tooling keeps the work aligned with the requested phase boundary.
+
+### What worked
+
+- The repository now contains the Phase 5 documentation artifact without Phase 6/7 tooling.
+- The ticket tasks now match the phase numbering in the report.
+- `docmgr --root ttmp doctor --ticket RAG-WEB-DESIGN-SYSTEM-REVIEW --stale-after 30` passed after removing stale file relations.
+
+### What didn't work
+
+- The previous step went one phase too far by adding a validator. That is now backed out rather than expanded.
+
+### What I learned
+
+- For this RAG effort, the near-term value is a readable design/IR reference, not executable IR governance.
+- Phase boundaries matter: validators and scaffolds should wait until the user explicitly asks for Phase 6 or Phase 7 work.
+
+### What was tricky to build
+
+- The tricky part was preserving the diary trail while removing the actual validator. I left the previous diary entry intact as historical record, then added this corrective step so future readers understand why the script disappeared.
+- Docmgr related files also needed cleanup because removed files should not remain in active document frontmatter.
+
+### What warrants a second pair of eyes
+
+- Whether the Phase 5 YAML should keep `generation_policy` fields as future intent or soften that language further while the catalog remains documentation-only.
+- Whether the task list should move the optional `ResultInspectorPanel` tab-state stories into a separate future ticket.
+
+### What should be done in the future
+
+- Do not add IR validators unless Phase 7 is explicitly requested.
+- Do not add generated React scaffolds or promotion metadata unless Phase 6 is explicitly requested.
+- Keep improving the YAML as human-readable documentation if additional Search Workbench concepts need clarification.
+
+### Code review instructions
+
+- Confirm `scripts/validate-dmeta-ir.py` is removed.
+- Confirm `Makefile` no longer exposes `dmeta-validate`.
+- Review `dmeta-ir/README.md` and `dmeta-ir/instantiations/rag-evaluation-dashboard.yaml` for documentation-only wording.
+- Review `tasks.md` for Phase 3/4/5 completion and Phase 6/7 deferral.
+
+### Technical details
+
+The scope boundary is now:
+
+```text
+Phase 3: split SearchView into reusable pieces — done
+Phase 4: add Storybook/component review surface — done
+Phase 5: author documentation-only DMETA IR vertical slice — done
+Phase 6: generated scaffolds/metadata — deferred
+Phase 7: validators — deferred
 ```
