@@ -14,10 +14,11 @@
 
 ## Phase 1 — Audit current packages and workflows
 
-- [ ] Identify all npm packages owned by Manuel that should use trusted publishing.
-- [ ] For each package, record npm package name, GitHub owner/repo, workflow filename, and optional GitHub environment.
-- [ ] Inspect current GitHub Actions workflows for `NODE_AUTH_TOKEN`, `NPM_TOKEN`, `--provenance`, and `id-token: write`.
+- [x] Identify the public `go-go-os-frontend` npm packages listed by `scripts/packages/package-sets.mjs`.
+- [x] Record the pilot package tuple for `@go-go-golems/os-repl`: repo `go-go-golems/go-go-os-frontend`, workflow `publish-npm.yml`, environment `npm-production`.
+- [x] Inspect current `go-go-os-frontend` GitHub Actions workflow for `NODE_AUTH_TOKEN`, Vault token use, `--provenance`, and `id-token: write`.
 - [ ] Identify packages currently configured with granular tokens or bypass-2FA token publishing.
+- [ ] List current npm trusted publisher config for `@go-go-golems/os-repl` from an authenticated npm session.
 
 ## Phase 2 — Configure trusted publishing safely
 
