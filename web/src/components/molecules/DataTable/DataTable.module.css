@@ -1,0 +1,10 @@
+.root { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 11px; }
+.root th { position: sticky; top: 0; z-index: 1; background: var(--mac-surface); color: var(--mac-text); border-bottom: 1px solid var(--mac-border); padding: 3px 4px; text-align: left; }
+.root td { border-bottom: 1px solid var(--mac-border-subtle, #ddd); padding: 3px 4px; vertical-align: top; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.selectable { cursor: pointer; }
+.selectable:hover { background: var(--mac-surface-2); }
+.selected { background: var(--mac-invert) !important; color: var(--mac-invert-text) !important; }
+.start { text-align: left; }
+.end { text-align: right; }
+.center { text-align: center; }
+.empty { padding: 24px !important; text-align: center; color: var(--mac-text-dim); }

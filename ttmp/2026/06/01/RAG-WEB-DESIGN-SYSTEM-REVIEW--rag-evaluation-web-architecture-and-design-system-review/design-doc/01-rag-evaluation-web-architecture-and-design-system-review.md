@@ -48,6 +48,8 @@ RelatedFiles:
       Note: Document detail tabs for text
     - Path: web/src/components/embeddings/EmbeddingsView.tsx
       Note: Embedding compute and stored-vector similarity inspector
+    - Path: web/src/components/foundation/Caption/Caption.tsx
+      Note: Foundation caption primitive added from reusable design-system plan
     - Path: web/src/components/foundation/StatusText/StatusText.tsx
       Note: Foundation workflow/status tone primitive introduced in Phase 1
     - Path: web/src/components/foundation/Text/Text.stories.tsx
@@ -56,14 +58,26 @@ RelatedFiles:
       Note: Foundation typography primitive introduced in Phase 1
     - Path: web/src/components/index.ts
       Note: Public component barrel for foundation and layout primitives
+    - Path: web/src/components/layout/AppShell/AppShell.tsx
+      Note: App shell primitive added from reusable design-system plan
     - Path: web/src/components/layout/DashboardGrid/DashboardGrid.stories.tsx
       Note: Phase 2 co-located layout Storybook story
     - Path: web/src/components/layout/DashboardGrid/DashboardGrid.tsx
       Note: Dashboard grid recipe primitive introduced in Phase 1
+    - Path: web/src/components/layout/FormRow/FormRow.tsx
+      Note: Form row primitive added from reusable design-system plan
     - Path: web/src/components/layout/Panel/Panel.tsx
       Note: Layout panel primitive introduced in Phase 1
+    - Path: web/src/components/layout/ScrollRegion/ScrollRegion.tsx
+      Note: Scroll region primitive added from reusable design-system plan
+    - Path: web/src/components/layout/TabList/TabList.tsx
+      Note: Controlled tab primitive added from reusable design-system plan
     - Path: web/src/components/molecules/CoveragePanel/CoveragePanel.tsx
       Note: Phase 2 extracted embedding coverage molecule
+    - Path: web/src/components/molecules/DataTable/DataTable.tsx
+      Note: Reusable dense data table molecule for results/lists
+    - Path: web/src/components/molecules/MetadataGrid/MetadataGrid.tsx
+      Note: Reusable metadata grid molecule for inspectors/details
     - Path: web/src/components/molecules/QueryPresetList/QueryPresetList.tsx
       Note: Phase 2 extracted query preset molecule
     - Path: web/src/components/organisms/ResultInspectorPanel/ResultInspectorPanel.stories.tsx
@@ -98,6 +112,7 @@ LastUpdated: 2026-06-01T00:00:00-04:00
 WhatFor: Use this report before refactoring the RAG Evaluation web UI, extracting design-system primitives, adding Storybook/validators, or authoring DMETA IR for the RAG dashboard.
 WhenToUse: Read when onboarding to the web app or planning the first design-system/DMETA vertical slice for search, corpus, workflow, embedding, or evaluation dashboards.
 ---
+
 
 
 

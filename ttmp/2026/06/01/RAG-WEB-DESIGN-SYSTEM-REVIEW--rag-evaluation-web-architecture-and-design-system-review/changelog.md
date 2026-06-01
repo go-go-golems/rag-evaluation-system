@@ -112,3 +112,19 @@ Adjusted scope to documentation-only DMETA IR through Phase 5; removed premature
 - /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/01/RAG-WEB-DESIGN-SYSTEM-REVIEW--rag-evaluation-web-architecture-and-design-system-review/reference/01-investigation-diary.md — Records scope correction and validator removal
 - /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/01/RAG-WEB-DESIGN-SYSTEM-REVIEW--rag-evaluation-web-architecture-and-design-system-review/tasks.md — Aligns task list with phases 3-5 and defers phases 6-7
 
+
+## 2026-06-01
+
+Expanded the reusable RAG design system with Caption, AppShell, ScrollRegion, TabList, FormRow, MetadataGrid, and DataTable plus stories
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/01/RAG-WEB-DESIGN-SYSTEM-REVIEW--rag-evaluation-web-architecture-and-design-system-review/reference/01-investigation-diary.md — Recorded expanded design-system primitive extraction
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/foundation/Caption/Caption.tsx — Foundation caption primitive for compact metadata labels
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/layout/AppShell/AppShell.tsx — Application shell layout primitive
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/layout/FormRow/FormRow.tsx — Reusable form row primitive
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/layout/ScrollRegion/ScrollRegion.tsx — Reusable scroll ownership primitive
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/layout/TabList/TabList.tsx — Controlled tab-list layout primitive
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/molecules/DataTable/DataTable.tsx — Reusable dense data table molecule
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/molecules/MetadataGrid/MetadataGrid.tsx — Reusable key/value metadata molecule
+

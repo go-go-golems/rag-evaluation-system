@@ -1,0 +1,4 @@
+.root { display: flex; border-bottom: 1px solid var(--mac-border); background: var(--mac-surface); }
+.item { appearance: none; border: 0; border-right: 1px solid var(--mac-border); background: transparent; color: var(--mac-text); font-family: var(--font-mono); font-size: 11px; padding: 4px 10px; cursor: pointer; text-transform: uppercase; }
+.item:hover { background: var(--mac-surface-2); }
+.active { background: var(--mac-bg); font-weight: 700; }

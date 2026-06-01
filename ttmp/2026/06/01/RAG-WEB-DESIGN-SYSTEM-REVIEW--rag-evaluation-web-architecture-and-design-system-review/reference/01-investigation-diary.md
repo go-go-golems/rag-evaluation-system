@@ -26,12 +26,20 @@ RelatedFiles:
       Note: Phase 0/2 tooling changes
     - Path: web/src/App.tsx
       Note: App shell and navigation event evidence
+    - Path: web/src/components/foundation/Caption/Caption.tsx
+      Note: Diary evidence for expanded primitive extraction
     - Path: web/src/components/foundation/index.ts
       Note: Phase 1 foundation primitive barrel
+    - Path: web/src/components/layout/TabList/TabList.tsx
+      Note: Diary evidence for expanded layout primitives
     - Path: web/src/components/layout/index.ts
       Note: Phase 1 layout primitive barrel
     - Path: web/src/components/molecules/CoveragePanel/CoveragePanel.tsx
       Note: Phase 2 extraction diary evidence
+    - Path: web/src/components/molecules/DataTable/DataTable.tsx
+      Note: Diary evidence for reusable molecule extraction
+    - Path: web/src/components/molecules/MetadataGrid/MetadataGrid.tsx
+      Note: Diary evidence for reusable molecule extraction
     - Path: web/src/components/molecules/QueryPresetList/QueryPresetList.tsx
       Note: Phase 2 extraction diary evidence
     - Path: web/src/components/organisms/ResultInspectorPanel/ResultInspectorPanel.tsx
@@ -58,6 +66,7 @@ LastUpdated: 2026-06-01T00:00:00-04:00
 WhatFor: Use this diary to understand how the RAG web review was investigated, what commands were run, what failed, and how to continue.
 WhenToUse: Read before continuing the RAG web design-system or DMETA IR implementation work.
 ---
+
 
 
 
@@ -910,4 +919,92 @@ Phase 4: add Storybook/component review surface — done
 Phase 5: author documentation-only DMETA IR vertical slice — done
 Phase 6: generated scaffolds/metadata — deferred
 Phase 7: validators — deferred
+```
+
+## Step 9: Expand the Reusable Design-System Primitive Set
+
+I resumed the design-system extraction with a broader pass over the primitives and reusable molecules called out in the design doc. This step adds the missing low-level pieces that are needed before refactoring the remaining Search, Corpus, and Workflow surfaces more aggressively.
+
+The new components are intentionally small and Storybook-backed. They do not redesign the dashboard; they provide named ownership for recurring caption text, app shell structure, scroll regions, tabs, form rows, metadata grids, and dense data tables.
+
+### Prompt Context
+
+**User prompt (verbatim):** "ok, it's great, now go full in in terms of extracting desig system and components and pages."
+
+**Assistant interpretation:** Continue beyond the minimal Search Workbench slice and aggressively extract the reusable design-system/component/page building blocks identified in the design doc, while still avoiding Phase 6 scaffolding and Phase 7 validators unless requested.
+
+**Inferred user intent:** The user wants the React design-system architecture to become real across more reusable primitives and components, not just documented as a plan.
+
+**Commit (code):** N/A at time of writing — implementation changes pending commit.
+
+### What I did
+
+- Added foundation primitive:
+  - `web/src/components/foundation/Caption/`
+- Added layout primitives:
+  - `web/src/components/layout/AppShell/`
+  - `web/src/components/layout/ScrollRegion/`
+  - `web/src/components/layout/TabList/`
+  - `web/src/components/layout/FormRow/`
+- Added reusable molecules:
+  - `web/src/components/molecules/MetadataGrid/`
+  - `web/src/components/molecules/DataTable/`
+- Added co-located Storybook stories for each new primitive/molecule.
+- Updated foundation/layout/molecule barrels.
+- Updated ticket tasks to mark the new reusable pieces and Storybook surfaces as complete.
+
+### Why
+
+- The design doc explicitly identified these as reusable pieces needed before wider page extraction.
+- `MetadataGrid` and `DataTable` are useful extraction targets for Search result inspection, Corpus Explorer document details, workflow lists, and future evaluation result views.
+- `TabList`, `ScrollRegion`, and `FormRow` give the app named primitives for common dashboard mechanics that were previously embedded in page-local/global CSS patterns.
+
+### What worked
+
+- TypeScript passed after adding the new components.
+- Storybook built successfully and now includes stories for the expanded primitive/molecule set.
+
+### What didn't work
+
+- I have not yet replaced all existing call sites with these primitives. This step establishes the reusable surface first; the next step should adopt `MetadataGrid`, `DataTable`, `TabList`, and `ScrollRegion` inside real pages/components.
+
+### What I learned
+
+- The next high-leverage refactor is not another primitive; it is adoption. `ResultInspectorPanel`, `RetrievalResultsPanel`, `DocumentInspector`, and `WorkflowsView` all contain patterns that can now move onto `MetadataGrid` and `DataTable`.
+- `AppShell` should be adopted carefully because `App.tsx` owns navigation and route-level behavior; it may need one small integration pass rather than a blind replacement.
+
+### What was tricky to build
+
+- The main tricky part was keeping the primitives generic without creating a giant prop-driven framework. `DataTable` owns table mechanics but leaves cell rendering to callers. `MetadataGrid` owns key/value structure but leaves values as React nodes.
+- `TabList` is controlled rather than stateful so real components and Storybook can show explicit tab states later.
+
+### What warrants a second pair of eyes
+
+- Whether `DataTable` should support column-level truncation and sticky headers in a more formal API before widespread adoption.
+- Whether `AppShell` should model the existing Mac-style menu/navigation more explicitly or stay as a bare layout primitive.
+- Whether `Caption` overlaps too much with `Text size="metadata"` or whether the mono/uppercase metadata role justifies a separate primitive.
+
+### What should be done in the future
+
+- Refactor `RetrievalResultsPanel` to use `DataTable`.
+- Refactor `ResultInspectorPanel` to use `MetadataGrid`, `TabList`, and `ScrollRegion`.
+- Refactor Corpus Explorer and Workflow views to use `DataTable`, `MetadataGrid`, `Panel`, `Stack`, and `ScrollRegion`.
+- Extract page-level folders such as `SearchWorkbenchPage` once the current component adoption is stable.
+
+### Code review instructions
+
+- Review new primitives under `web/src/components/foundation/Caption/` and `web/src/components/layout/`.
+- Review new molecules under `web/src/components/molecules/MetadataGrid/` and `web/src/components/molecules/DataTable/`.
+- Validate with:
+  - `cd web && pnpm typecheck`
+  - `cd web && pnpm build-storybook`
+
+### Technical details
+
+Validation commands that passed:
+
+```bash
+cd 2026-05-27--rag-evaluation-system/web
+pnpm typecheck
+pnpm build-storybook
 ```
