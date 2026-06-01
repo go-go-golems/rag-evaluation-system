@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '../../atoms';
 import { Caption, StatusText } from '../../foundation';
 import { Panel, ScrollRegion, TabList } from '../../layout';
 import { DataTable, MetadataGrid, type DataTableColumn, type MetadataGridItem } from '../../molecules';
@@ -195,7 +196,7 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
             ) : artifacts.length === 0 ? (
               <div className={styles.empty}>
                 No preprocessing artifacts for this document.
-                <button className="btn" style={{ marginLeft: 8, fontSize: 11 }} onClick={() => window.dispatchEvent(new CustomEvent('rag:navigate-to-workflows'))}>Submit Workflow →</button>
+                <Button className={styles.inlineAction} onClick={() => window.dispatchEvent(new CustomEvent('rag:navigate-to-workflows'))}>Submit Workflow →</Button>
               </div>
             ) : (
               <DataTable rows={artifacts} columns={artifactColumns} getRowKey={(a) => `${a.artifact_type}-${a.prompt_version}-${a.provider}-${a.model}`} />

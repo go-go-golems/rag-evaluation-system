@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from 'react';
+import { Button } from '../../atoms';
 import { Caption } from '../../foundation';
 import { FormRow, Panel, ScrollRegion, Stack } from '../../layout';
 import styles from './SearchControlsPanel.module.css';
@@ -66,21 +67,23 @@ export function SearchControlsPanel({
             onKeyDown={onKeyDown}
             autoFocus
           />
-          <button className="btn btn-primary" onClick={onSearch} disabled={isLoading || !query.trim()}>
+          <Button variant="primary" onClick={onSearch} disabled={isLoading || !query.trim()}>
             {isLoading ? '…' : '▶'}
-          </button>
+          </Button>
         </div>
 
         <Caption transform="uppercase">Retriever</Caption>
         <div className={styles.retrieverGroup}>
           {(['bm25', 'vector', 'hybrid'] as RetrieverType[]).map(r => (
-            <button
+            <Button
               key={r}
-              className={`btn ${styles.retrieverButton} ${retriever === r ? 'btn-primary' : ''}`}
+              className={styles.retrieverButton}
+              selected={retriever === r}
+              aria-pressed={retriever === r}
               onClick={() => setRetriever(r)}
             >
               {r}
-            </button>
+            </Button>
           ))}
         </div>
 

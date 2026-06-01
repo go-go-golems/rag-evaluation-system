@@ -42,16 +42,25 @@ RelatedFiles:
       Note: |-
         High-priority identity selector cleanup target
         IdentityBar cleanup completed after audit
+    - Path: web/src/components/embeddings/EmbeddingsView.tsx
+      Note: Button atom migration evidence
     - Path: web/src/components/foundation/Foundation.stories.module.css
       Note: Story-only foundation overview styling
     - Path: web/src/components/foundation/Foundation.stories.tsx
       Note: Foundation overview Storybook docs added after audit
+    - Path: web/src/components/organisms/SearchControlsPanel/SearchControlsPanel.tsx
+      Note: Button atom migration evidence
+    - Path: web/src/components/workflows/WorkflowsView.tsx
+      Note: Button atom migration evidence
+    - Path: web/src/index.css
+      Note: Legacy button global removed after migration
 ExternalSources: []
 Summary: Component-by-component audit of the current RAG React dashboard against the RAG React Design System Guidelines, including remaining CSS debt, missing Storybook stories, page-boundary gaps, and extraction recommendations.
 LastUpdated: 2026-06-01T19:30:00-04:00
 WhatFor: Use this audit to plan the next cleanup passes after foundation Storybook docs and to decide what should be extracted from each component.
 WhenToUse: Read before touching RAG React components, deleting global CSS, adding stories, or extracting new primitives/molecules/organisms/pages.
 ---
+
 
 
 

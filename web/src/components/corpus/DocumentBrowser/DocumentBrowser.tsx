@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '../../atoms';
 import { Caption, StatusText } from '../../foundation';
 import { Panel, ScrollRegion } from '../../layout';
 import { DataTable, type DataTableColumn } from '../../molecules';
@@ -78,9 +79,9 @@ export const DocumentBrowser: React.FC<DocumentBrowserProps> = ({
             />
             {hasMore && (
               <div className={styles.loadMore}>
-                <button className="btn" onClick={onLoadMore} style={{ fontSize: 11 }}>
+                <Button onClick={onLoadMore}>
                   Load more ({totalDocs - documents.length} remaining)
-                </button>
+                </Button>
               </div>
             )}
           </>

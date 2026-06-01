@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Button } from '../atoms';
 import { Caption, CodeText } from '../foundation';
 import { DashboardGrid, FormRow, Panel, Stack } from '../layout';
 import { DataTable, MetadataGrid } from '../molecules';
@@ -164,9 +165,9 @@ export const EmbeddingsView: React.FC = () => {
               </label>
             </Stack>
             <div className={styles.actions}>
-              <button className="btn btn-primary" onClick={handleCompute} disabled={!canCompute || computeState.isLoading}>
+              <Button variant="primary" onClick={handleCompute} disabled={!canCompute || computeState.isLoading}>
                 {computeState.isLoading ? 'Computing...' : 'Compute Embeddings'}
-              </button>
+              </Button>
             </div>
             {computeState.data ? (
               <MetadataGrid
@@ -218,9 +219,9 @@ export const EmbeddingsView: React.FC = () => {
               <FormRow label="Limit" control={<input className={`input ${styles.shortInput}`} type="number" min={1} value={matchLimit} onChange={(event) => setMatchLimit(Number(event.target.value))} />} />
             </Stack>
             <div className={styles.actions}>
-              <button className="btn btn-primary" onClick={handleCompare} disabled={!canCompare || similarityState.isLoading}>
+              <Button variant="primary" onClick={handleCompare} disabled={!canCompare || similarityState.isLoading}>
                 {similarityState.isLoading ? 'Comparing...' : 'Compare Similarity'}
-              </button>
+              </Button>
             </div>
             {similarityState.error ? <pre className="error-box">{formatApiError(similarityState.error)}</pre> : null}
           </Stack>

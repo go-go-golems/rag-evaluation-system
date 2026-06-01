@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { Button } from '../atoms';
 import { Caption } from '../foundation';
 import { FormRow, Panel, Stack } from '../layout';
 import { QueueHealthPanel, WorkflowListPanel, WorkflowOpGraphPanel, WorkflowOpGroupsPanel, WorkflowOpInspectorPanel, WorkflowOpResultPanel, WorkflowSummaryPanel, workflowGroupKey } from '../organisms';
@@ -145,10 +146,10 @@ const SubmitIntakeModal: React.FC<SubmitIntakeModalProps> = ({ onClose, onSubmit
           {error && <div className="error-box">{error}</div>}
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
-            <button className="btn" onClick={onClose}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting || !sourceInput}>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button variant="primary" onClick={handleSubmit} disabled={submitting || !sourceInput}>
               {submitting ? 'Submitting…' : 'Submit Workflow'}
-            </button>
+            </Button>
           </div>
         </Stack>
       </Panel>
@@ -314,9 +315,9 @@ export const WorkflowsView: React.FC = () => {
         <QueueHealthWidget />
       </div>
       <div>
-        <button className="btn btn-primary" onClick={() => setShowSubmit(true)}>
+        <Button variant="primary" onClick={() => setShowSubmit(true)}>
           + New Intake Workflow
-        </button>
+        </Button>
       </div>
       {showSubmit && (
         <SubmitIntakeModal

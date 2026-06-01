@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Button } from '../../atoms';
 import { Caption, StatusText } from '../../foundation';
 import { Panel, ScrollRegion, TabList } from '../../layout';
 import { MetadataGrid, type MetadataGridItem } from '../../molecules';
@@ -73,8 +74,8 @@ export function ResultInspectorPanel({ result, docDetail, onClose, onOpenInCorpu
       title={`Inspector — Rank #${result.rank}`}
       actions={(
         <div className={styles.actions}>
-          <button className="btn" style={{ fontSize: 10 }} onClick={onOpenInCorpus}>Open in Corpus</button>
-          <button className="btn" style={{ fontSize: 10 }} onClick={onClose}>✕</button>
+          <Button size="compact" onClick={onOpenInCorpus}>Open in Corpus</Button>
+          <Button size="compact" onClick={onClose}>✕</Button>
         </div>
       )}
       data-rag-component="ResultInspectorPanel"

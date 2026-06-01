@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Button } from '../../atoms';
 import { Caption, StatusText } from '../../foundation';
 import { Panel } from '../../layout';
 import { MetadataGrid } from '../../molecules';
@@ -50,9 +51,9 @@ export function WorkflowOpInspectorPanel({ sample, retrying = false, onClose, on
           {sample.op.RetryState.LastError}
           <Caption>Attempt {sample.op.RetryState.Attempt}/{sample.op.Retry.MaxAttempts}</Caption>
           <div className={styles.actions}>
-            <button className="btn" style={{ marginTop: 4 }} onClick={onRetry} disabled={retrying}>
+            <Button className={styles.retryButton} onClick={onRetry} disabled={retrying}>
               {retrying ? 'Retrying…' : 'Retry Now'}
-            </button>
+            </Button>
           </div>
         </div>
       )}

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Button } from '../../atoms';
 import { VisuallyHidden } from './VisuallyHidden';
 
 const meta = {
@@ -11,9 +12,9 @@ type Story = StoryObj<typeof meta>;
 
 export const AccessibleLabel: Story = {
   render: () => (
-    <button className="btn">
+    <Button>
       ⧉
       <VisuallyHidden>Copy chunk identifier</VisuallyHidden>
-    </button>
+    </Button>
   ),
 };

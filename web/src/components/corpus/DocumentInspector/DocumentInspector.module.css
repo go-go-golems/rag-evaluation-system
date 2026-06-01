@@ -10,3 +10,4 @@
 .present { background: var(--mac-bg-dark); }
 .missing { background: var(--mac-surface); }
 .empty { color: var(--mac-text-dim); font-family: var(--font-mono); font-size: 11px; }
+.inlineAction { margin-left: 8px; }

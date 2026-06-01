@@ -2706,3 +2706,95 @@ pnpm build
 pnpm build-storybook
 rg -n "chunk-bar" src || true
 ```
+
+## Step 27: Migrate Remaining Global Button Consumers
+
+After adding the Button atom, I completed the first global CSS retirement pass by replacing the remaining active `.btn` and `.btn-primary` consumers in components and stories. The only remaining match is the legacy `retro/MacButton` class name, which uses a different `mac-btn` namespace and is part of the separate retro-component decision.
+
+This turns the Button atom from a one-off fix for ArtifactIdentityBar into the actual system-owned button contract. It also allowed the old global `.btn` block to be removed from `web/src/index.css` safely.
+
+### Prompt Context
+
+**User prompt (verbatim):** "ok, continue"
+
+**Assistant interpretation:** Continue applying the Button atom and global CSS cleanup after fixing the selected ArtifactIdentityBar contrast issue.
+
+**Inferred user intent:** The user wants the design-system cleanup to proceed systematically, not leave old global button styles around after introducing the atom.
+
+**Commit (code):** N/A at time of writing — changes pending commit.
+
+### What I did
+
+- Migrated active `.btn` / `.btn-primary` consumers to `Button` in:
+  - `SearchControlsPanel`,
+  - `ResultInspectorPanel`,
+  - `WorkflowSummaryPanel`,
+  - `WorkflowOpInspectorPanel`,
+  - `EmbeddingsView`,
+  - `WorkflowsView`,
+  - `DocumentBrowser`,
+  - `DocumentInspector`,
+  - `Inline.stories`,
+  - `VisuallyHidden.stories`.
+- Moved small static spacing previously inline on migrated buttons into CSS Modules where needed.
+- Deleted the global `.btn` / `.btn-primary` CSS block from `web/src/index.css`.
+- Verified no active `.btn` or `.btn-primary` consumers remain outside legacy `retro/MacButton`.
+
+### Why
+
+- Once `Button` exists, global button classes should no longer be the app-facing contract.
+- Removing `.btn` from active components reduces `index.css` and makes button states Storybook-owned.
+
+### What worked
+
+- `pnpm typecheck` passed.
+- `pnpm build` passed.
+- `pnpm build-storybook` passed.
+- `rg` confirmed no active `.btn`/`.btn-primary` consumers remain, except unrelated legacy `mac-btn` naming.
+
+### What didn't work
+
+- `pnpm build` rewrote `internal/web/dist/index.html`; I reverted the generated embed artifact before committing.
+- Storybook still emits known iframe chunk and plugin timing warnings; build succeeds.
+
+### What I learned
+
+- The Button atom is immediately useful across Search, Corpus, Workflow, Embeddings, and stories.
+- The global CSS can shrink safely when migration is backed by `rg` checks.
+
+### What was tricky to build
+
+- The tricky part was distinguishing real `.btn` consumers from `retro/MacButton`'s `mac-btn` namespace. I left `retro/MacButton` untouched because the audit already treats the retro folder as a separate keep-or-delete decision.
+- Several buttons had small inline font-size/margin tweaks. I avoided expanding the Button API for those and either used `size="compact"` or local CSS Module spacing.
+
+### What warrants a second pair of eyes
+
+- Whether `Button size="compact"` should become the default in dense panels.
+- Whether `copy-btn` should become a `Button` variant or a separate `IconButton` atom in a later pass.
+
+### What should be done in the future
+
+- Consider an `IconButton` atom for close/copy buttons currently using `copy-btn`.
+- Continue retiring global style families in `index.css` with the same migrate-then-delete pattern.
+
+### Code review instructions
+
+- Review the Button atom consumers to confirm behavior is unchanged.
+- Confirm `web/src/index.css` no longer contains the global button block.
+- Validate with:
+  - `cd web && pnpm typecheck`
+  - `cd web && pnpm build`
+  - `cd web && pnpm build-storybook`
+  - `cd web && rg -n 'className="btn|btn-primary|\\.btn|`btn' src/components src/index.css src/App.tsx || true`
+
+### Technical details
+
+Validation commands that passed:
+
+```bash
+cd 2026-05-27--rag-evaluation-system/web
+pnpm typecheck
+pnpm build
+pnpm build-storybook
+rg -n 'className="btn|btn-primary|\.btn|`btn' src/components src/index.css src/App.tsx || true
+```

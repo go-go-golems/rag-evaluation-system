@@ -174,39 +174,6 @@ body {
 .accent-red { color: var(--mac-accent-2); }
 .accent-dim { color: var(--mac-text-dim); }
 
-/* ===== Buttons ===== */
-.btn {
-  border: 1px solid var(--mac-border);
-  background: var(--mac-surface);
-  padding: 2px 12px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.btn:hover {
-  background: var(--mac-surface-2);
-}
-
-.btn:active {
-  background: var(--mac-bg-dark);
-  color: var(--mac-text-inv);
-}
-
-.btn-primary {
-  background: var(--mac-bg-dark);
-  color: var(--mac-text-inv);
-}
-
-.btn-primary:hover {
-  background: #333333;
-}
-
-.btn:disabled {
-  color: var(--mac-text-dim);
-  cursor: not-allowed;
-}
-
 /* ===== Inputs ===== */
 .input {
   border: 1px solid var(--mac-border);

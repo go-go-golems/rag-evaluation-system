@@ -1,3 +1,4 @@
+import { Button } from '../../atoms';
 import { Caption, StatusText } from '../../foundation';
 import { Panel } from '../../layout';
 import { MetadataGrid } from '../../molecules';
@@ -76,8 +77,8 @@ export function WorkflowSummaryPanel({
           ...(failedCount > 0 ? [{ key: 'Failed', value: <StatusText status="failed">{failedCount}</StatusText> }] : []),
         ]} />
         <span className={styles.spacer} />
-        {isRunning && <button className="btn" onClick={onCancel}>Cancel</button>}
-        {workflow.Status === 'succeeded' && sourceId && <button className="btn" onClick={() => onNavigateToCorpus(sourceId, strategyId)}>View in Corpus →</button>}
+        {isRunning && <Button onClick={onCancel}>Cancel</Button>}
+        {workflow.Status === 'succeeded' && sourceId && <Button onClick={() => onNavigateToCorpus(sourceId, strategyId)}>View in Corpus →</Button>}
       </div>
     </Panel>
   );
