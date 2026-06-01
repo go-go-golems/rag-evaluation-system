@@ -41,7 +41,9 @@ RelatedFiles:
     - Path: web/package.json
       Note: Web tooling scripts and Storybook dependencies added for Phase 0/2
     - Path: web/src/App.tsx
-      Note: Top-level web app shell
+      Note: |-
+        Top-level web app shell
+        Root app shell uses AppShell primitive
     - Path: web/src/components/corpus/CorpusExplorerView.tsx
       Note: Corpus source/document/chunk exploration and artifact coverage workflow
     - Path: web/src/components/corpus/DocumentInspector.tsx
@@ -90,10 +92,14 @@ RelatedFiles:
       Note: Phase 2 organism Storybook coverage
     - Path: web/src/components/organisms/RetrievalResultsPanel/RetrievalResultsPanel.tsx
       Note: Phase 2 extracted retrieval results organism
+    - Path: web/src/components/organisms/SearchControlsPanel/SearchControlsPanel.module.css
+      Note: Controls-specific anatomy CSS after primitive adoption
     - Path: web/src/components/organisms/SearchControlsPanel/SearchControlsPanel.stories.tsx
       Note: Phase 2 organism Storybook coverage
     - Path: web/src/components/organisms/SearchControlsPanel/SearchControlsPanel.tsx
       Note: Phase 2 extracted query controls organism
+    - Path: web/src/components/pages/SearchWorkbenchPage/SearchWorkbenchPage.tsx
+      Note: Search Workbench page boundary
     - Path: web/src/components/search/SearchView.module.css
       Note: Search Workbench page shell CSS ownership
     - Path: web/src/components/search/SearchView.tsx
@@ -114,6 +120,7 @@ LastUpdated: 2026-06-01T00:00:00-04:00
 WhatFor: Use this report before refactoring the RAG Evaluation web UI, extracting design-system primitives, adding Storybook/validators, or authoring DMETA IR for the RAG dashboard.
 WhenToUse: Read when onboarding to the web app or planning the first design-system/DMETA vertical slice for search, corpus, workflow, embedding, or evaluation dashboards.
 ---
+
 
 
 

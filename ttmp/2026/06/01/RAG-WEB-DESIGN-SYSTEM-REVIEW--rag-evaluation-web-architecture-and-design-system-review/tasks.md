@@ -33,6 +33,7 @@
 - [x] Phase 3: extract `CoveragePanel` with complete and sparse coverage Storybook stories.
 - [x] Phase 3: extract `QueryPresetList` with TTC query Storybook story.
 - [x] Phase 3: refactor `SearchView.tsx` to compose extracted controls/results/coverage/preset components while preserving behavior.
+- [x] Phase 3: move Search Workbench into `components/pages/SearchWorkbenchPage/` and keep `SearchView` as a compatibility re-export.
 - [x] Phase 3: extract `ResultInspectorPanel` and add stories for detail/BM25/document-loading inspector states.
 - [x] Phase 3: migrate Search Workbench page shell from inline flex layout to `DashboardGrid`/`Stack` plus `SearchView.module.css`.
 - [x] Phase 4: add Storybook review surfaces for the Search Workbench organisms/molecules extracted so far.
@@ -41,6 +42,8 @@
 - [x] Phase 5: add initial documentation-only `dmeta-ir` core/interaction/Web MDS YAML for the Search Workbench vertical slice.
 - [x] Phase 3: add reusable `MetadataGrid` and `DataTable` molecules as extraction targets for inspector/results/corpus/workflow views.
 - [x] Phase 3 follow-up: adopt `MetadataGrid`, `DataTable`, `TabList`, and `ScrollRegion` inside Search Workbench result/inspector panels.
+- [x] Phase 3 follow-up: adopt `Panel`, `Stack`, `FormRow`, `ScrollRegion`, and `Caption` inside `SearchControlsPanel`.
+- [x] Phase 3 follow-up: adopt `AppShell` in the root app shell.
 - [ ] Phase 3 follow-up: adopt `MetadataGrid` and `DataTable` inside Corpus Explorer and Workflow views.
 - [ ] Deferred beyond requested scope (Phase 6): generated React scaffold output and promotion metadata.
 - [ ] Deferred beyond requested scope (Phase 7): executable validators for the documentation-only IR catalog.

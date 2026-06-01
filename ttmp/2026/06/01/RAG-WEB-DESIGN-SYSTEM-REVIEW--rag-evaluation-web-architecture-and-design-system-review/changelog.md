@@ -141,3 +141,17 @@ Adopted DataTable, MetadataGrid, TabList, and ScrollRegion inside Search Workben
 - /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/organisms/ResultInspectorPanel/ResultInspectorPanel.tsx — Inspector now uses MetadataGrid/TabList/ScrollRegion and supports defaultTab stories
 - /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/organisms/RetrievalResultsPanel/RetrievalResultsPanel.tsx — Retrieval results now use reusable DataTable/Panel/ScrollRegion
 
+
+## 2026-06-01
+
+Moved Search into a SearchWorkbenchPage boundary and adopted AppShell/FormRow/Panel/Stack/ScrollRegion/Caption in app shell and controls
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/01/RAG-WEB-DESIGN-SYSTEM-REVIEW--rag-evaluation-web-architecture-and-design-system-review/reference/01-investigation-diary.md — Recorded page-boundary and controls primitive adoption
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/App.tsx — Root application now uses AppShell
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/organisms/SearchControlsPanel/SearchControlsPanel.module.css — Controls-specific anatomy after primitive adoption
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/organisms/SearchControlsPanel/SearchControlsPanel.tsx — Controls panel now uses reusable design-system primitives
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/pages/SearchWorkbenchPage/SearchWorkbenchPage.tsx — Explicit Search Workbench page boundary
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/search/SearchView.tsx — Compatibility re-export for moved SearchWorkbenchPage
+

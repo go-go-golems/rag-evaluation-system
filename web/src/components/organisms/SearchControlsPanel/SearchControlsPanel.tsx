@@ -1,4 +1,7 @@
 import type { KeyboardEvent } from 'react';
+import { Caption } from '../../foundation';
+import { FormRow, Panel, ScrollRegion, Stack } from '../../layout';
+import styles from './SearchControlsPanel.module.css';
 
 export type RetrieverType = 'bm25' | 'vector' | 'hybrid';
 
@@ -52,13 +55,11 @@ export function SearchControlsPanel({
   onKeyDown,
 }: SearchControlsPanelProps) {
   return (
-    <div className="panel" data-rag-component="SearchControlsPanel">
-      <div className="panel-header"><span>Search</span></div>
-      <div className="panel-body-condensed" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ display: 'flex', gap: 4 }}>
+    <Panel title="Search" density="condensed" data-rag-component="SearchControlsPanel">
+      <Stack gap="sm">
+        <div className={styles.queryRow}>
           <input
-            className="input"
-            style={{ flex: 1 }}
+            className={`input ${styles.queryInput}`}
             placeholder="Enter query…"
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -70,13 +71,12 @@ export function SearchControlsPanel({
           </button>
         </div>
 
-        <div className="section-title" style={{ marginTop: 4 }}>Retriever</div>
-        <div style={{ display: 'flex', gap: 0 }}>
+        <Caption transform="uppercase">Retriever</Caption>
+        <div className={styles.retrieverGroup}>
           {(['bm25', 'vector', 'hybrid'] as RetrieverType[]).map(r => (
             <button
               key={r}
-              className={`btn ${retriever === r ? 'btn-primary' : ''}`}
-              style={{ flex: 1, textTransform: 'uppercase', fontSize: 10 }}
+              className={`btn ${styles.retrieverButton} ${retriever === r ? 'btn-primary' : ''}`}
               onClick={() => setRetriever(r)}
             >
               {r}
@@ -85,34 +85,24 @@ export function SearchControlsPanel({
         </div>
 
         {(retriever === 'bm25' || retriever === 'hybrid') && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div className="section-title" style={{ marginTop: 2 }}>BM25 Index</div>
-            <input
-              className="input"
-              style={{ width: '100%' }}
-              value={indexId}
-              onChange={e => setIndexId(e.target.value)}
-              placeholder="Index ID"
-            />
-          </div>
+          <FormRow
+            label="BM25 Index"
+            control={<input className={`input ${styles.fullInput}`} value={indexId} onChange={e => setIndexId(e.target.value)} placeholder="Index ID" />}
+          />
         )}
 
         {(retriever === 'vector' || retriever === 'hybrid') && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div className="section-title" style={{ marginTop: 2 }}>Vector</div>
-            <div className="meta-grid">
-              <span className="meta-key">Strategy</span>
-              <input className="input" style={{ width: '100%' }} value={strategyId} onChange={e => setStrategyId(e.target.value)} />
-              <span className="meta-key">Profile</span>
-              <input className="input" style={{ width: '100%' }} value={profile} onChange={e => setProfile(e.target.value)} />
-            </div>
-          </div>
+          <Stack gap="xs">
+            <Caption transform="uppercase">Vector</Caption>
+            <FormRow label="Strategy" control={<input className={`input ${styles.fullInput}`} value={strategyId} onChange={e => setStrategyId(e.target.value)} />} />
+            <FormRow label="Profile" control={<input className={`input ${styles.fullInput}`} value={profile} onChange={e => setProfile(e.target.value)} />} />
+          </Stack>
         )}
 
-        <div className="section-title" style={{ marginTop: 2 }}>Source Filter</div>
-        <div style={{ maxHeight: 100, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Caption transform="uppercase">Source Filter</Caption>
+        <ScrollRegion axis="y" className={styles.sourceList}>
           {sources.map(s => (
-            <label key={s.source_id} className="checkbox-row" style={{ fontSize: 10 }}>
+            <label key={s.source_id} className={`checkbox-row ${styles.sourceLabel}`}>
               <input
                 type="checkbox"
                 checked={selectedSourceIds.includes(s.source_id)}
@@ -121,23 +111,16 @@ export function SearchControlsPanel({
               <span className="truncate">{s.source_name}</span>
             </label>
           ))}
-          {sources.length === 0 && <span className="text-dim text-small">Loading sources…</span>}
-        </div>
+          {sources.length === 0 && <Caption>Loading sources…</Caption>}
+        </ScrollRegion>
 
-        <div className="section-title" style={{ marginTop: 2 }}>Limits</div>
-        <div className="meta-grid">
-          <span className="meta-key">Limit</span>
-          <input className="input" type="number" style={{ width: 60 }} value={limit} onChange={e => setLimit(Number(e.target.value))} min={1} max={100} />
-          {(retriever === 'vector' || retriever === 'hybrid') && (
-            <>
-              <span className="meta-key">Candidates</span>
-              <input className="input" type="number" style={{ width: 60 }} value={candidateLimit} onChange={e => setCandidateLimit(Number(e.target.value))} min={1} />
-            </>
-          )}
-          <span className="meta-key">Preview</span>
-          <input className="input" type="number" style={{ width: 60 }} value={previewRunes} onChange={e => setPreviewRunes(Number(e.target.value))} min={0} />
-        </div>
-      </div>
-    </div>
+        <Caption transform="uppercase">Limits</Caption>
+        <FormRow label="Limit" control={<input className={`input ${styles.narrowInput}`} type="number" value={limit} onChange={e => setLimit(Number(e.target.value))} min={1} max={100} />} />
+        {(retriever === 'vector' || retriever === 'hybrid') && (
+          <FormRow label="Candidates" control={<input className={`input ${styles.narrowInput}`} type="number" value={candidateLimit} onChange={e => setCandidateLimit(Number(e.target.value))} min={1} />} />
+        )}
+        <FormRow label="Preview" control={<input className={`input ${styles.narrowInput}`} type="number" value={previewRunes} onChange={e => setPreviewRunes(Number(e.target.value))} min={0} />} />
+      </Stack>
+    </Panel>
   );
 }

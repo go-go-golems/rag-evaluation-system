@@ -25,7 +25,9 @@ RelatedFiles:
     - Path: web/package.json
       Note: Phase 0/2 tooling changes
     - Path: web/src/App.tsx
-      Note: App shell and navigation event evidence
+      Note: |-
+        App shell and navigation event evidence
+        Diary evidence for AppShell adoption
     - Path: web/src/components/foundation/Caption/Caption.tsx
       Note: Diary evidence for expanded primitive extraction
     - Path: web/src/components/foundation/index.ts
@@ -53,7 +55,11 @@ RelatedFiles:
         Phase 2 extraction diary evidence
         Diary evidence for DataTable adoption
     - Path: web/src/components/organisms/SearchControlsPanel/SearchControlsPanel.tsx
-      Note: Phase 2 extraction diary evidence
+      Note: |-
+        Phase 2 extraction diary evidence
+        Diary evidence for controls primitive adoption
+    - Path: web/src/components/pages/SearchWorkbenchPage/SearchWorkbenchPage.tsx
+      Note: Diary evidence for page-boundary extraction
     - Path: web/src/components/search/SearchView.module.css
       Note: Phase 2 layout primitive migration diary evidence
     - Path: web/src/components/search/SearchView.tsx
@@ -72,6 +78,7 @@ LastUpdated: 2026-06-01T00:00:00-04:00
 WhatFor: Use this diary to understand how the RAG web review was investigated, what commands were run, what failed, and how to continue.
 WhenToUse: Read before continuing the RAG web design-system or DMETA IR implementation work.
 ---
+
 
 
 
@@ -1099,6 +1106,103 @@ This step is the first proof that the newly extracted components are not just St
 
 - Start with `web/src/components/organisms/RetrievalResultsPanel/RetrievalResultsPanel.tsx` to review the `DataTable` adoption.
 - Then review `web/src/components/organisms/ResultInspectorPanel/ResultInspectorPanel.tsx` and `.module.css` for the inspector split.
+- Validate with:
+  - `cd web && pnpm typecheck`
+  - `cd web && pnpm build`
+  - `cd web && pnpm build-storybook`
+
+### Technical details
+
+Validation commands that passed:
+
+```bash
+cd 2026-05-27--rag-evaluation-system/web
+pnpm typecheck
+pnpm build
+pnpm build-storybook
+```
+
+## Step 11: Promote Search to a Page Boundary and Adopt More Layout Primitives
+
+I continued the broader extraction by creating an explicit Search Workbench page boundary and adopting more of the layout/foundation primitives in application code. The old `SearchView` path remains as a compatibility re-export, while the actual page implementation now lives under `components/pages/SearchWorkbenchPage/`.
+
+This step also moves the root app shell onto the new `AppShell` primitive and rewrites `SearchControlsPanel` to use `Panel`, `Stack`, `FormRow`, `ScrollRegion`, and `Caption`. This reduces page-local inline layout and makes the controls panel follow the same design-system vocabulary as the result and inspector panels.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 9)
+
+**Assistant interpretation:** Continue extracting pages and adopting the new design-system primitives across real application boundaries.
+
+**Inferred user intent:** The user wants the component/page architecture to match the design doc's intended structure, not just expose low-level primitives.
+
+**Commit (code):** N/A at time of writing — implementation changes pending commit.
+
+### What I did
+
+- Added page boundary:
+  - `web/src/components/pages/SearchWorkbenchPage/SearchWorkbenchPage.tsx`
+  - `web/src/components/pages/SearchWorkbenchPage/SearchWorkbenchPage.module.css`
+  - `web/src/components/pages/SearchWorkbenchPage/index.ts`
+  - `web/src/components/pages/index.ts`
+- Replaced `web/src/components/search/SearchView.tsx` with a compatibility re-export of `SearchWorkbenchPage`.
+- Removed the old `web/src/components/search/SearchView.module.css` after moving the page CSS.
+- Updated `web/src/components/index.ts` to export pages.
+- Updated `web/src/App.tsx` to use `AppShell` for the root application shell.
+- Refactored `SearchControlsPanel` to use:
+  - `Panel`
+  - `Stack`
+  - `FormRow`
+  - `ScrollRegion`
+  - `Caption`
+- Added `SearchControlsPanel.module.css` for remaining controls-specific anatomy.
+
+### Why
+
+- The design doc's target structure includes `components/pages/SearchWorkbenchPage/`, not a generic `components/search/SearchView.tsx` as the main implementation location.
+- `AppShell` was extracted in the previous step; adopting it in `App.tsx` proves it can own real application shell structure.
+- `SearchControlsPanel` had many inline styles and global layout patterns that now have named primitives.
+
+### What worked
+
+- `pnpm typecheck` passed.
+- `pnpm build` passed.
+- `pnpm build-storybook` passed.
+- Existing imports of `SearchView` remain valid because `SearchView.tsx` re-exports the page component.
+
+### What didn't work
+
+- `pnpm build` rewrote `internal/web/dist/index.html`; I reverted that generated embed artifact before preparing the commit.
+- I have not yet moved Corpus Explorer or Workflow views into page folders. Search is the first page boundary.
+
+### What I learned
+
+- The compatibility re-export pattern is useful for incremental page moves: application imports do not need to change immediately, but the source tree can still move toward the target architecture.
+- `SearchControlsPanel` still has small control-specific CSS for button grouping and narrow inputs, which is appropriate component anatomy rather than a reason to over-expand primitives.
+
+### What was tricky to build
+
+- Moving the page file required fixing relative imports from `../molecules`/`../organisms` to `../../...` and service imports from `../../services/api` to `../../../services/api`.
+- Preserving compatibility through `SearchView.tsx` avoids a large rename blast radius while still creating the new page folder.
+
+### What warrants a second pair of eyes
+
+- Whether `SearchView` should be removed entirely in a later cleanup once imports have migrated to `SearchWorkbenchPage`.
+- Whether `AppShell` should own the existing nav strip more formally rather than receiving it as arbitrary header content.
+- Whether `SearchControlsPanel` should expose smaller subcomponents for retriever selection or source filters if reused elsewhere.
+
+### What should be done in the future
+
+- Move Corpus Explorer and Workflow views into page folders.
+- Adopt `DataTable`, `MetadataGrid`, `Panel`, and `ScrollRegion` in Corpus Explorer and Workflow pages.
+- Consider adding `SearchWorkbenchPage.stories.tsx` once page-level API mocking is available.
+
+### Code review instructions
+
+- Start at `web/src/components/pages/SearchWorkbenchPage/SearchWorkbenchPage.tsx` for the moved page boundary.
+- Review `web/src/components/search/SearchView.tsx` to confirm it is only a compatibility re-export.
+- Review `web/src/App.tsx` for `AppShell` adoption.
+- Review `web/src/components/organisms/SearchControlsPanel/SearchControlsPanel.tsx` for primitive adoption.
 - Validate with:
   - `cd web && pnpm typecheck`
   - `cd web && pnpm build`
