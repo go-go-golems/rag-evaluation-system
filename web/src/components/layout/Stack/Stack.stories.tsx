@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Panel } from '../Panel';
 import { Stack } from './Stack';
 
 const meta = {
@@ -12,9 +13,9 @@ type Story = StoryObj<typeof meta>;
 export const PanelStack: Story = {
   render: () => (
     <Stack gap="sm">
-      <div className="panel"><div className="panel-header"><span>Query</span></div><div className="panel-body-condensed">Controls</div></div>
-      <div className="panel"><div className="panel-header"><span>Coverage</span></div><div className="panel-body-condensed">204/204 embedded</div></div>
-      <div className="panel"><div className="panel-header"><span>Presets</span></div><div className="panel-body-condensed">hydrangea pruning</div></div>
+      <Panel title="Query" density="condensed">Controls</Panel>
+      <Panel title="Coverage" density="condensed">204/204 embedded</Panel>
+      <Panel title="Presets" density="condensed">hydrangea pruning</Panel>
     </Stack>
   ),
 };

@@ -358,3 +358,16 @@ Added IconButton atom, migrated copy/close/back actions, and removed legacy copy
 - /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/workflows/WorkflowsView.tsx — Workflow modal close action uses IconButton
 - /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/index.css — Removed legacy copy-btn global styles
 
+
+## 2026-06-01
+
+Added storyable EvaluationPage boundary and cleaned layout stories to use Panel instead of raw global panel markup
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/01/RAG-WEB-DESIGN-SYSTEM-REVIEW--rag-evaluation-web-architecture-and-design-system-review/reference/01-investigation-diary.md — Recorded EvaluationPage and layout story cleanup
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/evaluation/EvaluationView.tsx — Runtime wrapper delegates to EvaluationPage
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/layout/DashboardGrid/DashboardGrid.stories.tsx — Layout story now uses Panel primitive
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/layout/Stack/Stack.stories.tsx — Layout story now uses Panel primitive
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/pages/EvaluationPage/EvaluationPage.tsx — Storyable evaluation page placeholder
+

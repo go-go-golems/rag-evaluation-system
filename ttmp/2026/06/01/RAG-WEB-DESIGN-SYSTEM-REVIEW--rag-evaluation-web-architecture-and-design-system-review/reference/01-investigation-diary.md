@@ -2894,3 +2894,89 @@ pnpm build
 pnpm build-storybook
 rg -n "copy-btn|\.copy-btn" src src/index.css || true
 ```
+
+## Step 29: Add EvaluationPage Boundary and Clean Layout Stories
+
+I continued the guideline cleanup by replacing the raw Evaluation placeholder panel with a small storyable page boundary. `EvaluationView` is now only the runtime wrapper, while `EvaluationPage` owns the presentational placeholder and has Storybook coverage.
+
+I also cleaned two layout primitive stories that still demonstrated layout recipes with raw global `panel` markup. Those stories now compose the actual `Panel` primitive, so the Storybook examples reinforce the guidelines instead of preserving legacy global CSS patterns.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue"
+
+**Assistant interpretation:** Continue the post-atom cleanup by reducing remaining global panel/text usage and adding page story boundaries where low-risk.
+
+**Inferred user intent:** The user wants the design-system guideline audit applied broadly, including placeholders and stories, not just major feature widgets.
+
+**Commit (code):** N/A at time of writing — changes pending commit.
+
+### What I did
+
+- Added `web/src/components/pages/EvaluationPage/` with:
+  - `EvaluationPage.tsx`,
+  - `EvaluationPage.module.css`,
+  - `EvaluationPage.stories.tsx`,
+  - `index.ts`.
+- Updated `web/src/components/evaluation/EvaluationView.tsx` to delegate to `EvaluationPage`.
+- Exported `EvaluationPage` from `web/src/components/pages/index.ts`.
+- Replaced raw `.panel` snippets in:
+  - `Stack.stories.tsx`,
+  - `DashboardGrid.stories.tsx`.
+
+### Why
+
+- `EvaluationView` was still a raw global `panel` placeholder with no story.
+- Layout stories should model the real design-system primitives, not legacy global class recipes.
+- This is a low-risk way to continue shrinking active global panel usage while improving page-level Storybook coverage.
+
+### What worked
+
+- `pnpm typecheck` passed.
+- `pnpm build` passed.
+- `pnpm build-storybook` passed and included `Pages/EvaluationPage`.
+
+### What didn't work
+
+- I initially used `Text tone="secondary"`, but RAG `Text` supports `muted` rather than `secondary`; TypeScript caught this and I corrected it.
+- `pnpm build` rewrote `internal/web/dist/index.html`; I reverted the generated embed artifact before committing.
+
+### What I learned
+
+- Page boundaries can be added incrementally even for placeholders, as long as runtime containers remain simple wrappers.
+- Story files are still a source of legacy global CSS debt and should be included in cleanup scans.
+
+### What was tricky to build
+
+- The only notable mismatch was terminology drift between TTC-style tone names and RAG foundation tone names. RAG uses `muted`, not `secondary`, so future docs/examples should use the RAG primitive API exactly.
+
+### What warrants a second pair of eyes
+
+- Whether `EvaluationPage` should remain in `components/pages` while it is only a placeholder; it probably should because it establishes the future page contract.
+- Whether the evaluation capability text should be linked to future DMETA documentation when that work starts.
+
+### What should be done in the future
+
+- Add storyable page boundaries for Corpus, Workflows, and Embeddings.
+- Continue replacing raw panel/text classes in active page containers.
+
+### Code review instructions
+
+- Review `web/src/components/pages/EvaluationPage/EvaluationPage.tsx` and story first.
+- Confirm `EvaluationView` remains a no-logic runtime wrapper.
+- Review layout story changes to ensure they still demonstrate `Stack` and `DashboardGrid` recipes clearly.
+- Validate with:
+  - `cd web && pnpm typecheck`
+  - `cd web && pnpm build`
+  - `cd web && pnpm build-storybook`
+
+### Technical details
+
+Validation commands that passed:
+
+```bash
+cd 2026-05-27--rag-evaluation-system/web
+pnpm typecheck
+pnpm build
+pnpm build-storybook
+```
