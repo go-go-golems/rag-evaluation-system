@@ -3203,7 +3203,7 @@ This is a small cleanup step, but it matters because the web app now has fewer i
 
 **Inferred user intent:** The user wants the cleanup playbook to continue without reintroducing IR validation/scaffolding work or broad unrelated rewrites.
 
-**Commit (code):** N/A at time of writing — changes pending commit.
+**Commit (code):** 826ed52 — "feat: remove leftover RAG global utilities"
 
 ### What I did
 
