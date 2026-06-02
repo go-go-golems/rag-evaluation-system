@@ -3100,7 +3100,7 @@ This continues the global CSS reduction strategy: create a narrow atom, migrate 
 
 **Inferred user intent:** The user wants remaining app-wide form/error classes to become first-class design-system atoms with stories, matching the Button/IconButton cleanup pattern.
 
-**Commit (code):** 483e073 — "feat: atomize RAG form controls"
+**Commit (code):** 2a98180 — "feat: atomize RAG form controls"
 
 ### What I did
 
