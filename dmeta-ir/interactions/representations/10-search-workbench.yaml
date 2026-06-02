@@ -1,0 +1,98 @@
+summary: Visible Search Workbench obligations independent of Web rendering.
+description: >
+  Names the query, result, coverage, preset, and inspection obligations currently
+  implemented by the Search Workbench React page.
+why: >
+  These representations can later lower to Web panels, CLI output, reports, or
+  notebook cells without changing core model semantics.
+
+representations:
+  - id: query_composer
+    summary: Visible controls for composing and submitting a retrieval query.
+    description: >
+      Represents the obligation to enter query text, choose retriever mode, select
+      index/strategy/profile identity, apply source filters, set limits, and run a search.
+    why: >
+      Query composition is target-neutral. Web MDS decides whether it becomes a
+      side panel, command bar, modal, or notebook cell.
+    subjects:
+      - retrieval_query
+      - embedding_identity
+    supports_actions:
+      - submit_query
+    examples:
+      - Search controls panel in the current Web dashboard.
+    non_goals:
+      - Does not require React state setters or CSS modules.
+
+  - id: embedding_coverage_summary
+    summary: Visible coverage state for an embedding identity.
+    description: >
+      Represents the obligation to show how many chunks are embedded overall and
+      per source, including sparse-coverage warnings.
+    why: >
+      Coverage changes the interpretation of vector and hybrid search quality.
+    subjects:
+      - embedding_identity
+      - evidence_chunk
+    supports_actions: []
+    examples:
+      - Sparse coverage warning when fewer than half of chunks have embeddings.
+    non_goals:
+      - Does not prescribe the coverage strip's exact colors.
+
+  - id: query_preset_list
+    summary: A list of reusable example queries for smoke testing retrieval.
+    description: >
+      Represents curated query examples that quickly exercise corpus coverage and
+      retriever behavior.
+    why: >
+      Test queries are useful across Web demos, CLI smoke tests, and evaluation fixture setup.
+    subjects:
+      - retrieval_query
+    supports_actions:
+      - apply_query_preset
+    examples:
+      - hydrangea pruning
+      - compact evergreen shrubs
+    non_goals:
+      - Does not model query ranking or analytics.
+
+  - id: retrieval_results
+    summary: Ranked retrieval results returned from BM25, vector, or hybrid search.
+    description: >
+      Represents the visible ranked evidence list with title, score, chunk index,
+      retriever components, and preview text.
+    why: >
+      Retrieval results can render as a table, cards, CLI output, or evaluation report.
+    subjects:
+      - retrieval_result
+      - evidence_chunk
+    supports_actions:
+      - select_result
+      - inspect_result
+      - open_in_corpus
+    examples:
+      - Hybrid results table with BM25 and vector component columns.
+    non_goals:
+      - Does not require a table presentation.
+
+  - id: result_inspector
+    summary: Detailed inspection of one retrieval result and its source context.
+    description: >
+      Represents the obligation to show score breakdown, IDs, chunk text,
+      neighboring chunks, document metadata, and coverage for a selected result.
+    why: >
+      Result inspection is central to evaluating retrieval quality and should be
+      modeled separately from the results list.
+    subjects:
+      - retrieval_result
+      - source_document
+      - evidence_chunk
+    supports_actions:
+      - copy_artifact_identity
+      - open_in_corpus
+    examples:
+      - Inspector with detail, chunk, and document tabs.
+    non_goals:
+      - Does not own API fetching or browser routing.

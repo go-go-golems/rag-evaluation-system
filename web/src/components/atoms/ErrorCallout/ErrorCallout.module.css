@@ -1,0 +1,10 @@
+.root {
+  background: var(--mac-surface);
+  border: 1px solid var(--mac-accent-2);
+  color: var(--mac-accent-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  overflow: auto;
+  padding: 6px;
+  white-space: pre-wrap;
+}

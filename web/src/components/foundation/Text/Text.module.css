@@ -1,0 +1,48 @@
+.root {
+  margin: 0;
+  color: var(--mac-text);
+}
+
+.sizeBody {
+  font: var(--rag-font-role-body, 400 12px/1.45 var(--font-body));
+}
+
+.sizeCompact {
+  font: var(--rag-font-role-compact, 400 11px/1.4 var(--font-body));
+}
+
+.sizeMetadata {
+  font: var(--rag-font-role-metadata, 400 11px/1.35 var(--font-mono));
+}
+
+.sizeLabel {
+  font: var(--rag-font-role-label, 700 11px/1.2 var(--font-mono));
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sizeMetric {
+  font: var(--rag-font-role-metric, 700 12px/1.25 var(--font-mono));
+}
+
+.tonePrimary { color: var(--mac-text); }
+.toneMuted { color: var(--mac-text-dim); }
+.toneInverse { color: var(--mac-text-inv); }
+.toneAccent { color: var(--mac-accent); }
+.toneSuccess { color: var(--mac-green); }
+.toneWarning { color: var(--mac-amber); }
+.toneDanger { color: var(--mac-accent-2); }
+.toneInherit { color: inherit; }
+
+.weightRegular { font-weight: 400; }
+.weightBold { font-weight: 700; }
+
+.alignStart { text-align: start; }
+.alignCenter { text-align: center; }
+.alignEnd { text-align: end; }
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

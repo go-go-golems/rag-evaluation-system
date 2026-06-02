@@ -1,0 +1,27 @@
+.root {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.searchWorkbench {
+  grid-template-columns: 280px minmax(0, 1fr) 400px;
+  align-items: stretch;
+}
+
+.corpusExplorer {
+  grid-template-columns: 220px minmax(280px, 1fr) minmax(0, 2fr);
+  align-items: start;
+}
+
+.twoColumn {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@media (max-width: 900px) {
+  .searchWorkbench,
+  .corpusExplorer,
+  .twoColumn {
+    grid-template-columns: 1fr;
+  }
+}

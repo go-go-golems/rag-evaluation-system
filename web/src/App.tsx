@@ -5,6 +5,8 @@ import { SearchView } from './components/search/SearchView';
 import { EvaluationView } from './components/evaluation/EvaluationView';
 import { CorpusExplorerView } from './components/corpus/CorpusExplorerView';
 import { WorkflowsView } from './components/workflows/WorkflowsView';
+import { AppShell } from './components/layout';
+import { AppNav } from './components/molecules';
 
 const views = [
   { id: 'search', label: 'Search' },
@@ -71,22 +73,17 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--mac-bg)' }}>
-      <nav className="nav-strip">
-        <span className="nav-brand">◉ RAG Eval</span>
-        {views.map((view) => (
-          <span
-            key={view.id}
-            className={`nav-item ${activeView === view.id ? 'active' : ''}`}
-            onClick={() => setActiveView(view.id)}
-          >
-            {view.label}
-          </span>
-        ))}
-      </nav>
-      <div style={{ padding: '8px' }}>
-        {renderView()}
-      </div>
-    </div>
+    <AppShell
+      header={(
+        <AppNav
+          brand="◉ RAG Eval"
+          items={views}
+          activeItemId={activeView}
+          onItemSelect={setActiveView}
+        />
+      )}
+    >
+      {renderView()}
+    </AppShell>
   );
 };

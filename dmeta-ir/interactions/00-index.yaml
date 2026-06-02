@@ -1,0 +1,14 @@
+summary: Interaction IR manifest for the RAG Evaluation dashboard.
+description: >
+  Lists target-neutral user-visible representations, actions, and elaboration rules
+  for the first Search Workbench slice.
+why: >
+  Interaction IR is the visible-obligation layer between core RAG semantics and Web
+  MDS templates.
+files:
+  representations:
+    - representations/10-search-workbench.yaml
+  actions:
+    - actions/10-search-workbench.yaml
+  elaboration_rules:
+    - elaboration-rules/10-search-workbench.yaml

@@ -1,0 +1,42 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalPanel {
+  width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.formSection {
+  border: 1px solid var(--mac-border);
+  padding: 6px 8px;
+  margin-bottom: 6px;
+}
+
+.formSection legend {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 4px;
+  color: var(--mac-text-dim);
+}
+
+.workflowMessage {
+  display: block;
+}
+
+.fullInput {
+  width: 100%;
+}
+
+.shortInput {
+  width: 80px;
+}

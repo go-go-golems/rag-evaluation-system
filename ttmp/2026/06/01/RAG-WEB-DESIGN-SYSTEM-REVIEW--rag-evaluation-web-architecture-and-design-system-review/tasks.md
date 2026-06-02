@@ -1,0 +1,79 @@
+# Tasks
+
+## DONE
+
+- [x] Create RAG-local docmgr ticket with `docmgr --root ttmp`.
+- [x] Inspect the React web app source tree.
+- [x] Inspect the RTK Query API layer and Redux store.
+- [x] Inspect the global CSS/design-system state.
+- [x] Inspect Go server, embedded SPA, API route registry, workflow/artifact handlers, and database concepts needed to understand the web app.
+- [x] Review prior RAGEVAL web/retrieval/workflow docs for context.
+- [x] Run static scans for file size, class usage, inline style pressure, custom events, and missing Storybook/CSS-module/DMETA artifacts.
+- [x] Attempt frontend build and record dependency failure.
+- [x] Write the intern-facing design/architecture/review report.
+- [x] Write the investigation diary.
+- [x] Relate key files to the ticket docs.
+- [x] Run `docmgr --root ttmp doctor`.
+- [x] Upload the report bundle to reMarkable.
+- [x] Phase 0: install frontend dependencies and restore a passing local web build baseline.
+- [x] Phase 0: add Storybook package scripts/config so component review can start before large refactors.
+- [x] Phase 1: extract current retro visual tokens into `web/src/styles/tokens.css`.
+- [x] Phase 1: add foundation primitives for text, code identifiers, statuses, dividers, and visually hidden labels.
+- [x] Phase 1: add `Caption` foundation primitive for compact metadata labels and statuses.
+- [x] Phase 1: add layout primitives for panels, stacks, inline toolbars, and dashboard grid recipes.
+- [x] Phase 1: add `AppShell`, `ScrollRegion`, `TabList`, and `FormRow` layout primitives.
+- [x] Phase 2: start Storybook immediately with co-located foundation primitive stories.
+- [x] Phase 2: start Storybook immediately with co-located layout primitive stories.
+- [x] Phase 2: validate the new Storybook setup with `pnpm build-storybook`.
+
+## TODO
+
+- [x] Phase 3: extract `SearchControlsPanel` with interactive and loading Storybook stories.
+- [x] Phase 3: extract `RetrievalResultsPanel` with empty, loading, hybrid results, and error Storybook stories.
+- [x] Phase 3: extract `CoveragePanel` with complete and sparse coverage Storybook stories.
+- [x] Phase 3: extract `QueryPresetList` with TTC query Storybook story.
+- [x] Phase 3: refactor `SearchView.tsx` to compose extracted controls/results/coverage/preset components while preserving behavior.
+- [x] Phase 3: move Search Workbench into `components/pages/SearchWorkbenchPage/` and keep `SearchView` as a compatibility re-export.
+- [x] Phase 3: extract `ResultInspectorPanel` and add stories for detail/BM25/document-loading inspector states.
+- [x] Phase 3: migrate Search Workbench page shell from inline flex layout to `DashboardGrid`/`Stack` plus `SearchView.module.css`.
+- [x] Phase 4: add Storybook review surfaces for the Search Workbench organisms/molecules extracted so far.
+- [x] Phase 4: add Storybook review surfaces for `Caption`, `AppShell`, `ScrollRegion`, `TabList`, `FormRow`, `MetadataGrid`, and `DataTable`.
+- [x] Phase 4: add Storybook review surfaces for Corpus `SourcePanel`, `DocumentBrowser`, and `DocumentInspector` states.
+- [x] Phase 4: add Storybook review surfaces for Workflow `QueueHealthPanel`, `WorkflowListPanel`, `WorkflowSummaryPanel`, `WorkflowOpGraphPanel`, `WorkflowOpGroupsPanel`, `WorkflowOpInspectorPanel`, and `WorkflowOpResultPanel` states.
+- [x] Phase 4 optional follow-up: expand `ResultInspectorPanel` stories with explicit chunk-tab, document-tab, and document-loading states via `defaultTab`.
+- [x] Phase 5: add initial documentation-only `dmeta-ir` core/interaction/Web MDS YAML for the Search Workbench vertical slice.
+- [x] Phase 3: add reusable `MetadataGrid` and `DataTable` molecules as extraction targets for inspector/results/corpus/workflow views.
+- [x] Phase 3 follow-up: adopt `MetadataGrid`, `DataTable`, `TabList`, and `ScrollRegion` inside Search Workbench result/inspector panels.
+- [x] Phase 3 follow-up: adopt `Panel`, `Stack`, `FormRow`, `ScrollRegion`, and `Caption` inside `SearchControlsPanel`.
+- [x] Phase 3 follow-up: adopt `AppShell` in the root app shell.
+- [x] Phase 3 follow-up: keep `SourcePanel` under the Corpus feature area after review, while treating it as a feature panel that uses shared primitives.
+- [x] Phase 3 follow-up: adopt `DataTable`, `MetadataGrid`, `TabList`, `Panel`, `ScrollRegion`, `Caption`, and `StatusText` in Corpus source/document/inspector surfaces.
+- [x] Phase 3 follow-up: extract Workflow `QueueHealthPanel` and `WorkflowListPanel` organisms and adopt them in `WorkflowsView`.
+- [x] Phase 3 follow-up: extract Workflow `WorkflowSummaryPanel`, `WorkflowOpGraphPanel`, and `WorkflowOpGroupsPanel` organisms and adopt them in workflow detail.
+- [x] Phase 3 follow-up: extract Workflow `WorkflowOpInspectorPanel` and adopt `MetadataGrid`, `Panel`, `Caption`, and `StatusText` for sampled op details.
+- [x] Phase 3 follow-up: extract Workflow `WorkflowOpResultPanel` and adopt `MetadataGrid`/`DataTable` for op result records/artifacts.
+- [x] Phase 3 follow-up: refactor `SubmitIntakeModal` form structure through `Panel`, `Stack`, `FormRow`, and `Caption` while keeping workflow submission behavior in the view.
+- [x] Phase 3 follow-up: refactor `CoveragePanel` and `QueryPresetList` to use shared `Panel`, `Stack`, `Caption`, `StatusText`, `MetadataGrid`, and `DataTable` primitives instead of global panel/table/text classes.
+- [x] Phase 3 follow-up: refactor `EmbeddingsView` panels/forms/results through design-system primitives while keeping RTK Query and mutation behavior in the view.
+- [x] Phase 3 follow-up: refactor `PipelineView` through a storyable `PipelineOverview` and `PipelinePage` boundary with Storybook stories.
+- [x] Phase 3 follow-up: organize Corpus widgets into per-widget subdirectories while preserving existing Corpus stories.
+- [x] Phase 4 guidance: write RAG-specific React/design-system guidelines modeled after the TTC foundation guide, including CSS ownership, file layout, Storybook, page-boundary, and cleanup rules.
+- [ ] Deferred beyond requested scope (Phase 6): generated React scaffold output and promotion metadata.
+- [ ] Deferred beyond requested scope (Phase 7): executable validators for the documentation-only IR catalog.
+- [x] Guideline audit: inventory every current React component/page against the RAG design-system guidelines (layer, folder layout, Storybook coverage, global CSS usage, inline styles, container/presentation split).
+- [x] Guideline audit: create a ticket analysis doc listing compliant, partially compliant, and non-compliant components with concrete file-level cleanup recommendations.
+- [x] Foundation docs: add RAG Foundation Storybook overview stories for colors, typography, status tones, spacing, borders/radii, and accessibility.
+- [x] Foundation docs: add local story styling for foundation overview demos without introducing app-facing primitives or generic Box APIs.
+- [x] Corpus cleanup: add stories for IdentityBar, DocProcessingIdentityBar, ChunkEnrichmentIdentityBar, and ChunkTimelineBar.
+- [x] Corpus cleanup: refactor IdentityBar through Panel/Inline/FormRow/Caption/CodeText/MetadataGrid and move remaining anatomy into a CSS Module.
+- [x] Corpus cleanup: refactor ArtifactIdentityBar identity selectors through shared primitives and split presentational widgets if needed.
+- [x] Corpus cleanup: move ChunkTimelineBar global chunk-bar CSS into ChunkTimelineBar.module.css and keep dynamic geometry inline only where required.
+- [x] Global CSS cleanup: replace raw panel/table/text/status/meta/form/tab classes in stories and active components, then delete unused legacy blocks only after rg proves no consumers.
+- [ ] Page stories: add storyable DTO-shaped page boundaries for Corpus, Workflows, Embeddings, and Evaluation as those areas are split from RTK Query containers.
+- [x] Atoms: add a reusable Button atom for default, primary, selected, disabled, and compact button states, then migrate identity selector buttons away from ad-hoc/global button styling.
+- [x] Atoms: add IconButton for close/copy/back compact actions and migrate copy-btn consumers, then delete legacy copy-btn global CSS after rg confirms no consumers.
+- [x] Page stories: replace the Evaluation placeholder with a storyable EvaluationPage boundary using design-system primitives.
+- [x] Atoms: add TextInput, SelectInput, CheckboxRow, and ErrorCallout atoms; migrate form/error consumers; delete legacy input/select/error/checkbox globals after rg confirms no consumers.
+- [x] Globals: remove leftover accent/truncate/no-select utilities by migrating active consumers to foundation/local CSS.
+- [x] Navigation: extract global nav-strip/nav-brand/nav-item styling into storyable AppNav molecule and remove nav globals from index.css.
+- [x] Visual QA: start the real page with devctl, capture post-refactor page screenshots plus iframe-only Storybook report screenshots, and record visual smoke-check findings.

@@ -1,0 +1,12 @@
+summary: Core model manifest for the RAG Evaluation dashboard.
+description: >
+  Lists the target-neutral semantic catalogs that describe retrieval, corpus,
+  evidence, and embedding concepts before any interaction or Web rendering layer.
+why: >
+  Explicit manifests make catalog loading deterministic and avoid accidental glob
+  behavior as the DMETA IR grows.
+files:
+  archetypes:
+    - archetypes/10-search-workbench.yaml
+  capabilities:
+    - capabilities/10-search-workbench.yaml

@@ -1,0 +1,27 @@
+summary: React target metadata for generated/promoted RAG dashboard components.
+description: >
+  Records the intended React implementation conventions for this Web MDS catalog.
+why: >
+  React target details belong in the target layer, not core model or Interaction IR.
+target:
+  id: react_vite_storybook
+  summary: Vite React dashboard with Storybook review surfaces.
+  description: >
+    Uses React, Vite, TypeScript, CSS Modules for new owned components, global retro
+    CSS during migration, and Storybook for foundation/layout/component review.
+  why: >
+    This matches the current RAG web application and the Phase 0-2 design-system work.
+  generated_output:
+    proposed_dir: web/src/generated/dmeta-widgets
+    promotion_policy: scaffold_then_promote
+  promoted_components:
+    - web/src/components/organisms/SearchControlsPanel
+    - web/src/components/organisms/RetrievalResultsPanel
+    - web/src/components/organisms/ResultInspectorPanel
+    - web/src/components/molecules/CoveragePanel
+    - web/src/components/molecules/QueryPresetList
+  storybook:
+    required: true
+    title_policy: Generated titles should come from the generator once generation exists; promoted stories may be hand-authored.
+  non_goals:
+    - Does not require immediate generated React code in this first catalog seed.

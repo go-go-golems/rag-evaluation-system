@@ -4,8 +4,12 @@
 
 # Data
 data/
+state/
 *.db
 *.bleve/
+
+# Local devctl runtime
+.devctl/
 
 # Web build artifacts
 web/dist/

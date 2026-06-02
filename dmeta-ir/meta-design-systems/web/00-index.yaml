@@ -1,0 +1,17 @@
+summary: Web MDS manifest for the RAG Evaluation dashboard.
+description: >
+  Lists Web-specific design-system policy, templates, lowering rules, style tokens,
+  and React target metadata for the Search Workbench slice.
+why: >
+  Web MDS is where target-specific component hierarchy, layout recipes, CSS
+  ownership, and Storybook contracts belong.
+files:
+  component_system: component-system.yaml
+  lowering_rules: lowering-rules.yaml
+  widgets:
+    - widgets/search-workbench.yaml
+  style:
+    - style/tokens.yaml
+    - style/recipes.yaml
+  targets:
+    - targets/react.yaml

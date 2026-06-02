@@ -1,0 +1,14 @@
+.root {
+  display: flex;
+  align-items: center;
+}
+
+.wrap { flex-wrap: wrap; }
+.noWrap { flex-wrap: nowrap; }
+.gapXs { gap: 2px; }
+.gapSm { gap: 4px; }
+.gapMd { gap: 8px; }
+.gapLg { gap: 12px; }
+.justifyStart { justify-content: flex-start; }
+.justifyBetween { justify-content: space-between; }
+.justifyEnd { justify-content: flex-end; }

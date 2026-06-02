@@ -1,0 +1,32 @@
+.root {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--mac-text-dim);
+  cursor: pointer;
+  font: var(--rag-font-role-metadata);
+  padding: 0 2px;
+}
+
+.root:hover:not(:disabled) {
+  color: var(--mac-accent);
+}
+
+.root:focus-visible {
+  outline: 1px solid var(--mac-accent);
+  outline-offset: 1px;
+}
+
+.root:disabled {
+  color: var(--mac-text-dim);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.compact {
+  font-size: 10px;
+}
+
+.normal {
+  font: var(--rag-font-role-metadata);
+}

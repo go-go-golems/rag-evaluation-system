@@ -1,0 +1,85 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 960px;
+}
+
+.section {
+  border: 1px solid var(--mac-border);
+  background: var(--mac-surface);
+  padding: 12px;
+}
+
+.sectionTitle {
+  margin: 0 0 8px;
+  font: var(--rag-font-role-label);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.swatchGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.swatch {
+  border: 1px solid var(--mac-border);
+  background: var(--mac-surface);
+}
+
+.swatchColor {
+  height: 42px;
+  border-bottom: 1px solid var(--mac-border);
+}
+
+.swatchBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+}
+
+.specimenStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.statusGrid,
+.spacingGrid,
+.radiusGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.spacingRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spacingBar {
+  height: 12px;
+  min-width: 2px;
+  background: repeating-linear-gradient(90deg, var(--mac-border), var(--mac-border) 2px, var(--mac-surface) 2px, var(--mac-surface) 4px);
+  border: 1px solid var(--mac-border);
+}
+
+.radiusSample {
+  height: 48px;
+  border: 1px solid var(--mac-border);
+  background: var(--mac-surface-2);
+}
+
+.borderStrong {
+  border-width: 2px;
+}
+
+.accessibilityDemo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

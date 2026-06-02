@@ -1,0 +1,83 @@
+summary: Semantic archetypes for the Search Workbench vertical slice.
+description: >
+  Defines the target-neutral RAG concepts used by query composition, retrieval
+  results, result inspection, and corpus navigation.
+why: >
+  These objects can be used by Web, CLI, test fixtures, evaluation reports, and
+  future generated workflows without depending on React components.
+
+archetypes:
+  - id: retrieval_query
+    name: RetrievalQuery
+    summary: A query submitted against a corpus or retrieval configuration.
+    description: >
+      Represents the semantic request that drives BM25, vector, or hybrid
+      retrieval. It includes query text, retriever mode, corpus/index selection,
+      source filters, embedding identity, result limits, and preview length.
+    why: >
+      Query meaning exists outside Web rendering. The same query can be submitted
+      from the Web dashboard, CLI, notebook, smoke test, or evaluation run.
+    examples:
+      - fast growing trees for privacy screen
+      - hydrangea pruning
+    non_goals:
+      - Does not model the Web search input field.
+      - Does not model button placement or form layout.
+
+  - id: source_document
+    name: SourceDocument
+    summary: A document stored in the RAG corpus.
+    description: >
+      Represents a durable source item loaded from a source. It has identity,
+      title, URL, text or HTML content, metadata, word count, language, and
+      processing status.
+    why: >
+      Document identity is shared by corpus browsing, retrieval results,
+      citations, workflows, preprocessing artifacts, and evaluation labels.
+    examples:
+      - TTC guide page imported from the Tree Center corpus.
+      - Product detail document generated from a structured dump row.
+    non_goals:
+      - Does not decide whether a document is rendered as a table row, card, or inspector panel.
+
+  - id: evidence_chunk
+    name: EvidenceChunk
+    summary: A bounded text span used for retrieval and inspection.
+    description: >
+      Represents a chunk produced by a chunking strategy. It carries chunk index,
+      offsets, token count, text, embedding state, and optional enrichment state.
+    why: >
+      Chunks are central to retrieval explainability and evaluation. They are not
+      Web table rows; Web can render them as rows, cards, timelines, or reports.
+    examples:
+      - A 1200-rune chunk with 150-rune overlap from a guide document.
+    non_goals:
+      - Does not prescribe CSS for chunk text or coverage strips.
+
+  - id: retrieval_result
+    name: RetrievalResult
+    summary: One ranked evidence chunk returned by a retrieval run.
+    description: >
+      Combines EvidenceChunk identity with rank, retriever, score, optional BM25
+      and vector components, source/document identity, title, URL, and preview.
+    why: >
+      Search, evaluation, and debugging all need a shared semantic result shape
+      before any particular presentation is chosen.
+    examples:
+      - Hybrid rank #1 result with BM25 rank #1 and vector rank #3.
+    non_goals:
+      - Does not imply a table-based presentation.
+
+  - id: embedding_identity
+    name: EmbeddingIdentity
+    summary: The strategy/provider/model/dimensions tuple used to interpret vectors.
+    description: >
+      Identifies which chunking strategy and embedding model are being inspected.
+      Changing this identity changes coverage, vector search, and similarity results.
+    why: >
+      The current UI exposes this tuple as first-class state. It should be modeled
+      explicitly because many dashboard views depend on it.
+    examples:
+      - fixed-1200-150 + openai + text-embedding-3-small + 1536 dimensions.
+    non_goals:
+      - Does not store provider secrets or runtime API configuration.

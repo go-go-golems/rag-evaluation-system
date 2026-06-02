@@ -1,0 +1,23 @@
+.content {
+  align-items: center;
+}
+
+.field {
+  min-width: 0;
+}
+
+.providerInput {
+  width: 80px;
+}
+
+.modelInput {
+  width: 180px;
+}
+
+.dimensionsInput {
+  width: 72px;
+}
+
+.totals {
+  margin-left: auto;
+}

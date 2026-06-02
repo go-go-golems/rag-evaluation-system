@@ -1,0 +1,52 @@
+summary: Target-neutral capabilities for searching and inspecting the corpus.
+description: >
+  Describes what the system can do with RAG search semantics before Interaction IR
+  decides which user-visible obligations expose those capabilities.
+why: >
+  Capabilities keep product behavior separate from Web component choices.
+
+capabilities:
+  - id: compose_retrieval_query
+    summary: Compose a retrieval query with mode, filters, and limits.
+    description: >
+      Allows a caller to construct a RetrievalQuery for BM25, vector, or hybrid
+      search using corpus/index and embedding configuration.
+    why: >
+      Query composition is reusable across dashboard, CLI, tests, and batch evaluation.
+    inputs:
+      - retrieval_query
+    outputs:
+      - retrieval_query
+    non_goals:
+      - Does not describe control layout or keyboard shortcuts.
+
+  - id: execute_retrieval_query
+    summary: Execute a retrieval query and return ranked evidence.
+    description: >
+      Runs the selected retriever and returns a list of RetrievalResult objects.
+    why: >
+      Search execution is the central behavior of the Search Workbench vertical slice.
+    inputs:
+      - retrieval_query
+    outputs:
+      - retrieval_result
+    non_goals:
+      - Does not specify whether results render in a table or card list.
+
+  - id: inspect_retrieval_result
+    summary: Inspect one result with score, chunk, neighbor, and document context.
+    description: >
+      Expands a RetrievalResult into enough source context to evaluate whether the
+      retrieved evidence is useful, grounded, and explainable.
+    why: >
+      Result inspection is essential for debugging retrieval quality and for later
+      evaluation workflows.
+    inputs:
+      - retrieval_result
+      - source_document
+      - evidence_chunk
+    outputs:
+      - source_document
+      - evidence_chunk
+    non_goals:
+      - Does not own Web tab state.

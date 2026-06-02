@@ -1,0 +1,51 @@
+summary: Web dashboard component-system policy for RAG Evaluation.
+description: >
+  Defines the initial Web component hierarchy used by the hand-authored Search
+  Workbench templates.
+why: >
+  React files need a stable vocabulary for pages, organisms, molecules, layout,
+  and foundation primitives before generated scaffolds exist.
+levels:
+  page:
+    summary: Route-level or application-level compositions.
+    description: >
+      Pages compose multiple organisms and own data orchestration boundaries.
+    examples:
+      - SearchWorkbenchPage
+  organism:
+    summary: Stateful or data-rich panels that satisfy a major representation.
+    description: >
+      Organisms are Storybook-reviewable dashboard regions such as search controls,
+      retrieval results, and result inspectors.
+    examples:
+      - SearchControlsPanel
+      - RetrievalResultsPanel
+      - ResultInspectorPanel
+  molecule:
+    summary: Smaller reusable panels or content groups.
+    description: >
+      Molecules compose foundation/layout primitives and may be used by organisms.
+    examples:
+      - CoveragePanel
+      - QueryPresetList
+  layout:
+    summary: Structural primitives for dashboard arrangement.
+    description: >
+      Layout primitives own grid/stack/inline/panel structure, not domain meaning.
+    examples:
+      - DashboardGrid
+      - Stack
+      - Inline
+  foundation:
+    summary: Typography, code text, status text, dividers, and accessibility primitives.
+    description: >
+      Foundation primitives own repeated text/accessibility/separator roles.
+    examples:
+      - Text
+      - CodeText
+      - StatusText
+      - Divider
+      - VisuallyHidden
+non_goals:
+  - Does not define Go API schemas.
+  - Does not require replacing all current global CSS in one pass.

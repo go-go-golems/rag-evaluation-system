@@ -1,4 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Button, ErrorCallout, SelectInput, TextInput } from '../atoms';
+import { Caption, CodeText } from '../foundation';
+import { DashboardGrid, FormRow, Panel, Stack } from '../layout';
+import { DataTable, MetadataGrid } from '../molecules';
 import {
   Chunk,
   useComputeEmbeddingsMutation,
@@ -7,6 +11,7 @@ import {
   useListChunksQuery,
   useListDocumentsQuery,
 } from '../../services/api';
+import styles from './EmbeddingsView.module.css';
 
 const DEFAULT_PROVIDER = 'ollama';
 const DEFAULT_MODEL = 'nomic-embed-text';
@@ -102,175 +107,142 @@ export const EmbeddingsView: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {/* Controls */}
-      <div className="panel">
-        <div className="panel-header"><span>Embedding Inspector — Controls</span></div>
-        <div className="panel-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-          <fieldset className="fieldset">
+    <div className={styles.root}>
+      <Panel title="Embedding Inspector — Controls">
+        <div className={styles.controlsGrid}>
+          <fieldset className={styles.fieldset}>
             <legend>Strategy</legend>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="text-mono text-dim" style={{ width: 50 }}>Strategy</span>
-                <select className="select" value={strategyId} onChange={(e) => setStrategyId(e.target.value)} style={{ flex: 1 }}>
-                  {strategiesLoading ? <option>Loading...</option> : null}
-                  {strategies.map((s) => <option key={s.id} value={s.id}>{s.id}</option>)}
-                </select>
-              </label>
-              <span className="text-dim text-small">
+            <Stack gap="xs">
+              <FormRow
+                label="Strategy"
+                control={(
+                  <SelectInput value={strategyId} onChange={(event) => setStrategyId(event.target.value)}>
+                    {strategiesLoading ? <option>Loading...</option> : null}
+                    {strategies.map((strategy) => <option key={strategy.id} value={strategy.id}>{strategy.id}</option>)}
+                  </SelectInput>
+                )}
+              />
+              <Caption>
                 {selectedStrategy ? `${selectedStrategy.type}: ${selectedStrategy.description || 'no description'}` : 'Create chunks before computing embeddings.'}
-              </span>
-            </div>
+              </Caption>
+            </Stack>
           </fieldset>
 
-          <fieldset className="fieldset">
+          <fieldset className={styles.fieldset}>
             <legend>Provider Identity</legend>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="text-mono text-dim" style={{ width: 50 }}>Provider</span>
-                <input className="input" value={providerType} onChange={(e) => setProviderType(e.target.value)} style={{ flex: 1 }} />
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="text-mono text-dim" style={{ width: 50 }}>Model</span>
-                <input className="input" value={model} onChange={(e) => setModel(e.target.value)} style={{ flex: 1 }} />
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="text-mono text-dim" style={{ width: 50 }}>Dims</span>
-                <input className="input" type="number" min={1} value={dimensions} onChange={(e) => setDimensions(Number(e.target.value))} style={{ width: 60 }} />
-              </label>
-            </div>
+            <Stack gap="xs">
+              <FormRow label="Provider" control={<TextInput value={providerType} onChange={(event) => setProviderType(event.target.value)} />} />
+              <FormRow label="Model" control={<TextInput value={model} onChange={(event) => setModel(event.target.value)} />} />
+              <FormRow label="Dims" control={<TextInput className={styles.shortInput} type="number" min={1} value={dimensions} onChange={(event) => setDimensions(Number(event.target.value))} />} />
+            </Stack>
           </fieldset>
 
-          <fieldset className="fieldset">
+          <fieldset className={styles.fieldset}>
             <legend>Snapshot</legend>
-            <div className="stat-grid">
-              <span className="stat-label">Documents</span>
-              <span className="stat-value">{documentsLoading ? '...' : documents.length}</span>
-              <span className="stat-label">Strategies</span>
-              <span className="stat-value">{strategiesLoading ? '...' : strategies.length}</span>
-              <span className="stat-label">Chunks</span>
-              <span className="stat-value">{chunksLoading ? '...' : strategyChunks.length}</span>
-              <span className="stat-label">Last compute</span>
-              <span className="stat-value">{computeState.data ? `${computeState.data.computed} computed, ${computeState.data.skipped_fresh} fresh` : '—'}</span>
-            </div>
+            <MetadataGrid
+              density="compact"
+              items={[
+                { key: 'Documents', value: documentsLoading ? '...' : documents.length },
+                { key: 'Strategies', value: strategiesLoading ? '...' : strategies.length },
+                { key: 'Chunks', value: chunksLoading ? '...' : strategyChunks.length },
+                { key: 'Last compute', value: computeState.data ? `${computeState.data.computed} computed, ${computeState.data.skipped_fresh} fresh` : '—' },
+              ]}
+            />
           </fieldset>
         </div>
-      </div>
+      </Panel>
 
-      {/* Compute + Similarity */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <div className="panel">
-          <div className="panel-header"><span>Compute Embeddings</span></div>
-          <div className="panel-body">
-            <p className="text-dim text-small">Keep the limit small for first tests.</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="text-mono text-dim" style={{ width: 60 }}>Batch</span>
-                <input className="input" type="number" min={1} value={batchSize} onChange={(e) => setBatchSize(Number(e.target.value))} style={{ width: 60 }} />
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="text-mono text-dim" style={{ width: 60 }}>Limit</span>
-                <input className="input" type="number" min={0} value={computeLimit} onChange={(e) => setComputeLimit(Number(e.target.value))} style={{ width: 60 }} />
-              </label>
-              <label className="checkbox-row">
-                <input type="checkbox" checked={force} onChange={(e) => setForce(e.target.checked)} />
+      <DashboardGrid recipe="twoColumn">
+        <Panel title="Compute Embeddings">
+          <Stack gap="sm">
+            <Caption>Keep the limit small for first tests.</Caption>
+            <Stack gap="xs">
+              <FormRow label="Batch" control={<TextInput className={styles.shortInput} type="number" min={1} value={batchSize} onChange={(event) => setBatchSize(Number(event.target.value))} />} />
+              <FormRow label="Limit" control={<TextInput className={styles.shortInput} type="number" min={0} value={computeLimit} onChange={(event) => setComputeLimit(Number(event.target.value))} />} />
+              <label className={styles.checkboxRow}>
+                <input type="checkbox" checked={force} onChange={(event) => setForce(event.target.checked)} />
                 <span>Force recompute</span>
               </label>
-            </div>
-            <div style={{ marginTop: 6 }}>
-              <button className="btn btn-primary" onClick={handleCompute} disabled={!canCompute || computeState.isLoading}>
+            </Stack>
+            <div className={styles.actions}>
+              <Button variant="primary" onClick={handleCompute} disabled={!canCompute || computeState.isLoading}>
                 {computeState.isLoading ? 'Computing...' : 'Compute Embeddings'}
-              </button>
+              </Button>
             </div>
             {computeState.data ? (
-              <table className="data-table" style={{ marginTop: 6 }}>
-                <tbody>
-                  <tr><th>Considered</th><td>{computeState.data.considered}</td></tr>
-                  <tr><th>Computed</th><td>{computeState.data.computed}</td></tr>
-                  <tr><th>Skipped fresh</th><td>{computeState.data.skipped_fresh}</td></tr>
-                  <tr><th>Model</th><td className="mono">{computeState.data.provider_type}/{computeState.data.model} ({computeState.data.dimensions})</td></tr>
-                </tbody>
-              </table>
+              <MetadataGrid
+                className={styles.tableBlock}
+                density="compact"
+                items={[
+                  { key: 'Considered', value: computeState.data.considered },
+                  { key: 'Computed', value: computeState.data.computed },
+                  { key: 'Skipped fresh', value: computeState.data.skipped_fresh },
+                  { key: 'Model', value: <CodeText>{computeState.data.provider_type}/{computeState.data.model} ({computeState.data.dimensions})</CodeText> },
+                ]}
+              />
             ) : null}
-            {computeState.error ? <pre className="error-box">{formatApiError(computeState.error)}</pre> : null}
-          </div>
-        </div>
+            {computeState.error ? <ErrorCallout>{formatApiError(computeState.error)}</ErrorCallout> : null}
+          </Stack>
+        </Panel>
 
-        <div className="panel">
-          <div className="panel-header"><span>Pairwise / Bounded Similarity</span></div>
-          <div className="panel-body">
-            <p className="text-dim text-small">Similarity reads stored vectors only. Select a document with chunks, then compare.</p>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span className="text-mono text-dim" style={{ width: 60 }}>Document</span>
-              <select className="select" value={documentId} onChange={(e) => setDocumentId(e.target.value)} style={{ flex: 1 }}>
-                {documentsLoading ? <option>Loading...</option> : null}
-                {documents.map((d) => <option key={d.id} value={d.id}>{d.title || d.id}</option>)}
-              </select>
-            </label>
-            <div className="text-dim text-small" style={{ margin: '4px 0' }}>
-              {selectedDocument ? `${selectedDocument.status} · ${selectedDocument.word_count} words · ${selectedDocument.id}` : 'No document selected.'}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="text-mono text-dim" style={{ width: 60 }}>Chunk A</span>
-                <select className="select" value={chunkIDA} onChange={(e) => setChunkIDA(e.target.value)} style={{ flex: 1 }}>
-                  {strategyChunks.map((c) => <option key={c.id} value={c.id}>#{c.chunk_index} {c.id}</option>)}
-                </select>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="text-mono text-dim" style={{ width: 60 }}>Chunk B</span>
-                <select className="select" value={chunkIDB} onChange={(e) => setChunkIDB(e.target.value)} style={{ flex: 1 }}>
-                  <option value="">Top candidates for A</option>
-                  {strategyChunks.map((c) => <option key={c.id} value={c.id}>#{c.chunk_index} {c.id}</option>)}
-                </select>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="text-mono text-dim" style={{ width: 60 }}>Limit</span>
-                <input className="input" type="number" min={1} value={matchLimit} onChange={(e) => setMatchLimit(Number(e.target.value))} style={{ width: 60 }} />
-              </label>
-            </div>
-            <div style={{ marginTop: 6 }}>
-              <button className="btn btn-primary" onClick={handleCompare} disabled={!canCompare || similarityState.isLoading}>
+        <Panel title="Pairwise / Bounded Similarity">
+          <Stack gap="sm">
+            <Caption>Similarity reads stored vectors only. Select a document with chunks, then compare.</Caption>
+            <FormRow
+              label="Document"
+              control={(
+                <SelectInput value={documentId} onChange={(event) => setDocumentId(event.target.value)}>
+                  {documentsLoading ? <option>Loading...</option> : null}
+                  {documents.map((document) => <option key={document.id} value={document.id}>{document.title || document.id}</option>)}
+                </SelectInput>
+              )}
+              hint={selectedDocument ? `${selectedDocument.status} · ${selectedDocument.word_count} words · ${selectedDocument.id}` : 'No document selected.'}
+            />
+            <Stack gap="xs">
+              <FormRow
+                label="Chunk A"
+                control={(
+                  <SelectInput value={chunkIDA} onChange={(event) => setChunkIDA(event.target.value)}>
+                    {strategyChunks.map((chunk) => <option key={chunk.id} value={chunk.id}>#{chunk.chunk_index} {chunk.id}</option>)}
+                  </SelectInput>
+                )}
+              />
+              <FormRow
+                label="Chunk B"
+                control={(
+                  <SelectInput value={chunkIDB} onChange={(event) => setChunkIDB(event.target.value)}>
+                    <option value="">Top candidates for A</option>
+                    {strategyChunks.map((chunk) => <option key={chunk.id} value={chunk.id}>#{chunk.chunk_index} {chunk.id}</option>)}
+                  </SelectInput>
+                )}
+              />
+              <FormRow label="Limit" control={<TextInput className={styles.shortInput} type="number" min={1} value={matchLimit} onChange={(event) => setMatchLimit(Number(event.target.value))} />} />
+            </Stack>
+            <div className={styles.actions}>
+              <Button variant="primary" onClick={handleCompare} disabled={!canCompare || similarityState.isLoading}>
                 {similarityState.isLoading ? 'Comparing...' : 'Compare Similarity'}
-              </button>
+              </Button>
             </div>
-            {similarityState.error ? <pre className="error-box">{formatApiError(similarityState.error)}</pre> : null}
-          </div>
-        </div>
-      </div>
+            {similarityState.error ? <ErrorCallout>{formatApiError(similarityState.error)}</ErrorCallout> : null}
+          </Stack>
+        </Panel>
+      </DashboardGrid>
 
-      {/* Similarity Results */}
       {similarityState.data ? (
-        <div className="panel">
-          <div className="panel-header"><span>Similarity Results</span></div>
-          <div className="panel-body-condensed">
-            <div className="text-dim text-small">
-              Source: {similarityState.data.source.chunk_id} · {similarityState.data.considered} candidates
-            </div>
-            <table className="data-table" style={{ marginTop: 4 }}>
-              <thead>
-                <tr>
-                  <th>Score</th>
-                  <th>Chunk</th>
-                  <th>Document</th>
-                  <th>Index</th>
-                  <th>Preview</th>
-                </tr>
-              </thead>
-              <tbody>
-                {similarityState.data.matches.map((match) => (
-                  <tr key={match.chunk_id}>
-                    <td className="mono">{match.score.toFixed(6)}</td>
-                    <td className="mono">{match.chunk_id}</td>
-                    <td className="mono">{match.document_id}</td>
-                    <td className="num">{match.chunk_index}</td>
-                    <td className="text-small">{match.text_preview}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <Panel title="Similarity Results" density="condensed">
+          <Caption className={styles.resultIntro}>Source: {similarityState.data.source.chunk_id} · {similarityState.data.considered} candidates</Caption>
+          <DataTable
+            rows={similarityState.data.matches}
+            getRowKey={(match) => match.chunk_id}
+            columns={[
+              { id: 'score', header: 'Score', cell: (match) => <CodeText>{match.score.toFixed(6)}</CodeText> },
+              { id: 'chunk', header: 'Chunk', cell: (match) => <CodeText>{match.chunk_id}</CodeText> },
+              { id: 'document', header: 'Document', cell: (match) => <CodeText>{match.document_id}</CodeText> },
+              { id: 'index', header: 'Index', align: 'end', cell: (match) => match.chunk_index },
+              { id: 'preview', header: 'Preview', cell: (match) => <Caption tone="inherit">{match.text_preview}</Caption> },
+            ]}
+          />
+        </Panel>
       ) : null}
     </div>
   );

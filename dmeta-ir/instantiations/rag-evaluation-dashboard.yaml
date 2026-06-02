@@ -1,0 +1,40 @@
+summary: Initial instantiation for the RAG Evaluation dashboard Search Workbench.
+description: >
+  Selects the first vertical slice to model and eventually generate/promote through DMETA.
+why: >
+  The Search Workbench touches query composition, coverage, retrieval results, result
+  inspection, and corpus navigation, making it the smallest useful proving ground.
+instance:
+  id: rag_evaluation_dashboard_search_workbench
+  summary: Search Workbench slice for the RAG Evaluation dashboard.
+  description: >
+    Enables the Search Workbench page and its supporting Web templates as the first
+    DMETA-modeled dashboard slice.
+  why: >
+    This slice has already been refactored into Storybook-reviewable React boundaries.
+  selected_representations:
+    - query_composer
+    - embedding_coverage_summary
+    - query_preset_list
+    - retrieval_results
+    - result_inspector
+  selected_actions:
+    - submit_query
+    - apply_query_preset
+    - select_result
+    - inspect_result
+    - open_in_corpus
+    - copy_artifact_identity
+  selected_templates:
+    - rag.search_workbench_page
+    - rag.search_controls_panel
+    - rag.coverage_panel
+    - rag.query_preset_list
+    - rag.retrieval_results_panel
+    - rag.result_inspector_panel
+  human_notes: >
+    This instantiation is documentation/catalog seed work only. It records the
+    intended Search Workbench slice without requiring validation or generated React
+    scaffolds in the current scope.
+  non_goals:
+    - Does not model corpus explorer or workflow monitor templates yet.

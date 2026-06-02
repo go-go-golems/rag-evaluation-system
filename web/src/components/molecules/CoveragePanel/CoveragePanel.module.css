@@ -1,0 +1,8 @@
+.warning {
+  margin-top: 4px;
+  padding: 4px;
+  border: 1px solid var(--mac-amber);
+  color: var(--mac-amber);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}

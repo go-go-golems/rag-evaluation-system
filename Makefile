@@ -26,6 +26,7 @@ web-dev:
 web-build:
 	cd web && pnpm build
 
+
 # Build Go binary with embedded SPA
 build-full: web-build
 	go build -o $(BINARY) ./cmd/rag-eval

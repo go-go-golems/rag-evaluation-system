@@ -1,0 +1,32 @@
+.root {
+  border: 1px solid var(--mac-border);
+  background: var(--mac-surface);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+}
+
+.header {
+  background: var(--mac-bg-dark);
+  color: var(--mac-text-inv);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--mac-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.body {
+  padding: 8px;
+}
+
+.condensed {
+  padding: 4px 6px;
+}

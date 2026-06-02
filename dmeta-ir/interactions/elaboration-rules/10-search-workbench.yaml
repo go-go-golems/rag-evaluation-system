@@ -1,0 +1,38 @@
+summary: Elaboration rules from RAG capabilities to visible Search Workbench obligations.
+description: >
+  Connects core-model capabilities to Interaction IR representations and actions
+  for the first vertical slice.
+why: >
+  Elaboration keeps semantic behavior separate from the visible obligations a user
+  needs in order to exercise that behavior.
+
+elaboration_rules:
+  - id: elaborate_search_workbench
+    summary: Expose query composition, coverage, results, presets, and inspection for retrieval search.
+    description: >
+      When the dashboard needs to execute and inspect retrieval queries, provide the
+      visible obligations that make the query-to-evidence loop usable.
+    why: >
+      This is the smallest coherent Search Workbench slice: compose query, understand
+      coverage, run retrieval, select evidence, and inspect context.
+    inputs:
+      capabilities:
+        - compose_retrieval_query
+        - execute_retrieval_query
+        - inspect_retrieval_result
+    outputs:
+      representations:
+        - query_composer
+        - embedding_coverage_summary
+        - query_preset_list
+        - retrieval_results
+        - result_inspector
+      actions:
+        - submit_query
+        - apply_query_preset
+        - select_result
+        - inspect_result
+        - open_in_corpus
+        - copy_artifact_identity
+    non_goals:
+      - Does not choose Web component names or React files.

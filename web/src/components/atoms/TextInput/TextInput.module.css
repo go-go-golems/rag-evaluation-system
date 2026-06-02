@@ -1,0 +1,14 @@
+.root {
+  border: 1px solid var(--mac-border);
+  background: var(--mac-surface);
+  color: var(--mac-text);
+  padding: 2px 6px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  outline: none;
+}
+
+.root:focus {
+  outline: 1px solid var(--mac-accent);
+  outline-offset: -1px;
+}

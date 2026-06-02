@@ -1,0 +1,12 @@
+.root {
+  align-items: center;
+  padding: 2px 4px;
+}
+
+.label {
+  font-weight: 700;
+}
+
+.empty {
+  padding: 2px 4px;
+}

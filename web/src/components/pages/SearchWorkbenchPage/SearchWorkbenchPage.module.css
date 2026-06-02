@@ -1,0 +1,22 @@
+.workbench {
+  height: calc(100vh - 60px);
+}
+
+.controlsRail {
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.resultsColumn,
+.inspectorRail {
+  min-width: 0;
+}
+
+.emptyInspector {
+  height: 100%;
+}
+
+.emptyInspectorBody {
+  padding: 24px;
+  text-align: center;
+}

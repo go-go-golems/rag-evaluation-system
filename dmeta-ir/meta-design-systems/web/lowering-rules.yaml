@@ -1,0 +1,85 @@
+summary: Lowering rules from Search Workbench Interaction IR to Web templates.
+description: >
+  Declares how target-neutral representations/actions map to Web dashboard
+  templates for the first RAG vertical slice.
+why: >
+  Lowering rules keep Web-specific component choices outside the core model and
+  Interaction IR.
+
+lowering_rules:
+  - id: lower_search_workbench_page
+    summary: Lower the complete Search Workbench obligation set into a Web page.
+    description: >
+      When query composition, coverage, presets, results, and result inspection are
+      selected together, render the Search Workbench page template.
+    why: >
+      The page-level template owns the dashboard grid and composes the relevant panels.
+    consumes:
+      representations:
+        - query_composer
+        - embedding_coverage_summary
+        - query_preset_list
+        - retrieval_results
+        - result_inspector
+      actions:
+        - submit_query
+        - apply_query_preset
+        - select_result
+        - inspect_result
+        - open_in_corpus
+    produces:
+      template: rag.search_workbench_page
+    non_goals:
+      - Does not generate exact React props.
+
+  - id: lower_query_composer_to_controls_panel
+    summary: Lower query composition to the SearchControlsPanel Web organism.
+    description: >
+      Renders query controls as a compact left-rail panel in the Web dashboard.
+    why: >
+      The Web target currently uses a control rail rather than a modal or command palette.
+    consumes:
+      representations:
+        - query_composer
+      actions:
+        - submit_query
+    produces:
+      template: rag.search_controls_panel
+    non_goals:
+      - Does not define RTK mutation names.
+
+  - id: lower_retrieval_results_to_results_panel
+    summary: Lower ranked retrieval results to the RetrievalResultsPanel Web organism.
+    description: >
+      Renders ranked evidence as a selectable table-like panel with empty, loading,
+      error, and populated states.
+    why: >
+      A table-like panel fits dense debugging data, but the Interaction IR remains
+      presentation-neutral.
+    consumes:
+      representations:
+        - retrieval_results
+      actions:
+        - select_result
+        - inspect_result
+    produces:
+      template: rag.retrieval_results_panel
+    non_goals:
+      - Does not require other targets to use tables.
+
+  - id: lower_result_inspector_to_panel
+    summary: Lower result inspection to the ResultInspectorPanel Web organism.
+    description: >
+      Renders selected-result detail/chunk/document inspection as a right-rail panel.
+    why: >
+      The Web dashboard needs persistent side-by-side context while reviewing results.
+    consumes:
+      representations:
+        - result_inspector
+      actions:
+        - open_in_corpus
+        - copy_artifact_identity
+    produces:
+      template: rag.result_inspector_panel
+    non_goals:
+      - Does not prescribe the future typed navigation store.

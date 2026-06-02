@@ -1,0 +1,37 @@
+summary: Initial reusable Web layout and visual recipes for RAG Evaluation.
+description: >
+  Names coarse recipes proven by the first Search Workbench extraction.
+why: >
+  Recipes give Web MDS lowering rules a stable vocabulary without embedding full
+  React prop schemas.
+recipes:
+  - id: search_workbench_grid
+    summary: Three-column controls/results/inspector dashboard layout.
+    description: >
+      Places query controls and support panels in a narrow left rail, retrieval
+      results in the center, and selected-result inspection in a right rail.
+    why: >
+      This layout matches the Search Workbench's query-to-evidence workflow and is
+      implemented by the `DashboardGrid` searchWorkbench recipe.
+    maps_to:
+      primitive: DashboardGrid
+      recipe: searchWorkbench
+    examples:
+      - SearchView page shell.
+    non_goals:
+      - Does not force non-Web targets to use columns.
+  - id: dense_debug_panel
+    summary: Retro bordered panel for dense operator/debugging data.
+    description: >
+      Uses panel header/body structure for controls, tables, metadata grids, and inspectors.
+    why: >
+      The current dashboard language relies on dense inspectable panels; naming the
+      recipe prevents uncontrolled one-off panel variants.
+    maps_to:
+      primitive: Panel or global panel class during migration
+    examples:
+      - SearchControlsPanel
+      - RetrievalResultsPanel
+      - ResultInspectorPanel
+    non_goals:
+      - Does not eliminate all existing global panel CSS in one step.

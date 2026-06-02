@@ -1,0 +1,4 @@
+.root { display: grid; grid-template-columns: minmax(72px, max-content) minmax(0, 1fr); gap: 4px 8px; align-items: center; }
+.label { font-family: var(--font-mono); font-size: 10px; color: var(--mac-text-dim); text-transform: uppercase; }
+.control { min-width: 0; }
+.hint { grid-column: 2; font-family: var(--font-mono); font-size: 10px; color: var(--mac-text-dim); }

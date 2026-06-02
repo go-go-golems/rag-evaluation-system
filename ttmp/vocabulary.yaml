@@ -39,6 +39,14 @@ topics:
       description: Authentication, authorization, tokens, and supply-chain hardening
     - slug: release
       description: Release engineering, versioning, tagging, and publishing
+    - slug: react
+      description: React frontend architecture and components
+    - slug: css
+      description: CSS styling, tokens, and design-system ownership
+    - slug: design-system
+      description: Reusable UI design-system architecture
+    - slug: dmeta
+      description: DMETA IR and MetaDesignSystem modeling
 docTypes:
     - slug: design-doc
       description: Structured rationale and architecture notes

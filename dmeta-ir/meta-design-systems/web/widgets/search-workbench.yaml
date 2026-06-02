@@ -1,0 +1,225 @@
+summary: Web templates for the Search Workbench vertical slice.
+description: >
+  Maps Search Workbench Interaction IR representations onto Web page, organism,
+  and molecule templates that correspond to promoted React components.
+why: >
+  The current React components are now stable enough to describe as Web MDS
+  templates with coarse layout and Storybook contracts.
+
+templates:
+  - id: rag.search_workbench_page
+    name: SearchWorkbenchPage
+    summary: Page-level dashboard for composing retrieval queries and inspecting evidence.
+    description: >
+      Composes query controls, coverage state, quick query presets, retrieval
+      results, and the selected result inspector.
+    why: >
+      This is the Web page satisfying the Search view's top-level user intent. It
+      belongs in Web MDS because it chooses a dashboard grid composition.
+    component:
+      level: page
+      role: search_workbench_page
+      generation_policy: scaffold_then_promote
+      layout:
+        primitive: dashboard_grid
+        recipe: search_workbench
+    consumes:
+      representations:
+        - query_composer
+        - embedding_coverage_summary
+        - query_preset_list
+        - retrieval_results
+        - result_inspector
+      actions:
+        - submit_query
+        - apply_query_preset
+        - select_result
+        - inspect_result
+        - open_in_corpus
+    composition:
+      uses:
+        - template: rag.search_controls_panel
+          role: query_controls
+          required: true
+        - template: rag.coverage_panel
+          role: coverage_summary
+          required: false
+        - template: rag.query_preset_list
+          role: query_presets
+          required: true
+        - template: rag.retrieval_results_panel
+          role: result_list
+          required: true
+        - template: rag.result_inspector_panel
+          role: selected_result_inspector
+          required: false
+    design:
+      css_ownership: page_shell
+      foundation:
+        typography: required
+        code_text: required
+        status_text: required
+      layout_primitives:
+        - DashboardGrid
+        - Stack
+    stories:
+      - empty
+      - populated_hybrid_result
+      - sparse_vector_coverage
+    non_goals:
+      - Does not own API endpoint implementation.
+
+  - id: rag.search_controls_panel
+    name: SearchControlsPanel
+    summary: Web organism for query composition controls.
+    description: >
+      Renders query text, retriever selection, index/vector identity fields, source
+      filters, limits, and submit affordance.
+    why: >
+      The Web dashboard needs a compact controls rail for the query_composer representation.
+    component:
+      level: organism
+      role: query_controls
+      generation_policy: scaffold_then_promote
+      layout:
+        primitive: panel
+    consumes:
+      representations:
+        - query_composer
+      actions:
+        - submit_query
+    design:
+      css_ownership: widget_internal
+      foundation:
+        typography: required
+        status_text: optional
+    stories:
+      - interactive
+      - loading
+    non_goals:
+      - Does not execute API calls directly; page/container wiring owns mutations.
+
+  - id: rag.coverage_panel
+    name: CoveragePanel
+    summary: Web molecule for embedding coverage summary and sparse warnings.
+    description: >
+      Renders total/embedded/missing chunk counts, per-source coverage, and warning
+      copy when vector coverage is sparse.
+    why: >
+      Coverage is a supporting obligation for vector and hybrid search quality.
+    component:
+      level: molecule
+      role: embedding_coverage_summary
+      generation_policy: scaffold_then_promote
+      layout:
+        primitive: panel
+    consumes:
+      representations:
+        - embedding_coverage_summary
+      actions: []
+    design:
+      css_ownership: widget_internal
+      foundation:
+        status_text: required
+        code_text: optional
+    stories:
+      - complete
+      - sparse
+    non_goals:
+      - Does not compute embeddings.
+
+  - id: rag.query_preset_list
+    name: QueryPresetList
+    summary: Web molecule for curated Search Workbench example queries.
+    description: >
+      Renders selectable query examples used to populate the query composer.
+    why: >
+      Presets make smoke testing and demonstrations repeatable.
+    component:
+      level: molecule
+      role: query_preset_list
+      generation_policy: scaffold_then_promote
+      layout:
+        primitive: panel
+    consumes:
+      representations:
+        - query_preset_list
+      actions:
+        - apply_query_preset
+    design:
+      css_ownership: widget_internal
+      foundation:
+        code_text: required
+    stories:
+      - ttc_queries
+    non_goals:
+      - Does not submit queries automatically.
+
+  - id: rag.retrieval_results_panel
+    name: RetrievalResultsPanel
+    summary: Web organism for ranked retrieval results.
+    description: >
+      Renders empty, loading, error, and populated retrieval-result states with rank,
+      title, chunk index, score, optional BM25/vector components, and preview.
+    why: >
+      This is the primary evidence list for the retrieval_results representation.
+    component:
+      level: organism
+      role: retrieval_results
+      generation_policy: scaffold_then_promote
+      layout:
+        primitive: panel
+    consumes:
+      representations:
+        - retrieval_results
+      actions:
+        - select_result
+        - inspect_result
+    design:
+      css_ownership: widget_internal
+      foundation:
+        typography: required
+        code_text: required
+        status_text: required
+    stories:
+      - empty
+      - loading
+      - hybrid_results
+      - error_state
+    non_goals:
+      - Does not fetch search results.
+
+  - id: rag.result_inspector_panel
+    name: ResultInspectorPanel
+    summary: Web organism for selected retrieval result inspection.
+    description: >
+      Renders detail, chunk, and document inspection tabs for a selected retrieval
+      result, including score components, identities, neighboring chunks, metadata,
+      and coverage strip.
+    why: >
+      Inspector rendering is reusable and storyable once separated from page-level
+      document fetching and navigation events.
+    component:
+      level: organism
+      role: selected_result_inspector
+      generation_policy: scaffold_then_promote
+      layout:
+        primitive: panel
+    consumes:
+      representations:
+        - result_inspector
+      actions:
+        - open_in_corpus
+        - copy_artifact_identity
+    design:
+      css_ownership: widget_internal
+      foundation:
+        typography: required
+        code_text: required
+        status_text: required
+    stories:
+      - detail
+      - document_loading
+      - bm25_only_result
+    non_goals:
+      - Does not own RTK Query document fetching.

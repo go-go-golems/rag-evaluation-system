@@ -1,0 +1,6 @@
+.root { display: grid; gap: 6px; margin-top: 6px; }
+.section { display: grid; gap: 4px; }
+.sectionTitle { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--mac-text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.pre { margin: 0; max-height: 120px; overflow: auto; background: var(--mac-bg-dark); color: var(--mac-text-inv); border: 1px solid var(--mac-border); padding: 4px; font-family: var(--font-mono); font-size: 10px; line-height: 1.4; }
+.emittedList { max-height: 60px; overflow-y: auto; font-family: var(--font-mono); font-size: 10px; }
+.error { margin-top: 6px; }

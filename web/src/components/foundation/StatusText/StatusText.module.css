@@ -1,0 +1,14 @@
+.root {
+  font: var(--rag-font-role-code, 400 11px/1.45 var(--font-mono));
+}
+
+.pending { color: var(--mac-text-dim); }
+.ready { color: var(--mac-text-dim); }
+.running { color: var(--mac-accent); }
+.succeeded { color: var(--mac-green); }
+.done { color: var(--mac-green); }
+.partial { color: var(--mac-amber); }
+.warning { color: var(--mac-amber); }
+.failed { color: var(--mac-accent-2); }
+.error { color: var(--mac-accent-2); }
+.canceled { color: var(--mac-text-dim); text-decoration: line-through; }

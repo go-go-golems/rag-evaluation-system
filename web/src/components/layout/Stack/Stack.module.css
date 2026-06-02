@@ -1,0 +1,15 @@
+.root {
+  display: flex;
+  flex-direction: column;
+}
+
+.gapXs { gap: 2px; }
+.gapSm { gap: 4px; }
+.gapMd { gap: 8px; }
+.gapLg { gap: 12px; }
+.gapXl { gap: 16px; }
+
+.alignStretch { align-items: stretch; }
+.alignStart { align-items: flex-start; }
+.alignCenter { align-items: center; }
+.alignEnd { align-items: flex-end; }

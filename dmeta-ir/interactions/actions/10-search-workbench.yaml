@@ -1,0 +1,89 @@
+summary: Search Workbench interaction actions.
+description: >
+  Defines target-neutral actions used by the Search Workbench visible obligations.
+why: >
+  Actions are product interactions that Web can bind to buttons, keys, table rows,
+  or command palettes.
+
+actions:
+  - id: submit_query
+    summary: Execute the current retrieval query.
+    description: >
+      Runs BM25, vector, or hybrid retrieval using the selected configuration and
+      returns ranked evidence chunks.
+    why: >
+      Query submission is product behavior, not a React button implementation.
+    payload_ref: retrieval_query
+    examples:
+      - Press Enter in the query box.
+      - Click the Search control.
+    non_goals:
+      - Does not choose mutation hook names.
+
+  - id: apply_query_preset
+    summary: Use a curated query example as the active query text.
+    description: >
+      Copies a preset query into the current query composer without executing it.
+    why: >
+      Presets support smoke testing and demos while remaining independent of Web layout.
+    payload_ref: retrieval_query_text
+    examples:
+      - Select "hydrangea pruning" from the preset list.
+    non_goals:
+      - Does not track analytics for preset usage.
+
+  - id: select_result
+    summary: Select one ranked retrieval result.
+    description: >
+      Marks a result as the active result for inspection.
+    why: >
+      Selection state connects retrieval results to inspection without coupling the
+      representation to a Web table row.
+    payload_ref: retrieval_result_identity
+    examples:
+      - Click rank #1 in the result list.
+    non_goals:
+      - Does not require single-click versus keyboard selection.
+
+  - id: inspect_result
+    summary: Inspect one ranked retrieval result.
+    description: >
+      Opens details for a selected result, including score components, chunk text,
+      neighboring chunks, and document metadata.
+    why: >
+      Inspection is a reusable action for Web dashboard, evaluation UI, and reports.
+    payload_ref: retrieval_result_identity
+    examples:
+      - Open result detail after selecting a row.
+    non_goals:
+      - Does not define tab styling.
+
+  - id: open_in_corpus
+    summary: Navigate from a retrieval result to its document and chunk in the corpus browser.
+    description: >
+      Carries source, document, and chunk identity so the corpus browser can focus
+      the relevant artifact.
+    why: >
+      Search-to-corpus navigation is a product behavior that should outlive the
+      current browser custom-event implementation.
+    human_notes: >
+      The current implementation uses a `rag:navigate-to-chunk` custom event. The
+      target should use typed route state or an explicit dashboard navigation store.
+    payload_ref: corpus_focus_identity
+    examples:
+      - Open selected result in the Corpus Explorer.
+    non_goals:
+      - Does not choose React Router or Redux as the transport.
+
+  - id: copy_artifact_identity
+    summary: Copy a document, source, or chunk identifier.
+    description: >
+      Places an artifact identity string on the clipboard for debugging, issue
+      reports, or CLI reproduction.
+    why: >
+      Artifact identity copy actions are useful across many inspector surfaces.
+    payload_ref: artifact_identity
+    examples:
+      - Copy a chunk ID from the result inspector.
+    non_goals:
+      - Does not model clipboard permission UX.

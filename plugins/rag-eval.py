@@ -304,7 +304,7 @@ for line in sys.stdin:
                             "name": "backend",
                             "command": [
                                 "bash", "--noprofile", "--norc", "-lc",
-                                f"mkdir -p state && exec ./rag-eval serve --log-level debug",
+                                f"mkdir -p state && exec ./rag-eval serve --address 127.0.0.1:{backend_port} --db state/rag-eval.db --engine-db state/rag-eval-workflows.db --log-level debug",
                             ],
                             "env": {
                                 "RAG_EVAL_ADDRESS": f"127.0.0.1:{backend_port}",

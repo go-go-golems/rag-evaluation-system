@@ -1,0 +1,46 @@
+summary: RAG Web style token catalog seed.
+description: >
+  Documents the first token families extracted into `web/src/styles/tokens.css`.
+why: >
+  Token intent should be available to DMETA/Web MDS authors instead of being
+  discoverable only by reading CSS variables.
+token_families:
+  - id: retro_surface
+    summary: Monochrome dashboard surface and border tokens.
+    description: >
+      Owns the retro Mac-inspired black/white/gray surfaces, borders, and shadows.
+    why: >
+      The RAG dashboard has a coherent visual language that should be preserved
+      while making ownership explicit.
+    examples:
+      - --mac-bg
+      - --mac-surface
+      - --mac-border
+    non_goals:
+      - Does not define component-specific spacing.
+  - id: retrieval_status
+    summary: Accent tokens for retrieval, coverage, and status feedback.
+    description: >
+      Owns green/red/amber/blue accent colors used in search status, coverage, and scores.
+    why: >
+      These statuses recur across retrieval results, coverage panels, workflow views,
+      and evaluation summaries.
+    examples:
+      - --mac-green
+      - --mac-red
+      - --mac-amber
+    non_goals:
+      - Does not encode business thresholds.
+  - id: typography_roles
+    summary: Font and text-role aliases for dense dashboard UI.
+    description: >
+      Owns mono/sans font choices and reusable text-role aliases used by foundation primitives.
+    why: >
+      Repeated text roles should be expressed through tokens and foundation components,
+      not ad hoc CSS declarations.
+    examples:
+      - --font-mono
+      - --text-caption-size
+      - --text-code-size
+    non_goals:
+      - Does not decide heading hierarchy.
