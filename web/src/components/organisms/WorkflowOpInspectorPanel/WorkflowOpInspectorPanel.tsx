@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Button } from '../../atoms';
+import { Button, IconButton } from '../../atoms';
 import { Caption, StatusText } from '../../foundation';
 import { Panel } from '../../layout';
 import { MetadataGrid } from '../../molecules';
@@ -26,7 +26,7 @@ export function WorkflowOpInspectorPanel({ sample, retrying = false, onClose, on
     <Panel
       className={styles.root}
       title={`Sample Op: ${friendlyOpName(sample.op.Kind)}`}
-      actions={<button className="copy-btn" onClick={onClose}>✕</button>}
+      actions={<IconButton label="Close sampled op inspector" onClick={onClose}>✕</IconButton>}
       density="condensed"
       data-rag-component="WorkflowOpInspectorPanel"
     >

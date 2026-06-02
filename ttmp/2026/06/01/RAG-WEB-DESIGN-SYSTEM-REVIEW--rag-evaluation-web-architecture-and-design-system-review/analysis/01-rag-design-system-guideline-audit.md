@@ -18,6 +18,10 @@ RelatedFiles:
       Note: Button atom Storybook states
     - Path: web/src/components/atoms/Button/Button.tsx
       Note: Button atom added after selected-state contrast issue
+    - Path: web/src/components/atoms/IconButton/IconButton.stories.tsx
+      Note: IconButton Storybook states
+    - Path: web/src/components/atoms/IconButton/IconButton.tsx
+      Note: IconButton atom added for copy/close/back actions
     - Path: web/src/components/corpus/ArtifactIdentityBar/ArtifactIdentityBar.module.css
       Note: Artifact identity local selector anatomy
     - Path: web/src/components/corpus/ArtifactIdentityBar/ArtifactIdentityBar.stories.tsx
@@ -53,13 +57,16 @@ RelatedFiles:
     - Path: web/src/components/workflows/WorkflowsView.tsx
       Note: Button atom migration evidence
     - Path: web/src/index.css
-      Note: Legacy button global removed after migration
+      Note: |-
+        Legacy button global removed after migration
+        Legacy copy-btn global removed after migration
 ExternalSources: []
 Summary: Component-by-component audit of the current RAG React dashboard against the RAG React Design System Guidelines, including remaining CSS debt, missing Storybook stories, page-boundary gaps, and extraction recommendations.
 LastUpdated: 2026-06-01T19:30:00-04:00
 WhatFor: Use this audit to plan the next cleanup passes after foundation Storybook docs and to decide what should be extracted from each component.
 WhenToUse: Read before touching RAG React components, deleting global CSS, adding stories, or extracting new primitives/molecules/organisms/pages.
 ---
+
 
 
 

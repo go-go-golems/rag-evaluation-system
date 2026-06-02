@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Button } from '../atoms';
+import { Button, IconButton } from '../atoms';
 import { Caption } from '../foundation';
 import { FormRow, Panel, Stack } from '../layout';
 import { QueueHealthPanel, WorkflowListPanel, WorkflowOpGraphPanel, WorkflowOpGroupsPanel, WorkflowOpInspectorPanel, WorkflowOpResultPanel, WorkflowSummaryPanel, workflowGroupKey } from '../organisms';
@@ -82,7 +82,7 @@ const SubmitIntakeModal: React.FC<SubmitIntakeModalProps> = ({ onClose, onSubmit
       <Panel
         className="modal-panel"
         title="Submit Intake Workflow"
-        actions={<button className="copy-btn" onClick={onClose}>✕</button>}
+        actions={<IconButton label="Close intake workflow modal" onClick={onClose}>✕</IconButton>}
         density="condensed"
       >
         <Stack gap="sm" style={{ padding: 10 }}>

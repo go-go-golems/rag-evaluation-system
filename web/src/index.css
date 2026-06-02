@@ -378,21 +378,6 @@ body {
   font-size: 11px;
 }
 
-/* ===== Copy button ===== */
-.copy-btn {
-  cursor: pointer;
-  border: none;
-  background: none;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--mac-text-dim);
-  padding: 0 2px;
-}
-
-.copy-btn:hover {
-  color: var(--mac-accent);
-}
-
 /* ===== Utility ===== */
 .truncate {
   overflow: hidden;

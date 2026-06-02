@@ -345,3 +345,16 @@ Migrated remaining active global button consumers to the Button atom and removed
 - /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/workflows/WorkflowsView.tsx — Workflow actions use Button atom
 - /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/index.css — Removed legacy global button styles
 
+
+## 2026-06-01
+
+Added IconButton atom, migrated copy/close/back actions, and removed legacy copy-btn global CSS
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/01/RAG-WEB-DESIGN-SYSTEM-REVIEW--rag-evaluation-web-architecture-and-design-system-review/reference/01-investigation-diary.md — Recorded IconButton migration
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/atoms/IconButton/IconButton.tsx — Reusable compact action atom
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/corpus/DocumentInspector/DocumentInspector.tsx — Document inspector copy/close actions use IconButton
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/components/workflows/WorkflowsView.tsx — Workflow modal close action uses IconButton
+- /home/manuel/workspaces/2026-05-27/ttc-design-system/2026-05-27--rag-evaluation-system/web/src/index.css — Removed legacy copy-btn global styles
+

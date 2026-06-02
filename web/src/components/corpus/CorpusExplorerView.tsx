@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { IconButton } from '../atoms';
 import {
   useListCorpusSourcesQuery,
   useListCorpusDocumentsQuery,
@@ -174,13 +175,12 @@ export const CorpusExplorerView: React.FC<CorpusExplorerViewProps> = ({ initialT
           <div className="panel-header">
             <span>{selectedDoc ? selectedDoc.title : 'Document Inspector'}</span>
             {selectedDoc && (
-              <button
-                className="copy-btn"
-                title="Copy document ID"
+              <IconButton
+                label="Copy document ID"
                 onClick={() => navigator.clipboard.writeText(selectedDoc.id)}
               >
                 #{selectedDoc.id}
-              </button>
+              </IconButton>
             )}
           </div>
           <div className="panel-body-condensed" style={{ overflowY: 'auto', maxHeight: 600 }}>

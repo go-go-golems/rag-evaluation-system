@@ -1,4 +1,4 @@
-import { Button } from '../../atoms';
+import { Button, IconButton } from '../../atoms';
 import { Caption, StatusText } from '../../foundation';
 import { Panel } from '../../layout';
 import { MetadataGrid } from '../../molecules';
@@ -60,7 +60,7 @@ export function WorkflowSummaryPanel({
       actions={(
         <div className={styles.actions}>
           <StatusText status={workflowStatusToRagStatus(workflow.Status)} icon>{workflow.Status}</StatusText>
-          <button className="copy-btn" onClick={onBack}>← Back</button>
+          <IconButton label="Back to workflow list" onClick={onBack}>← Back</IconButton>
         </div>
       )}
       density="condensed"

@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { IconButton } from '../../atoms';
+import { MetadataGrid } from '../../molecules';
 import { Panel } from './Panel';
 
 const meta = { title: 'Design System/Layout/Panel', component: Panel } satisfies Meta<typeof Panel>;
@@ -14,11 +16,11 @@ export const Default: Story = {
 
 export const WithActions: Story = {
   render: () => (
-    <Panel title="Inspector" actions={<button className="copy-btn">✕</button>} density="condensed">
-      <div className="meta-grid">
-        <span className="meta-key">Chunk</span><span className="meta-value">chunk_01HX7RAGDEMO</span>
-        <span className="meta-key">Score</span><span className="meta-value">0.8421</span>
-      </div>
+    <Panel title="Inspector" actions={<IconButton label="Close inspector">✕</IconButton>} density="condensed">
+      <MetadataGrid items={[
+        { key: 'Chunk', value: 'chunk_01HX7RAGDEMO' },
+        { key: 'Score', value: '0.8421' },
+      ]} />
     </Panel>
   ),
 };

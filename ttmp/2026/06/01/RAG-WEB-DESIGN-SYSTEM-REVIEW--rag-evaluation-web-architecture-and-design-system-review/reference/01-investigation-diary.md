@@ -2798,3 +2798,99 @@ pnpm build
 pnpm build-storybook
 rg -n 'className="btn|btn-primary|\.btn|`btn' src/components src/index.css src/App.tsx || true
 ```
+
+## Step 28: Add IconButton Atom and Remove copy-btn Globals
+
+I added the second atom implied by the button cleanup: `IconButton` for compact close, copy, and back actions. The previous `copy-btn` global class was doing atom work from `index.css`; it is now replaced by a co-located atom with Storybook coverage.
+
+This continues the migrate-then-delete pattern from the Button atom: first move all consumers to the atom, verify no active global consumers remain with `rg`, and only then delete the global CSS block.
+
+### Prompt Context
+
+**User prompt (verbatim):** "add the atom, continue"
+
+**Assistant interpretation:** Add the compact icon/copy button atom discussed in the previous turn and keep migrating global CSS consumers.
+
+**Inferred user intent:** The user wants small action buttons to be design-system owned, not implemented through global `copy-btn` classes.
+
+**Commit (code):** N/A at time of writing — changes pending commit.
+
+### What I did
+
+- Added `IconButton` atom:
+  - `web/src/components/atoms/IconButton/IconButton.tsx`
+  - `IconButton.module.css`
+  - `IconButton.stories.tsx`
+  - `IconButton/index.ts`
+- Exported `IconButton` from `web/src/components/atoms/index.ts`.
+- Migrated `copy-btn` consumers in:
+  - `WorkflowsView`,
+  - `WorkflowOpInspectorPanel`,
+  - `WorkflowSummaryPanel`,
+  - `CorpusExplorerView`,
+  - `DocumentInspector`,
+  - `Panel.stories`.
+- Replaced the `Panel` story's raw `meta-grid` demo with `MetadataGrid` while touching that story.
+- Deleted the global `.copy-btn` block from `web/src/index.css`.
+- Verified `rg -n "copy-btn|\\.copy-btn" src src/index.css` returns no consumers.
+
+### Why
+
+- Close/copy/back controls are repeated atom-level UI states.
+- Keeping them in global CSS prevents `index.css` from shrinking and hides the contract from Storybook.
+- The Button atom should not be overloaded for terse icon-like actions with no border.
+
+### What worked
+
+- `pnpm typecheck` passed.
+- `pnpm build` passed.
+- `pnpm build-storybook` passed and included the new `IconButton` stories.
+- `copy-btn` has no remaining active consumers.
+
+### What didn't work
+
+- `pnpm build` rewrote `internal/web/dist/index.html`; I reverted the generated embed artifact before committing.
+- Storybook still emits the known large iframe chunk and plugin timing warnings; build succeeds.
+
+### What I learned
+
+- `IconButton` and `Button` give us a clean atom split: bordered action buttons vs compact chromeless utility actions.
+- Several stories still contained raw global examples; touching atoms is a good moment to clean those stories too.
+
+### What was tricky to build
+
+- `IconButton` needs an accessible `label` prop because many usages are glyph-only (`✕`, `⧉`). Existing text usages like `← Back` still benefit from the same atom because they use the same chromeless action style.
+- The old `copy-btn` was also used for chunk ID text buttons, so the atom supports arbitrary children rather than requiring only an icon.
+
+### What warrants a second pair of eyes
+
+- Whether `IconButton` should require `label` when children are non-text glyphs. TypeScript cannot easily enforce that without making common text cases clumsy.
+- Whether `IconButton` should have a selected or danger variant later; not needed yet.
+
+### What should be done in the future
+
+- Continue deleting global CSS families only after migrating all consumers.
+- Consider the next cleanup family: raw `panel`/`panel-header` fallback in page containers, or `text-*` globals.
+
+### Code review instructions
+
+- Review `web/src/components/atoms/IconButton/IconButton.tsx` and story coverage.
+- Review migrated close/copy/back usages for unchanged behavior.
+- Confirm `web/src/index.css` no longer contains `.copy-btn`.
+- Validate with:
+  - `cd web && pnpm typecheck`
+  - `cd web && pnpm build`
+  - `cd web && pnpm build-storybook`
+  - `cd web && rg -n "copy-btn|\\.copy-btn" src src/index.css || true`
+
+### Technical details
+
+Validation commands that passed:
+
+```bash
+cd 2026-05-27--rag-evaluation-system/web
+pnpm typecheck
+pnpm build
+pnpm build-storybook
+rg -n "copy-btn|\.copy-btn" src src/index.css || true
+```

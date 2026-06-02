@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button } from '../../atoms';
+import { Button, IconButton } from '../../atoms';
 import { Caption, StatusText } from '../../foundation';
 import { Panel, ScrollRegion, TabList } from '../../layout';
 import { DataTable, MetadataGrid, type DataTableColumn, type MetadataGridItem } from '../../molecules';
@@ -29,7 +29,7 @@ const ArtifactDetail: React.FC<{ artifacts: DocumentProcessingArtifact[] }> = ({
     <Panel
       className={styles.artifactPanel}
       title={`Artifact: ${selected.artifact_type} (${selected.prompt_version})`}
-      actions={<button className="copy-btn" onClick={() => setSelectedIdx(null)}>✕</button>}
+      actions={<IconButton label="Close artifact detail" onClick={() => setSelectedIdx(null)}>✕</IconButton>}
       density="condensed"
     >
       <MetadataGrid items={[
@@ -102,7 +102,7 @@ export const DocumentInspector: React.FC<DocumentInspectorProps> = ({ detail, ch
     { id: 'tokens', header: 'Tokens', align: 'end', cell: (chunk) => chunk.token_count },
     { id: 'embed', header: 'Embed', align: 'center', cell: (chunk) => <Caption tone={chunk.embedding?.present ? 'success' : 'muted'}>{chunk.embedding?.present ? '●' : '○'}</Caption> },
     { id: 'enrich', header: 'Enrich', align: 'center', cell: (chunk) => <Caption tone={chunk.enrichment?.present ? 'success' : 'muted'} title={chunk.enrichment?.short_summary ?? ''}>{chunk.enrichment?.present ? '●' : '○'}</Caption> },
-    { id: 'id', header: 'ID', cell: (chunk) => <button className="copy-btn" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(chunk.id); }} title="Copy chunk ID">{chunk.id.slice(0, 12)}…</button> },
+    { id: 'id', header: 'ID', cell: (chunk) => <IconButton label="Copy chunk ID" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(chunk.id); }}>{chunk.id.slice(0, 12)}…</IconButton> },
   ];
 
   const missingColumns: DataTableColumn<CorpusChunk>[] = [
