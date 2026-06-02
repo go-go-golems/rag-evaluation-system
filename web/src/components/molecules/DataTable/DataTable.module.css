@@ -3,7 +3,7 @@
 .root td { border-bottom: 1px solid var(--mac-border-subtle, #ddd); padding: 3px 4px; vertical-align: top; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .selectable { cursor: pointer; }
 .selectable:hover { background: var(--mac-surface-2); }
-.selected { background: var(--mac-invert) !important; color: var(--mac-invert-text) !important; }
+.selected { background: var(--mac-bg-dark) !important; color: var(--mac-text-inv) !important; }
 .start { text-align: left; }
 .end { text-align: right; }
 .center { text-align: center; }

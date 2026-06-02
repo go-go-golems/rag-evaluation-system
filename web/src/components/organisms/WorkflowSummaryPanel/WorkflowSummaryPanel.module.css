@@ -3,7 +3,7 @@
 .progressFill { position: absolute; top: 0; bottom: 0; left: 0; }
 .done { background: var(--mac-green); }
 .running { background: var(--mac-amber); }
-.failed { background: var(--mac-red); }
+.failed { background: var(--mac-accent-2); }
 .progressLabel { position: relative; z-index: 1; display: block; height: 100%; text-align: center; font-family: var(--font-mono); font-size: 10px; line-height: 18px; }
 .metaRow { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; font-size: 12px; }
 .spacer { margin-left: auto; }
