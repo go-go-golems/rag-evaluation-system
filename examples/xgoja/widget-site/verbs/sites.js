@@ -14,12 +14,11 @@ function demo() {
 
   db.configure("sqlite3", ":memory:")
   db.exec("CREATE TABLE queries (id INTEGER PRIMARY KEY, name TEXT, status TEXT)")
-  db.exec("INSERT INTO queries (name, status) VALUES (?, ?)", "Fast Growing Trees", "success")
+  db.exec("INSERT INTO queries (name, status) VALUES (?, ?)", "Fast Growing Trees", "succeeded")
   db.exec("INSERT INTO queries (name, status) VALUES (?, ?)", "Arborvitae Spacing", "running")
 
   const app = express.app()
-  app.staticFromAssetsModule("/static", assets, "/app/public")
-  app.get("/", (_req, res) => res.redirect("/static/?page=demo"))
+  app.spaFromAssetsModule("/", assets, "/app/public", { excludePrefixes: ["/api", "/healthz", "/favicon.ico"] })
   app.get("/favicon.ico", (_req, res) => res.status(204).end())
   app.get("/healthz", (_req, res) => res.json({ ok: true, site: "rag-widget-xgoja-site" }))
   app.get("/api/widget/schema", (_req, res) => res.json({ schemaVersion: "0.1.0", components: ["Panel", "StatusText", "DataTable"] }))
@@ -31,7 +30,7 @@ function demo() {
       id,
       title: "xgoja widget demo",
       root: rag.panel({ title: "xgoja widget demo" },
-        rag.statusText({ status: "success", icon: true }, "Rows: " + rows.length),
+        rag.statusText({ status: "succeeded", icon: true }, "Rows: " + rows.length),
         rag.dataTable({
           rows,
           getRowKey: "id",

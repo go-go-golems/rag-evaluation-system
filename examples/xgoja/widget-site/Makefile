@@ -15,7 +15,6 @@ sync-app:
 	mkdir -p $(CURDIR)/assets/public
 	cp -R $(REPO_ROOT)/packages/rag-evaluation-site/app-dist/index.html $(REPO_ROOT)/packages/rag-evaluation-site/app-dist/assets $(CURDIR)/assets/public/
 	find $(CURDIR)/assets/public -name '*.map' -delete
-	python3 -c 'from pathlib import Path; p=Path("$(CURDIR)/assets/public/index.html"); s=p.read_text(); s=s.replace("src=\"/assets/", "src=\"/static/assets/").replace("href=\"/assets/", "href=\"/static/assets/"); p.write_text(s)'
 	python3 -c 'from pathlib import Path; root=Path("$(CURDIR)/assets/public/assets"); [p.write_text(p.read_text().replace("\\n//# sourceMappingURL=" + p.name + ".map", "").replace("//# sourceMappingURL=" + p.name + ".map", "")) for p in root.glob("*.js")]'
 
 doctor:
@@ -32,7 +31,7 @@ serve-smoke: build
 	log=$$(mktemp); \
 	$(BIN) serve sites demo --http-listen $(HTTP_ADDR) >$$log 2>&1 & \
 	pid=$$!; \
-	trap 'kill $$pid >/dev/null 2>&1 || true; wait $$pid >/dev/null 2>&1 || true; rm -f $$log /tmp/rag-widget-xgoja-page.json /tmp/rag-widget-xgoja-static.html /tmp/rag-widget-xgoja-health.json /tmp/rag-widget-xgoja-root.html' EXIT; \
+	trap 'kill $$pid >/dev/null 2>&1 || true; wait $$pid >/dev/null 2>&1 || true; rm -f $$log /tmp/rag-widget-xgoja-page.json /tmp/rag-widget-xgoja-spa.html /tmp/rag-widget-xgoja-health.json /tmp/rag-widget-xgoja-root.html /tmp/rag-widget-xgoja-asset.js' EXIT; \
 	for i in $$(seq 1 100); do \
 		if curl -fsS http://$(HTTP_ADDR)/healthz >/tmp/rag-widget-xgoja-health.json 2>/dev/null; then break; fi; \
 		if ! kill -0 $$pid >/dev/null 2>&1; then cat $$log; exit 1; fi; \
@@ -46,10 +45,12 @@ serve-smoke: build
 	grep -q '"type":"DataTable"' /tmp/rag-widget-xgoja-page.json; \
 	grep -q 'Fast Growing Trees' /tmp/rag-widget-xgoja-page.json; \
 	curl -fsS http://$(HTTP_ADDR)/ >/tmp/rag-widget-xgoja-root.html; \
-	grep -q '/static/?page=demo' /tmp/rag-widget-xgoja-root.html || true; \
-	curl -fsS http://$(HTTP_ADDR)/static/ >/tmp/rag-widget-xgoja-static.html; \
-	grep -q 'data-rag-page="RagEvaluationSiteApp"' /tmp/rag-widget-xgoja-static.html || grep -q 'RAG Evaluation Site' /tmp/rag-widget-xgoja-static.html; \
-	grep -q '/static/assets/index-' /tmp/rag-widget-xgoja-static.html; \
+	grep -q 'RAG Evaluation Site' /tmp/rag-widget-xgoja-root.html; \
+	grep -q '/assets/index-' /tmp/rag-widget-xgoja-root.html; \
+	curl -fsS http://$(HTTP_ADDR)/pages/demo >/tmp/rag-widget-xgoja-spa.html; \
+	grep -q 'RAG Evaluation Site' /tmp/rag-widget-xgoja-spa.html; \
+	curl -fsS http://$(HTTP_ADDR)/assets/$$(basename $$(find $(CURDIR)/assets/public/assets -name 'index-*.js' | head -1)) >/tmp/rag-widget-xgoja-asset.js; \
+	grep -q 'RagEvaluationSiteApp' /tmp/rag-widget-xgoja-asset.js; \
 	kill $$pid >/dev/null 2>&1 || true; \
 	wait $$pid >/dev/null 2>&1 || true
 

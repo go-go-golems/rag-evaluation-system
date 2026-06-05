@@ -32,3 +32,8 @@
 - [x] Decide whether to implement preconfigured database host-service contribution or use `db.configure()` only for demo.
 - [ ] Consider adding Express `spaFromAssetsModule` helper for React client-side route fallback.
 - [ ] Reconcile or restore the missing `examples/xgoja/14-generated-runtime-package` referenced by help.
+- [ ] Implement Express app.spaFromAssetsModule helper in go-go-goja for API-safe React SPA fallback from embedded assets.
+- [ ] Use app.spaFromAssetsModule in examples/xgoja/widget-site so /pages/demo renders the React app while /api/widget remains dynamic.
+- [ ] Implement preconfigured database host-provider config in go-go-goja using driverName/dataSourceName and disabled configure().
+- [ ] Use preconfigured db config in examples/xgoja/widget-site and remove JavaScript db.configure() from the jsverb.
+- [ ] Add smoke coverage proving db.configure() is disabled when the xgoja db module is preconfigured.
