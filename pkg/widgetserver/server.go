@@ -173,6 +173,8 @@ func (s *Server) handleSchema(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) frontendHandler() (http.Handler, error) {
 	switch s.cfg.FrontendMode {
+	case FrontendAPIOnly:
+		return http.NotFoundHandler(), nil
 	case FrontendEmbedded:
 		if s.cfg.FrontendHandler != nil {
 			return s.cfg.FrontendHandler, nil
@@ -240,14 +242,6 @@ func cleanPrefix(prefix string) string {
 		return "/api/widget"
 	}
 	return strings.TrimRight(prefix, "/")
-}
-
-func cloneURL(u *url.URL) *url.URL {
-	if u == nil {
-		return &url.URL{}
-	}
-	out := *u
-	return &out
 }
 
 func scriptErrorMessage(err error, dev bool) string {

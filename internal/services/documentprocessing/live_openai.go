@@ -130,9 +130,9 @@ func (p *OpenAIResponsesProvider) call(ctx context.Context, prompt string) (stri
 	return b.String(), nil
 }
 
-func limitString(s string, max int) string {
-	if max <= 0 || len(s) <= max {
+func limitString(s string, limit int) string {
+	if limit <= 0 || len(s) <= limit {
 		return s
 	}
-	return s[:max]
+	return s[:limit]
 }

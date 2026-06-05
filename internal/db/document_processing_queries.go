@@ -109,7 +109,7 @@ func (q *Queries) ListDocumentProcessingArtifacts(documentID string) ([]Document
 	if err != nil {
 		return nil, fmt.Errorf("list document processing artifacts: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	ret := []DocumentProcessingArtifact{}
 	for rows.Next() {
 		var a DocumentProcessingArtifact
@@ -139,7 +139,7 @@ func (q *Queries) ListDocumentProcessingIdentities() ([]DocumentProcessingIdenti
 	if err != nil {
 		return nil, fmt.Errorf("list document processing identities: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	ret := []DocumentProcessingIdentity{}
 	for rows.Next() {
 		var id DocumentProcessingIdentity
@@ -167,7 +167,7 @@ func (q *Queries) ListDocumentProcessingCoverage(artifactType, promptVersion, pr
 	if err != nil {
 		return nil, fmt.Errorf("list document processing coverage: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	ret := []DocumentProcessingCoverage{}
 	for rows.Next() {
 		var c DocumentProcessingCoverage

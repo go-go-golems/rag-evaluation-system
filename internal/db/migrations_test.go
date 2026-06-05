@@ -13,7 +13,7 @@ func TestMigrateUpgradesLegacyChunksWithoutStrategyID(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 
 	legacySchema := []string{
 		migrationV1Sources,

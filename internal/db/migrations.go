@@ -30,7 +30,7 @@ func ensureChunksStrategyID(db *sql.DB) error {
 	if _, err := db.Exec(`PRAGMA foreign_keys = OFF`); err != nil {
 		return err
 	}
-	defer db.Exec(`PRAGMA foreign_keys = ON`)
+	defer func() { _, _ = db.Exec(`PRAGMA foreign_keys = ON`) }()
 
 	stmts := []string{
 		`CREATE TABLE chunks_new (
@@ -68,7 +68,7 @@ func tableHasColumn(db *sql.DB, tableName, columnName string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var cid int

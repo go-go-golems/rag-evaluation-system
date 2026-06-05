@@ -21,7 +21,7 @@ func setupSearchTestDB(t *testing.T) (*sql.DB, *db.Queries) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { database.Close() })
+	t.Cleanup(func() { _ = database.Close() })
 	if err := db.Migrate(database); err != nil {
 		t.Fatal(err)
 	}

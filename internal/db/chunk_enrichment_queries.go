@@ -77,7 +77,7 @@ func (q *Queries) ListChunksForDocuments(strategyID string, documentIDs []string
 	if err != nil {
 		return nil, fmt.Errorf("list chunks for documents: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	ret := []Chunk{}
 	for rows.Next() {
 		var c Chunk
@@ -197,7 +197,7 @@ func (q *Queries) ListChunkEnrichments(chunkID, strategyID, promptVersion string
 	if err != nil {
 		return nil, fmt.Errorf("list chunk enrichments: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	ret := []ChunkEnrichment{}
 	for rows.Next() {
 		var e ChunkEnrichment
@@ -227,7 +227,7 @@ func (q *Queries) ListChunkEnrichmentIdentities() ([]ChunkEnrichmentIdentity, er
 	if err != nil {
 		return nil, fmt.Errorf("list chunk enrichment identities: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	ret := []ChunkEnrichmentIdentity{}
 	for rows.Next() {
 		var id ChunkEnrichmentIdentity
@@ -255,7 +255,7 @@ func (q *Queries) ListChunkEnrichmentCoverage(strategyID, promptVersion string) 
 	if err != nil {
 		return nil, fmt.Errorf("list chunk enrichment coverage: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	ret := []ChunkEnrichmentCoverage{}
 	for rows.Next() {
 		var c ChunkEnrichmentCoverage

@@ -62,12 +62,12 @@ func (s *Service) QueryHybrid(ctx context.Context, req HybridQueryRequest) (*Que
 		for _, item := range items {
 			candidate, ok := merged[item.ChunkID]
 			if !ok {
-				copy := item
-				copy.Score = 0
-				copy.Retriever = "hybrid"
-				copy.Components = map[string]RetrievalComponent{}
-				merged[item.ChunkID] = &copy
-				candidate = &copy
+				itemCopy := item
+				itemCopy.Score = 0
+				itemCopy.Retriever = "hybrid"
+				itemCopy.Components = map[string]RetrievalComponent{}
+				merged[item.ChunkID] = &itemCopy
+				candidate = &itemCopy
 			}
 			candidate.Score += 1.0 / float64(req.RRFK+item.Rank)
 			candidate.Components[name] = RetrievalComponent{Rank: item.Rank, Score: item.Score}

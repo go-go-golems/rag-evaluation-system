@@ -1,0 +1,3 @@
+package rageval
+
+//go:generate go tool logcopter-gen -area-prefix go-go-golems.rag-evaluation-system -strip-prefix github.com/go-go-golems/rag-evaluation-system ./pkg/... ./internal/... ./cmd/...

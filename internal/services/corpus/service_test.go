@@ -17,14 +17,16 @@ func setupTestDB(t *testing.T) *sql.DB {
 		t.Fatal(err)
 	}
 	path := tmp.Name()
-	tmp.Close()
-	t.Cleanup(func() { os.Remove(path) })
+	if err := tmp.Close(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Remove(path) })
 
 	database, err := sql.Open("sqlite3", path+"?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=on")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { database.Close() })
+	t.Cleanup(func() { _ = database.Close() })
 
 	if err := db.Migrate(database); err != nil {
 		t.Fatal(err)
@@ -59,10 +61,12 @@ func seedTestData(t *testing.T, database *sql.DB) {
 	_ = queries.InsertChunk("chk-004", "doc-2", "fixed-100-20", 0, "Hello world from doc two chunk zero", 25, 0, 100, "{}")
 
 	// Insert embedding for chk-001 only
-	database.ExecContext(ctx, `
+	if _, err := database.ExecContext(ctx, `
 		INSERT INTO chunk_embeddings (chunk_id, strategy_id, provider, model, dimensions, text_hash, embedding)
 		VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		"chk-001", "fixed-100-20", "openai", "text-embedding-3-small", 1536, "hash001", []byte{0x01, 0x02, 0x03})
+		"chk-001", "fixed-100-20", "openai", "text-embedding-3-small", 1536, "hash001", []byte{0x01, 0x02, 0x03}); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestSourceSummaries_NoIdentity(t *testing.T) {

@@ -169,7 +169,7 @@ func (s *Service) QueryBM25(ctx context.Context, req QueryRequest) (*QueryResult
 	if err != nil {
 		return nil, fmt.Errorf("open bm25 index %s: %w", req.IndexID, err)
 	}
-	defer idx.Close()
+	defer func() { _ = idx.Close() }()
 
 	textQuery := bleve.NewMatchQuery(req.Query)
 	textQuery.SetField("text")

@@ -169,7 +169,7 @@ func (q *Queries) ListSources() ([]Source, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var sources []Source
 	for rows.Next() {
@@ -193,7 +193,7 @@ func (q *Queries) ListDocuments(limit, offset int) ([]Document, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var docs []Document
 	for rows.Next() {
@@ -238,7 +238,7 @@ func (q *Queries) ListChunks(documentID string) ([]Chunk, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var chunks []Chunk
 	for rows.Next() {
@@ -294,7 +294,7 @@ func (q *Queries) ListChunksForStrategySourcesDocuments(strategyID string, sourc
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var chunks []Chunk
 	for rows.Next() {
@@ -328,7 +328,7 @@ func (q *Queries) ListEmbeddingCoverageBySource(strategyID, provider, model stri
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var coverage []EmbeddingCoverage
 	for rows.Next() {
@@ -407,7 +407,7 @@ func (q *Queries) ListChunkEmbeddingsForStrategy(strategyID, provider, model str
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var embeddings []ChunkEmbedding
 	for rows.Next() {

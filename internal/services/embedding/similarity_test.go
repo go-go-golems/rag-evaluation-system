@@ -6,10 +6,10 @@ import (
 	"testing"
 )
 
-func seedStoredSimilarityEmbeddings(t *testing.T) (strategyID string, chunkIDs []string, service *Service) {
+func seedStoredSimilarityEmbeddings(t *testing.T) (string, []string, *Service) {
 	t.Helper()
 	queries := openEmbeddingTestQueries(t)
-	strategyID = seedChunkedStrategy(t, queries)
+	strategyID := seedChunkedStrategy(t, queries)
 	chunks, err := queries.ListChunksForStrategy(strategyID, 3)
 	if err != nil {
 		t.Fatalf("list chunks: %v", err)
@@ -18,6 +18,7 @@ func seedStoredSimilarityEmbeddings(t *testing.T) (strategyID string, chunkIDs [
 		t.Fatalf("expected at least 3 chunks, got %d", len(chunks))
 	}
 
+	chunkIDs := []string{}
 	vectors := [][]float32{
 		{1, 0},
 		{0, 1},

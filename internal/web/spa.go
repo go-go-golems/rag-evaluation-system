@@ -26,7 +26,7 @@ func SPAHandler() http.Handler {
 		}
 
 		if f, err := subFS.Open(path); err == nil {
-			f.Close()
+			_ = f.Close()
 			fileServer.ServeHTTP(w, r)
 			return
 		}

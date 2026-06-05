@@ -52,17 +52,17 @@ type CorpusChunk struct {
 	TokenCount  int    `json:"token_count"`
 	Text        string `json:"text"`
 	Embedding   *struct {
-		Present     bool   `json:"present"`
-		Provider    string `json:"provider_type"`
-		Model       string `json:"model"`
-		Dimensions  int    `json:"dimensions"`
-		TextHash    string `json:"text_hash,omitempty"`
-		UpdatedAt   string `json:"updated_at,omitempty"`
+		Present    bool   `json:"present"`
+		Provider   string `json:"provider_type"`
+		Model      string `json:"model"`
+		Dimensions int    `json:"dimensions"`
+		TextHash   string `json:"text_hash,omitempty"`
+		UpdatedAt  string `json:"updated_at,omitempty"`
 	} `json:"embedding,omitempty"`
 	Enrichment *struct {
-		Present      bool    `json:"present"`
-		PromptVersion string `json:"prompt_version,omitempty"`
-		ShortSummary  string `json:"short_summary,omitempty"`
+		Present       bool    `json:"present"`
+		PromptVersion string  `json:"prompt_version,omitempty"`
+		ShortSummary  string  `json:"short_summary,omitempty"`
 		QualityScore  float64 `json:"quality_score,omitempty"`
 		UpdatedAt     string  `json:"updated_at,omitempty"`
 	} `json:"enrichment,omitempty"`
@@ -72,21 +72,21 @@ type CorpusChunk struct {
 // content text, and chunk list.
 type CorpusDocumentDetail struct {
 	Document struct {
-		ID             string                 `json:"id"`
-		SourceID       string                 `json:"source_id"`
-		ExternalID     string                 `json:"external_id"`
-		Title          string                 `json:"title"`
-		URL            string                 `json:"url"`
-		WordCount      int                    `json:"word_count"`
-		Status         string                 `json:"status"`
-		Metadata       map[string]interface{} `json:"metadata"`
-		ContentText    string                 `json:"content_text,omitempty"`
-		ContentHTML    string                 `json:"content_html,omitempty"`
-		ContentType    string                 `json:"content_type"`
-		Author         string                 `json:"author"`
-		Language       string                 `json:"language"`
-		CreatedAt      string                 `json:"created_at"`
-		UpdatedAt      string                 `json:"updated_at"`
+		ID          string                 `json:"id"`
+		SourceID    string                 `json:"source_id"`
+		ExternalID  string                 `json:"external_id"`
+		Title       string                 `json:"title"`
+		URL         string                 `json:"url"`
+		WordCount   int                    `json:"word_count"`
+		Status      string                 `json:"status"`
+		Metadata    map[string]interface{} `json:"metadata"`
+		ContentText string                 `json:"content_text,omitempty"`
+		ContentHTML string                 `json:"content_html,omitempty"`
+		ContentType string                 `json:"content_type"`
+		Author      string                 `json:"author"`
+		Language    string                 `json:"language"`
+		CreatedAt   string                 `json:"created_at"`
+		UpdatedAt   string                 `json:"updated_at"`
 	} `json:"document"`
 	Chunks []CorpusChunk `json:"chunks"`
 }
@@ -158,7 +158,7 @@ func (s *Service) SourceSummaries(ctx context.Context, identity EmbeddingIdentit
 	if err != nil {
 		return nil, fmt.Errorf("corpus source summaries: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var results []SourceSummary
 	for rows.Next() {
@@ -257,7 +257,7 @@ func (s *Service) DocumentBrowser(ctx context.Context, sourceID string, identity
 	if err != nil {
 		return nil, fmt.Errorf("corpus document browser: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var results []CorpusDocumentRow
 	for rows.Next() {
@@ -404,11 +404,11 @@ func (s *Service) DocumentDetail(ctx context.Context, documentID string, identit
 	if err != nil {
 		return nil, fmt.Errorf("corpus document detail chunks: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	if err != nil {
 		return nil, fmt.Errorf("corpus document detail chunks: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var c CorpusChunk
@@ -424,12 +424,12 @@ func (s *Service) DocumentDetail(ctx context.Context, documentID string, identit
 
 		if textHash.Valid && textHash.String != "" {
 			c.Embedding = &struct {
-				Present     bool   `json:"present"`
-				Provider    string `json:"provider_type"`
-				Model       string `json:"model"`
-				Dimensions  int    `json:"dimensions"`
-				TextHash    string `json:"text_hash,omitempty"`
-				UpdatedAt   string `json:"updated_at,omitempty"`
+				Present    bool   `json:"present"`
+				Provider   string `json:"provider_type"`
+				Model      string `json:"model"`
+				Dimensions int    `json:"dimensions"`
+				TextHash   string `json:"text_hash,omitempty"`
+				UpdatedAt  string `json:"updated_at,omitempty"`
 			}{
 				Present:    true,
 				Provider:   identity.ProviderType,

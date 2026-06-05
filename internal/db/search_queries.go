@@ -99,7 +99,7 @@ func (q *Queries) ListChunksWithDocumentContextFiltered(strategyID string, sourc
 	if err != nil {
 		return nil, fmt.Errorf("list chunks with document context: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var chunks []ChunkWithDocument
 	for rows.Next() {
@@ -143,7 +143,7 @@ func (q *Queries) ListChunkEmbeddingsForStrategySourcesWithContext(strategyID st
 	if err != nil {
 		return nil, fmt.Errorf("list chunk embeddings with context: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var embeddings []ChunkEmbeddingWithContext
 	for rows.Next() {

@@ -97,7 +97,7 @@ func TestApplyKeepsStrategiesSeparate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("group chunks: %v", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	counts := map[string]int{}
 	for rows.Next() {
 		var strategyID string
