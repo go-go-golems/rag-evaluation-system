@@ -12,6 +12,16 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: examples/xgoja/widget-site/Makefile
+      Note: Doctor
+    - Path: examples/xgoja/widget-site/verbs/sites.js
+      Note: Demo jsverb serving health
+    - Path: examples/xgoja/widget-site/xgoja.yaml
+      Note: Generated binary build spec wiring express
+    - Path: pkg/xgoja/providers/widgetsite/provider.go
+      Note: Real xgoja provider registering widget.dsl and rag.dsl
+    - Path: pkg/xgoja/providers/widgetsite/provider_test.go
+      Note: Provider registration and generated runtime require tests
     - Path: ttmp/2026/06/04/XGOJA-WIDGETSITE--xgoja-widget-site-binary-design/scripts/01-current-xgoja-widgetsite-experiment/verbs/sites.js
       Note: Scratch jsverb combining express
     - Path: ttmp/2026/06/04/XGOJA-WIDGETSITE--xgoja-widget-site-binary-design/scripts/01-current-xgoja-widgetsite-experiment/widgetprovider/provider.go
@@ -20,10 +30,11 @@ RelatedFiles:
       Note: Captured expected build failure without xgoja replace
 ExternalSources: []
 Summary: Chronological diary for the xgoja WidgetRenderer generated binary design ticket.
-LastUpdated: 2026-06-05T01:55:00-04:00
+LastUpdated: 2026-06-05T02:35:00-04:00
 WhatFor: Use this to understand how the xgoja WidgetRenderer binary design was researched, tested, written, validated, uploaded, and committed.
 WhenToUse: Read before resuming implementation of the RAG xgoja provider, example binary, host-service database wiring, or Express embedded app fallback.
 ---
+
 
 
 # Diary
@@ -441,3 +452,143 @@ Error: Parse error on line 15:
 
 - reMarkable destination: `/ai/2026/06/05/XGOJA-WIDGETSITE`
 - Bundle name: `XGOJA-WIDGETSITE Widget Site Binary Design`
+
+
+## Step 5: Implement the First xgoja Widget Site Slice
+
+This step turned the earlier design into the first working implementation slice. The RAG repository now has a stable xgoja provider package that exposes the existing `widget.dsl` module through generated xgoja binaries, plus a tiny generated-binary example that combines Express, embedded assets, the database host module, JavaScript verbs, and Widget IR output.
+
+The implementation intentionally keeps the webapp small. It proves the hard integration path first: generated xgoja module resolution, local `packages[].replace`, `--xgoja-replace`, embedded static files, `db.configure()`, and curl-visible Widget IR endpoints. Replacing the tiny page with the packaged React WidgetRenderer app can happen in the next slice without changing the provider boundary.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead"
+
+**Assistant interpretation:** Implement the planned first slice from the xgoja design: add the real RAG xgoja provider for `widget.dsl` / `rag.dsl`, create a generated binary example and smoke test, validate it, update the ticket diary, and commit.
+
+**Inferred user intent:** Move from research/design into a concrete, buildable xgoja integration while keeping the scope small enough to validate reliably.
+
+**Commit (code):** 70f30b1f53a5ed6530b1780431ee2b3bceddcd91 — "Add xgoja widget site provider and example"
+
+### What I did
+
+- Updated the existing Widget DSL engine integration for the current go-go-goja API:
+  - `github.com/go-go-golems/go-go-goja/engine` -> `github.com/go-go-golems/go-go-goja/pkg/engine`
+  - `engine.NewBuilder()` -> `engine.NewRuntimeFactoryBuilder()`
+  - `RuntimeModuleSpec` -> `RuntimeModuleRegistrar`
+  - `RuntimeModuleContext` -> `RuntimeModuleRegistrationContext`
+  - `engine.Factory` -> `engine.RuntimeFactory`
+- Added `pkg/xgoja/providers/widgetsite/provider.go`:
+  - package id `rag-widget-site`
+  - module `widget.dsl`
+  - module alias `rag.dsl`
+  - both modules use `widgetdsl.NewLoader()`.
+- Added `pkg/xgoja/providers/widgetsite/provider_test.go`:
+  - verifies provider registry module resolution for `widget.dsl` and `rag.dsl`
+  - verifies a generated-runtime-style host can `require("widget.dsl")` and produce Widget IR.
+- Added `examples/xgoja/widget-site/`:
+  - `xgoja.yaml` selecting `express`, `fs:assets`, `db`, and `widget.dsl`
+  - `verbs/sites.js` exposing `serve sites demo`
+  - `assets/public/index.html` as a tiny embedded static app
+  - `Makefile` with `doctor`, `list-modules`, `build`, and `serve-smoke`
+  - `.gitignore` ignoring generated `dist/` output.
+- Checked tasks 18, 19, 20, 21, 22, and 25 in the ticket.
+- Related the new provider and example files to this diary and updated the ticket changelog.
+
+### Why
+
+- The earlier experiment proved that ticket-local providers are not generated-build-safe. A real provider needed to live under a stable package path in the RAG module.
+- The generated example needed to exercise the real composition path rather than only unit-test the provider.
+- The first implementation slice should avoid adding xgoja host-service changes until the basic provider/assets/db/jsverb path is known to work.
+
+### What worked
+
+- Focused package tests passed:
+
+```text
+go test ./pkg/xgoja/providers/widgetsite ./pkg/widgetdsl ./pkg/widgetrunner ./pkg/widgetserver -count=1
+```
+
+- The xgoja example smoke passed:
+
+```text
+make -C examples/xgoja/widget-site smoke
+```
+
+- The smoke ran:
+  - `xgoja doctor -f examples/xgoja/widget-site/xgoja.yaml`
+  - `xgoja list-modules -f examples/xgoja/widget-site/xgoja.yaml`
+  - `xgoja build ... --xgoja-replace /home/manuel/workspaces/2026-05-27/rag-evaluation-system/go-go-goja --keep-work`
+  - generated binary `serve sites demo --http-listen 127.0.0.1:18791`
+  - curl checks for `/healthz`, `/static/`, and `/api/widget/pages/demo`.
+- `xgoja list-modules` showed the desired module aliases:
+  - `express`
+  - `fs:assets`
+  - `db`
+  - `widget.dsl`.
+
+### What didn't work
+
+- A full workspace test still fails outside the focused implementation packages because the active workspace includes sibling `scraper`, and `scraper/pkg/js/runtime/databases.go` still imports the old go-go-goja path:
+
+```text
+go test ./... -count=1
+# github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval
+../scraper/pkg/js/runtime/databases.go:7:2: no required module provides package github.com/go-go-golems/go-go-goja/engine; to add it:
+	cd /home/manuel/workspaces/2026-05-27/rag-evaluation-system/scraper
+	go get github.com/go-go-golems/go-go-goja/engine
+```
+
+- `GOWORK=off go test ./... -count=1` also cannot be used as a clean validation right now because the published `github.com/go-go-golems/scraper v0.0.2` transitively imports `github.com/go-go-golems/go-go-goja/engine`, while released `go-go-goja v0.8.0` exposes the engine API under `pkg/engine`.
+- A temporary `GOWORK=off -mod=mod` provider probe introduced broad `go.mod` / `go.sum` churn; I reverted those files to avoid committing dependency noise unrelated to this slice.
+
+### What I learned
+
+- The current go-go-goja engine API rename affects both direct Widget DSL tests and runner composition; the RAG package must use `pkg/engine` and the new runtime factory builder names.
+- A stable xgoja provider package under `pkg/xgoja/providers/widgetsite` works with generated xgoja builds when `packages[].replace` points back to the RAG module root.
+- For the first demo, `db.configure("sqlite3", ":memory:")` is sufficient and avoids host-service changes. A preconfigured database host-service remains a future production hardening task.
+
+### What was tricky to build
+
+- The generated xgoja binary is built from a temporary Go module, so local development requires two independent replace paths: `--xgoja-replace` for the local go-go-goja checkout and `packages[].replace` for the RAG provider package. Missing either replace can make the build resolve the wrong module source or try to fetch unpublished local code.
+- The provider test needed to cover two levels: direct provider registry module resolution and a generated-runtime-style host requiring the module through the xgoja runtime. The second test is more valuable because it exercises the integration shape the generated binary uses.
+- Full-repo validation is currently entangled with the sibling/published `scraper` dependency's stale go-go-goja import path. I kept the validation honest by recording the failure verbatim and limiting the pass claim to focused packages plus the xgoja generated-binary smoke.
+
+### What warrants a second pair of eyes
+
+- Review `examples/xgoja/widget-site/xgoja.yaml` to confirm the package ids, module aliases, and local `replace` path match xgoja conventions.
+- Review `verbs/sites.js` for API shape: it currently returns a `schemaVersion`, `id`, `title`, and `root` directly from the jsverb rather than using `pkg/widgetserver`.
+- Review whether task 25 should stay checked as a demo-scope decision (`db.configure()` for now) or be split into a separate production database host-service task.
+
+### What should be done in the future
+
+- Replace the tiny static app with `packages/rag-evaluation-site/app-dist` once the xgoja path is stable.
+- Add a Playwright smoke for the generated xgoja binary after the React app is embedded.
+- Decide whether xgoja should gain a first-class preconfigured DB host-service contribution for production WidgetRenderer binaries.
+- Consider adding an Express helper for SPA fallback from embedded assets.
+- Fix or update the sibling/published `scraper` dependency that still imports `github.com/go-go-golems/go-go-goja/engine`.
+
+### Code review instructions
+
+- Start with `pkg/xgoja/providers/widgetsite/provider.go` and verify that it registers only the intended modules.
+- Review `pkg/xgoja/providers/widgetsite/provider_test.go` to see both direct provider registration and runtime `require("widget.dsl")` coverage.
+- Review `examples/xgoja/widget-site/xgoja.yaml`, then `examples/xgoja/widget-site/verbs/sites.js`, then `examples/xgoja/widget-site/Makefile`.
+- Validate with:
+
+```text
+go test ./pkg/xgoja/providers/widgetsite ./pkg/widgetdsl ./pkg/widgetrunner ./pkg/widgetserver -count=1
+make -C examples/xgoja/widget-site smoke
+```
+
+### Technical details
+
+- Provider package path: `pkg/xgoja/providers/widgetsite`
+- xgoja package id: `rag-widget-site`
+- xgoja modules: `widget.dsl`, `rag.dsl`
+- Example path: `examples/xgoja/widget-site`
+- Demo listen address in smoke: `127.0.0.1:18791`
+- Demo endpoints:
+  - `GET /healthz`
+  - `GET /static/`
+  - `GET /api/widget/schema`
+  - `GET /api/widget/pages/demo`
