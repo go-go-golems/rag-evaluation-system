@@ -1,0 +1,15 @@
+# css-visual-diff CSS Inspect: first-panel
+
+Selector: `[data-rag-page="RagEvaluationSiteApp"] section:first-of-type, [data-rag-page="RagEvaluationSiteApp"] article:first-of-type, [data-rag-page="RagEvaluationSiteApp"] > div:first-child`
+
+Exists: `true`
+
+Bounds: x=0.00 y=0.00 width=1440.00 height=708.00
+
+| Property | Value |
+| --- | --- |
+| background-color | rgba(0, 0, 0, 0) |
+| border | 0px none rgb(29, 35, 42) |
+| border-radius | 0px |
+| box-shadow | none |
+| padding | 0px |

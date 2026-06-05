@@ -1,0 +1,47 @@
+[
+  {
+    "bounds": {
+      "height": 1100,
+      "width": 1408,
+      "x": 16,
+      "y": 16
+    },
+    "error": "",
+    "exists": true,
+    "name": "root",
+    "selector": "#storybook-root",
+    "source": "styles",
+    "textStart": "◉ RAG EvalSearchCorpusWorkflowsDSLSearchQuery▶ Searchhybridbm25vectorBM25 IndexStrategyThe Tree CenterArXiv RAG papers with a very long title-like source nameBr",
+    "visible": true
+  },
+  {
+    "bounds": {
+      "height": 1100,
+      "width": 1408,
+      "x": 16,
+      "y": 16
+    },
+    "error": "",
+    "exists": true,
+    "name": "first-panel",
+    "selector": "#storybook-root section:first-of-type, #storybook-root article:first-of-type, #storybook-root \u003e div:first-child",
+    "source": "styles",
+    "textStart": "◉ RAG EvalSearchCorpusWorkflowsDSLSearchQuery▶ Searchhybridbm25vectorBM25 IndexStrategyThe Tree CenterArXiv RAG papers with a very long title-like source nameBr",
+    "visible": true
+  },
+  {
+    "bounds": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "error": "",
+    "exists": true,
+    "name": "table",
+    "selector": "table",
+    "source": "styles",
+    "textStart": "Name Description Default Control propertyName* This is a short description summary defaultValue Set string propertyName* This is a short description summary def",
+    "visible": false
+  }
+]

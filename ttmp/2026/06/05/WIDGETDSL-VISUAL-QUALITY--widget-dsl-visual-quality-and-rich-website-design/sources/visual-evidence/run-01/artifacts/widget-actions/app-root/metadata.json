@@ -1,0 +1,14 @@
+{
+  "side": "script",
+  "target_name": "widget-actions",
+  "url": "http://127.0.0.1:18791/pages/actions",
+  "viewport": {
+    "width": 1440,
+    "height": 1100
+  },
+  "name": "app-root",
+  "selector": "[data-rag-page=\"RagEvaluationSiteApp\"]",
+  "selector_source": "",
+  "format": "bundle",
+  "created_at": "2026-06-05T12:03:18.797876681Z"
+}

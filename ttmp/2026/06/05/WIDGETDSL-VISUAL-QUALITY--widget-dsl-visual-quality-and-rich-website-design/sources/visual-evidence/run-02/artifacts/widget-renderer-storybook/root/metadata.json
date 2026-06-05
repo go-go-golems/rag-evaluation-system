@@ -1,0 +1,14 @@
+{
+  "side": "script",
+  "target_name": "widget-renderer-storybook",
+  "url": "http://127.0.0.1:6007/iframe.html?id=widget-ir-renderer--search-workbench-composition\u0026viewMode=story",
+  "viewport": {
+    "width": 1440,
+    "height": 1100
+  },
+  "name": "root",
+  "selector": "#storybook-root",
+  "selector_source": "",
+  "format": "css-json",
+  "created_at": "2026-06-05T12:29:00.374238634Z"
+}

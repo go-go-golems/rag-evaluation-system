@@ -1,0 +1,16 @@
+{
+  "exists": true,
+  "computed": {
+    "background-color": "rgba(0, 0, 0, 0)",
+    "border": "0px none rgb(29, 35, 42)",
+    "border-radius": "0px",
+    "box-shadow": "none",
+    "padding": "0px"
+  },
+  "bounds": {
+    "x": 0,
+    "y": 0,
+    "width": 1440,
+    "height": 708
+  }
+}

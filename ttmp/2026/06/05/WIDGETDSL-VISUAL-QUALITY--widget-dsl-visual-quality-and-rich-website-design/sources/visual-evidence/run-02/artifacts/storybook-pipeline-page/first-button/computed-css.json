@@ -1,0 +1,17 @@
+{
+  "exists": true,
+  "computed": {
+    "background-color": "rgba(0, 0, 0, 0.1)",
+    "border-radius": "0px",
+    "color": "rgba(0, 0, 0, 0)",
+    "font-weight": "400",
+    "height": "auto",
+    "padding": "10px 16px"
+  },
+  "bounds": {
+    "x": 0,
+    "y": 0,
+    "width": 0,
+    "height": 0
+  }
+}

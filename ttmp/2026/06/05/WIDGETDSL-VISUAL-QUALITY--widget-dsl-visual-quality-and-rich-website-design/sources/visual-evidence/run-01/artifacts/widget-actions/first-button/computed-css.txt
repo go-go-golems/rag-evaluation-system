@@ -1,0 +1,16 @@
+# css-visual-diff CSS Inspect: first-button
+
+Selector: `button`
+
+Exists: `true`
+
+Bounds: x=8.00 y=326.00 width=102.98 height=24.00
+
+| Property | Value |
+| --- | --- |
+| height | 24px |
+| padding | 2px 12px |
+| border-radius | 0px |
+| background-color | rgba(0, 0, 0, 0) |
+| color | rgb(29, 35, 42) |
+| font-weight | 400 |

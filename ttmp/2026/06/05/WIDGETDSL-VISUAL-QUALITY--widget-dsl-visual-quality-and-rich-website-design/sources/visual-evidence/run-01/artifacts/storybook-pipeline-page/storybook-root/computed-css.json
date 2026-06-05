@@ -1,0 +1,16 @@
+{
+  "exists": true,
+  "computed": {
+    "background-color": "rgba(0, 0, 0, 0)",
+    "color": "rgb(0, 0, 0)",
+    "font-family": "Geneva, \"Helvetica Neue\", Arial, sans-serif",
+    "font-size": "12px",
+    "padding": "0px"
+  },
+  "bounds": {
+    "x": 16,
+    "y": 16,
+    "width": 1408,
+    "height": 101.75
+  }
+}

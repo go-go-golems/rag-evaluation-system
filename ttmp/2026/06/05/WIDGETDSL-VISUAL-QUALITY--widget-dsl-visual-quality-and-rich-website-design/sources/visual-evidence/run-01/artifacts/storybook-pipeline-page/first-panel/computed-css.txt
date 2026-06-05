@@ -1,0 +1,15 @@
+# css-visual-diff CSS Inspect: first-panel
+
+Selector: `#storybook-root section:first-of-type, #storybook-root article:first-of-type, #storybook-root > div:first-child`
+
+Exists: `true`
+
+Bounds: x=16.00 y=16.00 width=1408.00 height=101.75
+
+| Property | Value |
+| --- | --- |
+| background-color | rgba(0, 0, 0, 0) |
+| border | 0px solid rgb(0, 0, 0) |
+| border-radius | 0px |
+| box-shadow | none |
+| padding | 0px |

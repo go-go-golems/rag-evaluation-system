@@ -1,0 +1,47 @@
+[
+  {
+    "bounds": {
+      "height": 109.75,
+      "width": 1408,
+      "x": 16,
+      "y": 16
+    },
+    "error": "",
+    "exists": true,
+    "name": "root",
+    "selector": "#storybook-root",
+    "source": "styles",
+    "textStart": "HYBRID — 2 resultsfast growing trees for privacy screen#TitleIdxScoreBM25VecPreview1Fast Growing Trees for Privacy Screens40.0387#1 (12.440)#3 (0.812)Thuja Gree",
+    "visible": true
+  },
+  {
+    "bounds": {
+      "height": 109.75,
+      "width": 1408,
+      "x": 16,
+      "y": 16
+    },
+    "error": "",
+    "exists": true,
+    "name": "panel",
+    "selector": "#storybook-root section:first-of-type, #storybook-root article:first-of-type, #storybook-root \u003e div:first-child",
+    "source": "styles",
+    "textStart": "HYBRID — 2 resultsfast growing trees for privacy screen#TitleIdxScoreBM25VecPreview1Fast Growing Trees for Privacy Screens40.0387#1 (12.440)#3 (0.812)Thuja Gree",
+    "visible": true
+  },
+  {
+    "bounds": {
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "error": "",
+    "exists": true,
+    "name": "table",
+    "selector": "table",
+    "source": "styles",
+    "textStart": "Name Description Default Control propertyName* This is a short description summary defaultValue Set string propertyName* This is a short description summary def",
+    "visible": false
+  }
+]

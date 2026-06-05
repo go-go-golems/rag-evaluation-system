@@ -1,0 +1,15 @@
+{
+  "exists": true,
+  "computed": {
+    "background-color": "rgba(0, 0, 0, 0)",
+    "border-collapse": "collapse",
+    "border-spacing": "0px",
+    "font-size": "13px"
+  },
+  "bounds": {
+    "x": 0,
+    "y": 0,
+    "width": 0,
+    "height": 0
+  }
+}

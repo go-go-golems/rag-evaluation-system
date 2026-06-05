@@ -18,12 +18,21 @@ RelatedFiles:
       Note: Developer workflow instructions for devctl build/up/logs/down
     - Path: examples/xgoja/widget-site/devctl/widget-site.py
       Note: NDJSON devctl plugin for rebuilding and launching the generated widget-site binary
+    - Path: packages/rag-evaluation-site/src/app/app.css
+      Note: Standalone app shell currently provides only min-height and no page chrome/padding/container
+    - Path: packages/rag-evaluation-site/src/theme.css
+      Note: Standalone package theme currently lacks mac/design-system tokens consumed by components
+    - Path: ttmp/2026/06/05/WIDGETDSL-VISUAL-QUALITY--widget-dsl-visual-quality-and-rich-website-design/scripts/03-capture-visual-evidence.js
+      Note: css-visual-diff JS verb for capturing Widget DSL and Storybook visual evidence
+    - Path: web/src/styles/tokens.css
+      Note: Original RAG app token source that defines --mac and font role variables
 ExternalSources: []
 Summary: ""
-LastUpdated: 2026-06-05T12:58:00-04:00
+LastUpdated: 2026-06-05T13:40:00-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 # Diary
@@ -125,7 +134,7 @@ The setup intentionally lives in the example directory rather than the repositor
 
 **Inferred user intent:** Keep the work checkpointed in git and make the example site easy to run during the upcoming visual-quality investigation.
 
-**Commit (code):** <built-in function hash> — "Add devctl workflow for xgoja widget site"
+**Commit (code):** 9acd175d23e3cc89ebd397b2c6f7e6c5b5c9336f — "Add devctl workflow for xgoja widget site"
 
 ### What I did
 
@@ -274,3 +283,180 @@ devctl smoke --timeout 10m
   - `devctl sync-app --timeout 10m`
   - `devctl smoke --timeout 10m`
   - `devctl clean`
+
+## Step 3: Capture Visual Evidence and Identify the Token Boundary Failure
+
+This step created the first visual evidence set for the Widget DSL visual-quality investigation. I used the new devctl workflow to rebuild and launch the generated xgoja widget-site, served the existing static Storybook build, and ran a ticket-local `css-visual-diff` JavaScript verb that captures overlay screenshots, selector preflight JSON, and computed CSS JSON for the generated page and several Storybook references.
+
+The most important finding is that the generated page is not merely a weak composition; the standalone package is missing the original design-system token contract that the copied components expect. The component CSS uses `--mac-*`, `--font-body`, `--font-mono`, and `--rag-font-role-*` variables, but `packages/rag-evaluation-site/src/theme.css` only defines `--rag-*` tokens. As a result, CSS declarations such as `background: var(--mac-surface)` and `border: 1px solid var(--mac-border)` become invalid at computed-style time, making buttons, panels, and tables appear transparent or browser-default-like.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 1 and Step 2)
+
+**Assistant interpretation:** Gather visual evidence with screenshots and css-visual-diff, compare the generated Widget DSL page against Storybook/original RAG references, and keep the evidence and scripts in the ticket.
+
+**Inferred user intent:** Move from subjective “looks bad” feedback to file-backed, screenshot-backed causes and an actionable implementation guide.
+
+**Commit (code):** 8888e0d072f2b45b11c94caf74b3884ab608f2cb — "Docs: capture widget DSL visual evidence"
+
+### What I did
+
+- Read `css-visual-diff help --all` plus relevant help pages:
+  - `getting-started`
+  - `javascript-api`
+  - `javascript-verbs`
+  - `pixel-accuracy-scripting-guide`.
+- Enumerated Storybook stories and selected visual references:
+  - `pages-pipelinepage--populated`
+  - `component-library-organisms-retrievalresultspanel--hybrid-results`
+  - `widget-ir-renderer--search-workbench-composition`.
+- Added ticket-local scripts:
+  - `scripts/01-start-widget-and-storybook.sh`
+  - `scripts/02-stop-widget-and-storybook.sh`
+  - `scripts/03-capture-visual-evidence.js`
+  - `scripts/04-run-visual-evidence.sh`.
+- Ran the visual evidence workflow twice:
+  - `run-01`: failed during a Storybook table selector screenshot.
+  - `run-02`: succeeded after switching probe artifacts from full bundles to `css-json`.
+- Attempted to use the image QA tool twice with fresh context and all comparison images.
+- Inspected generated CSS JSON and source files to identify token mismatch and shell/app layout issues.
+
+### Why
+
+- The visual-quality guide needs evidence beyond subjective screenshot review.
+- css-visual-diff artifacts can show both the visible page structure and the browser-computed styles that explain why the page looks wrong.
+- The intern guide should explain root causes in terms of architecture boundaries: authoring DSL, renderer, component CSS, theme tokens, app shell, and example composition.
+
+### What worked
+
+- The devctl-managed widget-site startup worked inside the evidence script:
+
+```text
+examples/xgoja/widget-site devctl up --force --timeout 10m
+```
+
+- Static Storybook served successfully from `web/storybook-static` on port `6007`.
+- The successful evidence run wrote artifacts under:
+
+```text
+ttmp/2026/06/05/WIDGETDSL-VISUAL-QUALITY--widget-dsl-visual-quality-and-rich-website-design/sources/visual-evidence/run-02
+```
+
+- Captured targets:
+  - generated Widget DSL action page: `widget-actions.overlay.png`
+  - original RAG PipelinePage story: `storybook-pipeline-page.overlay.png`
+  - original RetrievalResultsPanel story: `storybook-retrieval-results.overlay.png`
+  - WidgetRenderer Storybook composition: `widget-renderer-storybook.overlay.png`.
+- Computed CSS evidence for the generated widget page showed:
+
+```json
+{
+  "app-root": {
+    "background-color": "rgba(0, 0, 0, 0)",
+    "max-width": "none",
+    "padding": "0px"
+  },
+  "first-button": {
+    "background-color": "rgba(0, 0, 0, 0)",
+    "border-radius": "0px",
+    "height": "24px",
+    "padding": "2px 12px"
+  },
+  "first-table": {
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "11px"
+  }
+}
+```
+
+- Source inspection found the token mismatch:
+  - `packages/rag-evaluation-site/src/theme.css` defines only `--rag-*` tokens.
+  - component CSS such as `Button.module.css`, `Panel.module.css`, and `DataTable.module.css` consumes `--mac-*`, `--font-mono`, and role font tokens.
+  - `web/src/styles/tokens.css` is the original source defining those variables.
+
+### What didn't work
+
+- The image QA tool failed twice with the same remote TLS error:
+
+```text
+pinocchio exited with code 1:
+Error: inference failed: Post "https://api.openai.com/v1/responses": remote error: tls: bad record MAC
+```
+
+- I continued with direct artifact inspection rather than waiting on the remote service.
+
+- `docmgr doctor` initially failed after evidence capture because css-visual-diff generated Markdown helper files (`index.md`, `computed-css.md`, and `README.md`) without docmgr frontmatter inside the ticket tree. I converted generated helper Markdown files to `.txt`, converted the successful run summary into `01-visual-evidence-summary.md` with frontmatter, and patched `scripts/04-run-visual-evidence.sh` so future runs perform the same sanitization automatically.
+
+- `run-01` failed while trying to capture a selector screenshot for a Storybook `table` probe:
+
+```text
+Error: promise rejected: ArtifactError: context canceled
+```
+
+- Fix: changed `scripts/03-capture-visual-evidence.js` from `artifacts: "bundle"` to `artifacts: "css-json"`. Overlay screenshots still provide full-page visual evidence, and CSS JSON is enough for token/layout root-cause analysis.
+- Generic Storybook selectors such as `table` and `button` sometimes hit hidden Storybook control elements instead of visible story content. The preflight output recorded this as `visible=false` and `bounds={width:0,height:0}` for some Storybook probes.
+
+### What I learned
+
+- The generated page looks bad primarily because copied component CSS depends on design tokens that are absent from the standalone package theme.
+- A correct implementation guide must start with the design-token contract before discussing fancier DSL composition improvements.
+- `RagEvaluationSiteApp` currently renders only a raw root div around `WidgetRenderer`; it does not provide app-shell chrome, page padding, sidebar/navigation, or a constrained content surface unless the Widget IR author explicitly emits `AppShell`.
+- The generated example uses many raw layout widgets (`Stack`, `DashboardGrid`, `Panel`, `Button`, `DataTable`) but no high-level page template. That puts too much visual composition responsibility on the DSL author.
+
+### What was tricky to build
+
+- The tricky part was separating three causes that all contribute to the poor screenshot:
+  1. missing CSS variables in the standalone package,
+  2. lack of a default app shell/page template,
+  3. example composition that uses low-level primitives without visual presets.
+- css-visual-diff was useful because the computed CSS exposed missing token symptoms directly: transparent backgrounds, zero panel borders, and root padding of `0px`.
+- Storybook iframes include Storybook-managed DOM, so broad selectors can accidentally hit hidden controls. Future scripts should prefer stable `data-rag-*` attributes in components and stories.
+
+### What warrants a second pair of eyes
+
+- Confirm whether the standalone package should import the exact original `web/src/styles/tokens.css` token set or define a cleaner package-local token bridge that maps `--mac-*` to `--rag-*` aliases.
+- Review whether `RagEvaluationSiteApp` should always wrap pages in `AppShell`, or whether the server/DSL author should choose a page template explicitly.
+- Review whether high-level DSL recipes should be implemented in JS (`rag.dsl`) or React (`WidgetRenderer`/template registry).
+
+### What should be done in the future
+
+- Add `data-rag-component` / `data-rag-layout` attributes to component roots so visual tooling can target visible RAG widgets reliably.
+- Add a package-level theme contract test that renders representative components and verifies critical computed values are not transparent/default due to missing variables.
+- Build higher-level DSL page recipes for search, corpus explorer, workflow dashboard, and action dashboard so authors can create rich pages without hand-composing every panel.
+
+### Code review instructions
+
+- Start with `packages/rag-evaluation-site/src/theme.css` and compare it with `web/src/styles/tokens.css`.
+- Inspect `packages/rag-evaluation-site/src/components/atoms/Button/Button.module.css`, `Panel.module.css`, and `DataTable.module.css` to see the missing token consumers.
+- Inspect `packages/rag-evaluation-site/src/app/App.tsx` to see the raw `rag-evaluation-site-root` wrapper around `WidgetRenderer`.
+- Inspect `examples/xgoja/widget-site/verbs/sites.js` to see how much low-level layout composition the example author currently writes.
+- Re-run evidence with:
+
+```text
+ttmp/2026/06/05/WIDGETDSL-VISUAL-QUALITY--widget-dsl-visual-quality-and-rich-website-design/scripts/04-run-visual-evidence.sh \
+  ttmp/2026/06/05/WIDGETDSL-VISUAL-QUALITY--widget-dsl-visual-quality-and-rich-website-design/sources/visual-evidence/run-N
+```
+
+### Technical details
+
+- `css-visual-diff` command shape:
+
+```text
+css-visual-diff verbs \
+  --repository ttmp/2026/06/05/WIDGETDSL-VISUAL-QUALITY--widget-dsl-visual-quality-and-rich-website-design/scripts \
+  widget-dsl visual capture-evidence \
+  ttmp/2026/06/05/WIDGETDSL-VISUAL-QUALITY--widget-dsl-visual-quality-and-rich-website-design/sources/visual-evidence/run-02 \
+  --widgetUrl http://127.0.0.1:18791 \
+  --storybookUrl http://127.0.0.1:6007 \
+  --output json
+```
+
+- Key source files:
+  - `packages/rag-evaluation-site/src/theme.css`
+  - `packages/rag-evaluation-site/src/styles.css`
+  - `packages/rag-evaluation-site/src/app/app.css`
+  - `packages/rag-evaluation-site/src/app/App.tsx`
+  - `packages/rag-evaluation-site/src/widgets/WidgetRenderer.tsx`
+  - `web/src/styles/tokens.css`
+  - `examples/xgoja/widget-site/verbs/sites.js`

@@ -1,0 +1,100 @@
+{
+  "output_dir": "ttmp/2026/06/05/WIDGETDSL-VISUAL-QUALITY--widget-dsl-visual-quality-and-rich-website-design/sources/visual-evidence/run-02/artifacts/storybook-retrieval-results",
+  "results": [
+    {
+      "metadata": {
+        "side": "script",
+        "target_name": "storybook-retrieval-results",
+        "url": "http://127.0.0.1:6007/iframe.html?id=component-library-organisms-retrievalresultspanel--hybrid-results\u0026viewMode=story",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "name": "root",
+        "selector": "#storybook-root",
+        "selector_source": "",
+        "format": "css-json",
+        "created_at": "2026-06-05T12:28:58.612160327Z"
+      },
+      "style": {
+        "exists": true,
+        "computed": {
+          "background-color": "rgba(0, 0, 0, 0)",
+          "color": "rgb(0, 0, 0)",
+          "font-family": "Geneva, \"Helvetica Neue\", Arial, sans-serif",
+          "font-size": "12px",
+          "padding": "0px"
+        },
+        "bounds": {
+          "x": 16,
+          "y": 16,
+          "width": 1408,
+          "height": 109.75
+        }
+      }
+    },
+    {
+      "metadata": {
+        "side": "script",
+        "target_name": "storybook-retrieval-results",
+        "url": "http://127.0.0.1:6007/iframe.html?id=component-library-organisms-retrievalresultspanel--hybrid-results\u0026viewMode=story",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "name": "panel",
+        "selector": "#storybook-root section:first-of-type, #storybook-root article:first-of-type, #storybook-root \u003e div:first-child",
+        "selector_source": "",
+        "format": "css-json",
+        "created_at": "2026-06-05T12:28:58.612839519Z"
+      },
+      "style": {
+        "exists": true,
+        "computed": {
+          "background-color": "rgb(255, 255, 255)",
+          "border": "1px solid rgb(0, 0, 0)",
+          "border-radius": "0px",
+          "box-shadow": "none",
+          "padding": "0px"
+        },
+        "bounds": {
+          "x": 16,
+          "y": 16,
+          "width": 1408,
+          "height": 109.75
+        }
+      }
+    },
+    {
+      "metadata": {
+        "side": "script",
+        "target_name": "storybook-retrieval-results",
+        "url": "http://127.0.0.1:6007/iframe.html?id=component-library-organisms-retrievalresultspanel--hybrid-results\u0026viewMode=story",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "name": "table",
+        "selector": "table",
+        "selector_source": "",
+        "format": "css-json",
+        "created_at": "2026-06-05T12:28:58.613439287Z"
+      },
+      "style": {
+        "exists": true,
+        "computed": {
+          "background-color": "rgba(0, 0, 0, 0)",
+          "border-collapse": "collapse",
+          "border-spacing": "0px",
+          "font-size": "13px"
+        },
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        }
+      }
+    }
+  ]
+}

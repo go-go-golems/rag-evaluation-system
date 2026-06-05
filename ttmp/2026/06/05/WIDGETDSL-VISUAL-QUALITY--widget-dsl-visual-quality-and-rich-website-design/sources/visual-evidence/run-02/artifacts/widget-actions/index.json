@@ -1,0 +1,134 @@
+{
+  "output_dir": "ttmp/2026/06/05/WIDGETDSL-VISUAL-QUALITY--widget-dsl-visual-quality-and-rich-website-design/sources/visual-evidence/run-02/artifacts/widget-actions",
+  "results": [
+    {
+      "metadata": {
+        "side": "script",
+        "target_name": "widget-actions",
+        "url": "http://127.0.0.1:18791/pages/actions",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "name": "app-root",
+        "selector": "[data-rag-page=\"RagEvaluationSiteApp\"]",
+        "selector_source": "",
+        "format": "css-json",
+        "created_at": "2026-06-05T12:28:55.117664251Z"
+      },
+      "style": {
+        "exists": true,
+        "computed": {
+          "background-color": "rgba(0, 0, 0, 0)",
+          "color": "rgb(29, 35, 42)",
+          "font-family": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "font-size": "16px",
+          "max-width": "none",
+          "padding": "0px"
+        },
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1100
+        }
+      }
+    },
+    {
+      "metadata": {
+        "side": "script",
+        "target_name": "widget-actions",
+        "url": "http://127.0.0.1:18791/pages/actions",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "name": "first-panel",
+        "selector": "[data-rag-page=\"RagEvaluationSiteApp\"] section:first-of-type, [data-rag-page=\"RagEvaluationSiteApp\"] article:first-of-type, [data-rag-page=\"RagEvaluationSiteApp\"] \u003e div:first-child",
+        "selector_source": "",
+        "format": "css-json",
+        "created_at": "2026-06-05T12:28:55.118402898Z"
+      },
+      "style": {
+        "exists": true,
+        "computed": {
+          "background-color": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(29, 35, 42)",
+          "border-radius": "0px",
+          "box-shadow": "none",
+          "padding": "0px"
+        },
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 708
+        }
+      }
+    },
+    {
+      "metadata": {
+        "side": "script",
+        "target_name": "widget-actions",
+        "url": "http://127.0.0.1:18791/pages/actions",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "name": "first-table",
+        "selector": "table",
+        "selector_source": "",
+        "format": "css-json",
+        "created_at": "2026-06-05T12:28:55.11895803Z"
+      },
+      "style": {
+        "exists": true,
+        "computed": {
+          "background-color": "rgba(0, 0, 0, 0)",
+          "border-collapse": "collapse",
+          "border-spacing": "2px",
+          "font-size": "11px"
+        },
+        "bounds": {
+          "x": 8,
+          "y": 398,
+          "width": 1424,
+          "height": 84.5
+        }
+      }
+    },
+    {
+      "metadata": {
+        "side": "script",
+        "target_name": "widget-actions",
+        "url": "http://127.0.0.1:18791/pages/actions",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "name": "first-button",
+        "selector": "button",
+        "selector_source": "",
+        "format": "css-json",
+        "created_at": "2026-06-05T12:28:55.119485622Z"
+      },
+      "style": {
+        "exists": true,
+        "computed": {
+          "background-color": "rgba(0, 0, 0, 0)",
+          "border-radius": "0px",
+          "color": "rgb(29, 35, 42)",
+          "font-weight": "400",
+          "height": "24px",
+          "padding": "2px 12px"
+        },
+        "bounds": {
+          "x": 8,
+          "y": 326,
+          "width": 102.984375,
+          "height": 24
+        }
+      }
+    }
+  ]
+}

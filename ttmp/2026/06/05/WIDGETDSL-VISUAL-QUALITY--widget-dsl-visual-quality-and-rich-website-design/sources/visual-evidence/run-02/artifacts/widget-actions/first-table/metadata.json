@@ -1,0 +1,14 @@
+{
+  "side": "script",
+  "target_name": "widget-actions",
+  "url": "http://127.0.0.1:18791/pages/actions",
+  "viewport": {
+    "width": 1440,
+    "height": 1100
+  },
+  "name": "first-table",
+  "selector": "table",
+  "selector_source": "",
+  "format": "css-json",
+  "created_at": "2026-06-05T12:28:55.11895803Z"
+}

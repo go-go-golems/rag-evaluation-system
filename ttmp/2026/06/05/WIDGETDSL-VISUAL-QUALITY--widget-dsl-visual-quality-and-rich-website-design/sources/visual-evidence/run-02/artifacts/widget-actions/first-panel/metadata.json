@@ -1,0 +1,14 @@
+{
+  "side": "script",
+  "target_name": "widget-actions",
+  "url": "http://127.0.0.1:18791/pages/actions",
+  "viewport": {
+    "width": 1440,
+    "height": 1100
+  },
+  "name": "first-panel",
+  "selector": "[data-rag-page=\"RagEvaluationSiteApp\"] section:first-of-type, [data-rag-page=\"RagEvaluationSiteApp\"] article:first-of-type, [data-rag-page=\"RagEvaluationSiteApp\"] \u003e div:first-child",
+  "selector_source": "",
+  "format": "css-json",
+  "created_at": "2026-06-05T12:28:55.118402898Z"
+}

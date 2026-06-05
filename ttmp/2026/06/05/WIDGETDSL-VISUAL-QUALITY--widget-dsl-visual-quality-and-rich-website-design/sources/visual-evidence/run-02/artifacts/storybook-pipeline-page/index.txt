@@ -1,0 +1,8 @@
+# css-visual-diff Inspect Index
+
+| Name | Source | Selector | Screenshot | HTML | CSS JSON | CSS Markdown | Inspect JSON |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| storybook-root |  | `#storybook-root` | storybook-root/screenshot.png | storybook-root/prepared.html | storybook-root/computed-css.json | storybook-root/computed-css.md | storybook-root/inspect.json |
+| first-panel |  | `#storybook-root section:first-of-type, #storybook-root article:first-of-type, #storybook-root > div:first-child` | first-panel/screenshot.png | first-panel/prepared.html | first-panel/computed-css.json | first-panel/computed-css.md | first-panel/inspect.json |
+| first-table |  | `table` | first-table/screenshot.png | first-table/prepared.html | first-table/computed-css.json | first-table/computed-css.md | first-table/inspect.json |
+| first-button |  | `button` | first-button/screenshot.png | first-button/prepared.html | first-button/computed-css.json | first-button/computed-css.md | first-button/inspect.json |

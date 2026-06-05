@@ -1,0 +1,15 @@
+# css-visual-diff CSS Inspect: storybook-root
+
+Selector: `#storybook-root`
+
+Exists: `true`
+
+Bounds: x=16.00 y=16.00 width=1408.00 height=101.75
+
+| Property | Value |
+| --- | --- |
+| background-color | rgba(0, 0, 0, 0) |
+| color | rgb(0, 0, 0) |
+| font-family | Geneva, "Helvetica Neue", Arial, sans-serif |
+| font-size | 12px |
+| padding | 0px |

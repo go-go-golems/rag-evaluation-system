@@ -1,0 +1,14 @@
+# css-visual-diff CSS Inspect: first-table
+
+Selector: `table`
+
+Exists: `true`
+
+Bounds: x=8.00 y=398.00 width=1424.00 height=84.50
+
+| Property | Value |
+| --- | --- |
+| border-collapse | collapse |
+| font-size | 11px |
+| background-color | rgba(0, 0, 0, 0) |
+| border-spacing | 2px |

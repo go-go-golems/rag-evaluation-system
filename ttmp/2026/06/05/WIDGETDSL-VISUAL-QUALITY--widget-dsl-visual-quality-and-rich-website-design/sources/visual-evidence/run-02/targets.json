@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Generated Widget DSL action page",
+    "root": "[data-rag-page=\"RagEvaluationSiteApp\"]",
+    "slug": "widget-actions",
+    "url": "http://127.0.0.1:18791/pages/actions"
+  },
+  {
+    "name": "Original RAG PipelinePage Storybook page",
+    "root": "#storybook-root",
+    "slug": "storybook-pipeline-page",
+    "url": "http://127.0.0.1:6007/iframe.html?id=pages-pipelinepage--populated\u0026viewMode=story"
+  },
+  {
+    "name": "Original RetrievalResultsPanel Storybook organism",
+    "root": "#storybook-root",
+    "slug": "storybook-retrieval-results",
+    "url": "http://127.0.0.1:6007/iframe.html?id=component-library-organisms-retrievalresultspanel--hybrid-results\u0026viewMode=story"
+  },
+  {
+    "name": "WidgetRenderer search workbench Storybook composition",
+    "root": "#storybook-root",
+    "slug": "widget-renderer-storybook",
+    "url": "http://127.0.0.1:6007/iframe.html?id=widget-ir-renderer--search-workbench-composition\u0026viewMode=story"
+  }
+]

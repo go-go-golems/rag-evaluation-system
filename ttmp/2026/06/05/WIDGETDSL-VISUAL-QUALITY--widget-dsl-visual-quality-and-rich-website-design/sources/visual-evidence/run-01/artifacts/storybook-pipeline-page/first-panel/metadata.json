@@ -1,0 +1,14 @@
+{
+  "side": "script",
+  "target_name": "storybook-pipeline-page",
+  "url": "http://127.0.0.1:6007/iframe.html?id=pages-pipelinepage--populated\u0026viewMode=story",
+  "viewport": {
+    "width": 1440,
+    "height": 1100
+  },
+  "name": "first-panel",
+  "selector": "#storybook-root section:first-of-type, #storybook-root article:first-of-type, #storybook-root \u003e div:first-child",
+  "selector_source": "",
+  "format": "bundle",
+  "created_at": "2026-06-05T12:03:20.875937163Z"
+}
