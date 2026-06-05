@@ -1,0 +1,6 @@
+plugins:
+  - id: rag-widget-xgoja-site
+    path: python3
+    args:
+      - ./devctl/widget-site.py
+    priority: 10

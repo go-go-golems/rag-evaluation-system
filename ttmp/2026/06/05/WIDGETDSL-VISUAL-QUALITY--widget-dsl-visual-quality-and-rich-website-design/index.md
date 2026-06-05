@@ -4,8 +4,8 @@ Ticket: WIDGETDSL-VISUAL-QUALITY
 Status: active
 Topics:
     - frontend
-    - widget-dsl
-    - visual-design
+    - ui-dsl
+    - design-system
 DocType: index
 Intent: long-term
 Owners: []
@@ -35,8 +35,8 @@ Current status: **active**
 ## Topics
 
 - frontend
-- widget-dsl
-- visual-design
+- ui-dsl
+- design-system
 
 ## Tasks
 

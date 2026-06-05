@@ -1,16 +1,30 @@
 ---
 Title: Investigation Diary
-DocType: reference
 Ticket: WIDGETDSL-VISUAL-QUALITY
 Status: active
-Intent: long-term
 Topics:
-  - frontend
-  - widget-dsl
-  - visual-design
-Created: 2026-06-05T12:10:00-04:00
-LastUpdated: 2026-06-05T12:10:00-04:00
+    - frontend
+    - ui-dsl
+    - design-system
+DocType: reference
+Intent: long-term
+Owners: []
+RelatedFiles:
+    - Path: examples/xgoja/widget-site/.devctl.yaml
+      Note: Example-local devctl plugin wiring
+    - Path: examples/xgoja/widget-site/.gitignore
+      Note: Ignores example-local devctl runtime state
+    - Path: examples/xgoja/widget-site/README.devctl.md
+      Note: Developer workflow instructions for devctl build/up/logs/down
+    - Path: examples/xgoja/widget-site/devctl/widget-site.py
+      Note: NDJSON devctl plugin for rebuilding and launching the generated widget-site binary
+ExternalSources: []
+Summary: ""
+LastUpdated: 2026-06-05T12:58:00-04:00
+WhatFor: ""
+WhenToUse: ""
 ---
+
 
 # Diary
 
@@ -96,3 +110,167 @@ Create  a detailed analysis / design / implementation guide that is for a new in
 - Ticket path: `ttmp/2026/06/05/WIDGETDSL-VISUAL-QUALITY--widget-dsl-visual-quality-and-rich-website-design`
 - Primary design doc: `design-doc/01-widget-dsl-visual-quality-analysis-and-implementation-guide.md`
 - Diary doc: `reference/01-investigation-diary.md`
+
+## Step 2: Add an Example-Local devctl Rebuild and Launch Workflow
+
+This step added a dedicated `devctl` setup inside `examples/xgoja/widget-site` so the generated Widget DSL site can be rebuilt, launched, supervised, logged, and smoked from one consistent workflow. This is important for the visual-quality ticket because screenshot and comparison work needs a reliable way to start the current widget-site without remembering the xgoja build command, the local `go-go-goja` replace path, or the correct HTTP listen flag.
+
+The setup intentionally lives in the example directory rather than the repository root. The root repository already has a separate `.devctl.yaml` for the normal RAG backend/web stack. The example-local config lets a developer run `devctl up --force --timeout 10m` from `examples/xgoja/widget-site` and get exactly the generated xgoja widget-site service.
+
+### Prompt Context
+
+**User prompt (verbatim):** "commit at appropriate intervals as well,  including your previous work. Also create a devctl setup in the example site directory to easily recompile and launch the site."
+
+**Assistant interpretation:** Commit the already-completed xgoja action-demo changes, then add and validate a devctl workflow in the widget-site example directory for rebuild/launch/smoke operations.
+
+**Inferred user intent:** Keep the work checkpointed in git and make the example site easy to run during the upcoming visual-quality investigation.
+
+**Commit (code):** <built-in function hash> — "Add devctl workflow for xgoja widget site"
+
+### What I did
+
+- Committed the previous xgoja action-demo work as:
+  - `694095e7d99bdf3786156162d77e046db30c9420` — `Expand xgoja widget site action demo`.
+- Committed the initial visual-quality ticket setup as:
+  - `b6c3612b6b19d412762cc66fb83656fe0b43a610` — `Docs: create widget DSL visual quality ticket`.
+- Read devctl guidance through:
+  - `devctl help --all`
+  - `devctl help user-guide`
+  - `devctl help scripting-guide`
+  - `devctl help plugin-authoring`.
+- Added `examples/xgoja/widget-site/.devctl.yaml`.
+- Added `examples/xgoja/widget-site/devctl/widget-site.py`.
+- Added `examples/xgoja/widget-site/README.devctl.md`.
+- Updated `examples/xgoja/widget-site/.gitignore` to ignore `.devctl/` runtime state.
+- Added a WIDGETDSL-VISUAL-QUALITY task for the devctl setup and marked it complete.
+- Related the devctl files to this diary and updated the ticket changelog.
+
+### Why
+
+- The visual comparison work needs a reproducible way to rebuild and run the current generated site.
+- `make smoke` is useful for CI-like validation, but devctl gives a better local development loop: plan, build, up, status, logs, down.
+- Keeping the setup in the example directory avoids colliding with the root repo's existing devctl environment.
+
+### What worked
+
+- Plugin discovery worked:
+
+```text
+cd examples/xgoja/widget-site
+devctl plugins list --timeout 30s
+```
+
+- Planning worked and produced a single supervised service:
+
+```text
+devctl plan --timeout 30s
+```
+
+- Validation worked:
+
+```text
+devctl validate --timeout 30s
+```
+
+- Build worked after adding the expected per-step `ok` boolean:
+
+```text
+devctl build --timeout 10m
+```
+
+- Supervised launch worked:
+
+```text
+devctl up --force --timeout 10m
+devctl status --tail-lines 5
+curl -fsS http://127.0.0.1:18791/api/widget/pages/actions | grep -q 'xgoja widget actions demo'
+devctl down
+```
+
+- Dynamic smoke command worked after stdout cleanup:
+
+```text
+devctl smoke --timeout 10m
+```
+
+### What didn't work
+
+- First `devctl build --timeout 10m` displayed build steps as `ok: false` even though the underlying commands completed. The plugin returned step objects with `status`, but this devctl renderer expects an `ok` boolean on each step.
+- Fix: changed `run_step(...)` to return both fields, for example:
+
+```json
+{"name":"build","ok":true,"status":"succeeded","duration_ms":4503}
+```
+
+- First `devctl smoke --timeout 10m` failed with protocol contamination:
+
+```text
+E_PROTOCOL_STDOUT_CONTAMINATION: cd /home/manuel/workspaces/2026-05-27/rag-evaluation-system/go-go-goja && GOWORK=off go run ./cmd/xgoja doctor ...: invalid character 'c' looking for beginning of value
+```
+
+- Cause: `command.run` used `subprocess.run(...)` without redirecting stdout, so `make smoke` wrote ordinary command output to the plugin's stdout. devctl plugin stdout must contain only NDJSON protocol frames.
+- Fix: changed command helpers to route child stdout and stderr to `sys.stderr`:
+
+```python
+proc = subprocess.run(command_map[name], cwd=str(root), stdout=sys.stderr, stderr=sys.stderr)
+```
+
+### What I learned
+
+- devctl's NDJSON boundary is strict in dynamic commands, not only handshake/plan. Any subprocess invoked by `command.run` must not inherit stdout.
+- The installed devctl version renders build steps most clearly when each step includes `ok` as well as descriptive status/output fields.
+- Example-local devctl configs are useful when a subdirectory has a distinct lifecycle from the root repo.
+
+### What was tricky to build
+
+- Path resolution had to account for three roots:
+  - `repo_root`: the example directory passed to devctl.
+  - `ragRoot`: `../../..`, the main RAG repo root.
+  - `xgojaRoot`: `../../../../go-go-goja`, the sibling checkout used by `make build`.
+- The plugin has to use `ctx.repo_root` instead of assuming the caller's process cwd, because devctl can be invoked with `--repo-root`.
+- Build and command phases have different output constraints. `build.run` can capture command output and return summaries, while `command.run` must ensure child output goes to stderr to keep stdout protocol-clean.
+
+### What warrants a second pair of eyes
+
+- Review whether the plugin should expose more helper commands, such as `open-actions` or `browser-smoke`, after the visual comparison scripts exist.
+- Review whether `devctl up` should always rebuild or whether a faster `--skip-build` workflow should be documented for screenshot iteration.
+- Review whether dynamic command output through devctl's structured logs is readable enough for long `make smoke` output.
+
+### What should be done in the future
+
+- Use the devctl-managed site as the source server for screenshot capture scripts in this ticket.
+- Add visual-diff helper commands later if the ticket-local scripts become stable enough to expose through devctl.
+- Document any chosen ports or overrides once screenshot automation is finalized.
+
+### Code review instructions
+
+- Start with `examples/xgoja/widget-site/README.devctl.md` for intended usage.
+- Review `examples/xgoja/widget-site/.devctl.yaml` for plugin wiring.
+- Review `examples/xgoja/widget-site/devctl/widget-site.py` for protocol behavior and path resolution.
+- Validate with:
+
+```text
+cd examples/xgoja/widget-site
+devctl plugins list --timeout 30s
+devctl plan --timeout 30s
+devctl validate --timeout 30s
+devctl build --timeout 10m
+devctl up --force --timeout 10m
+devctl status --tail-lines 5
+devctl down
+devctl smoke --timeout 10m
+```
+
+### Technical details
+
+- Service name: `widget-site`
+- Preferred port: `18791`
+- Health URL: `http://127.0.0.1:18791/healthz`
+- Action demo URL: `http://127.0.0.1:18791/pages/actions`
+- Build phase:
+  - `make sync-app`
+  - `make build`
+- Dynamic commands:
+  - `devctl sync-app --timeout 10m`
+  - `devctl smoke --timeout 10m`
+  - `devctl clean`
