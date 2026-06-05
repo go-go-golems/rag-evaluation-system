@@ -53,6 +53,11 @@ commandProviders:
     package: go-go-goja-http
     name: serve
     mount: serve
+help:
+  sources:
+    - id: widget-dsl
+      package: rag-widget-site
+      source: widget-dsl
 jsverbs:
   - id: local-sites
     path: ./verbs

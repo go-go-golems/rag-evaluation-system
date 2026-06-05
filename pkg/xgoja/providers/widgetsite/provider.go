@@ -4,6 +4,7 @@ import (
 	"github.com/dop251/goja_nodejs/require"
 	"github.com/go-go-golems/go-go-goja/pkg/xgoja/providerapi"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc"
 )
 
 const PackageID = "rag-widget-site"
@@ -27,6 +28,12 @@ func Register(registry *providerapi.ProviderRegistry) error {
 			DefaultAs:        "rag.dsl",
 			Description:      "Alias for widget.dsl in RAG-oriented xgoja scripts.",
 			NewModuleFactory: loader,
+		},
+		providerapi.HelpSource{
+			Name:        "widget-dsl",
+			Description: "Getting started and JavaScript API reference for widget.dsl and rag.dsl.",
+			FS:          doc.FS,
+			Root:        ".",
 		},
 	)
 }

@@ -2,6 +2,7 @@ package widgetsite
 
 import (
 	"context"
+	"io/fs"
 	"strings"
 	"testing"
 
@@ -33,6 +34,39 @@ func TestRegisterExposesWidgetModules(t *testing.T) {
 		loader(vm, moduleObj)
 		if got := exports.Get("panel"); got == nil || got.String() == "undefined" {
 			t.Fatalf("module %s did not expose panel(): %#v", name, got)
+		}
+	}
+}
+
+func TestRegisterExposesWidgetDSLHelpSource(t *testing.T) {
+	registry := providerapi.NewProviderRegistry()
+	if err := Register(registry); err != nil {
+		t.Fatalf("register provider: %v", err)
+	}
+	source, ok := registry.ResolveHelpSource(PackageID, "widget-dsl")
+	if !ok {
+		t.Fatalf("expected widget-dsl help source")
+	}
+	entries, err := fs.Glob(source.FS, "*.md")
+	if err != nil {
+		t.Fatalf("glob help entries: %v", err)
+	}
+	if len(entries) != 2 {
+		t.Fatalf("expected two help entries, got %v", entries)
+	}
+	for _, want := range []string{"widget-dsl-getting-started", "widget-dsl-js-api-reference"} {
+		found := false
+		for _, entry := range entries {
+			data, err := fs.ReadFile(source.FS, entry)
+			if err != nil {
+				t.Fatalf("read %s: %v", entry, err)
+			}
+			if strings.Contains(string(data), "Slug: "+want) {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatalf("missing help slug %s in %v", want, entries)
 		}
 	}
 }
