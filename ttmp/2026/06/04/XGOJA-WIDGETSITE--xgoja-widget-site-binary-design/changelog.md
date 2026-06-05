@@ -45,3 +45,13 @@ Embedded the packaged React WidgetRenderer app in the xgoja example and validate
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/examples/xgoja/widget-site/assets/public/index.html — React app entry served from /static/
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/examples/xgoja/widget-site/verbs/sites.js — API page aliases and favicon route for clean browser smoke
 
+
+## 2026-06-05
+
+Added provider-bundled Glazed help docs for widget.dsl getting started and JavaScript API reference, and verified they render in the generated xgoja binary help command (code commit 5cdcf5b42fec3df59b35462bd06943e219508b6d).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md — Getting started tutorial
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md — JavaScript API reference
+

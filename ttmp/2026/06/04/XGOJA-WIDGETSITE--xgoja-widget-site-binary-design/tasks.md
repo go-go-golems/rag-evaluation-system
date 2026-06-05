@@ -37,3 +37,4 @@
 - [ ] Implement preconfigured database host-provider config in go-go-goja using driverName/dataSourceName and disabled configure().
 - [ ] Use preconfigured db config in examples/xgoja/widget-site and remove JavaScript db.configure() from the jsverb.
 - [ ] Add smoke coverage proving db.configure() is disabled when the xgoja db module is preconfigured.
+- [x] Add provider-bundled Glazed help entries for widget.dsl getting started and JavaScript API reference.

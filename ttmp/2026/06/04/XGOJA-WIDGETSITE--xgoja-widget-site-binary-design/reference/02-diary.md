@@ -25,9 +25,17 @@ RelatedFiles:
         Demo jsverb serving health
         Serves React app redirect
     - Path: examples/xgoja/widget-site/xgoja.yaml
-      Note: Generated binary build spec wiring express
+      Note: |-
+        Generated binary build spec wiring express
+        Selects the provider-shipped widget-dsl help source for the generated binary
+    - Path: pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md
+      Note: Provider-bundled tutorial help entry for authoring Widget IR in xgoja
+    - Path: pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md
+      Note: Provider-bundled JavaScript API reference for widget.dsl and rag.dsl
     - Path: pkg/xgoja/providers/widgetsite/provider.go
-      Note: Real xgoja provider registering widget.dsl and rag.dsl
+      Note: |-
+        Real xgoja provider registering widget.dsl and rag.dsl
+        Registers widget-dsl HelpSource with the xgoja provider
     - Path: pkg/xgoja/providers/widgetsite/provider_test.go
       Note: Provider registration and generated runtime require tests
     - Path: ttmp/2026/06/04/XGOJA-WIDGETSITE--xgoja-widget-site-binary-design/scripts/01-current-xgoja-widgetsite-experiment/verbs/sites.js
@@ -38,10 +46,11 @@ RelatedFiles:
       Note: Captured expected build failure without xgoja replace
 ExternalSources: []
 Summary: Chronological diary for the xgoja WidgetRenderer generated binary design ticket.
-LastUpdated: 2026-06-05T03:45:00-04:00
+LastUpdated: 2026-06-05T04:20:00-04:00
 WhatFor: Use this to understand how the xgoja WidgetRenderer binary design was researched, tested, written, validated, uploaded, and committed.
 WhenToUse: Read before resuming implementation of the RAG xgoja provider, example binary, host-service database wiring, or Express embedded app fallback.
 ---
+
 
 
 
@@ -723,3 +732,124 @@ make -C examples/xgoja/widget-site smoke
 - Embedded xgoja asset root: `examples/xgoja/widget-site/assets/public`
 - Browser smoke URL: `http://127.0.0.1:18792/static/?page=demo`
 - Screenshot artifact: `xgoja-widgetsite-react-smoke-2026-06-05.png`
+
+
+## Step 7: Add Provider-Bundled Widget DSL Help Entries
+
+This step added the first user-facing documentation shipped by the `rag-widget-site` xgoja provider itself. The generated xgoja binary can now expose a textbook-style getting-started tutorial and a JavaScript API reference through its normal Glazed `help` command when the buildspec selects the provider's `widget-dsl` help source.
+
+The docs explain the central design boundary before listing functions: `widget.dsl` creates JSON-compatible Widget IR, not HTML and not React elements. That distinction is the key to using the provider correctly. JavaScript authors describe the page as serializable data; the React `RagEvaluationSiteApp` fetches that data and renders it with the real component library.
+
+### Prompt Context
+
+**User prompt (verbatim):** "ok, write them, use a textbook writing style and all."
+
+**Assistant interpretation:** Write the missing provider-bundled Glazed help entries for the Widget DSL xgoja provider, using a clear instructional/textbook style, and wire them into xgoja so generated binaries can show the docs.
+
+**Inferred user intent:** Make the DSL usable by future authors from the generated binary itself, without requiring them to read ticket docs or source code first.
+
+**Commit (code):** 5cdcf5b42fec3df59b35462bd06943e219508b6d — "Add widget DSL xgoja help docs"
+
+### What I did
+
+- Added `pkg/xgoja/providers/widgetsite/doc/doc.go` with `//go:embed *.md`.
+- Added `pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md`:
+  - explains Widget IR as a JSON boundary rendered by React
+  - shows xgoja provider selection in `xgoja.yaml`
+  - shows a jsverb site serving `/api/widget/pages/demo`
+  - explains table cells, SPA fallback, build/run commands, and troubleshooting.
+- Added `pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md`:
+  - documents module names `widget.dsl` and `rag.dsl`
+  - documents `text`, `element`, `component`, `fragment`
+  - documents all component helper names
+  - documents status values, data table cell specs, child normalization, actions, and page object contract.
+- Updated `pkg/xgoja/providers/widgetsite/provider.go` to register a provider-owned `providerapi.HelpSource` named `widget-dsl`.
+- Updated `pkg/xgoja/providers/widgetsite/provider_test.go` to assert the help source exists and contains the two expected slugs.
+- Updated `examples/xgoja/widget-site/xgoja.yaml` to select the provider-shipped help source:
+  - package `rag-widget-site`
+  - source `widget-dsl`.
+- Checked task 33 and updated the ticket changelog/relations.
+
+### Why
+
+- The xgoja help infrastructure already supports provider-owned help sources, but the RAG Widget DSL provider did not ship any docs.
+- Generated binaries are easier to use when their runtime APIs are documented by the same binary that exposes those APIs.
+- A short tutorial plus an API reference covers two different reader needs: first successful page authoring and later precise function lookup.
+
+### What worked
+
+- Provider tests passed:
+
+```text
+go test ./pkg/xgoja/providers/widgetsite -count=1
+```
+
+- The generated xgoja buildspec validated the provider help source:
+
+```text
+make -C examples/xgoja/widget-site doctor list-modules build
+```
+
+- `xgoja doctor` reported:
+
+```text
+help-provider-source ok help.sources[0] provider source rag-widget-site.widget-dsl
+```
+
+- The generated binary rendered both help topics:
+
+```text
+examples/xgoja/widget-site/dist/rag-widget-xgoja-site help widget-dsl-getting-started
+examples/xgoja/widget-site/dist/rag-widget-xgoja-site help widget-dsl-js-api-reference
+```
+
+### What didn't work
+
+- No implementation failures in this step.
+- There is still unrelated in-progress work in adjacent areas from earlier tasks, including SPA fallback and preconfigured DB follow-ups. This step only completed the provider help documentation slice.
+
+### What I learned
+
+- Provider-owned help is opt-in at the generated binary level: registering `providerapi.HelpSource` makes the docs available to xgoja, and `help.sources` in `xgoja.yaml` selects them for a concrete binary.
+- The Glazed renderer displays the help pages cleanly, including tables and code examples, from the generated binary's `help` command.
+
+### What was tricky to build
+
+- The documentation needed to be precise about the rendering boundary. If the docs only list helper names, users may assume the DSL emits HTML or can contain function-valued renderers. The tutorial therefore starts with the Widget IR boundary, then shows code.
+- The docs also needed to explain the status vocabulary. The earlier demo rendered `? Rows: 2` because it used `success`; the reference now explicitly says to use `succeeded` for the success checkmark icon.
+
+### What warrants a second pair of eyes
+
+- Review whether the docs should be selected automatically by generated binaries when the provider is selected, or remain explicit through `help.sources`.
+- Review the API reference against future additions to `WidgetRenderer`; if new component helpers are added, the table should be updated in the same commit.
+- Review whether these help entries should become top-level help topics in generated binaries or remain non-top-level provider docs.
+
+### What should be done in the future
+
+- Add a generated-binary smoke that asserts `help widget-dsl-getting-started` and `help widget-dsl-js-api-reference` succeed.
+- Add examples for server actions once the xgoja example uses action endpoints.
+- Revisit the docs after preconfigured DB and SPA fallback tasks are fully committed.
+
+### Code review instructions
+
+- Start with `pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md` and verify the tutorial flow.
+- Then review `pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md` against `pkg/widgetdsl/module.go`.
+- Review `pkg/xgoja/providers/widgetsite/provider.go` to confirm the `HelpSource` is registered once.
+- Review `examples/xgoja/widget-site/xgoja.yaml` to confirm the generated binary selects the help source.
+- Validate with:
+
+```text
+go test ./pkg/xgoja/providers/widgetsite -count=1
+make -C examples/xgoja/widget-site doctor list-modules build
+examples/xgoja/widget-site/dist/rag-widget-xgoja-site help widget-dsl-getting-started
+examples/xgoja/widget-site/dist/rag-widget-xgoja-site help widget-dsl-js-api-reference
+```
+
+### Technical details
+
+- Help source name: `widget-dsl`
+- Help slugs:
+  - `widget-dsl-getting-started`
+  - `widget-dsl-js-api-reference`
+- Provider package: `pkg/xgoja/providers/widgetsite`
+- Generated example selector: `examples/xgoja/widget-site/xgoja.yaml` → `help.sources[0]`
