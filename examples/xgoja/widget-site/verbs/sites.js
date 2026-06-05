@@ -54,38 +54,34 @@ function demo() {
 
   function pageSummary(id) {
     const c = counts()
-    return rag.dashboardGrid({ recipe: "four-up" },
-      rag.panel({ title: "Total queries", density: "condensed" }, rag.statusText({ status: "ready", icon: true }, String(c.total))),
-      rag.panel({ title: "Succeeded", density: "condensed" }, rag.statusText({ status: "succeeded", icon: true }, String(c.succeeded || 0))),
-      rag.panel({ title: "Running", density: "condensed" }, rag.statusText({ status: "running", icon: true }, String(c.running || 0))),
-      rag.panel({ title: "Failed", density: "condensed" }, rag.statusText({ status: "failed", icon: true }, String(c.failed || 0)))
-    )
+    return rag.recipes.metrics({ items: [
+      { label: "Total queries", value: c.total, status: "ready" },
+      { label: "Succeeded", value: c.succeeded || 0, status: "succeeded" },
+      { label: "Running", value: c.running || 0, status: "running" },
+      { label: "Failed", value: c.failed || 0, status: "failed" }
+    ]})
   }
 
   function toolbar() {
-    return rag.inline({ gap: "sm", wrap: true },
-      rag.button({ variant: "primary", action: { kind: "server", name: "add-query", payload: { owner: "research" } } }, "Add query"),
-      rag.button({ variant: "secondary", action: { kind: "server", name: "bulk-retry-failed" } }, "Retry failed"),
-      rag.button({ variant: "secondary", action: { kind: "server", name: "reset-demo" } }, "Reset demo"),
-      rag.caption({ tone: "muted" }, "Actions mutate in-memory SQLite state and ask the React app to refresh.")
-    )
-  }
-
-  function queryTable(rows) {
-    return rag.dataTable({
-      rows,
-      getRowKey: "id",
-      selectedKey: appState.selectedId,
-      onRowSelect: { kind: "server", name: "select-query" },
-      emptyMessage: "No queries yet",
-      columns: [
-        { id: "priority", header: "Priority", align: "right", cell: rag.cell.number("priority") },
-        { id: "name", header: "Query", cell: rag.cell.field("name") },
-        { id: "owner", header: "Owner", cell: rag.cell.caption("owner", { tone: "muted" }) },
-        { id: "status", header: "Status", cell: rag.cell.status("status", { icon: true }) },
-        { id: "notes", header: "Notes", cell: rag.cell.caption("notes", { tone: "muted" }) }
+    return rag.recipes.actionToolbar({
+      title: "Queue controls",
+      caption: "Actions mutate in-memory SQLite state and ask the React app to refresh.",
+      actions: [
+        { label: "Add query", variant: "primary", action: "add-query", payload: { owner: "research" } },
+        { label: "Retry failed", action: "bulk-retry-failed" },
+        { label: "Reset demo", action: "reset-demo" }
       ]
     })
+  }
+
+  function queryColumns() {
+    return [
+      { id: "priority", header: "Priority", align: "right", cell: rag.cell.number("priority") },
+      { id: "name", header: "Query", cell: rag.cell.field("name") },
+      { id: "owner", header: "Owner", cell: rag.cell.caption("owner", { tone: "muted" }) },
+      { id: "status", header: "Status", cell: rag.cell.status("status", { icon: true }) },
+      { id: "notes", header: "Notes", cell: rag.cell.caption("notes", { tone: "muted" }) }
+    ]
   }
 
   function selectedPanel(row) {
@@ -121,24 +117,28 @@ function demo() {
   function widgetPage(id) {
     const rows = allRows()
     const selected = selectedRow()
-    return {
+    return rag.page({
       schemaVersion: "0.1.0",
       id,
       title: "xgoja widget actions demo",
-      root: rag.stack({ gap: "lg" },
+      sections: [
         rag.panel({ title: "xgoja widget actions demo" },
           rag.statusText({ status: "succeeded", icon: true }, "Rows: " + rows.length),
           rag.caption({ tone: "muted" }, "This page is authored by a jsverb. Buttons and table row selection call /api/widget/actions/{name} and refresh the React app.")
         ),
         pageSummary(id),
-        rag.panel({ title: "Queue controls" }, toolbar()),
-        rag.dashboardGrid({ recipe: "two-up" },
-          rag.panel({ title: "Query queue" }, queryTable(rows)),
-          selectedPanel(selected)
-        ),
+        toolbar(),
+        rag.recipes.masterDetailTable({
+          title: "Query queue",
+          rows,
+          columns: queryColumns(),
+          selectedKey: appState.selectedId,
+          onRowSelect: "select-query",
+          detail: () => selectedPanel(selected)
+        }),
         auditPanel()
-      )
-    }
+      ]
+    })
   }
 
   function payload(req) {

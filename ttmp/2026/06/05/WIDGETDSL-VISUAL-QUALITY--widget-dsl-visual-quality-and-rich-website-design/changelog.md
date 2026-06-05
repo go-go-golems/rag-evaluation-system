@@ -65,3 +65,13 @@ Implemented Phase 2 default shell/page chrome for the standalone Widget DSL app,
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/app/app.css — Default shell styling
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/05/WIDGETDSL-VISUAL-QUALITY--widget-dsl-visual-quality-and-rich-website-design/sources/visual-evidence/run-shell-01/01-visual-evidence-summary.md — Post-shell visual evidence
 
+
+## 2026-06-05
+
+Implemented Phase 3 semantic Widget DSL recipes, refactored the xgoja action dashboard to use them, documented the API, and validated with Go tests, xgoja smoke, devctl smoke, generated help checks, and browser action smoke.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/examples/xgoja/widget-site/verbs/sites.js — Recipe-backed showcase
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/pkg/widgetdsl/module.go — Recipe implementation
+

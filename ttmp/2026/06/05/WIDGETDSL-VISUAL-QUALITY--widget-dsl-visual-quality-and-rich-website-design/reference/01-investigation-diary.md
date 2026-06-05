@@ -20,6 +20,8 @@ RelatedFiles:
       Note: Synced rebuilt standalone app into generated xgoja example assets
     - Path: examples/xgoja/widget-site/devctl/widget-site.py
       Note: NDJSON devctl plugin for rebuilding and launching the generated widget-site binary
+    - Path: examples/xgoja/widget-site/verbs/sites.js
+      Note: Refactored xgoja showcase to use semantic recipes
     - Path: packages/rag-evaluation-site/src/app/App.tsx
       Note: Added default standalone shell rendering
     - Path: packages/rag-evaluation-site/src/app/app.css
@@ -30,6 +32,12 @@ RelatedFiles:
       Note: |-
         Standalone package theme currently lacks mac/design-system tokens consumed by components
         Implemented standalone token bridge for --mac
+    - Path: pkg/widgetdsl/module.go
+      Note: Added page
+    - Path: pkg/widgetdsl/module_test.go
+      Note: Covered recipe/action/page helpers and JSON serialization
+    - Path: pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md
+      Note: Documented action/page/recipe API
     - Path: ttmp/2026/06/05/WIDGETDSL-VISUAL-QUALITY--widget-dsl-visual-quality-and-rich-website-design/scripts/03-capture-visual-evidence.js
       Note: |-
         css-visual-diff JS verb for capturing Widget DSL and Storybook visual evidence
@@ -42,10 +50,11 @@ RelatedFiles:
       Note: Original RAG app token source that defines --mac and font role variables
 ExternalSources: []
 Summary: ""
-LastUpdated: 2026-06-05T18:25:00-04:00
+LastUpdated: 2026-06-05T18:35:00-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -1023,3 +1032,129 @@ docmgr doctor --ticket WIDGETDSL-VISUAL-QUALITY --stale-after 30
   - `ttmp/2026/06/05/WIDGETDSL-VISUAL-QUALITY--widget-dsl-visual-quality-and-rich-website-design/sources/visual-evidence/run-shell-01`
 - Browser screenshot:
   - `widgetsite-shell-smoke-2026-06-05.png`
+
+## Step 8: Add Semantic Widget DSL Recipes
+
+This step implemented Phase 3 from the visual-quality guide: `widget.dsl`/`rag.dsl` now include semantic helpers for common RAG dashboard patterns. The new helpers keep the low-level Widget IR contract intact, but allow scripts to express page intent through `rag.page`, `rag.action.*`, and `rag.recipes.*` instead of manually assembling every dashboard grid, action toolbar, and master/detail layout.
+
+The xgoja widget-site showcase was refactored to use these recipes while preserving the stateful action dashboard behavior. Go tests, generated xgoja smoke, devctl smoke, generated help checks, and Pi Playwright browser action smoke all passed.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue"
+
+**Assistant interpretation:** Continue the visual-quality implementation plan after Phase 2 shell/page chrome, choosing the next practical slice from the guide.
+
+**Inferred user intent:** Keep improving the Widget DSL authoring experience and example quality without stopping at visual shell fixes.
+
+**Commit (code):** 0a4b156fc768023854a714c1a16f572cb633e70e — "Add semantic widget DSL recipes"
+
+### What I did
+
+- Added WIDGETDSL-VISUAL-QUALITY tasks for Phase 3 recipe implementation, showcase refactor, and validation.
+- Extended `pkg/widgetdsl/module.go` with:
+  - `rag.page(options)`,
+  - `rag.action.server`, `rag.action.navigate`, `rag.action.event`, `rag.action.copy`,
+  - `rag.recipes.metrics`,
+  - `rag.recipes.actionToolbar`,
+  - `rag.recipes.masterDetailTable`.
+- Added `pkg/widgetdsl/module_test.go` coverage proving recipes/actions/page helpers produce JSON-serializable Widget IR.
+- Refactored `examples/xgoja/widget-site/verbs/sites.js` to use:
+  - `rag.recipes.metrics` for summary cards,
+  - `rag.recipes.actionToolbar` for queue controls,
+  - `rag.recipes.masterDetailTable` for the query queue + selected query layout,
+  - `rag.page` for the page wrapper and default stacked sections.
+- Updated provider-bundled help docs:
+  - `pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md`,
+  - `pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md`.
+- Validated generated help content includes the new recipe docs.
+
+### Why
+
+- Phase 1 and Phase 2 fixed visual environment problems, but scripts were still verbose because authors had to manually compose common RAG page patterns.
+- Recipes make example code read closer to the dashboard intent while still returning ordinary JSON-compatible Widget IR.
+- Keeping recipes in `widget.dsl` means both standalone scripts and generated xgoja binaries get the same authoring conveniences.
+
+### What worked
+
+- `go test ./pkg/widgetdsl ./pkg/xgoja/providers/widgetsite -count=1` passed.
+- `make -C examples/xgoja/widget-site smoke` passed after fixing slice normalization.
+- `cd examples/xgoja/widget-site && devctl smoke --timeout 10m` passed.
+- Generated help checks passed:
+
+```text
+examples/xgoja/widget-site/dist/rag-widget-xgoja-site help widget-dsl-js-api-reference | grep -q 'recipes.masterDetailTable'
+examples/xgoja/widget-site/dist/rag-widget-xgoja-site help widget-dsl-getting-started | grep -q 'Use recipes for common dashboards'
+```
+
+- Pi Playwright browser smoke at `http://127.0.0.1:18800/pages/actions` passed:
+  - shell was `default`,
+  - `DataTable` existed,
+  - initial page had `Rows: 3`, `Queue controls`, `Query queue`, and `Fast Growing Trees`,
+  - clicking `Add query` refreshed to `Rows: 4`, `Follow-up Query 4`, and `Added query #4`,
+  - console warnings/errors count was zero,
+  - screenshot captured as `widgetsite-recipes-smoke-2026-06-05.png`.
+
+### What didn't work
+
+- First `make -C examples/xgoja/widget-site smoke` failed after the recipe refactor.
+- Manual reproduction showed the refreshed page had `Rows: 4`, but the recipe-backed `DataTable` had `rows: []`, so smoke greps for `Follow-up Query` and `Bulk retry requested from Widget IR action` failed.
+- Root cause: `anySlice` only accepted `[]any`, while database query rows crossed Goja as a typed Go slice.
+- Fix: changed `anySlice` to use reflection for slices/arrays and convert them into `[]any`.
+
+### What I learned
+
+- Goja function binding requires functions that accept `goja.FunctionCall` to return `goja.Value` when they need the full call object; the initial `page(call goja.FunctionCall) map[string]any` shape did not receive arguments correctly.
+- Recipe helpers need robust normalization because inputs may be plain JS arrays, Go-backed typed slices, or nested exported maps.
+- The recipes can simplify example code without changing the renderer contract: the resulting page still contains `Panel`, `DashboardGrid`, `DataTable`, `Button`, and `MetadataGrid` nodes.
+
+### What was tricky to build
+
+- The main tricky part was preserving JSON compatibility while allowing `masterDetailTable.detail` to be a JavaScript callback. The callback is only evaluated while constructing the Widget IR response; the returned value is exported as a plain Widget IR node before crossing the HTTP JSON boundary.
+- Another sharp edge was string action shorthand. The recipe layer accepts either a full action spec or a string server action name, but it always expands to a plain `{ kind: "server", name }` object.
+- Typed-slice normalization was a runtime-only problem that package tests did not catch until the generated xgoja smoke exercised DB query rows.
+
+### What warrants a second pair of eyes
+
+- Review whether recipes belong permanently in `widget.dsl` or should eventually be separated into a richer `rag.dsl` namespace while keeping `widget.dsl` minimal.
+- Review the `masterDetailTable` selected-row lookup, which currently assumes row IDs are under `id` for the callback convenience path.
+- Review whether recipe helpers should validate required fields more strictly or remain permissive like the low-level component helpers.
+
+### What should be done in the future
+
+- Add a test that uses a typed Go slice as recipe `rows` input to prevent regressions in `anySlice`.
+- Document `rag.page` metadata options for shell behavior in the generated schema/help docs.
+- Consider richer recipes for search workbench pages, retrieval result comparison, and evaluation run timelines.
+
+### Code review instructions
+
+- Start in `pkg/widgetdsl/module.go`:
+  - `page`,
+  - `metricsRecipe`,
+  - `actionToolbarRecipe`,
+  - `masterDetailTableRecipe`,
+  - `anySlice`,
+  - `normalizeActionSpec`.
+- Then review `pkg/widgetdsl/module_test.go` for the JSON-serialization test.
+- Review `examples/xgoja/widget-site/verbs/sites.js` to confirm the recipe refactor did not remove behavior.
+- Validate with:
+
+```text
+go test ./pkg/widgetdsl ./pkg/xgoja/providers/widgetsite -count=1
+make -C examples/xgoja/widget-site smoke
+cd examples/xgoja/widget-site && devctl smoke --timeout 10m
+```
+
+### Technical details
+
+- Recipe implementation:
+  - `pkg/widgetdsl/module.go`
+- Recipe tests:
+  - `pkg/widgetdsl/module_test.go`
+- Recipe-backed showcase:
+  - `examples/xgoja/widget-site/verbs/sites.js`
+- Provider docs:
+  - `pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md`
+  - `pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md`
+- Browser screenshot:
+  - `widgetsite-recipes-smoke-2026-06-05.png`

@@ -172,6 +172,34 @@ return {
 
 The table is still rendered by React. The JavaScript author only supplies serializable rows and serializable cell specifications. Avoid function-valued cell renderers; they cannot cross the JSON boundary and they are not part of Widget IR.
 
+## Use recipes for common dashboards
+
+Low-level helpers are useful when you need full control, but common RAG dashboard pages should use semantic recipes where possible. Recipes return ordinary Widget IR, so they remain JSON-compatible and render through the same React components.
+
+```js
+const rows = db.query("SELECT id, name, status FROM queries ORDER BY id")
+
+return rag.page({
+  id: "actions",
+  title: "Actions",
+  sections: [
+    rag.recipes.metrics({ items: [
+      { label: "Total", value: rows.length, status: "ready" },
+      { label: "Running", value: rows.filter(row => row.status === "running").length, status: "running" }
+    ]}),
+    rag.recipes.actionToolbar({
+      title: "Queue controls",
+      actions: [
+        { label: "Add query", variant: "primary", action: "add-query" },
+        { label: "Reset", action: rag.action.server("reset-demo") }
+      ]
+    })
+  ]
+})
+```
+
+The current recipe set includes `metrics`, `actionToolbar`, and `masterDetailTable`. Use recipes to make scripts read like page intent, then drop down to component helpers such as `panel`, `dataTable`, and `metadataGrid` for custom sections.
+
 ## Build and run
 
 Run the normal xgoja checks before building:

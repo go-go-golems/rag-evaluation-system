@@ -284,6 +284,79 @@ widget.button({
 
 The React app posts server actions to `/api/widget/actions/{name}`. The exact action contract is owned by the WidgetRenderer server or jsverb site. The DSL only preserves the action object.
 
+The `action` namespace provides small constructors for common action specifications:
+
+```js
+widget.action.server("add-query", { payload: { owner: "research" } })
+widget.action.navigate("/pages/actions")
+widget.action.event("widget:selected", { detail: { id: 1 } })
+widget.action.copy("copied value")
+```
+
+The constructors return plain JSON-compatible action objects. Low-level literal action objects remain valid.
+
+## Page helper and semantic recipes
+
+The `page` helper builds the standard page wrapper and can turn a list of sections into a stacked root:
+
+```js
+return widget.page({
+  id: "actions",
+  title: "Actions",
+  meta: { shell: "app", maxWidth: "wide" },
+  sections: [
+    widget.panel({ title: "Intro" }, "Rendered by React")
+  ]
+})
+```
+
+`page({ root })` preserves an explicit root. `page({ sections })` creates a `Stack` root with `gap: "lg"` by default.
+
+The `recipes` namespace expands common RAG dashboard patterns into ordinary Widget IR:
+
+### `recipes.metrics({ items, recipe? })`
+
+Creates a dashboard grid of condensed metric panels:
+
+```js
+widget.recipes.metrics({ items: [
+  { label: "Total", value: 12, status: "ready" },
+  { label: "Running", value: 3, status: "running" }
+]})
+```
+
+### `recipes.actionToolbar({ title, actions, caption? })`
+
+Creates a panel containing inline buttons. `action` may be a full action spec or a string shorthand for a server action name:
+
+```js
+widget.recipes.actionToolbar({
+  title: "Queue controls",
+  actions: [
+    { label: "Add query", variant: "primary", action: "add-query", payload: { owner: "research" } },
+    { label: "Reset", action: widget.action.server("reset-demo") }
+  ],
+  caption: "Actions refresh the React app after the server mutates state."
+})
+```
+
+### `recipes.masterDetailTable(options)`
+
+Creates a two-up dashboard grid containing a `DataTable` panel and a detail panel. `onRowSelect` may be a full action spec or a string shorthand for a server action name. `detail` may be a callback that receives the selected row and returns Widget IR:
+
+```js
+widget.recipes.masterDetailTable({
+  title: "Query queue",
+  rows,
+  columns,
+  selectedKey,
+  onRowSelect: "select-query",
+  detail: row => widget.panel({ title: "Selected" }, row ? row.name : "No selection")
+})
+```
+
+Recipes are convenience helpers only. They return the same JSON-compatible Widget IR that could be written manually with low-level component helpers.
+
 ## Page object contract
 
 A page endpoint should return a wrapper object around the root node:

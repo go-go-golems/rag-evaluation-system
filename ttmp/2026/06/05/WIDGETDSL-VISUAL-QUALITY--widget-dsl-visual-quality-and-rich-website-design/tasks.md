@@ -16,3 +16,6 @@
 - [x] Implement Phase 2 default standalone app shell/page chrome with meta.shell opt-out and AppShell double-wrap detection.
 - [x] Rebuild/sync xgoja widget-site assets and run smoke tests after the default shell change.
 - [x] Re-run css-visual-diff evidence after the default shell change and verify root/page chrome computed CSS improves.
+- [x] Implement Phase 3 semantic widget.dsl recipes and action helpers for common RAG dashboard patterns.
+- [x] Refactor xgoja widget-site showcase to use semantic recipes without losing action-dashboard behavior.
+- [x] Validate recipe helpers with Go tests, xgoja smoke, browser smoke, and docmgr doctor.

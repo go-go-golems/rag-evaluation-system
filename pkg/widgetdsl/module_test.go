@@ -150,6 +150,58 @@ func TestDataTableAndCellHelpersAreJSONSerializable(t *testing.T) {
 	assertString(t, decoded, "type", "DataTable")
 }
 
+func TestSemanticRecipesAndActionsAreJSONSerializable(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const rag = require("widget.dsl");
+		const rows = [{ id: 1, name: "Alpha", status: "running" }];
+		const page = rag.page({
+			id: "actions",
+			title: "Actions",
+			meta: { shell: "app", maxWidth: "wide" },
+			sections: [
+				rag.recipes.metrics({ items: [
+					{ label: "Total", value: rows.length, status: "ready" },
+					{ label: "Running", value: 1, status: "running" }
+				]}),
+				rag.recipes.actionToolbar({ title: "Controls", actions: [
+					{ label: "Add", action: "add-query", variant: "primary", payload: { owner: "test" } },
+					{ label: "Reset", action: rag.action.server("reset-demo") }
+				]}),
+				rag.recipes.masterDetailTable({
+					title: "Rows",
+					rows,
+					columns: [{ id: "name", header: "Name", cell: rag.cell.field("name") }],
+					selectedKey: 1,
+					onRowSelect: "select-query",
+					detail: row => rag.panel({ title: "Selected" }, row.name)
+				})
+			]
+		});
+		JSON.stringify(page);
+	`)
+	if err != nil {
+		t.Fatalf("build recipe page: %v", err)
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal([]byte(value.String()), &decoded); err != nil {
+		t.Fatalf("recipe page is not JSON: %v\n%s", err, value.String())
+	}
+	assertString(t, decoded, "id", "actions")
+	root := decoded["root"].(map[string]any)
+	assertString(t, root, "type", "Stack")
+	children := root["children"].([]any)
+	if len(children) != 3 {
+		t.Fatalf("recipe page children len = %d, want 3: %#v", len(children), children)
+	}
+	toolbar := children[1].(map[string]any)
+	assertString(t, toolbar, "type", "Panel")
+}
+
 func assertString(t *testing.T, m map[string]any, key, want string) {
 	t.Helper()
 	if got, _ := m[key].(string); got != want {
