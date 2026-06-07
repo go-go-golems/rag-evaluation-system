@@ -1,5 +1,5 @@
-import { StatusText } from '../../foundation';
-import { Panel } from '../../layout';
+import { StatusText } from '@go-go-golems/rag-evaluation-site';
+import { Panel } from '@go-go-golems/rag-evaluation-site';
 import type { WorkflowOpGroup } from '../../../services/api';
 import { friendlyOpName, workflowStatusToRagStatus } from '../../workflows/workflowFormat';
 import styles from './WorkflowOpGraphPanel.module.css';

@@ -1,7 +1,7 @@
-import { SelectInput } from '../../atoms';
-import { Caption, StatusText } from '../../foundation';
-import { Panel, ScrollRegion } from '../../layout';
-import { DataTable, type DataTableColumn } from '../../molecules';
+import { SelectInput } from '@go-go-golems/rag-evaluation-site';
+import { Caption, StatusText } from '@go-go-golems/rag-evaluation-site';
+import { Panel, ScrollRegion } from '@go-go-golems/rag-evaluation-site';
+import { DataTable, type DataTableColumn } from '@go-go-golems/rag-evaluation-site';
 import type { WorkflowListItem } from '../../../services/api';
 import { timeAgo, workflowStatusToRagStatus } from '../../workflows/workflowFormat';
 

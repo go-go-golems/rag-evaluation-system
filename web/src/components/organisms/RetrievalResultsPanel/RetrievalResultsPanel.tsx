@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { ErrorCallout } from '../../atoms';
-import { Caption } from '../../foundation';
-import { Panel, ScrollRegion } from '../../layout';
-import { DataTable, type DataTableColumn } from '../../molecules';
+import { ErrorCallout } from '@go-go-golems/rag-evaluation-site';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { Panel, ScrollRegion } from '@go-go-golems/rag-evaluation-site';
+import { DataTable, type DataTableColumn } from '@go-go-golems/rag-evaluation-site';
 import type { RetrievalResult, SearchResult } from '../../../services/api';
 import type { RetrieverType } from '../SearchControlsPanel';
 import styles from './RetrievalResultsPanel.module.css';

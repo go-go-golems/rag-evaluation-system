@@ -1,7 +1,7 @@
 import type { KeyboardEvent } from 'react';
-import { Button, CheckboxRow, TextInput } from '../../atoms';
-import { Caption } from '../../foundation';
-import { FormRow, Panel, ScrollRegion, Stack } from '../../layout';
+import { Button, CheckboxRow, TextInput } from '@go-go-golems/rag-evaluation-site';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { FormRow, Panel, ScrollRegion, Stack } from '@go-go-golems/rag-evaluation-site';
 import styles from './SearchControlsPanel.module.css';
 
 export type RetrieverType = 'bm25' | 'vector' | 'hybrid';

@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Caption } from '../../foundation';
-import { CoveragePanel, QueryPresetList } from '../../molecules';
-import { DashboardGrid, Panel, Stack } from '../../layout';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { CoveragePanel } from '../../molecules/CoveragePanel';
+import { QueryPresetList } from '../../molecules/QueryPresetList';
+import { DashboardGrid, Panel, Stack } from '@go-go-golems/rag-evaluation-site';
 import { ResultInspectorPanel, RetrievalResultsPanel, SearchControlsPanel, type RetrieverType } from '../../organisms';
 import styles from './SearchWorkbenchPage.module.css';
 import {

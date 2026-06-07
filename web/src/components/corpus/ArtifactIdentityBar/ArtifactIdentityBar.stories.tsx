@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Stack } from '../../layout';
+import { Stack } from '@go-go-golems/rag-evaluation-site';
 import { ChunkEnrichmentIdentityBar, DocProcessingIdentityBar } from './ArtifactIdentityBar';
 import type {
   ChunkEnrichmentCoverageArgs,

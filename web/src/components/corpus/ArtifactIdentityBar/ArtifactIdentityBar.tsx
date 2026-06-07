@@ -1,7 +1,7 @@
 import React from 'react';
-import { Button } from '../../atoms';
-import { Caption } from '../../foundation';
-import { Inline } from '../../layout';
+import { Button } from '@go-go-golems/rag-evaluation-site';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { Inline } from '@go-go-golems/rag-evaluation-site';
 import {
   DocumentProcessingIdentity,
   ChunkEnrichmentIdentity,

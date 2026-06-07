@@ -1,6 +1,6 @@
 import React from 'react';
-import { Caption } from '../../foundation';
-import { Panel, ScrollRegion } from '../../layout';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { Panel, ScrollRegion } from '@go-go-golems/rag-evaluation-site';
 import {
   CorpusSourceSummary,
   DocumentProcessingCoverageItem,

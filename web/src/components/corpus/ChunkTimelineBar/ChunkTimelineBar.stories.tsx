@@ -1,7 +1,7 @@
 import { useState, type ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Caption } from '../../foundation';
-import { Stack } from '../../layout';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { Stack } from '@go-go-golems/rag-evaluation-site';
 import { ChunkTimelineBar } from './ChunkTimelineBar';
 import type { CorpusChunk } from '../../../services/api';
 

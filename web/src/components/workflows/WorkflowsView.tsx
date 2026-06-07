@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Button, ErrorCallout, IconButton, SelectInput, TextInput } from '../atoms';
-import { Caption } from '../foundation';
-import { FormRow, Panel, Stack } from '../layout';
+import { Button, ErrorCallout, IconButton, SelectInput, TextInput } from '@go-go-golems/rag-evaluation-site';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { FormRow, Panel, Stack } from '@go-go-golems/rag-evaluation-site';
 import { QueueHealthPanel, WorkflowListPanel, WorkflowOpGraphPanel, WorkflowOpGroupsPanel, WorkflowOpInspectorPanel, WorkflowOpResultPanel, WorkflowSummaryPanel, workflowGroupKey } from '../organisms';
 import styles from './WorkflowsView.module.css';
 import {

@@ -1,6 +1,6 @@
-import { Caption, CodeText, StatusText } from '../foundation';
-import { DashboardGrid, Panel } from '../layout';
-import { DataTable, type DataTableColumn } from '../molecules';
+import { Caption, CodeText, StatusText } from '@go-go-golems/rag-evaluation-site';
+import { DashboardGrid, Panel } from '@go-go-golems/rag-evaluation-site';
+import { DataTable, type DataTableColumn } from '@go-go-golems/rag-evaluation-site';
 import type { Document, Source } from '../../services/api';
 
 export interface PipelineOverviewProps {

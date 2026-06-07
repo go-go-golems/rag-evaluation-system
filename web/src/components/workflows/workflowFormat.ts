@@ -1,4 +1,4 @@
-import type { RagStatus } from '../foundation';
+import type { RagStatus } from '@go-go-golems/rag-evaluation-site';
 
 const STATUS_ICON: Record<string, string> = {
   pending: '◌', ready: '◌', running: '●', succeeded: '✔', failed: '✘', canceled: '⊘',

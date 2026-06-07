@@ -1,7 +1,7 @@
-import { Button, IconButton } from '../../atoms';
-import { Caption, StatusText } from '../../foundation';
-import { Panel } from '../../layout';
-import { MetadataGrid } from '../../molecules';
+import { Button, IconButton } from '@go-go-golems/rag-evaluation-site';
+import { Caption, StatusText } from '@go-go-golems/rag-evaluation-site';
+import { Panel } from '@go-go-golems/rag-evaluation-site';
+import { MetadataGrid } from '@go-go-golems/rag-evaluation-site';
 import type { WorkflowListItem } from '../../../services/api';
 import { timeAgo, workflowStatusToRagStatus } from '../../workflows/workflowFormat';
 import styles from './WorkflowSummaryPanel.module.css';

@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button, ErrorCallout, SelectInput, TextInput } from '../atoms';
-import { Caption, CodeText } from '../foundation';
-import { DashboardGrid, FormRow, Panel, Stack } from '../layout';
-import { DataTable, MetadataGrid } from '../molecules';
+import { Button, ErrorCallout, SelectInput, TextInput } from '@go-go-golems/rag-evaluation-site';
+import { Caption, CodeText } from '@go-go-golems/rag-evaluation-site';
+import { DashboardGrid, FormRow, Panel, Stack } from '@go-go-golems/rag-evaluation-site';
+import { DataTable, MetadataGrid } from '@go-go-golems/rag-evaluation-site';
 import {
   Chunk,
   useComputeEmbeddingsMutation,

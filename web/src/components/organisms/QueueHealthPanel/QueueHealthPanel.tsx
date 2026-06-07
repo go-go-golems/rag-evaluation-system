@@ -1,6 +1,6 @@
-import { Caption } from '../../foundation';
-import { Panel } from '../../layout';
-import { DataTable, MetadataGrid, type DataTableColumn } from '../../molecules';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { Panel } from '@go-go-golems/rag-evaluation-site';
+import { DataTable, MetadataGrid, type DataTableColumn } from '@go-go-golems/rag-evaluation-site';
 import type { QueueStatus } from '../../../services/api';
 
 export interface QueueHealthPanelProps {

@@ -12,9 +12,9 @@
  * bundled into a self-contained HTML file.
  */
 
-import { StatusText } from '../components/foundation';
-import { Caption } from '../components/foundation';
-import { Button } from '../components/atoms';
+import { StatusText } from '@go-go-golems/rag-evaluation-site';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { Button } from '@go-go-golems/rag-evaluation-site';
 
 /* ── colour palette ────────────────────────────────────────── */
 

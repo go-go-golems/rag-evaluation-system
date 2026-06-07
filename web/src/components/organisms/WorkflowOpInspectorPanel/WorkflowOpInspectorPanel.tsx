@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { Button, ErrorCallout, IconButton } from '../../atoms';
-import { Caption, StatusText } from '../../foundation';
-import { Panel } from '../../layout';
-import { MetadataGrid } from '../../molecules';
+import { Button, ErrorCallout, IconButton } from '@go-go-golems/rag-evaluation-site';
+import { Caption, StatusText } from '@go-go-golems/rag-evaluation-site';
+import { Panel } from '@go-go-golems/rag-evaluation-site';
+import { MetadataGrid } from '@go-go-golems/rag-evaluation-site';
 import type { WorkflowOp } from '../../../services/api';
 import { friendlyOpName, workflowStatusToRagStatus } from '../../workflows/workflowFormat';
 import styles from './WorkflowOpInspectorPanel.module.css';

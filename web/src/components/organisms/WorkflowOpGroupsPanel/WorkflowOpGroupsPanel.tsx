@@ -1,6 +1,6 @@
-import { Caption, StatusText } from '../../foundation';
-import { Panel } from '../../layout';
-import { DataTable, type DataTableColumn } from '../../molecules';
+import { Caption, StatusText } from '@go-go-golems/rag-evaluation-site';
+import { Panel } from '@go-go-golems/rag-evaluation-site';
+import { DataTable, type DataTableColumn } from '@go-go-golems/rag-evaluation-site';
 import type { WorkflowOpGroup } from '../../../services/api';
 import { friendlyOpName, workflowStatusToRagStatus } from '../../workflows/workflowFormat';
 

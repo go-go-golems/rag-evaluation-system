@@ -7,25 +7,25 @@
  * Rendered server-side → bundled into a self-contained HTML file.
  */
 
-import { Panel } from '../components/layout';
-import { Stack } from '../components/layout';
-import { Inline } from '../components/layout';
-import { DashboardGrid } from '../components/layout';
-import { FormRow } from '../components/layout';
-import { TabList } from '../components/layout';
-import { AppShell } from '../components/layout';
-import { AppNav } from '../components/molecules';
-import { DataTable } from '../components/molecules';
-import { MetadataGrid } from '../components/molecules';
-import { StatusText } from '../components/foundation';
-import { Caption } from '../components/foundation';
-import { Divider } from '../components/foundation';
-import { Text } from '../components/foundation';
-import { Button } from '../components/atoms';
-import { TextInput } from '../components/atoms';
-import { SelectInput } from '../components/atoms';
-import { CheckboxRow } from '../components/atoms';
-import { ErrorCallout } from '../components/atoms';
+import { Panel } from '@go-go-golems/rag-evaluation-site';
+import { Stack } from '@go-go-golems/rag-evaluation-site';
+import { Inline } from '@go-go-golems/rag-evaluation-site';
+import { DashboardGrid } from '@go-go-golems/rag-evaluation-site';
+import { FormRow } from '@go-go-golems/rag-evaluation-site';
+import { TabList } from '@go-go-golems/rag-evaluation-site';
+import { AppShell } from '@go-go-golems/rag-evaluation-site';
+import { AppNav } from '@go-go-golems/rag-evaluation-site';
+import { DataTable } from '@go-go-golems/rag-evaluation-site';
+import { MetadataGrid } from '@go-go-golems/rag-evaluation-site';
+import { StatusText } from '@go-go-golems/rag-evaluation-site';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { Divider } from '@go-go-golems/rag-evaluation-site';
+import { Text } from '@go-go-golems/rag-evaluation-site';
+import { Button } from '@go-go-golems/rag-evaluation-site';
+import { TextInput } from '@go-go-golems/rag-evaluation-site';
+import { SelectInput } from '@go-go-golems/rag-evaluation-site';
+import { CheckboxRow } from '@go-go-golems/rag-evaluation-site';
+import { ErrorCallout } from '@go-go-golems/rag-evaluation-site';
 
 /* ── sample data ──────────────────────────────────────────── */
 

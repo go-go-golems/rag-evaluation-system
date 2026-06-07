@@ -1,6 +1,6 @@
-import { ErrorCallout } from '../../atoms';
-import { Caption } from '../../foundation';
-import { DataTable, MetadataGrid, type DataTableColumn } from '../../molecules';
+import { ErrorCallout } from '@go-go-golems/rag-evaluation-site';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { DataTable, MetadataGrid, type DataTableColumn } from '@go-go-golems/rag-evaluation-site';
 import type { OpResult } from '../../../services/api';
 import styles from './WorkflowOpResultPanel.module.css';
 

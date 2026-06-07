@@ -1,7 +1,7 @@
 import React from 'react';
-import { SelectInput, TextInput } from '../../atoms';
-import { Caption } from '../../foundation';
-import { FormRow, Inline, Panel } from '../../layout';
+import { SelectInput, TextInput } from '@go-go-golems/rag-evaluation-site';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { FormRow, Inline, Panel } from '@go-go-golems/rag-evaluation-site';
 import { CorpusIdentityArgs } from '../../../services/api';
 import styles from './IdentityBar.module.css';
 

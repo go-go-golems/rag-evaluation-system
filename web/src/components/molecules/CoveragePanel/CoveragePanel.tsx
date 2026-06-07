@@ -1,5 +1,5 @@
-import { Caption, StatusText } from '../../foundation';
-import { Panel } from '../../layout';
+import { Caption, StatusText } from '@go-go-golems/rag-evaluation-site';
+import { Panel } from '@go-go-golems/rag-evaluation-site';
 import { DataTable, MetadataGrid, type DataTableColumn } from '@go-go-golems/rag-evaluation-site';
 import type { EmbeddingCoverageResult } from '../../../services/api';
 import styles from './CoveragePanel.module.css';

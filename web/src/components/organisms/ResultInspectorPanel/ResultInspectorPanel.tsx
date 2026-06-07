@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Button } from '../../atoms';
-import { Caption, StatusText } from '../../foundation';
-import { Panel, ScrollRegion, TabList } from '../../layout';
-import { MetadataGrid, type MetadataGridItem } from '../../molecules';
+import { Button } from '@go-go-golems/rag-evaluation-site';
+import { Caption, StatusText } from '@go-go-golems/rag-evaluation-site';
+import { Panel, ScrollRegion, TabList } from '@go-go-golems/rag-evaluation-site';
+import { MetadataGrid, type MetadataGridItem } from '@go-go-golems/rag-evaluation-site';
 import type { CorpusDocumentDetail, RetrievalResult } from '../../../services/api';
 import styles from './ResultInspectorPanel.module.css';
 

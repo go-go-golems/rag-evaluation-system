@@ -1,8 +1,8 @@
-import { ErrorCallout } from '../../atoms';
-import { Caption } from '../../foundation';
-import { Panel } from '../../layout';
+import { ErrorCallout } from '@go-go-golems/rag-evaluation-site';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { Panel } from '@go-go-golems/rag-evaluation-site';
 import { useGetDslPageQuery } from '../../../services/api';
-import { WidgetRenderer } from '../../../widgets';
+import { WidgetRenderer } from '@go-go-golems/rag-evaluation-site';
 import styles from './DslPreviewPage.module.css';
 
 export interface DslPreviewPageProps {

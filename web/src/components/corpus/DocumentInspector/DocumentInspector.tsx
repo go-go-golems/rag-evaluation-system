@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Button, ErrorCallout, IconButton } from '../../atoms';
-import { Caption, StatusText } from '../../foundation';
-import { Panel, ScrollRegion, TabList } from '../../layout';
-import { DataTable, MetadataGrid, type DataTableColumn, type MetadataGridItem } from '../../molecules';
+import { Button, ErrorCallout, IconButton } from '@go-go-golems/rag-evaluation-site';
+import { Caption, StatusText } from '@go-go-golems/rag-evaluation-site';
+import { Panel, ScrollRegion, TabList } from '@go-go-golems/rag-evaluation-site';
+import { DataTable, MetadataGrid, type DataTableColumn, type MetadataGridItem } from '@go-go-golems/rag-evaluation-site';
 import {
   CorpusChunk,
   CorpusDocumentDetail,

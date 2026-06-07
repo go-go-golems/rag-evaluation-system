@@ -1,5 +1,5 @@
-import { Caption } from '../../foundation';
-import { Panel, Stack } from '../../layout';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { Panel, Stack } from '@go-go-golems/rag-evaluation-site';
 import styles from './QueryPresetList.module.css';
 
 export interface QueryPresetListProps {

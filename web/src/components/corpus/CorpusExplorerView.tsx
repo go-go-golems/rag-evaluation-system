@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { IconButton } from '../atoms';
-import { Caption } from '../foundation';
-import { Panel, ScrollRegion } from '../layout';
+import { IconButton } from '@go-go-golems/rag-evaluation-site';
+import { Caption } from '@go-go-golems/rag-evaluation-site';
+import { Panel, ScrollRegion } from '@go-go-golems/rag-evaluation-site';
 import {
   useListCorpusSourcesQuery,
   useListCorpusDocumentsQuery,

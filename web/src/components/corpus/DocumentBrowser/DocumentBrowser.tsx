@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Button, TextInput } from '../../atoms';
-import { Caption, StatusText } from '../../foundation';
-import { Panel, ScrollRegion } from '../../layout';
-import { DataTable, type DataTableColumn } from '../../molecules';
+import { Button, TextInput } from '@go-go-golems/rag-evaluation-site';
+import { Caption, StatusText } from '@go-go-golems/rag-evaluation-site';
+import { Panel, ScrollRegion } from '@go-go-golems/rag-evaluation-site';
+import { DataTable, type DataTableColumn } from '@go-go-golems/rag-evaluation-site';
 import { CorpusDocumentRow } from '../../../services/api';
 import styles from './DocumentBrowser.module.css';
 

@@ -1,5 +1,5 @@
-import { Caption, Text } from '../../foundation';
-import { Panel, Stack } from '../../layout';
+import { Caption, Text } from '@go-go-golems/rag-evaluation-site';
+import { Panel, Stack } from '@go-go-golems/rag-evaluation-site';
 import styles from './EvaluationPage.module.css';
 
 export interface EvaluationPageProps {

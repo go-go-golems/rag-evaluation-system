@@ -6,8 +6,7 @@ import { EvaluationView } from './components/evaluation/EvaluationView';
 import { CorpusExplorerView } from './components/corpus/CorpusExplorerView';
 import { WorkflowsView } from './components/workflows/WorkflowsView';
 import { DslPreviewPage } from './components/pages';
-import { AppShell } from './components/layout';
-import { AppNav } from './components/molecules';
+import { AppNav, AppShell } from '@go-go-golems/rag-evaluation-site';
 
 const views = [
   { id: 'search', label: 'Search' },
