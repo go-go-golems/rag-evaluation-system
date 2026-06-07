@@ -85,6 +85,24 @@ Use this ownership rule for all new context-viewer code:
 | API calls, persistence, document/session loading | `web/src/services`, `web/src/components/pages`, containers | Backend ownership remains in the app. |
 | Widget IR node/recipe support | package `src/widgets/*`, Go `pkg/widgetdsl/*` after React components stabilize | Preserve “Goja authors data; React renders UI.” |
 
+### Atomic layer split
+
+The implementation should preserve the recovered ownership rule from `design-doc/01-design-integration-research-and-implementation-plan.md`: tokens/foundation/atoms/layout stay generic, molecules own reusable data-display patterns, organisms own feature panels with DTO-shaped props, pages compose organisms, and containers own API/state side effects.
+
+For the context-viewer work, that means the first component pass should not create one `ContextViewer` mega-component. Split it this way:
+
+| Layer | Context-viewer additions | Notes |
+|---|---|---|
+| tokens/theme | typography comparison or scoped readable-mode variables | Review separately; do not silently change global defaults. |
+| foundation | `SectionLabel` only if `Caption` cannot cover it | Prefer extending existing `Caption`/`Text` before adding primitives. |
+| atoms | `Chip` / `AnnotationBadge` / `ContextKindSwatch` | Small, reusable semantic markers; no layout or data fetching. |
+| layout | no new layout primitives initially | Use `Panel`, `Stack`, `Inline`, `DashboardGrid`, `ScrollRegion`, `TabList`, `FormRow`. |
+| molecules | `ContextLegend`, `ContextBudgetBar`, `ContextStripDiagram`, `ContextStackDiagram`, `ContextTreemap`, `TranscriptMessageCard`, `TranscriptTokenBar`, `AnnotationNoteCard`, `CourseStepNav` | Reusable visual/data-display units with typed DTO props. |
+| organisms | `ContextWindowVisualizerPanel`, `TranscriptReaderPanel`, `AnnotationRailPanel`, `AnchoredCommentRail`, `CourseLessonPanel`, `CourseSlidePanel` | Feature panels that compose molecules and own controlled selection props. |
+| pages | `ContextVisualizerPage`, `TranscriptAnnotationPage`, `ContextCoursePage` | Static/storyable package demos or web pages composed from organisms. |
+| containers | upload parser, API loaders, persisted annotations, route state | `web`-owned unless generalized later. |
+| Widget IR / Goja | `contextWindowStudio(...)`, `annotatedTranscript(...)` recipes | Add after React molecules/organisms stabilize. |
+
 ### Component promotion table
 
 | Prototype source | Prototype symbol | Production target | First Storybook states |

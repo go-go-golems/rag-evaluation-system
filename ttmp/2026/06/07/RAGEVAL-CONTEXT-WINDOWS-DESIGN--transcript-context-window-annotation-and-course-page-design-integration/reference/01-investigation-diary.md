@@ -520,3 +520,52 @@ The fixtures are intentionally derived from the prototype's sample data but norm
 ### Technical details
 - Source prototype files: `sources/03-context-viewer-design-iteration/data.jsx` and `data2.jsx`.
 - Public package export: `packages/rag-evaluation-site/src/index.ts` now exports `./context`.
+
+## Step 7: Reconfirm Atomic Split from Original Sources
+
+I reread the first design document and the source index after the user asked whether the context-viewer work was still being split through atoms, molecules, organisms, pages, and containers. The answer is yes: the recovered guidance explicitly says layer ownership is the governing rule, and the context-viewer prototype must be promoted into layers rather than copied as one large screen.
+
+I updated the post-unification integration plan with an explicit atomic layer split so the next implementation step is constrained by that recovered guidance. The DTO/fixture step remains valid because it defines contracts only; the next UI step should start with small package atoms/molecules such as `ContextKindSwatch`, `ContextLegend`, and `ContextBudgetBar`, then compose them into organisms.
+
+### Prompt Context
+
+**User prompt (verbatim):** "what about splitting this out into atoms / molecules / organisms, did you read the first design document again to refresh your memory? and potentially the attached sources / where we got the information form?"
+
+**Assistant interpretation:** Re-check the original design evidence and make sure the implementation plan follows the atomic design/layer ownership rules, rather than jumping straight into coarse components.
+
+**Inferred user intent:** Keep the context-viewer integration aligned with the recovered design-system playbooks and source provenance before further coding.
+
+### What I did
+- Reread `design-doc/01-design-integration-research-and-implementation-plan.md`, especially the recovered guidance and candidate component decomposition.
+- Reread `sources/index.md` to confirm where the recovered docs and context-viewer zip came from.
+- Reread `sources/01-recovered-design-docs.md` to refresh the source list and why each recovered document matters.
+- Updated `design-doc/03-context-viewer-integration-plan-after-design-system-unification.md` with an explicit atomic layer split.
+
+### Why
+- The context-viewer prototype contains screen-level JSX and duplicated primitives, so the implementation needs a clear layer split before more code is ported.
+- The first design document already made this point; the new post-unification plan needed to state it as an implementation constraint.
+
+### What worked
+- The original source material cleanly supports a package-first but still atomic/layered implementation plan.
+- The source index confirms the provenance: prior docs were recovered via go-minitrace SQL/JS plus git history, and the new design iteration came from `~/Downloads/context-viewer.zip`.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- The next UI step should begin with small package atoms/molecules, not a `ContextWindowVisualizerPanel` organism first.
+
+### What was tricky to build
+- The package-first decision from design-system unification does not replace atomic design; it only decides the landing zone. Inside the package, components still need to be split by layer.
+
+### What warrants a second pair of eyes
+- Review whether `ContextKindSwatch` is an atom or molecule. It is small like an atom, but it carries domain meaning from the context-window taxonomy.
+
+### What should be done in the future
+- Implement the next UI increment in this order: atom marker/swatch → legend/budget molecules → diagram molecules → visualizer organism.
+
+### Code review instructions
+- Review the new “Atomic layer split” section in `design-doc/03-context-viewer-integration-plan-after-design-system-unification.md`.
+
+### Technical details
+- Source provenance docs reread: `sources/index.md` and `sources/01-recovered-design-docs.md`.

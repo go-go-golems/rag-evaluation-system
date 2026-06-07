@@ -84,3 +84,13 @@ Added package context-viewer DTOs and normalized fixtures; package typecheck/bui
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/context/types.ts — Context
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/index.ts — Public package export
 
+
+## 2026-06-07
+
+Clarified post-unification plan with explicit atoms/molecules/organisms/pages/container split from recovered source guidance.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/07/RAGEVAL-CONTEXT-WINDOWS-DESIGN--transcript-context-window-annotation-and-course-page-design-integration/design-doc/03-context-viewer-integration-plan-after-design-system-unification.md — Adds atomic layer split for context-viewer implementation
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/07/RAGEVAL-CONTEXT-WINDOWS-DESIGN--transcript-context-window-annotation-and-course-page-design-integration/reference/01-investigation-diary.md — Records source reread and clarified layer guidance
+
