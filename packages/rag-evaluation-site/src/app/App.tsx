@@ -5,7 +5,7 @@ import { AppShell, Panel } from '../components/layout';
 import { AppNav } from '../components/molecules';
 import { WidgetRenderer } from '../widgets/WidgetRenderer';
 import type { ActionSpec, AppNavItemSpec, RenderableValue, WidgetNode } from '../widgets/ir';
-import type { WidgetActionContext } from '../widgets/actions';
+import { dispatchWidgetAction, type WidgetActionContext } from '../widgets/actions';
 import { useWidgetPage, type WidgetPageResponse } from '../hooks/useWidgetPage';
 import './app.css';
 
@@ -36,7 +36,10 @@ export function RagEvaluationSiteApp({ apiBase = '/api/widget', defaultPageId = 
   const { page, loading, error, refresh } = useWidgetPage(`${cleanApiBase}/pages/${encodeURIComponent(pageId)}`);
 
   async function handleAction(action: ActionSpec, context: WidgetActionContext): Promise<void> {
-    if (action.kind !== 'server') return;
+    if (action.kind !== 'server') {
+      dispatchWidgetAction(action, context);
+      return;
+    }
     const response = await fetch(`${cleanApiBase}/actions/${encodeURIComponent(action.name)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

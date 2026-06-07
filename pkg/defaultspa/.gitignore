@@ -1,1 +1,1 @@
-dist
+# Default SPA build artifacts are committed because pkg/defaultspa/spa.go embeds dist.

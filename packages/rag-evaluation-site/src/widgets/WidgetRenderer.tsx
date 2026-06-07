@@ -167,7 +167,7 @@ function renderDataTable(node: ComponentNode, onAction?: WidgetActionHandler): R
         cell: (row) => renderCell(column.cell, row, (child) => renderWidgetNode(child, onAction)),
       }))}
       getRowKey={(row) => rowKey(row, props.getRowKey)}
-      selectedKey={props.selectedKey}
+      selectedKey={props.selectedKey == null ? props.selectedKey : String(props.selectedKey)}
       emptyMessage={renderRenderableValue(props.emptyMessage, onAction)}
       onRowSelect={rowSelectAction ? (row) => bindAndRun(rowSelectAction, { row, rowKey: rowKey(row, props.getRowKey), componentType: 'DataTable' }, onAction) : undefined}
     />

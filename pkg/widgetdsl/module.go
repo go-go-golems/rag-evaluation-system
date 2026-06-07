@@ -3,6 +3,7 @@ package widgetdsl
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/dop251/goja"
@@ -11,6 +12,8 @@ import (
 )
 
 const ModuleName = "widget.dsl"
+
+var templatePattern = regexp.MustCompile(`\$\{([^}]+)\}|\$([A-Za-z0-9_.-]+)`)
 
 var componentNames = []string{
 	"appShell",
@@ -354,7 +357,7 @@ func (r *runtime) masterDetailTableRecipe(call goja.FunctionCall) goja.Value {
 		"props":    map[string]any{"title": stringFromMap(options, "title", "Items")},
 		"children": []any{map[string]any{"kind": "component", "type": "DataTable", "props": tableProps}},
 	}
-	detailNode := r.detailNode(options, selectedRow(rows, selectedKey))
+	detailNode := r.detailNode(options, selectedRow(rows, selectedKey, tableProps["getRowKey"]))
 	return r.vm.ToValue(map[string]any{
 		"kind":     "component",
 		"type":     "DashboardGrid",
@@ -595,21 +598,73 @@ func normalizeActionSpec(action any, name any, payload any) (map[string]any, boo
 	return nil, false
 }
 
-func selectedRow(rows []any, selectedKey any) any {
+func selectedRow(rows []any, selectedKey any, keySpec any) any {
 	if selectedKey == nil {
 		return nil
 	}
-	wanted := fmt.Sprint(selectedKey)
+	wanted := stringifyRowKey(selectedKey)
 	for _, raw := range rows {
 		row, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
-		if fmt.Sprint(row["id"]) == wanted {
+		if rowKeyForSpec(row, keySpec) == wanted {
 			return row
 		}
 	}
 	return nil
+}
+
+func rowKeyForSpec(row map[string]any, spec any) string {
+	switch typed := spec.(type) {
+	case string:
+		return stringifyRowKey(valueAtPath(row, typed))
+	case map[string]any:
+		if field, ok := typed["field"].(string); ok {
+			return stringifyRowKey(valueAtPath(row, field))
+		}
+		if template, ok := typed["template"].(string); ok {
+			return renderRowTemplate(template, row)
+		}
+	}
+	return stringifyRowKey(valueAtPath(row, "id"))
+}
+
+func stringifyRowKey(value any) string {
+	if value == nil {
+		return ""
+	}
+	return fmt.Sprint(value)
+}
+
+func valueAtPath(row map[string]any, path string) any {
+	if path == "" {
+		return nil
+	}
+	var current any = row
+	for _, part := range strings.Split(path, ".") {
+		if part == "" {
+			continue
+		}
+		object, ok := current.(map[string]any)
+		if !ok {
+			return nil
+		}
+		current = object[part]
+	}
+	return current
+}
+
+func renderRowTemplate(template string, row map[string]any) string {
+	return templatePattern.ReplaceAllStringFunc(template, func(match string) string {
+		path := strings.TrimPrefix(match, "$")
+		path = strings.TrimPrefix(strings.TrimSuffix(path, "}"), "{")
+		value := valueAtPath(row, path)
+		if value == nil {
+			return ""
+		}
+		return stringifyRowKey(value)
+	})
 }
 
 func stringifyValue(value goja.Value) string {

@@ -202,6 +202,37 @@ func TestSemanticRecipesAndActionsAreJSONSerializable(t *testing.T) {
 	assertString(t, toolbar, "type", "Panel")
 }
 
+func TestMasterDetailTableUsesConfiguredRowKeyForDetails(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const rag = require("widget.dsl");
+		const table = rag.recipes.masterDetailTable({
+			rows: [{ id: 1, slug: "alpha", name: "Alpha" }],
+			getRowKey: "slug",
+			columns: [{ id: "name", header: "Name", cell: rag.cell.field("name") }],
+			selectedKey: "alpha",
+			detail: row => rag.panel({ title: "Selected" }, row.name)
+		});
+		JSON.stringify(table);
+	`)
+	if err != nil {
+		t.Fatalf("build master-detail recipe: %v", err)
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal([]byte(value.String()), &decoded); err != nil {
+		t.Fatalf("master-detail table is not JSON: %v\n%s", err, value.String())
+	}
+	children := decoded["children"].([]any)
+	detail := children[1].(map[string]any)
+	detailChildren := detail["children"].([]any)
+	text := detailChildren[0].(map[string]any)
+	assertString(t, text, "text", "Alpha")
+}
+
 func assertString(t *testing.T, m map[string]any, key, want string) {
 	t.Helper()
 	if got, _ := m[key].(string); got != want {
