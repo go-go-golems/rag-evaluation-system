@@ -2,7 +2,6 @@
 
 ## TODO
 
-- [ ] Add tasks here
 
 - [x] Capture css-visual-diff help and establish visual parity scripts
 - [x] Quantify duplication between web/src and packages/rag-evaluation-site

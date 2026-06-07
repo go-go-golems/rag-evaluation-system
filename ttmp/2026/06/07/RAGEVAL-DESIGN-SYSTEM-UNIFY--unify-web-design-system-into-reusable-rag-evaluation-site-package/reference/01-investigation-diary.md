@@ -16,12 +16,19 @@ RelatedFiles:
       Note: Step 1 css-visual-diff help capture
     - Path: ttmp/2026/06/07/RAGEVAL-DESIGN-SYSTEM-UNIFY--unify-web-design-system-into-reusable-rag-evaluation-site-package/scripts/02_component_duplication_inventory.py
       Note: Step 1 duplication inventory script
+    - Path: web/src/App.tsx
+      Note: Direct package imports after compatibility barrel removal
+    - Path: web/src/components/index.ts
+      Note: Barrel no longer exposes package-owned compatibility APIs
+    - Path: web/src/components/pages/SearchWorkbenchPage/SearchWorkbenchPage.tsx
+      Note: Keeps app-owned molecules local while package primitives import directly
 ExternalSources: []
 Summary: Chronological diary for unifying duplicated web/src design-system components into packages/rag-evaluation-site with Storybook and css-visual-diff visual parity checks.
 LastUpdated: 2026-06-07T00:00:00Z
 WhatFor: Use to resume or review the design-system unification work.
 WhenToUse: Before changing frontend package boundaries or deleting duplicated files.
 ---
+
 
 
 # Diary
@@ -542,3 +549,63 @@ I verified the fix in the browser: the first review card now shows readable side
 
 ### Technical details
 - Requires ImageMagick `convert`; if unavailable, the converter falls back to copying the raw image.
+
+## Step 9: Remove Web Compatibility Barrels and Close the Ticket
+
+With the package now established as the canonical owner of shared UI primitives and the widget renderer, I removed the last thin web-side compatibility barrels. Web code now imports shared atoms, foundation primitives, layout primitives, shared molecules, and Widget IR APIs directly from `@go-go-golems/rag-evaluation-site`, while app-specific molecules continue to import from their concrete local directories.
+
+This leaves the web app with a clearer ownership boundary: package-owned UI comes from the package, and web-owned application/container code remains under `web/src`. After typecheck and production build passed, I removed the placeholder task and closed the design-system unification ticket so the next work can return to context-viewer integration.
+
+### Prompt Context
+
+**User prompt (verbatim):** "clean up the compatibility barrels, then close the ticket, so we can move back to integrating the new context-viewer"
+
+**Assistant interpretation:** Finish the optional import hygiene by deleting web re-export compatibility barrels, validate the app, and mark the docmgr ticket complete.
+
+**Inferred user intent:** Clear the remaining design-system cleanup from the queue and unblock the next feature track.
+
+**Commit (code):** bfe2dab4893d0d9bac03390ba34c01253cf2f09b — "refactor(web): remove shared compatibility barrels"
+
+### What I did
+- Rewrote web imports from local `atoms`, `foundation`, `layout`, `molecules`, and `widgets` barrels to direct `@go-go-golems/rag-evaluation-site` imports where the symbol is package-owned.
+- Kept `CoveragePanel` and `QueryPresetList` as web-owned molecules and imported them from their concrete local directories.
+- Deleted `web/src/components/atoms/index.ts`, `web/src/components/foundation/index.ts`, `web/src/components/layout/index.ts`, and `web/src/widgets/index.ts`.
+- Updated `web/src/components/index.ts` and `web/src/components/molecules/index.ts` so they no longer re-export package-owned compatibility APIs.
+- Ran `pnpm --dir web typecheck` and `pnpm --dir web build`.
+
+### Why
+- Compatibility barrels hid the ownership boundary after the duplicated implementations were removed.
+- Direct package imports make it obvious which APIs are reusable package APIs and which APIs remain application-specific.
+
+### What worked
+- `pnpm --dir web typecheck` passed.
+- `pnpm --dir web build` passed.
+- The placeholder task was removed, leaving all ticket tasks completed.
+
+### What didn't work
+- The first validation run failed because `web/src/App.tsx` still imported `AppShell` and `AppNav` through now-deleted local barrels:
+  - `src/App.tsx(9,26): error TS2307: Cannot find module './components/layout' or its corresponding type declarations.`
+  - `src/App.tsx(10,10): error TS2305: Module '"./components/molecules"' has no exported member 'AppNav'.`
+- Rewriting those imports to `@go-go-golems/rag-evaluation-site` fixed the failure.
+
+### What I learned
+- The web app had one direct `./components/layout` import outside the earlier relative-path cleanup patterns.
+- `web/src/components/molecules/index.ts` should stay local-only unless `CoveragePanel` or `QueryPresetList` are promoted later.
+
+### What was tricky to build
+- The cleanup needed to distinguish package-owned molecules (`AppNav`, `DataTable`, `MetadataGrid`) from app-owned molecules (`CoveragePanel`, `QueryPresetList`). Rewriting every molecules import to the package would have been incorrect, so `SearchWorkbenchPage` now imports local app molecules from their concrete subdirectories.
+
+### What warrants a second pair of eyes
+- Review whether `CoveragePanel` and `QueryPresetList` should remain app-owned or become package components in a future pass.
+- Review the larger import diff for readability; many files now import several symbols from the package directly.
+
+### What should be done in the future
+- Resume context-viewer integration using the now-stable package/web ownership boundary.
+
+### Code review instructions
+- Start with `web/src/App.tsx`, `web/src/components/pages/SearchWorkbenchPage/SearchWorkbenchPage.tsx`, and the deleted barrel files.
+- Validate with `pnpm --dir web typecheck` and `pnpm --dir web build`.
+
+### Technical details
+- Package-owned import target: `@go-go-golems/rag-evaluation-site`.
+- App-owned molecules retained locally: `web/src/components/molecules/CoveragePanel` and `web/src/components/molecules/QueryPresetList`.

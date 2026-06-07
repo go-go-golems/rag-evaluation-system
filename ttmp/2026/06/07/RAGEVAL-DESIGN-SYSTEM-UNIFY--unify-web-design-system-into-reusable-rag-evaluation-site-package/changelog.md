@@ -86,3 +86,19 @@ Trimmed review-site left/right screenshots so package Storybook cards are human-
 
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/07/RAGEVAL-DESIGN-SYSTEM-UNIFY--unify-web-design-system-into-reusable-rag-evaluation-site-package/scripts/05_prepare_package_storybook_review_site.py — Trims review-site display images
 
+
+## 2026-06-07
+
+Removed web compatibility barrels and rewrote shared UI imports to @go-go-golems/rag-evaluation-site (commit bfe2dab).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/web/src/App.tsx — Imports AppShell/AppNav directly from package
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/web/src/components/index.ts — Stops re-exporting deleted compatibility barrels
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/web/src/components/pages/SearchWorkbenchPage/SearchWorkbenchPage.tsx — Separates package primitives from app-owned molecules
+
+
+## 2026-06-07
+
+Ticket complete: shared design-system ownership moved to package, Storybook/visual review artifacts captured, compatibility barrels removed.
+
