@@ -10,7 +10,7 @@
 - [x] Write phased integration plan with related files and validation steps
 - [x] Add package context DTOs and fixtures
 - [x] Define context component taxonomy and export style helpers for context kinds
-- [ ] Add ContextKindSwatch atom with Storybook states
+- [x] Add ContextKindSwatch atom with Storybook states
 - [ ] Add ContextLegend molecule with pattern/tone/outline stories
 - [ ] Add ContextBudgetBar molecule with under/near/over-budget stories
 - [ ] Add ContextStripDiagram molecule with dense and selected segment stories

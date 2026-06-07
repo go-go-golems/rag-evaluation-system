@@ -105,3 +105,15 @@ Expanded context-viewer tasks into a handoff checklist and added typed context-k
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/context/kinds.ts — Context kind taxonomy and visual style helpers
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/07/RAGEVAL-CONTEXT-WINDOWS-DESIGN--transcript-context-window-annotation-and-course-page-design-integration/tasks.md — Detailed handoff task list
 
+
+## 2026-06-07
+
+Added ContextKindSwatch atom with Storybook coverage for pattern/tone/outline context kinds.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/atoms/ContextKindSwatch/ContextKindSwatch.module.css — Bitmap-style swatch CSS
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/atoms/ContextKindSwatch/ContextKindSwatch.stories.tsx — Storybook states for all modes and sizes
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/atoms/ContextKindSwatch/ContextKindSwatch.tsx — Context kind swatch atom
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/atoms/index.ts — Exports new atom
+

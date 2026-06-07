@@ -619,3 +619,61 @@ I then completed the first implementation task by adding a typed context-kind ta
 
 ### Technical details
 - Prototype source: `sources/03-context-viewer-design-iteration/patterns.jsx`.
+
+## Step 9: Add ContextKindSwatch Atom and Stories
+
+I implemented the first visual atom for the context-viewer integration: `ContextKindSwatch`. It renders the context-kind taxonomy as small Classic Mac-style bitmap/pattern markers in pattern, tone, and outline modes, and it is exported from the package atom barrel for reuse by upcoming legends, diagrams, and annotation components.
+
+This is intentionally a tiny visual primitive. It does not know about diagram layout, token budgets, transcripts, or selection state beyond a simple selected outline; those responsibilities belong to molecules and organisms in later tasks.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 8)
+
+**Assistant interpretation:** Continue working through the detailed ticket tasks one at a time and commit at a sensible component boundary.
+
+**Inferred user intent:** Build the context-viewer components incrementally with handoff-safe task tracking and Storybook validation.
+
+### What I did
+- Added `packages/rag-evaluation-site/src/components/atoms/ContextKindSwatch/ContextKindSwatch.tsx`.
+- Added CSS Modules for pattern/tone/outline swatch rendering.
+- Added Storybook coverage for all context kinds across `pattern`, `tone`, and `outline` modes plus size/selection states.
+- Exported `ContextKindSwatch` from `packages/rag-evaluation-site/src/components/atoms/index.ts`.
+- Ran `pnpm --dir packages/rag-evaluation-site typecheck`.
+- Ran `pnpm --dir packages/rag-evaluation-site build`.
+- Ran `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-context-swatch`.
+
+### Why
+- `ContextKindSwatch` is the smallest reusable visual unit needed by context legends, diagram keys, annotation labels, and future transcript/course affordances.
+- Storybook now exposes the kind vocabulary for quick visual review before larger components depend on it.
+
+### What worked
+- Package typecheck passed.
+- Package build passed.
+- Package Storybook build passed.
+
+### What didn't work
+- First typecheck failed because I used an unsupported `align` prop on the existing `Inline` layout component in the story:
+  - `Property 'align' does not exist on type 'IntrinsicAttributes & InlineProps'.`
+- I fixed the story by using `style={{ alignItems: 'center' }}` on `Inline`.
+
+### What I learned
+- The current `Inline` API supports `gap`, `justify`, and `wrap`, but not cross-axis alignment. Stories should use inline style or a small local wrapper when cross-axis alignment is needed.
+
+### What was tricky to build
+- CSS cannot directly consume the prototype's SVG `url(#pattern)` fills in an atom without an enclosing SVG definition. I approximated the prototype bitmap styles using low-level CSS gradients for the atom; the later SVG diagram components can still use SVG patterns where appropriate.
+
+### What warrants a second pair of eyes
+- Visual review should check whether the CSS pattern approximations are close enough to the prototype's Classic Mac SVG patterns.
+- The `instruction`, `conversation`, `retrieval`, `tool`, `annotation`, `course`, and `other` additions need label review before they spread into diagrams.
+
+### What should be done in the future
+- Build `ContextLegend` from `ContextKindSwatch` and use that as the first human-review checkpoint in Storybook.
+
+### Code review instructions
+- Start with `packages/rag-evaluation-site/src/components/atoms/ContextKindSwatch/ContextKindSwatch.tsx`.
+- Then inspect `ContextKindSwatch.module.css` and `ContextKindSwatch.stories.tsx`.
+- Validate with package typecheck/build and the Storybook build command above.
+
+### Technical details
+- Storybook build output used for validation: `/tmp/rag-package-storybook-context-swatch`.
