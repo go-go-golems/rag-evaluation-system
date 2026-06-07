@@ -3,15 +3,23 @@ Title: Investigation Diary
 Ticket: RAGEVAL-CONTEXT-WINDOWS-DESIGN
 Status: active
 Topics:
-  - design-system
-  - frontend-architecture
-  - react
-  - rag
-  - ui-dsl
+    - design-system
+    - frontend-architecture
+    - react
+    - rag
+    - ui-dsl
 DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: packages/rag-evaluation-site/src/context/fixtures.ts
+      Note: Normalized prototype fixtures for package Storybook and future Widget IR
+    - Path: packages/rag-evaluation-site/src/context/index.ts
+      Note: Context module barrel
+    - Path: packages/rag-evaluation-site/src/context/types.ts
+      Note: New context-viewer DTO contracts
+    - Path: packages/rag-evaluation-site/src/index.ts
+      Note: Exports context contracts from package API
     - Path: ttmp/2026/06/07/RAGEVAL-CONTEXT-WINDOWS-DESIGN--transcript-context-window-annotation-and-course-page-design-integration/scripts/01_capture_go_minitrace_help.sh
       Note: Captured go-minitrace help pages for reproducible query setup
     - Path: ttmp/2026/06/07/RAGEVAL-CONTEXT-WINDOWS-DESIGN--transcript-context-window-annotation-and-course-page-design-integration/scripts/02_convert_relevant_pi_sessions.sh
@@ -26,6 +34,7 @@ LastUpdated: 2026-06-07T00:00:00Z
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 # Diary
@@ -400,3 +409,114 @@ This keeps the detailed analysis in the ticket while making the active frontend 
 ### Code review instructions
 - Start with `web/README.md`.
 - Check that all relative links resolve from the `web/` directory.
+
+## Step 5: Rebase Context-Viewer Plan on the Unified Package Boundary
+
+After closing the design-system unification ticket, I reread the context-viewer diary and analysis docs to re-establish the next implementation boundary. The unification work resolves the biggest open question from the earlier context-viewer analysis: reusable context-window, transcript, annotation, and course presentation vocabulary should start in `packages/rag-evaluation-site`, while `web` should compose package components into app pages and own API/container behavior.
+
+I wrote a new implementation plan that turns the earlier analysis-only concept map into a phase-by-phase coding path. The first recommended coding step is deliberately small: define JSON-compatible package DTOs and fixtures before porting diagram renderers or wiring pages.
+
+### Prompt Context
+
+**User prompt (verbatim):** "ok, close the ticket for the unification, and continue with the context-viewer. What are the next steps from here, potentially reread the diaries if you need to"
+
+**Assistant interpretation:** Confirm the unification ticket is closed, reread the context-viewer diary/plan if needed, and resume by identifying concrete next steps for implementation.
+
+**Inferred user intent:** Move out of design-system cleanup mode and back into context-viewer integration with a clear, current plan that reflects the new package/web ownership boundary.
+
+### What I did
+- Confirmed `RAGEVAL-DESIGN-SYSTEM-UNIFY` is already `complete` with 0 open tasks.
+- Reread the context-viewer investigation diary and the two existing design docs.
+- Created `design-doc/03-context-viewer-integration-plan-after-design-system-unification.md`.
+- Updated the plan to reflect that `packages/rag-evaluation-site` is now the canonical reusable layer.
+- Completed the open task for writing the phased integration plan.
+
+### Why
+- The previous analysis intentionally avoided a detailed implementation plan because the package/web boundary was still under discussion.
+- The design-system unification now gives a stable boundary for implementation decisions.
+
+### What worked
+- The new plan identifies a package-first, Storybook-first path.
+- It provides a component promotion table, DTO sketches, landing zones, validation commands, and phased implementation order.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- The next safe step is DTOs and fixtures, not SVG renderers or app navigation. Contracts unlock later diagram, transcript, Storybook, web, and Widget IR work without forcing premature UI decisions.
+
+### What was tricky to build
+- The plan needed to preserve the earlier analysis-first conclusions while updating the target boundary after unification. The critical distinction is that reusable visuals belong in the package, but upload/parsing workflows, routing, API calls, and persistence stay in `web` until generalized.
+
+### What warrants a second pair of eyes
+- Whether readable typography should become global package defaults or a scoped transcript/course mode.
+- Whether course/slides/handout surfaces should be package demos, web product pages, or both.
+
+### What should be done in the future
+- Start Phase 1 by adding context DTOs and fixtures under `packages/rag-evaluation-site/src/context`.
+
+### Code review instructions
+- Start with `design-doc/03-context-viewer-integration-plan-after-design-system-unification.md`.
+- Compare its target-boundary table against the recently closed design-system unification ticket.
+
+### Technical details
+- First coding target: `packages/rag-evaluation-site/src/context/types.ts`, `fixtures.ts`, and `index.ts`.
+
+## Step 6: Add Package Context DTOs and Fixtures
+
+I started the first coding phase from the post-unification plan by adding JSON-compatible context-viewer contracts and normalized fixture data to the package. This creates a stable contract layer before any SVG diagram, transcript card, annotation rail, or course page component is ported from the prototype.
+
+The fixtures are intentionally derived from the prototype's sample data but normalized for production React: every context part, transcript message, slide, agenda item, and annotation has a stable `id`, and shared metadata is represented with JSON-compatible records so the same contracts can later flow through Widget IR or Goja recipes.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 5)
+
+**Assistant interpretation:** Continue from planning into the first safe package implementation step.
+
+**Inferred user intent:** Begin integrating context-viewer concepts without breaking the design-system boundary that was just cleaned up.
+
+### What I did
+- Added `packages/rag-evaluation-site/src/context/types.ts` with context-window, transcript, annotation, course, slide, and handout DTOs.
+- Added `packages/rag-evaluation-site/src/context/fixtures.ts` with normalized fixtures from `data.jsx` and `data2.jsx`.
+- Added `packages/rag-evaluation-site/src/context/index.ts`.
+- Exported the new context module from `packages/rag-evaluation-site/src/index.ts`.
+- Ran `pnpm --dir packages/rag-evaluation-site typecheck`.
+- Ran `pnpm --dir packages/rag-evaluation-site build`.
+
+### Why
+- DTOs and fixtures are the lowest-risk first increment: they let later Storybook components share a stable vocabulary without prematurely committing to rendering details.
+- Keeping the contracts JSON-compatible preserves the future Widget IR/Goja path.
+
+### What worked
+- Package typecheck passed.
+- Package build passed.
+
+### What didn't work
+- First typecheck failed because `src/index.ts` re-exported both Widget IR JSON types and the new context JSON types under the same names:
+  - `src/index.ts(6,1): error TS2308: Module './widgets' has already exported a member named 'JsonPrimitive'. Consider explicitly re-exporting to resolve the ambiguity.`
+  - `src/index.ts(6,1): error TS2308: Module './widgets' has already exported a member named 'JsonValue'. Consider explicitly re-exporting to resolve the ambiguity.`
+- I fixed this by renaming the context-side types to `ContextJsonPrimitive`, `ContextJsonValue`, and `ContextJsonRecord`.
+
+### What I learned
+- The package top-level export surface already exposes Widget IR JSON types, so new domain contract modules should avoid generic type names.
+- The prototype's kind vocabulary includes existing terms such as `context`, `summary`, `generated`, `evicted`, and `empty`; the production type should preserve those terms rather than forcing an artificial smaller taxonomy.
+
+### What was tricky to build
+- The fixtures needed to stay faithful to the prototype while becoming deterministic enough for stories and future visual tests. Stable IDs were added everywhere even when the prototype used array position or inline annotation objects.
+
+### What warrants a second pair of eyes
+- Review `ContextPartKind` naming before diagram components rely on it.
+- Confirm whether `empty` should remain a first-class context part kind or be derived from `limit - total` in renderers.
+
+### What should be done in the future
+- Build package context-window diagram components and stories on top of these DTOs.
+
+### Code review instructions
+- Start with `packages/rag-evaluation-site/src/context/types.ts`.
+- Then inspect `packages/rag-evaluation-site/src/context/fixtures.ts` for faithful normalization from the prototype.
+- Validate with `pnpm --dir packages/rag-evaluation-site typecheck` and `pnpm --dir packages/rag-evaluation-site build`.
+
+### Technical details
+- Source prototype files: `sources/03-context-viewer-design-iteration/data.jsx` and `data2.jsx`.
+- Public package export: `packages/rag-evaluation-site/src/index.ts` now exports `./context`.

@@ -63,3 +63,24 @@ Added web/README.md with frontend architecture primer, glossary, contribution ch
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/07/RAGEVAL-CONTEXT-WINDOWS-DESIGN--transcript-context-window-annotation-and-course-page-design-integration/reference/01-investigation-diary.md — Recorded README addition
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/web/README.md — New frontend contributor README
 
+
+## 2026-06-07
+
+Added post-unification context-viewer integration plan with package-first implementation phases.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/07/RAGEVAL-CONTEXT-WINDOWS-DESIGN--transcript-context-window-annotation-and-course-page-design-integration/design-doc/03-context-viewer-integration-plan-after-design-system-unification.md — Concrete implementation plan after design-system unification
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/07/RAGEVAL-CONTEXT-WINDOWS-DESIGN--transcript-context-window-annotation-and-course-page-design-integration/reference/01-investigation-diary.md — Diary entry recording the resumed context-viewer planning step
+
+
+## 2026-06-07
+
+Added package context-viewer DTOs and normalized fixtures; package typecheck/build pass.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/context/fixtures.ts — Fixture data derived from context-viewer prototype
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/context/types.ts — Context
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/index.ts — Public package export
+
