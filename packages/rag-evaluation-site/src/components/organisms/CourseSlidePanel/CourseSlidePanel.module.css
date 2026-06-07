@@ -1,0 +1,7 @@
+.root { display: flex; flex-direction: column; gap: 14px; }
+.header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; border-bottom: 2px solid var(--mac-border); padding-bottom: 10px; }
+.body { display: grid; grid-template-columns: 1.2fr .8fr; gap: 18px; align-items: start; }
+.diagram { min-width: 0; }
+.note { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; }
+.note > span { color: var(--mac-accent); font: var(--rag-font-role-label); line-height: 1.6; }
+@media (max-width: 900px) { .body { grid-template-columns: 1fr; } }

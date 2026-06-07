@@ -207,3 +207,14 @@ Added anchored comment DTOs, card molecule, and rail organism from prototype com
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/context/fixtures.ts — Anchored comment fixtures
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/context/types.ts — Anchored comment DTO
 
+
+## 2026-06-07
+
+Added course step navigation, lesson panel, and slide panel components with Storybook coverage.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/CourseStepNav/CourseStepNav.tsx — Course agenda molecule
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/CourseLessonPanel/CourseLessonPanel.tsx — Course landing organism
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/CourseSlidePanel/CourseSlidePanel.tsx — Course slide organism
+

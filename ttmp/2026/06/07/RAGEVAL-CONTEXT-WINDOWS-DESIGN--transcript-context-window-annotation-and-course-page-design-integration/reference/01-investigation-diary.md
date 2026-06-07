@@ -1117,3 +1117,63 @@ This preserves the prototype's review/comment idea without copying the full canv
 
 ### Technical details
 - Prototype source: `sources/03-context-viewer-design-iteration/screens3.jsx` (`SEED_COMMENTS`, rail/sticky/popover variants).
+
+## Step 18: Add Course Step, Lesson, and Slide Components
+
+I implemented the course/slide package components from the context-viewer prototype's course landing and slide deck surfaces. The new `CourseStepNav` molecule renders the agenda, while `CourseLessonPanel` and `CourseSlidePanel` compose course metadata, outcomes, agenda, notes, and context diagrams into reusable package organisms.
+
+This completes the package-side course component task and gives the future web page composition a ready-made course landing and slide presentation vocabulary.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead."
+
+**Assistant interpretation:** Continue with the next planned task: course and slide components.
+
+**Inferred user intent:** Finish the package component coverage for the major context-viewer prototype surfaces before web page composition.
+
+### What I did
+- Added `packages/rag-evaluation-site/src/components/molecules/CourseStepNav/*`.
+- Added `packages/rag-evaluation-site/src/components/organisms/CourseLessonPanel/*`.
+- Added `packages/rag-evaluation-site/src/components/organisms/CourseSlidePanel/*`.
+- Exported the new molecule and organisms from package barrels.
+- Added Storybook stories for agenda, workshop landing, anatomy slide, and slide deck samples.
+- Ran package typecheck, package build, and package Storybook build.
+- Opened the `CourseLessonPanel / Workshop Landing` story and captured `course-lesson-panel.png`.
+
+### Why
+- The prototype includes a course landing page and slide deck; these are product surfaces, not just examples.
+- Course components reuse the context-window diagram vocabulary and complete the package coverage before web page composition.
+
+### What worked
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed after adapting to existing component APIs.
+- `pnpm --dir packages/rag-evaluation-site build` passed.
+- `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-course` passed.
+- Browser sanity check showed a rendered readable course lesson panel.
+
+### What didn't work
+- First typecheck failed because I used guessed APIs that differ from existing package components:
+  - `DashboardGrid` uses `recipe="twoColumn"`, not `columns`.
+  - `Text` sizes are `body`, `compact`, `metadata`, `label`, and `metric`; there is no `lg`/`xl`.
+  - `MetadataGridItem` uses `key`, not `label`.
+- I fixed the components to use the existing package APIs.
+
+### What I learned
+- New package components should stay close to existing package component APIs rather than introducing new prop names for familiar layout/metadata concepts.
+
+### What was tricky to build
+- Course slides compose diagram molecules inside a teaching layout. I kept the slide organism presentational and avoided adding keyboard/local-storage behavior from the prototype; that can remain page-level behavior if needed later.
+
+### What warrants a second pair of eyes
+- Review whether the course typography needs the prototype's larger readable text mode before real course content is added.
+- Review whether slide deck navigation should be part of `CourseSlidePanel` or a higher-level page component.
+
+### What should be done in the future
+- Compose web pages from the package components using fixtures.
+
+### Code review instructions
+- Review `CourseStepNav.tsx`, `CourseLessonPanel.tsx`, and `CourseSlidePanel.tsx`.
+- Open Storybook stories under `Component Library / Molecules / CourseStepNav` and `Component Library / Organisms / Course*`.
+
+### Technical details
+- Storybook build output used for validation: `/tmp/rag-package-storybook-course`.

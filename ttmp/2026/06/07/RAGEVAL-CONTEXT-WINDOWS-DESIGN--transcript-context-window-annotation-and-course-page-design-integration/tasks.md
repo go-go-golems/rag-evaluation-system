@@ -23,7 +23,7 @@
 - [x] Add AnnotationBadge/AnnotationNoteCard molecules and stories
 - [x] Add TranscriptReaderPanel and AnnotationRailPanel organisms with controlled selection stories
 - [x] Add AnchoredCommentCard/Rail components and stories from prototype comment states
-- [ ] Add CourseStepNav/CourseLessonPanel/CourseSlidePanel components and stories
+- [x] Add CourseStepNav/CourseLessonPanel/CourseSlidePanel components and stories
 - [ ] Compose web ContextVisualizerPage from package components using fixtures
 - [ ] Compose web TranscriptAnnotationPage from package components using fixtures
 - [ ] Compose web ContextCoursePage from package components using fixtures
