@@ -139,3 +139,15 @@ Added ContextBudgetBar and ContextStripDiagram molecules with Storybook states a
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextStripDiagram/ContextStripDiagram.tsx — Context strip molecule
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/index.ts — Exports new context molecules
 
+
+## 2026-06-07
+
+Added ContextStackDiagram, ContextTreemap, and ContextDiagramPanel to complete the context diagram molecule/organism slice.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/index.ts — Exports organism layer
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextStackDiagram/ContextStackDiagram.tsx — Stack diagram molecule
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextTreemap/ContextTreemap.tsx — Treemap molecule
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/ContextDiagramPanel/ContextDiagramPanel.tsx — View-switching diagram organism
+

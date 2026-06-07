@@ -14,9 +14,9 @@
 - [x] Add ContextLegend molecule with pattern/tone/outline stories
 - [x] Add ContextBudgetBar molecule with under/near/over-budget stories
 - [x] Add ContextStripDiagram molecule with dense and selected segment stories
-- [ ] Add ContextStackDiagram molecule with grouped context-window stories
-- [ ] Add ContextTreemap molecule with proportional token stories
-- [ ] Compose ContextDiagramPanel organism for switching diagram views
+- [x] Add ContextStackDiagram molecule with grouped context-window stories
+- [x] Add ContextTreemap molecule with proportional token stories
+- [x] Compose ContextDiagramPanel organism for switching diagram views
 - [ ] Run package Storybook build and capture visual sweep for context diagram components
 - [ ] Ask for human Storybook feedback on context diagram visuals before transcript work
 - [ ] Add TranscriptMessageCard atom/molecule split and stories

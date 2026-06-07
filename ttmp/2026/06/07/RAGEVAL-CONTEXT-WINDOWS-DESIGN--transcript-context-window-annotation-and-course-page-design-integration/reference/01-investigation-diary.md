@@ -788,3 +788,63 @@ I validated both in Storybook and captured browser screenshots for sanity checks
 
 ### Technical details
 - Storybook build output used for validation: `/tmp/rag-package-storybook-context-budget-strip`.
+
+## Step 12: Complete Context Diagram Molecules and Panel Organism
+
+I finished the remaining context-window diagram views and composed them into the first package organism. `ContextStackDiagram` renders a layered call view, `ContextTreemap` renders proportional token tiles, and `ContextDiagramPanel` wraps strip/stack/budget/treemap views behind compact view-switching buttons.
+
+This completes the first full atom → molecule → organism slice for context windows: `ContextKindSwatch` feeds `ContextLegend` and diagram molecules, and those molecules now compose into `ContextDiagramPanel`. I also ran Storybook and browser sanity checks; the new panels render rather than blanking or loading indefinitely.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead."
+
+**Assistant interpretation:** Finish and commit the current context diagram WIP after clarifying the atom/molecule/organism split.
+
+**Inferred user intent:** Keep progressing through the ticket tasks while preserving task bookkeeping and commit hygiene.
+
+### What I did
+- Added `packages/rag-evaluation-site/src/components/molecules/ContextStackDiagram/*`.
+- Added `packages/rag-evaluation-site/src/components/molecules/ContextTreemap/*`.
+- Added `packages/rag-evaluation-site/src/components/organisms/ContextDiagramPanel/*`.
+- Added/updated component barrels for molecules, organisms, and package components.
+- Ran `pnpm --dir packages/rag-evaluation-site typecheck`.
+- Ran `pnpm --dir packages/rag-evaluation-site build`.
+- Ran `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-context-panel`.
+- Opened the `ContextDiagramPanel` Storybook story and captured `context-diagram-panel-starting-views.png`.
+
+### Why
+- Stack and treemap complete the prototype's four context-window diagram views.
+- The panel organism validates that the views compose under one controlled feature panel before moving on to transcript/annotation work.
+
+### What worked
+- Package typecheck passed.
+- Package build passed.
+- Package Storybook build passed.
+- Browser visual sanity check showed rendered panels, buttons, legends, stack diagrams, treemaps, and budget view content.
+
+### What didn't work
+- No blocking failures.
+- Minor visual note from screenshot review: the compact view buttons could use a stronger selected state, although the selected button does use the package `Button selected` styling.
+
+### What I learned
+- The first context diagram slice is now layered correctly: atom (`ContextKindSwatch`) → molecules (`ContextLegend`, `ContextBudgetBar`, `ContextStripDiagram`, `ContextStackDiagram`, `ContextTreemap`) → organism (`ContextDiagramPanel`).
+
+### What was tricky to build
+- The treemap is currently a flex-based proportional approximation rather than the prototype's full squarify algorithm. It is adequate for a first storyable molecule, but exact squarified packing can be revisited if visual review asks for it.
+
+### What warrants a second pair of eyes
+- Review whether treemap proportionality is visually good enough or should use the prototype squarify algorithm.
+- Review whether the view selector needs a more obvious selected state.
+
+### What should be done in the future
+- Run a package Storybook visual sweep for the new context diagram stories.
+- Ask for human feedback on the complete context diagram slice before transcript/annotation implementation.
+
+### Code review instructions
+- Review `ContextStackDiagram.tsx`, `ContextTreemap.tsx`, and `ContextDiagramPanel.tsx`.
+- Open Storybook story `Component Library / Organisms / ContextDiagramPanel / Starting Views`.
+- Validate with package typecheck, build, and Storybook build.
+
+### Technical details
+- Storybook build output used for validation: `/tmp/rag-package-storybook-context-panel`.
