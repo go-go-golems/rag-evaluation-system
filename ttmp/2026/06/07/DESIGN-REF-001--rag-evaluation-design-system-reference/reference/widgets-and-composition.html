@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design System — Widgets &amp; Composition</title>
+<style>
+  :root { --bg: #FFF; --ink: #000; --surface2: #eee; --accent: #0000CC; --green: #007722; --amber: #AA7700; --red: #C00; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font: 400 13px/1.5 Geneva, 'Helvetica Neue', Arial, sans-serif; max-width: 960px; margin: 0 auto; padding: 1.5rem; color: #000; }
+  h1 { border-bottom: 3px solid #000; padding-bottom: 8px; }
+  h2 { border-bottom: 1px solid #000; margin-top: 2em; padding-bottom: 4px; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid #000; padding: 4px 8px; text-align: left; vertical-align: top; }
+  th { background: #000; color: #fff; }
+  pre { background: #f4f4f4; padding: 12px; overflow-x: auto; }
+  code { font: 12px/1.4 Monaco, 'Courier New', monospace; background: #f4f4f4; padding: 1px 4px; }
+  .widget-card { border: 1px solid #000; padding: 12px; margin: 8px 0; }
+  .widget-card { border: 1px solid #ccc; padding: 12px; margin: 0.5em 0; }
+  .badge { display: inline-block; background: #000; color: #fff; font-size: 11px; padding: 1px 6px; border-radius: 0; font-family: Monaco, monospace; font-size: 11px; }
+  .note { background: #FFFFE0; border-left: 3px solid #AA7700; padding: 8px 12px; margin: 1em 0; }
+</style>
+</head>
+<body>
+<h1>Widgets &amp; Composition</h1>
+<p>A visual and structural reference for every widget in the system, how widgets compose, and their interaction model.</p>
+
+<h2>1. Widget Types at a Glance</h2>
+<table>
+<thead><tr><th>Widget</th><th>Role</th><th>Key Props</th><th>Common Combinations</th></tr></thead>
+<tbody>
+<tr><td><code>AppShell</code></td><td>Root layout</td><td>header, sidebar</td><td>Wraps every page</td></tr>
+<tr><td><code>AppNav</code></td><td>Top navigation</td><td>brand, items, activeId</td><td>Inside AppShell header</td></tr>
+<tr><td><code>Panel</code></td><td>Card container</td><td>title, actions, density</td><td>Panel → Stack → DataTable</td></tr>
+<tr><td><code>Stack</code></td><td>Vertical layout</td><td>gap, align</td><td>Default container for flow</td></tr>
+<tr><td><code>Inline</code></td><td>Horizontal flex</td><td>gap, justify, wrap</td><td>Toolbar rows, button groups</td></tr>
+<tr><td><code>DashboardGrid</code></td><td>Responsive grid</td><td>cols, recipe</td><td>KPI dashboards</td></tr>
+<tr><td><code>DataTable</code></td><td>Tabular data</td><td>columns, rows, getRowKey, onRowSelect</td><td>Master side of master-detail</td></tr>
+<tr><td><code>StatusText</code></td><td>Status indicator</td><td>status (ok/warn/err)</td><td>KPI tiles, inline badges</td></tr>
+<tr><td><code>MetadataGrid</code></td><td>Key-value pairs</td><td>items (key/value pairs)</td><td>Detail panels</td></tr>
+<tr><td><code>Caption</code></td><td>Styled inline text</td><td>tone, transform</td><td>Labels, overlines, tags</td></tr>
+<tr><td><code>Button</code></td><td>Clickable action</td><td>variant, size, action</td><td>Toolbar, form actions</td></tr>
+<tr><td><code>FormRow</code></td><td>Label + control</td><td>label, control</td><td>Settings panels</td></tr>
+<tr><td><code>TextInput</code></td><td>Text input</td><td>value, placeholder</td><td>FormRow control</td></tr>
+<tr><td><code>SelectInput</code></td><td>Dropdown</td><td>options, value</td><td>FormRow control</td></tr>
+<tr><td><code>TabList</code></td><td>Tab navigation</td><td>items, activeId</td><td>Page sub-navigation</td></tr>
+<tr><td><code>ScrollRegion</code></td><td>Scrollable box</td><td>axis</td><td>Long tables, logs</td></tr>
+</tbody></table>
+
+<h2>2. Composition Patterns</h2>
+<p>Widgets are composed in a strict hierarchy. The tree must start with either <code>AppShell</code> or <code>Stack</code> as the root.</p>
+
+<h3>Pattern A: Dashboard</h3>
+<pre><code>AppShell
+ └── DashboardGrid (cols=2)
+      ├── Panel (title="Metrics")
+      │    └── Stack
+      │         ├── StatusText (ok)
+      │         └── Caption
+      └── Panel (title="Query Results")
+           └── DataTable</code></pre>
+
+<h3>Pattern B: Master-Detail</h3>
+<pre><code>Stack
+ ├── DataTable (master)
+ └── Panel (detail, conditionally shown)
+      └── MetadataGrid</code></pre>
+
+<h3>Pattern C: Settings Form</h3>
+<pre><code>Panel (title="Settings")
+  Stack
+    ├── FormRow(label="Name", control=TextInput)
+    ├── FormRow(label="Mode", control=SelectInput)
+    └── FormRow(label="Advanced", control=CheckboxRow)</code></pre>
+
+<h2>3. Component Details</h2>
+
+<h3>3.1 Panel</h3>
+<table>
+<thead><tr><th>Prop</th><th>Type</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>title</td><td>ReactNode</td><td>Header text. Omit for a border-only container</td></tr>
+<tr><td>actions</td><td>ReactNode</td><td>Button or toolbar on the header right</td></tr>
+<tr><td>density</td><td>'normal' | 'condensed'</td><td>Controls internal padding</td></tr>
+<tr><td>fill</td><td>boolean</td><td>Stretch to fill parent height</td></tr>
+</tbody></table>
+
+<h3>3.2 Stack</h3>
+<p>Vertical flexbox with optional gap. <code>gap</code> values: <code>xs</code>(2px), <code>sm</code>(4px), <code>md</code>(8px), <code>lg</code>(16px), <code>xl</code>(24px). <code>align</code> controls stretch, start, center, end.</p>
+
+<h3>3.3 Inline</h3>
+<p>Horizontal flexbox. Same gap tokens. <code>justify</code> supports <code>start</code>, <code>between</code>, <code>end</code>. Set <code>wrap</code> for wrapping.</p>
+
+<h3>3.4 DataTable</h3>
+<table>
+<thead><tr><th>Prop</th><th>Type</th></tr></thead>
+<tbody>
+<tr><td>columns</td><td><code>{ id, header, cell: (row) => ReactNode, align?, maxWidth? }[]</td></tr>
+<tr><td>rows</td><td>Array of data objects</td></tr>
+<tr><td>getRowKey</td><td>(row) => string</td></tr>
+<tr><td>onRowSelect</td><td>(row) => void</td></tr>
+</tbody>
+</table>
+
+<h3>3.5 StatusText</h3>
+<p>Shows a status indicator dot + label. Status values: <code>ok</code>, <code>error</code>, <code>running</code>, <code>warning</code>, <code>pending</code>, <code>canceled</code>. Optionally show icon (Unicode character) before the text.</p>
+
+<h3>3.6 MetadataGrid</h3>
+<p>Renders a &lt;dl&gt; of key-value pairs. Set <code>density="compact"</code> for tighter rows. Each item has optional <code>copyValue</code> that enables a copy-to-clipboard button.</p>
+
+<h3>3.7 Caption</h3>
+<p>Tones: <code>muted</code>, <code>accent</code>, <code>success</code>, <code>warning</code>, <code>danger</code>, <code>inherit</code>. Transforms: <code>none</code>, <code>uppercase</code>. With <code>truncate</code> for ellipsis on overflow.</p>
+
+<h3>3.8 Actions &amp; Interactions</h3>
+<p>Every widget can carry an <code>action</code> object that describes what happens on click.</p>
+<table>
+<thead><tr><th>Kind</th><th>Behaviour</th><th>Trigger</th></tr></thead>
+<tbody>
+<tr><td><code>navigate</code></td><td>SPA navigation</td><td>URL change, no full reload</td></tr>
+<tr><td><code>server</code></td><td>POST /api/widget/actions/<code>name</code></td><td>Reloads page content from server</td></tr>
+<tr><td><code>event</code></td><td>Dispatches a CustomEvent</td><td>Component communication</td></tr>
+<tr><td><code>copy</code></td><td>Writes to clipboard</td><td>Button or detail view</td></tr>
+</tbody></table>
+
+<h2>4. Composition Examples</h2>
+
+<h3>Dashboard KPI Row</h3>
+<pre><code>DashboardGrid (cols=3)
+└── repeated for each KPI:
+    Panel(title="Queue Depth", density=condensed)
+      StatusText(status=ok, "142 items")
+</code></pre>
+
+<h3>Master-Detail Table</h3>
+<pre><code>Stack
+ ├── DataTable (columns, rows, onRowSelect)
+ └── (conditionally) Panel
+      └── MetadataGrid (items from selected row)
+</code></pre>
+
+<h2>5. Semantic Recipes</h2>
+<p>Pre-composed patterns exposed via the <code>rag.recipes</code> JavaScript object. These are convenience constructors that return Widget IR:</p>
+<table>
+<thead><tr><th>Recipe</th><th>Signature</th><th>Output</th></tr></thead>
+<tbody>
+<tr><td>metrics</td><td>rag.recipes.metrics({ items })</td><td>DashboardGrid of StatusText/KPI tiles</td></tr>
+<tr><td>actionToolbar</td><td>rag.recipes.actionToolbar({ title, actions[] })</td><td>Panel with row of Button widgets</td></tr>
+<tr><td>masterDetail</td><td>rag.recipes.masterDetailTable({ rows, columns, detail })</td><td>Stack with DataTable + detail Panel</td></tr>
+</tbody></table>
+
+<h2>6. Action Flow Diagram</h2>
+<pre>
+  User clicks
+    ↓
+  Action object (navigate | server | event | copy)
+    ↓
+  WidgetRenderer dispatches:
+    server → POST /api/widget/actions/{name}
+    navigate → router.push(href)
+    event → dispatchEvent(new CustomEvent(…))
+    copy → navigator.clipboard
+</pre>
+
+<h2>7. File Reference</h2>
+<table>
+<thead><tr><th>Artifact</th><th>Location</th></tr></thead>
+<tbody>
+<tr><td>Widget IR types</td><td>web/src/widgets/ir.ts</td></tr>
+<tr><td>Widget Renderer</td><td>web/src/widgets/WidgetRenderer.tsx</td></tr>
+<tr><td>Goja DSL</td><td>pkg/widgetdsl/</td></tr>
+<tr><td>HTTP API</td><td>pkg/widgetserver/</td></tr>
+<tr><td>React components</td><td>web/src/components/</td></tr>
+</tbody></table>
+
+<hr>
+<p style="color:#666;font-size:0.85em">RAG Evaluation Design System — Widgets &amp; Composition — 2026-06-07</p>
+</body>
+</html>

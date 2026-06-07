@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Evaluation Design System Reference</title>
+<style>
+:root {
+  --bg: #FFFFFF;
+  --surface: #FFFFFF;
+  --text: #000;
+  --muted: #666;
+  --accent: #0000CC;
+  --green: #007722;
+  --amber: #AA7700;
+  --red: #CC0000;
+  --border: #000;
+  --surface-2: #EEE;
+  --font-body: 'Geneva', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Monaco', 'Courier New', monospace;
+  --font-mono-size: 13px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-body); font-size: 14px; line-height: 1.6; color: var(--text); max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+h1 { font-size: 2rem; margin-bottom: 0.25em; border-bottom: 2px solid #000; padding-bottom: 0.3em; }
+h2 { border-bottom: 1px solid #000; padding-bottom: 4px; margin-top: 2.5em; }
+h3 { margin-top: 1.5em; }
+h3 code { font-family: var(--font-mono, monospace); font-size: 1em; }
+code, pre { font-family: var(--font-mono); font-size: 13px; }
+pre { background: #f4f4f4; padding: 12px; overflow-x: auto; border: 1px solid #ddd; }
+.token { display: inline-block; background: #f0f0f0; padding: 1px 5px; font-family: monospace; font-size: 0.9em; border-radius: 3px; }
+.swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid #ccc; vertical-align: middle; margin-right: 6px; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; font-size: 0.9em; }
+th { background: #000; color: #fff; }
+td { vertical-align: top; }
+.section-num { color: #999; font-size: 0.85em; }
+</style>
+</head>
+<body>
+
+<h1>RAG Evaluation Design System Reference</h1>
+<p><em>For new team members, external designers, and contributors.</em></p>
+
+<h2>Part I — Styling &amp; Look-and-Feel</h2>
+
+<h3>1. Design Tokens</h3>
+<p>Every visual value in this system is defined by a CSS custom property.  Hard-coding a colour or spacing value anywhere else is not permitted.</p>
+
+<table>
+<thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+<tbody>
+<tr><td><code>--mac-bg</code></td><td><code>#FFFFFF</code></td><td>Page / card backgrounds</td></tr>
+<tr><td><code>--mac-text</code></td><td><code>#000000</code></td><td>Primary text</td></tr>
+<tr><td><code>--mac-text-dim</code></td><td><code>#666</code></td><td>Secondary / muted text</td></tr>
+<tr><td><code>--mac-surface-2</code></td><td><code>#EEE</code></td><td>Alternate rows, zebra stripes</td></tr>
+<tr><td><code>--mac-accent</code></td><td><code>#0000CC</code></td><td>Primary action / link colour</td></tr>
+<tr><td><code>--mac-accent-2</code></td><td><code>#CC0000</code></td><td>Destructive actions</td></tr>
+<tr><td><code>--mac-green</code></td><td><code>#007722</code></td><td>Success / OK status</td></tr>
+<tr><td><code>--mac-amber</code></td><td><code>#AA7700</code></td><td>Warnings / pending</td></tr>
+</tbody></table>
+
+<h3>2. Typography</h3>
+<table>
+<thead><tr><th>Role Token</th><th>Computed Value</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td><code>--rag-font-role-body</code></td><td>400 12px/1.45 Geneva</td><td>Paragraph text</td></tr>
+<tr><td><code>--rag-font-role-compact</code></td><td>400 11px/1.4 Geneva</td><td>Secondary, dense text</td></tr>
+<tr><td><code>--rag-font-role-metadata</code></td><td>400 11px/1.35 Monaco</td><td>Key-value metadata</td></tr>
+<tr><td><code>--rag-font-role-label</code></td><td>700 11px/1.2 Monaco</td><td>Headings, labels</td></tr>
+<tr><td><code>--rag-font-role-metric</code></td><td>700 12px/1.25 Monaco</td><td>KPI numbers</td></tr>
+<tr><td><code>--rag-font-role-code</code></td><td>400 11px/1.45 Monaco</td><td>Code, stack traces</td></tr>
+</tbody></table>
+
+<h3>3. Spacing Scale</h3>
+<table>
+<thead><tr><th>Token</th><th>Value</th><th>When to use</th></tr></thead>
+<tbody>
+<tr><td>xxs</td><td>2 px</td><td>Micro-alignments</td></tr>
+<tr><td>xs</td><td>4 px</td><td>Inline element gaps</td></tr>
+<tr><td>sm</td><td>8 px</td><td>Component internal padding</td></tr>
+<tr><td>md</td><td>16 px</td><td>Section spacing</td></tr>
+<tr><td>lg</td><td>24 px</td><td>Page-level margins</td></tr>
+</tbody></table>
+
+<hr/>
+<h2>Part II — Widget System, Hierarchy &amp; Interaction</h2>
+
+<h3>4. Widget IR: The Core Data Structure</h3>
+<p>Every UI page is a JSON tree of widget nodes. There are three kinds of nodes:</p>
+<table>
+<thead><tr><th>Kind</th><th>Fields</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td>text</td><td>kind, text</td><td>Leaf text</td></tr>
+<tr><td>element</td><td>tag, attrs, children</td><td>HTML passthrough</td></tr>
+<tr><td>component</td><td>type, props, children</td><td>Mapped to a React component by WidgetRenderer</td></tr>
+</tbody></table>
+
+<h3>5. Component Catalogue</h3>
+
+<table>
+<thead><tr><th>Type</th><th>Key Props</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>AppShell</code></td><td>header, sidebar</td><td>Root page wrapper (nav + content)</td></tr>
+<tr><td><code>AppNav</code></td><td>brand, items, activeId</td><td>Top navigation bar</td></tr>
+<tr><td><code>Panel</code></td><td>title, actions, density</td><td>Card / card container</td></tr>
+<tr><td><code>Stack</code></td><td>gap, align</td><td>Vertical flex container</td></tr>
+<tr><td><code>Inline</code></td><td>gap, justify, wrap</td><td>Horizontal flex container</td></tr>
+<tr><td><code>DashboardGrid</code></td><td>cols, recipe</td><td>CSS Grid auto-placement</td></tr>
+<tr><td><code>DataTable</code></td><td>columns, rows, getRowKey</td><td>Full-featured data table</td></tr>
+<tr><td><code>StatusText</code></td><td>status (ok, error, warning, running)</td><td>Status indicator</td></tr>
+<tr><td><code>MetadataGrid</code></td><td>items (key-value pairs)</td><td>Key-value property display</td></tr>
+<tr><td><code>Button</code></td><td>variant, size, action</td><td>Click handler, actions</td></tr>
+<tr><td><code>FormRow</code></td><td>label, control</td><td>Label + control row</td></tr>
+<tr><td><code>TabList</code></td><td>items, activeId</td><td>Tab navigation</td></tr>
+<tr><td><code>SelectInput</code></td><td>value, options</td><td>Dropdown select</td></tr>
+<tr><td><code>TextInput</code></td><td>value, placeholder</td><td>Text field</td></tr>
+<tr><td><code>Caption</code></td><td>tone, transform</td><td>Styled text blocks</td></tr>
+<tr><td><code>ScrollRegion</code></td><td>axis</td><td>Overflow scroll container</td></tr>
+</tbody></table>
+
+<h3>6. Interaction: Actions</h3>
+<p>Widget nodes can carry an <code>action</code> property describing what happens on interaction.</p>
+<table>
+<thead><tr><th>Kind</th><th>Behaviour</th></tr></thead>
+<tbody>
+<tr><td><code>navigate</code></td><td>SPA push to a new page</td></tr>
+<tr><td><code>server</code></td><td>POST to server, receive new Widget IR</td></tr>
+<tr><td><code>event</code></td><td>Dispatch a custom DOM event</td></tr>
+<tr><td><code>copy</code></td><td>Copy text to clipboard</td></tr>
+</tbody>
+</table>
+
+<h3>7. Semantic Recipes</h3>
+<p>Pre-composed patterns for common dashboard needs:</p>
+<ul>
+<li><strong>metrics()</strong> – grid of KPI tiles</li>
+<li><strong>actionToolbar()</strong> – header bar with buttons</li>
+<li><strong>masterDetailTable()</strong> – master-detail table layout</li>
+</ul>
+
+<h3>8. File Map</h3>
+<table>
+<thead><tr><th>Artifact</th><th>Path</th></tr></thead>
+<tbody>
+<tr><td>Widget IR types</td><td><code>web/src/widgets/ir.ts</code></td></tr>
+<tr><td>Widget Renderer</td><td><code>web/src/widgets/WidgetRenderer.tsx</code></td></tr>
+<tr><td>Design Tokens</td><td><code>web/src/styles/tokens.css</code></td></tr>
+<tr><td>Goja DSL module</td><td><code>pkg/widgetdsl/</code></td></tr>
+<tr><td>Widget Runner</td><td><code>pkg/widgetrunner/</code></td></tr>
+<tr><td>HTTP Server</td><td><code>pkg/widgetserver/</code></td></tr>
+<tr><td>React Components</td><td><code>web/src/components/</code></td></tr>
+<tr><td>Widget IR spec</td><td><code>pkg/widgetschema/</code></td></tr>
+</tbody></table>
+
+<hr>
+<p style="color: #999; font-size: 0.85em">Generated 2026-06-07 · DESIGN-REF-001</p>
+</body>
+</html>

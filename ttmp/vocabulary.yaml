@@ -95,6 +95,10 @@ topics:
       description: Research notes, source evaluation, and investigation artifacts
     - slug: ui-dsl
       description: UI DSL and Widget IR systems for declarative user interfaces
+    - slug: frontend-architecture
+      description: Frontend architecture and component design system organization
+    - slug: storybook
+      description: Storybook component documentation and visual testing
 docTypes:
     - slug: design-doc
       description: Structured rationale and architecture notes

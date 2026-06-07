@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Evaluation Design System Reference</title>
+<style>
+:root { --bg: #fff; --text: #000; --surface: #fff; --surface-2: #eee; --border: #000; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Geneva, 'Helvetica Neue', Arial, sans-serif; max-width: 960px; margin: 0 auto; padding: 2rem 1rem; line-height: 1.55; font-size: 14px; color: #000; }
+h1 { border-bottom: 3px solid #000; padding-bottom: 0.25em; }
+h2 { border-bottom: 1px solid #000; padding-bottom: 4px; margin-top: 2em; }
+h3 { margin-top: 1.5em; }
+h3 code { font-family: Monaco, 'Courier New', monospace; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th, td { border: 1px solid #000; padding: 4px 8px; text-align: left; vertical-align: top; }
+th { background: #000; color: #fff; }
+code, pre { font-family: 'Monaco', 'Courier New', monospace; font-size: 0.9em; }
+pre { background: #f5f5f5; padding: 12px; border: 1px solid #ddd; overflow-x: auto; }
+.swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid #ccc; vertical-align: middle; margin-right: 4px; }
+.toc a { text-decoration: none; color: #0000CC; }
+.toc ul { list-style: none; padding-left: 1.5em; }
+</style>
+</head>
+<body>
+<h1>RAG Evaluation Design System Reference</h1>
+<p>Version 1.0 — 2026-06-07</p>
+
+<nav class="toc">
+<strong>Contents</strong>
+<ol>
+<li><a href="#tokens">Design Tokens &amp; Colour</a></li>
+<li><a href="#typo">Typography &amp; Spacing</a></li>
+<li><a href="#hierarchy">Component Hierarchy</a></li>
+<li><a href="#widgets">Widget IR &amp; Component Catalogue</a></li>
+<li><a href="#actions">Actions &amp; Interaction</a></li>
+<li><a href="#recipes">Semantic Recipes</a></li>
+<li><a href="#files">File &amp; Directory Map</a></li>
+</ol>
+</nav>
+
+<h2 id="tokens">1. Design Tokens</h2>
+<table>
+<thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+<tbody>
+<tr><td><code>--mac-bg</code></td><td><code>#FFFFFF</code></td><td>Page background</td></tr>
+<tr><td><code>--mac-text</code></td><td><code>#000000</code></td><td>Primary text</td></tr>
+<tr><td><code>--mac-text-dim</code></td><td><code>#666</code></td><td>Secondary text</td></tr>
+<tr><td><code>--mac-surface</code></td><td><code>#FFF</code></td><td>Panel background</td></tr>
+<tr><td><code>--mac-surface-2</code></td><td><code>#EEE</code></td><td>Alternate row / zebra</td></tr>
+<tr><td><code>--mac-accent</code></td><td><code>#0000CC</code></td><td>Primary action</td></tr>
+<tr><td><code>--mac-accent-2</code></td><td><code>#CC0000</code></td><td>Destructive / error</td></tr>
+<tr><td><code>--mac-green</code></td><td><code>#007722</code></td><td>Success / OK</td></tr>
+<tr><td><code>--mac-amber</code></td><td><code>#AA7700</code></td><td>Warning / pending</td></tr>
+</tbody></table>
+
+<h2 id="typo">2. Typography &amp; Spacing</h2>
+<table>
+<thead><tr><th>Role</th><th>CSS Token</th><th>Computed</th></tr></thead>
+<tbody>
+<tr><td>Body</td><td><code>--rag-font-role-body</code></td><td>400 12px/1.45 Geneva</td></tr>
+<tr><td>Compact</td><td><code>--rag-font-role-compact</code></td><td>400 11px/1.4 Geneva</td></tr>
+<tr><td>Metadata</td><td><code>--rag-font-role-metadata</code></td><td>400 11px/1.35 Monaco</td></tr>
+<tr><td>Label</td><td><code>--rag-font-role-label</code></td><td>700 11px/1.2 Monaco</td></tr>
+<tr><td>Metric</td><td><code>--rag-font-role-metric</code></td><td>700 12px/1.25 Monaco</td></tr>
+<tr><td>Code</td><td><code>--rag-font-role-code</code></td><td>400 11px/1.45 Monaco</td></tr>
+</tbody></table>
+
+<p>Spacing follows a 4px grid: 2, 4, 8, 16, 24 px.</p>
+
+<h2 id="hierarchy">3. Component Hierarchy</h2>
+<pre>
+AppShell
+ ├── AppNav
+ ├── DashboardGrid
+ │   ├── Panel
+ │   │   ├── Stack
+ │   │   └── DataTable / MetadataGrid / StatusText
+ └── Panel (detail view)
+</pre>
+
+<p>Each box in the tree is a <em>Widget IR node</em> of <code>kind: "component"</code>.
+The WidgetRenderer maps each <code>type</code> string to a React component.</p>
+
+<h2 id="widgets">4. Widget IR &amp; Component Catalogue</h2>
+<table>
+<thead><tr><th>Type</th><th>Key Props</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td>AppShell</td><td>header, sidebar</td><td>Root shell with nav &amp; content area</td></tr>
+<tr><td>AppNav</td><td>brand, items, activeId</td><td>Top-level navigation bar</td></tr>
+<tr><td>Panel</td><td>title, actions, density</td><td>Card with border and optional header</td></tr>
+<tr><td>Stack</td><td>gap, align</td><td>Vertical flex container</td></tr>
+<tr><td>Inline</td><td>gap, justify, wrap</td><td>Horizontal flex</td></tr>
+<tr><td>DashboardGrid</td><td>cols, recipe</td><td>Responsive CSS-grid layout</td></tr>
+<tr><td>DataTable</td><td>columns, rows, getRowKey, onRowSelect</td><td>Sortable, selectable data table</td></tr>
+<tr><td>StatusText</td><td>status (ok/error/warning/running)</td><td>Status badge with optional icon</td></tr>
+<tr><td>MetadataGrid</td><td>items (key-value pairs)</td><td>Key-value property list</td></tr>
+<tr><td>Button</td><td>variant, size, action</td><td>Interactive button</td></tr>
+<tr><td>Caption</td><td>tone, transform, truncate</td><td>Styled inline text (overlines, tags)</td></tr>
+<tr><td>FormRow</td><td>label, control</td><td>Label + input pair</td></tr>
+<tr><td>ScrollRegion</td><td>axis</td><td>Overflow scroll wrapper</td></tr>
+<tr><td>TabList</td><td>items, activeId</td><td>Tab bar</td></tr>
+<tr><td>TextInput</td><td>value, placeholder</td><td>Single-line text input</td></tr>
+<tr><td>SelectInput</td><td>options, value</td><td>Dropdown</td></tr>
+</tbody></table>
+
+<h2 id="actions">5. Actions &amp; Interaction Model</h2>
+<p>Every interactive widget can declare an <code>action</code> property:</p>
+<table>
+<thead><tr><th>Kind</th><th>Behaviour</th></tr></thead>
+<tbody>
+<tr><td><code>navigate</code></td><td>Client-side SPA navigation</td></tr>
+<tr><td><code>server</code></td><td>POST to a named server endpoint; receive fresh Widget IR</td></tr>
+<tr><td><code>event</code></td><td>Dispatches a DOM CustomEvent</td></tr>
+<tr><td><code>copy</code></td><td>Copy a value to clipboard</td></tr>
+</tbody></table>
+
+<p>Example server action:</p>
+<pre><code>{
+  "kind": "server",
+  "name": "reindex",
+  "payload": { "scope": "full" }
+}</code></pre>
+<p>The React app POSTs to <code>/api/widget/actions/reindex</code>, the server
+executes the Goja script's <code>actions.reindex</code> handler and returns the
+updated page as Widget IR.</p>
+
+<h2 id="recipes">6. Semantic Recipes</h2>
+<p>Higher-level helpers that produce Widget IR for common patterns:</p>
+<ul>
+<li><code>rag.recipes.metrics({items})</code> — KPI tiles in a DashboardGrid</li>
+<li><code>rag.recipes.actionToolbar({title, actions})</code> — header bar with buttons</li>
+<li><code>rag.recipes.masterDetailTable({rows, columns, detail})</code> — master-detail pattern</li>
+</ul>
+
+<h2 id="files">7. File Map</h2>
+<table>
+<thead><tr><th>Artifact</th><th>Path</th></tr></thead>
+<tbody>
+<tr><td>Widget IR types</td><td><code>web/src/widgets/ir.ts</code></td></tr>
+<tr><td>Widget Renderer</td><td><code>web/src/widgets/WidgetRenderer.tsx</code></td></tr>
+<tr><td>Design tokens</td><td><code>web/src/styles/tokens.css</code></td></tr>
+<tr><td>Goja DSL</td><td><code>pkg/widgetdsl/</code></td></tr>
+<tr><td>Runner</td><td><code>pkg/widgetrunner/</code></td></tr>
+<tr><td>HTTP Server</td><td><code>pkg/widgetserver/</code></td></tr>
+<tr><td>React Components</td><td><code>web/src/components/</code></td></tr>
+</tbody></table>
+
+<hr>
+<p style="font-size:0.85em;color:#666;">Generated 2026-06-07 &middot; DESIGN-REF-001</p>
+</body>
+</html>

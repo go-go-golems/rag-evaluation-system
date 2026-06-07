@@ -12,7 +12,6 @@
  * bundled into a self-contained HTML file.
  */
 
-import React from 'react';
 import { StatusText } from '../components/foundation';
 import { Caption } from '../components/foundation';
 import { Button } from '../components/atoms';

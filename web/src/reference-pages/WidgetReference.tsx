@@ -7,14 +7,12 @@
  * Rendered server-side → bundled into a self-contained HTML file.
  */
 
-import React from 'react';
 import { Panel } from '../components/layout';
 import { Stack } from '../components/layout';
 import { Inline } from '../components/layout';
 import { DashboardGrid } from '../components/layout';
 import { FormRow } from '../components/layout';
 import { TabList } from '../components/layout';
-import { ScrollRegion } from '../components/layout';
 import { AppShell } from '../components/layout';
 import { AppNav } from '../components/molecules';
 import { DataTable } from '../components/molecules';
@@ -22,10 +20,8 @@ import { MetadataGrid } from '../components/molecules';
 import { StatusText } from '../components/foundation';
 import { Caption } from '../components/foundation';
 import { Divider } from '../components/foundation';
-import { CodeText } from '../components/foundation';
 import { Text } from '../components/foundation';
 import { Button } from '../components/atoms';
-import { IconButton } from '../components/IconButton';
 import { TextInput } from '../components/atoms';
 import { SelectInput } from '../components/atoms';
 import { CheckboxRow } from '../components/atoms';
@@ -57,9 +53,9 @@ const metaItems = [
 ];
 
 const navItems = [
-  { id: 'dashboard', label: 'Dashboard', action: { kind: 'navigate' as const, to: '/dashboard' } },
-  { id: 'corpus',    label: 'Corpus',    action: { kind: 'navigate' as const, to: '/corpus' } },
-  { id: 'queries',   label: 'Queries',   action: { kind: 'navigate' as const, to: '/queries' } },
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'corpus', label: 'Corpus' },
+  { id: 'queries', label: 'Queries' },
 ];
 
 /* ── component ────────────────────────────────────────────── */
@@ -206,13 +202,13 @@ export default function WidgetReference() {
           <Stack gap="md">
             <FormRow label="Name" control={<TextInput defaultValue="" placeholder="Enter name" />} />
             <FormRow label="Retriever" control={
-              <SelectInput options={[
-                { value: 'bm25', label: 'BM25' },
-                { value: 'dense', label: 'Dense' },
-                { value: 'hybrid', label: 'Hybrid' },
-              ]} />
+              <SelectInput defaultValue="bm25">
+                <option value="bm25">BM25</option>
+                <option value="dense">Dense</option>
+                <option value="hybrid">Hybrid</option>
+              </SelectInput>
             } />
-            <FormRow label="Verbose" control={<CheckboxRow label="Enable verbose logging" />} />
+            <FormRow label="Verbose" control={<CheckboxRow checked={false} onChange={() => {}}>Enable verbose logging</CheckboxRow>} />
             <FormRow label="Max Results" control={<TextInput defaultValue="10" type="number" min={1} max={100} />} />
             <Divider />
             <Inline gap="sm" justify="end">
@@ -233,6 +229,7 @@ export default function WidgetReference() {
             { id: 'chunks', label: 'Chunks' },
           ]}
           activeId="overview"
+          onChange={() => {}}
         />
       </div>
 
@@ -248,7 +245,7 @@ export default function WidgetReference() {
         <p className="ds-ref-label">AppShell → AppNav → DashboardGrid → Panel → Stack → StatusText</p>
         <div style={{ border: '1px solid #ccc', overflow: 'hidden' }}>
           <AppShell header={
-            <AppNav brand="RAG Eval" items={navItems} activeItemId="dashboard" />
+            <AppNav brand="RAG Eval" items={navItems} activeItemId="dashboard" onItemSelect={() => {}} />
           }>
             <DashboardGrid recipe="twoColumn">
               <Panel title="Queue Health" density="condensed">
@@ -305,13 +302,13 @@ export default function WidgetReference() {
           <Stack gap="sm">
             <FormRow label="Corpus" control={<TextInput defaultValue="wikipedia-en" />} />
             <FormRow label="Retriever" control={
-              <SelectInput options={[
-                { value: 'bm25', label: 'BM25', selected: true },
-                { value: 'dense', label: 'Dense' },
-              ]} />
+              <SelectInput defaultValue="bm25">
+                <option value="bm25">BM25</option>
+                <option value="dense">Dense</option>
+              </SelectInput>
             } />
             <FormRow label="Top-K" control={<TextInput defaultValue="10" type="number" />} />
-            <FormRow label="Verbose" control={<CheckboxRow label="Log retrieval scores" />} />
+            <FormRow label="Verbose" control={<CheckboxRow checked={false} onChange={() => {}}>Log retrieval scores</CheckboxRow>} />
             <Divider />
             <Inline gap="sm" justify="end">
               <Button>Reset</Button>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RAG Evaluation Design System Reference</title>
+<style>
+  :root { --bg: #fff; --text: #000; --surface-2: #eee; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Geneva, 'Helvetica Neue', Arial, sans-serif; max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; font-size: 14px; line-height: 1.5; color: #000; }
+  h1 { border-bottom: 3px solid #000; padding-bottom: 0.25em; }
+  h2 { border-bottom: 1px solid #000; padding-bottom: 4px; margin-top: 2em; }
+  h3 { margin-top: 1.5em; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid #000; padding: 4px 8px; text-align: left; vertical-align: top; }
+  th { background: #000; color: #fff; }
+  code { font-family: Monaco, 'Courier New', monospace; background: #f4f4f4; padding: 1px 4px; font-size: 0.9em; }
+  pre { background: #f4f4f4; padding: 12px; overflow-x: auto; border: 1px solid #ddd; }
+  .swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid #ccc; vertical-align: middle; margin-right: 4px; }
+  .section { page-break-after: always; }
+</style>
+</head>
+<body>
+<h1>RAG Evaluation Design System Reference</h1>
+<p><em>Version 1.0 — 2026-06-07 — DESIGN-REF-001</em></p>
+
+<nav>
+<strong>Contents</strong>
+<ol>
+<li><a href="#tokens">Design Tokens &amp; Colour</a></li>
+<li>Typography &amp; Spacing</li>
+<li>Widget IR &amp; Component Hierarchy</li>
+<li>Widget Catalogue</li>
+<li>Actions &amp; Interaction Model</li>
+<li>Semantic Recipes</li>
+<li>File Map</li>
+</ol>
+</nav>
+
+<h2 id="tokens" id="tokens">1. Design Tokens</h2>
+<p>All visual constants are CSS custom properties defined on <code>:root</code>.
+No component should contain a hard-coded colour or spacing value.</p>
+
+<table>
+<thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+<tbody>
+<tr><td><code>--mac-bg</code></td><td>#FFF</td><td>Page background</td></tr>
+<tr><td><code>--mac-bg-dark</code></td><td>#000</td><td>Dark backgrounds, stripes</td></tr>
+<tr><td><code>--mac-text</code></td><td>#000</td><td>Primary text</td></tr>
+<tr><td><code>--mac-text-dim</code></td><td>#666</td><td>Muted / secondary text</td></tr>
+<tr><td><code>--mac-surface</code></td><td>#FFF</td><td>Card / panel backgrounds</td></tr>
+<tr><td><code>--mac-surface-2</code></td><td>#EEE</td><td>Alternate rows, zebra stripes</td></tr>
+<tr><td><code>--mac-accent</code></td><td>#0000CC</td><td>Primary action / links</td></tr>
+<tr><td><code>--mac-accent-2</code></td><td>#CC0000</td><td>Destructive / error</td></tr>
+<tr><td><code>--mac-green</code></td><td>#007722</td><td>Success</td></tr>
+<tr><td><code>--mac-amber</code></td><td>#AA7700</td><td>Warning / pending</td></tr>
+</tbody></table>
+
+<h2>2. Typography &amp; Spacing</h2>
+<table>
+<thead><tr><th>Role</th><th>Token</th><th>Computed</th></tr></thead>
+<tbody>
+<tr><td>Body</td><td>--rag-font-role-body</td><td>400 12px/1.45 Geneva</td></tr>
+<tr><td>Compact</td><td>--rag-font-role-compact</td><td>400 11px/1.4 Geneva</td></tr>
+<tr><td>Metadata</td><td>--rag-font-role-metadata</td><td>400 11px/1.35 Monaco</td></tr>
+<tr><td>Label</td><td>--rag-font-role-label</td><td>700 11px/1.2 Monaco</td></tr>
+<tr><td>Metric</td><td>--rag-font-role-metric</td><td>700 12px/1.25 Monaco</td></tr>
+<tr><td>Code</td><td>--rag-font-role-code</td><td>400 11px/1.45 Monaco</td></tr>
+</tbody></table>
+
+<p>Spacing: 2, 4, 8, 16, 24 px (4px base grid). All paddings, margins, and gaps
+MUST be multiples of 4px.</p>
+
+<h2>3. Component Hierarchy</h2>
+<pre>
+AppShell
+ ├── AppNav (brand + navigation items)
+ ├── DashboardGrid
+ │   ├── Panel
+ │   │   ├── StatusText
+ │   │   ├── MetadataGrid
+ │   │   └── Stack / Inline
+ │   └── DataTable
+ └── Panel (detail view)
+      ├── DataTable (master)
+      └── Panel (detail)
+          └── MetadataGrid
+</pre>
+
+<p>Every UI is a tree of Widget IR nodes, serialised as JSON and rendered by the
+<code>WidgetRenderer</code> React component.  Widget IR has three node kinds:</p>
+<ul>
+  <li><strong>text</strong> – leaf text node</li>
+  <li><strong>element</strong> – passthrough HTML-like element (tag, attrs, children)</li>
+  <li><strong>component</strong> – typed widget node (Panel, DataTable, etc.)</li>
+</ul>
+
+<h2>4. Widget Catalogue</h2>
+<table>
+<thead><tr><th>Type</th><th>Key Props</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>AppShell</td><td>header, sidebar</td><td>Root layout</td></tr>
+<tr><td>AppNav</td><td>brand, items, activeId</td><td>Top nav bar</td></tr>
+<tr><td>Panel</td><td>title, actions, density</td><td>Bordered card</td></tr>
+<tr><td>Stack</td><td>gap, align</td><td>Vertical flex</td></tr>
+<tr><td>Inline</td><td>gap, justify, wrap</td><td>Horizontal flex</td></tr>
+<tr><td>DashboardGrid</td><td>cols, recipe</td><td>CSS Grid auto-layout</td></tr>
+<tr><td>DataTable</td><td>columns, rows, getRowKey</td><td>Sortable, selectable table</td></tr>
+<tr><td>StatusText</td><td>status (ok, error, warning, running, pending)</td><td>Status badge</td></tr>
+<tr><td>MetadataGrid</td><td>items[]</td><td>Key-value pairs</td></tr>
+<tr><td>Button</td><td>variant, size, action</td><td>CTA</td></tr>
+<tr><td>FormRow</td><td>label, control</td><td>Label+control pair</td></tr>
+<tr><td>Caption</td><td>tone, transform, truncate</td><td>Styled text</td></tr>
+<tr><td>TabList</td><td>items, activeId</td><td>Tab navigation</td></tr>
+<tr><td>SelectInput</td><td>options, value</td><td>Dropdown</td></tr>
+<tr><td>TextInput</td><td>value, placeholder</td><td>Text input</td></tr>
+<tr><td>ScrollRegion</td><td>axis</td><td>Scrollable container</td></tr>
+</tbody></table>
+
+<h2>5. Actions</h2>
+<table>
+<thead><tr><th>Kind</th><th>Behaviour</th></tr></thead>
+<tbody>
+<tr><td>navigate</td><td>Client-side page change</td></tr>
+<tr><td>server</td><td>POST to /api/widget/actions/{name}, receive updated Widget IR</td></tr>
+<tr><td>event</td><td>Dispatch a DOM CustomEvent</td></tr>
+<tr><td>copy</td><td>Copy a value to clipboard</td></tr>
+</tbody></table>
+
+<h2>6. Semantic Recipes</h2>
+<ul>
+<li><code>rag.recipes.metrics({items})</code> — KPI tile grid</li>
+<li><code>rag.recipes.actionToolbar({title, actions})</code> — button toolbar</li>
+<li><code>rag.recipes.masterDetailTable({rows, columns, detail})</code> — master-detail pattern</li>
+</ul>
+
+<h2>7. File Map</h2>
+<table>
+<thead><tr><th>Artifact</th><th>Path</th></tr></thead>
+<tbody>
+<tr><td>Widget IR</td><td>web/src/widgets/ir.ts</td></tr>
+<tr><td>Widget Renderer</td><td>web/src/widgets/WidgetRenderer.tsx</td></tr>
+<tr><td>Design tokens</td><td>web/src/styles/tokens.css</td></tr>
+<tr><td>Goja DSL</td><td>pkg/widgetdsl/</td></tr>
+<tr><td>Runner</td><td>pkg/widgetrunner/</td></tr>
+<tr><td>HTTP Server</td><td>pkg/widgetserver/</td></tr>
+<tr><td>React Components</td><td>web/src/components/</td></tr>
+</tbody></table>
+
+<hr>
+<p style="color:#999;font-size:0.85em">Generated 2026-06-07 · DESIGN-REF-001</p>
+</body>
+</html>

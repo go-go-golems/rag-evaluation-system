@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design System — Foundation &amp; Tokens</title>
+<style>
+  :root {
+    --c-bg: #FFFFFF; --c-surface: #FFF; --c-ink: #000; --c-accent: #0000CC;
+    --c-surface2: #EEE; --c-green: #007722; --c-amber: #AA7700; --c-red: #CC0000;
+    --font-body: Geneva, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: Monaco, 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; color: #000; line-height: 1.5; }
+  h1 { font-family: var(--font-body); border-bottom: 3px solid #000; padding-bottom: .25em; }
+  h2 { margin-top: 2.5em; border-bottom: 1px solid #000; padding-bottom: .25em; }
+  h3 { margin-top: 1.5em; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid #000; padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: #000; color: #fff; }
+  .swatch { display: inline-block; width: 18px; height: 18px; border: 1px solid #ccc; vertical-align: middle; margin-right: 6px; }
+  .swatch-row { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1em 0; }
+  .card { border: 1px solid #000; padding: 12px; margin-bottom: 1em; background: #fff; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+  code, pre { font-family: Monaco, 'Courier New', monospace; font-size: 0.9em; }
+  pre { background: #f5f5f5; padding: 12px; overflow-x: auto; }
+  .font-sample { font-family: var(--font-mono); font-size: 48px; line-height: 1; margin: 0.5em 0; }
+  .space-none, .space-xs, .space-sm, .space-md, .space-lg { background: #000; display: inline-block; width: 4px; vertical-align: middle; margin-right: 8px; }
+  .space-xs { width: 2px; height: 4px; }
+  .space-sm { width: 8px; height: 4px; }
+  .space-md { width: 16px; height: 4px; }
+  .space-lg { width: 24px; height: 4px; }
+</style>
+</head>
+<body>
+
+<h1>Foundation &amp; Tokens</h1>
+<p>Design tokens, colour palette, typography, and spacing for the RAG Evaluation Design System. This document is fully self-contained and works offline.</p>
+
+<h2 id="colours">1. Colour Palette</h2>
+<p>Every colour used in the system is defined as a CSS custom property. These are the only colours you may use. Never hardcode hex values.</p>
+
+<div class="card-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin:1em 0;">
+  <div style="padding:16px; background:#000; color:#fff; text-align:center; border:1px solid #000">Primary text / bg-dark</div>
+  <div style="padding:16px; background:#fff; border:1px solid #000; text-align:center">Surface</div>
+  <div style="padding:16px; background:#EEE; text-align:center">Surface-2</div>
+  <div style="padding:16px; background:#0000CC; color:#fff; text-align:center">Accent</div>
+  <div style="padding:16px; background:#CC0000; color:#fff; text-align:center">Destructive</div>
+  <div style="padding:16px; background:#007722; color:#fff; text-align:center">Success</div>
+  <div style="padding:16px; background:#AA7700; color:#fff; text-align:center">Warning</div>
+</div>
+
+<table>
+<thead><tr><th>CSS Variable</th><th>Value</th><th>Usage</th></tr></thead>
+<tbody>
+<tr><td><code>--mac-bg</code></td><td>#FFFFFF</td><td>Page background</td></tr>
+<tr><td><code>--mac-text</code></td><td>#000000</td><td>Primary text</td></tr>
+<tr><td><code>--mac-text-dim</code></td><td>#666666</td><td>Muted / secondary text</td></tr>
+<tr><td><code>--mac-surface</code></td><td>#FFFFFF</td><td>Card / panel background</td></tr>
+<tr><td><code>--mac-surface-2</code></td><td>#EEEEEE</td><td>Alternate rows, zebra stripes</td></tr>
+<tr><td><code>--mac-accent</code></td><td>#0000CC</td><td>Primary actions, links</td></tr>
+<tr><td><code>--mac-accent-2</code></td><td>#CC0000</td><td>Errors, destructive actions</td></tr>
+<tr><td><code>--mac-green</code></td><td>#007722</td><td>Success / OK status</td></tr>
+<tr><td><code>--mac-amber</code></td><td>#AA7700</td><td>Warning / pending</td></tr>
+</tbody>
+</table>
+
+<h2>2. Typography</h2>
+
+<p>Two font families are used in the entire system. Every text element must inherit from one of the five roles below.</p>
+
+<table>
+<thead><tr><th>Role</th><th>CSS Token</th><th>Computed</th><th>Used For</th></tr></thead>
+<tbody>
+<tr><td>Body</td><td><code>--rag-font-role-body</code></td><td>400 12px/1.45 Geneva</td><td>Paragraphs, descriptions</td></tr>
+<tr><td>Compact</td><td><code>--rag-font-role-compact</code></td><td>400 11px/1.4 Geneva</td><td>Toolbars, secondary labels</td></tr>
+<tr><td>Metadata</td><td><code>--rag-font-role-metadata</code></td><td>400 11px/1.35 Monaco</td><td>Key-value pairs, labels</td></tr>
+<tr><td>Label</td><td><code>--rag-font-role-label</code></td><td>700 11px/1.2 Monaco</td><td>Section headers, tabs</td></tr>
+<tr><td>Metric</td><td><code>--rag-font-role-metric</code></td><td>700 12px/1.25 Monaco</td><td>KPI numbers</td></tr>
+<tr><td>Code</td><td><code>--rag-font-role-code</code></td><td>400 11px/1.45 Monaco</td><td>Stack traces, code blocks</td></tr>
+</tbody></table>
+
+<p>Specimens:</p>
+<div style="font: 400 12px/1.45 Geneva, sans-serif; margin: .5em 0;">Body — The quick brown fox jumps over the lazy dog.</div>
+<div style="font: 400 11px/1.4 Geneva, sans-serif; color:#666">Compact — Secondary description or toolbar text</div>
+<div style="font: 400 11px/1.35 Monaco, monospace; color: #666">Metadata — 11px Monaco for keys and values</div>
+<div style="font: 700 11px/1.2 Monaco, monospace;">LABEL &mdash; 11px BOLD MONACO</div>
+<div style="font: 700 12px/1.25 Monaco, monospace; font-size: 24px;">247.5</div>
+
+<h2>3. Spacing</h2>
+<p>All spacing is a multiple of 4px.</p>
+<table>
+<thead><tr><th>Token</th><th>px</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>xxs</td><td>2px</td><td>Micro gaps between icon and label</td></tr>
+<tr><td>xs</td><td>4px</td><td>Inline element spacing</td></tr>
+<tr><td>sm</td><td>8px</td><td>Component internal padding</td></tr>
+<tr><td>md</td><td>16px</td><td>Section separators</td></tr>
+<tr><td>lg</td><td>24px</td><td>Page-level margins</td></tr>
+</tbody></table>
+
+<h2>4. Borders, Borders, &amp; Shadows</h2>
+<ul>
+  <li><strong>Border:</strong> 1px solid #000 for all components</li>
+  <li><strong>Border radius:</strong> 0 (no rounding — monochrome aesthetic)</li>
+  <li><strong>Shadows:</strong> None. Use borders only.</li>
+  <li><strong>Focus ring:</strong> 2px inset outline, colour <code>--mac-accent</code></li>
+</ul>
+
+<h2>5. Iconography</h2>
+<p>The design system deliberately does not use an icon library. Status indicators are inline SVG or Unicode characters
+(the StatusText component shows ✔, ●, ✘, etc.). Icon-buttons use <code>IconButton</code> with aria labels.</p>
+
+</body>
+</html>
