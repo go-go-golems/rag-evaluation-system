@@ -1,0 +1,35 @@
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  color: var(--mac-text);
+}
+
+.default {
+  gap: 6px 18px;
+}
+
+.compact {
+  gap: 4px 14px;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.label {
+  color: var(--mac-text);
+  font: var(--rag-font-role-metadata);
+  white-space: nowrap;
+}
+
+.compact .label {
+  font: var(--rag-font-role-compact);
+}
+
+.item[data-selected='true'] .label {
+  color: var(--mac-accent);
+  font-weight: 700;
+}

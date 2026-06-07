@@ -11,7 +11,7 @@
 - [x] Add package context DTOs and fixtures
 - [x] Define context component taxonomy and export style helpers for context kinds
 - [x] Add ContextKindSwatch atom with Storybook states
-- [ ] Add ContextLegend molecule with pattern/tone/outline stories
+- [x] Add ContextLegend molecule with pattern/tone/outline stories
 - [ ] Add ContextBudgetBar molecule with under/near/over-budget stories
 - [ ] Add ContextStripDiagram molecule with dense and selected segment stories
 - [ ] Add ContextStackDiagram molecule with grouped context-window stories

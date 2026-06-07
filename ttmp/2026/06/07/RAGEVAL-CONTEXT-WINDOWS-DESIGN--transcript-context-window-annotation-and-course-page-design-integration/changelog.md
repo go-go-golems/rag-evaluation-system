@@ -117,3 +117,14 @@ Added ContextKindSwatch atom with Storybook coverage for pattern/tone/outline co
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/atoms/ContextKindSwatch/ContextKindSwatch.tsx — Context kind swatch atom
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/atoms/index.ts — Exports new atom
 
+
+## 2026-06-07
+
+Added ContextLegend molecule with pattern/tone/outline Storybook stories and browser sanity check.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextLegend/ContextLegend.stories.tsx — Storybook visual states
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextLegend/ContextLegend.tsx — Legend molecule composed from context swatches
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/index.ts — Exports ContextLegend
+

@@ -677,3 +677,56 @@ This is intentionally a tiny visual primitive. It does not know about diagram la
 
 ### Technical details
 - Storybook build output used for validation: `/tmp/rag-package-storybook-context-swatch`.
+
+## Step 10: Add ContextLegend Molecule and Storybook Checkpoint
+
+I built the first context-viewer molecule, `ContextLegend`, by composing `ContextKindSwatch` with kind labels from the context taxonomy. This keeps the component layering explicit: the swatch remains the atom, while the legend owns the repeated labeled data-display pattern.
+
+I also opened the new Storybook story in the running package Storybook and captured a screenshot for a quick sanity check. The legend renders in pattern, tone, and outline modes, and this is a good point for human visual feedback before the budget bar and diagram molecules start depending on the same visual language.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 8)
+
+**Assistant interpretation:** Continue through the granular implementation tasks, adding Storybook coverage and asking for feedback when useful.
+
+**Inferred user intent:** Keep visual integration reviewable and avoid building too much on top of unreviewed aesthetics.
+
+### What I did
+- Added `packages/rag-evaluation-site/src/components/molecules/ContextLegend/ContextLegend.tsx`.
+- Added `ContextLegend.module.css`, `index.ts`, and `ContextLegend.stories.tsx`.
+- Exported `ContextLegend` from `packages/rag-evaluation-site/src/components/molecules/index.ts`.
+- Ran package typecheck, package build, and package Storybook build.
+- Opened `http://127.0.0.1:6007/?path=/story/component-library-molecules-contextlegend--modes` and captured `context-legend-modes.png`.
+
+### Why
+- The legend is the first reusable molecule that validates whether the context kind taxonomy and swatches are understandable in context.
+- It is the natural visual checkpoint before `ContextBudgetBar`, `ContextStripDiagram`, and other diagram molecules reuse the same swatches and labels.
+
+### What worked
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `pnpm --dir packages/rag-evaluation-site build` passed.
+- `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-context-legend` passed.
+- The running Storybook story rendered visible legend panels and swatches.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- The legend is readable but visually dense; human feedback should decide whether swatch/label spacing should be loosened before the same language appears inside diagrams.
+
+### What was tricky to build
+- `ContextLegend` needed to stay a molecule, not absorb diagram concerns. It therefore exposes `kinds`, `mode`, `compact`, and `selectedKind`, but does not know about tokens, budgets, or snapshots.
+
+### What warrants a second pair of eyes
+- Please review whether the pattern/tone/outline modes are visually distinct enough and whether the labels are the right domain vocabulary.
+
+### What should be done in the future
+- Implement `ContextBudgetBar` next if the legend language looks acceptable.
+
+### Code review instructions
+- Start with `packages/rag-evaluation-site/src/components/molecules/ContextLegend/ContextLegend.tsx`.
+- Open the Storybook story `Component Library / Molecules / ContextLegend / Modes` for visual review.
+
+### Technical details
+- Storybook build output used for validation: `/tmp/rag-package-storybook-context-legend`.
