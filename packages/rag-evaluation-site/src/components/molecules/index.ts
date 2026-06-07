@@ -10,3 +10,7 @@ export * from './TranscriptMessageCard';
 export * from './AnnotationNoteCard';
 export * from './AnchoredCommentCard';
 export * from './CourseStepNav';
+export * from './KeyValueStrip';
+export * from './CheckList';
+export * from './StepList';
+export * from './PersonSummary';

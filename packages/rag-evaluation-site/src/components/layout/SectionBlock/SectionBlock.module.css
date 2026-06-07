@@ -1,0 +1,9 @@
+.root { min-width: 0; }
+.normal { padding: 24px 34px; }
+.spacious { padding: 30px 34px 34px; }
+.divider-top { border-top: 1px solid var(--mac-border); }
+.divider-bottom { border-bottom: 1px solid var(--mac-border); }
+.divider-both { border-top: 1px solid var(--mac-border); border-bottom: 1px solid var(--mac-border); }
+.label { margin-bottom: 14px; color: var(--mac-text); font: var(--rag-font-role-label); letter-spacing: .08em; text-transform: uppercase; }
+.caption { display: block; margin-top: -8px; margin-bottom: 14px; }
+.body { min-width: 0; }

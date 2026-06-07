@@ -1,0 +1,6 @@
+.root { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; }
+.avatar { width: 44px; height: 44px; border: 1px solid var(--mac-border); background: var(--mac-surface-2); display: grid; place-items: center; font: 700 18px/1 var(--font-body); }
+.body { min-width: 0; }
+.name { font: 700 13px/1.25 var(--font-body); }
+.role { margin-top: 2px; color: var(--mac-text-dim); font: var(--rag-font-role-metadata); }
+.bio { margin-top: 5px; color: var(--mac-text); font: 400 12px/1.45 var(--font-body); max-width: 300px; }

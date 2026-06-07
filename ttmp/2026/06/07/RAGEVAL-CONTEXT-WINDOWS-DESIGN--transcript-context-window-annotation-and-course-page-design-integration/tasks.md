@@ -24,6 +24,7 @@
 - [x] Add TranscriptReaderPanel and AnnotationRailPanel organisms with controlled selection stories
 - [x] Add AnchoredCommentCard/Rail components and stories from prototype comment states
 - [x] Add CourseStepNav/CourseLessonPanel/CourseSlidePanel components and stories
+- [x] Add generic landing-page vocabulary for course surfaces (SectionBlock, SplitPane, KeyValueStrip, CheckList, StepList, PersonSummary)
 - [ ] Compose web ContextVisualizerPage from package components using fixtures
 - [ ] Compose web TranscriptAnnotationPage from package components using fixtures
 - [ ] Compose web ContextCoursePage from package components using fixtures

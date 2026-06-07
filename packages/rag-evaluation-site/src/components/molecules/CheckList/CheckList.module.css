@@ -1,0 +1,3 @@
+.root { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.item { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; color: var(--mac-text); font: 400 13px/1.45 var(--font-body); }
+.marker { color: var(--mac-green); font-weight: 700; line-height: 20px; }

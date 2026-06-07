@@ -1301,3 +1301,72 @@ The capture pass succeeded for 22 targets: full app shell, page-level surfaces, 
 - Contact sheets:
   - `prototype-design/visual-diff/prototype-screenshots/00-page-contact-sheet.png`
   - `prototype-design/visual-diff/prototype-screenshots/00-widget-contact-sheet.png`
+
+## Step 22: Generalize Course Landing Vocabulary
+
+I converted the course landing refactor from course-specific widgets into reusable typographic and layout vocabulary. The new pieces are intentionally generic: `SectionBlock`, `SplitPane`, `KeyValueStrip`, `CheckList`, `StepList`, and `PersonSummary`. They can support course pages, documentation pages, onboarding/marketing pages, and any sparse editorial layout that should not use heavy Mac window chrome.
+
+`CourseLessonPanel` now uses these primitives instead of nested `Panel` components. The result is closer to the original course HTML: a large display title, clean meta strip, two-pane outcomes/agenda layout, row-separated agenda list, and instructor summary without black title bars.
+
+### Prompt Context
+
+**User prompt (verbatim):** "try to make the outcome list, the agendalist, the metastrip be more generic than just course they are useful typographic / layout / design system molecules/organisms"
+
+**Assistant interpretation:** Implement the richer course-page vocabulary as reusable design-system components rather than course-only components.
+
+**Inferred user intent:** Keep the component library broadly reusable and avoid hardcoding course-specific concepts when the underlying pattern is generic.
+
+### What I did
+- Added layout primitives:
+  - `SectionBlock` — plain section with label/caption/density/dividers, no black titlebar.
+  - `SplitPane` — generic two-pane layout with ratios and optional divider.
+- Added generic molecules:
+  - `KeyValueStrip` — bordered metadata/info strip.
+  - `CheckList` — checked outcome/action list.
+  - `StepList` — minimal numbered row list with title, description, meta, active state.
+  - `PersonSummary` — avatar/name/subtitle/bio summary.
+- Added Storybook stories for each new layout/molecule.
+- Refactored `CourseLessonPanel` to compose the generic vocabulary instead of nested `Panel`s.
+- Ran package typecheck, build, and Storybook build successfully.
+- Captured Storybook screenshot `course-lesson-panel-generic.png` and checked it visually.
+
+### Why
+- The original course HTML is a sparse course/landing page, not an application panel.
+- `Panel` is correct for app chrome and dashboard widgets, but it creates visual noise when used for every content block in a learning/marketing surface.
+- The same patterns are reusable beyond courses: info strips, checked lists, step lists, split panes, and plain labeled sections are general typographic/layout vocabulary.
+
+### What worked
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `pnpm --dir packages/rag-evaluation-site build` passed.
+- `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-course-generic` passed.
+- Visual check confirmed the top of the page now reads as a spacious landing page with large title and lightweight meta strip.
+
+### What didn't work
+- First typecheck failed because `PersonSummaryProps` used a `role` prop that conflicts with `HTMLAttributes<HTMLDivElement>.role`. I renamed it to `subtitle`.
+- First `SplitPane` usage treated panes as children, but the primitive API used explicit `left` and `right` props. I updated `CourseLessonPanel` accordingly.
+
+### What I learned
+- The course vocabulary should be framed as editorial/typographic primitives, not course-only components.
+- Existing app primitives (`Panel`, `DashboardGrid`) are still useful, but they should not carry every page type.
+
+### What was tricky to build
+- The main naming issue was avoiding course-specific names while still producing components that read naturally in course code. `StepList`, `CheckList`, and `KeyValueStrip` preserve the visual semantics without binding the components to courses.
+
+### What warrants a second pair of eyes
+- `StepList` active/hover/focus states should be reviewed for accessibility and visual subtlety.
+- `CourseLessonPanel` may still need a frameless variant if the outer border feels too app-like.
+
+### What should be done in the future
+- Add a diagram teaser/showcase section using generic section vocabulary.
+- Compare the refactored CourseLessonPanel against the original prototype screenshot with css-visual-diff.
+
+### Code review instructions
+- Start with `CourseLessonPanel.tsx` to see composition.
+- Review generic components under `layout/SectionBlock`, `layout/SplitPane`, `molecules/KeyValueStrip`, `molecules/CheckList`, `molecules/StepList`, and `molecules/PersonSummary`.
+- Validate in Storybook: `Component Library / Organisms / CourseLessonPanel / Workshop Landing`.
+
+### Technical details
+- Validation commands:
+  - `pnpm --dir packages/rag-evaluation-site typecheck`
+  - `pnpm --dir packages/rag-evaluation-site build`
+  - `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-course-generic`

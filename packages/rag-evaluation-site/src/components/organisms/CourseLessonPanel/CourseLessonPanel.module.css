@@ -1,0 +1,64 @@
+.root {
+  background: var(--mac-surface);
+  color: var(--mac-text);
+  border: 1px solid var(--mac-border);
+  min-width: 0;
+}
+
+.hero {
+  max-width: none;
+}
+
+.eyebrow {
+  margin-bottom: 14px;
+  color: var(--mac-text-dim);
+  font: var(--rag-font-role-metadata);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0 0 14px;
+  max-width: 760px;
+  color: var(--mac-text);
+  font: 700 46px/1.02 var(--font-body);
+  letter-spacing: -.02em;
+}
+
+.lead {
+  margin: 0 0 22px;
+  max-width: 620px;
+  color: #333;
+  font: 400 16px/1.5 var(--font-body);
+}
+
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.metaStrip {
+  margin-top: 26px;
+  max-width: 760px;
+}
+
+.instructorBlock {
+  margin-top: 22px;
+}
+
+.sectionLabel {
+  margin-bottom: 8px;
+  color: var(--mac-text);
+  font: var(--rag-font-role-label);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.blurb {
+  margin: 0;
+  max-width: 680px;
+  color: #333;
+  font: 400 14px/1.6 var(--font-body);
+}

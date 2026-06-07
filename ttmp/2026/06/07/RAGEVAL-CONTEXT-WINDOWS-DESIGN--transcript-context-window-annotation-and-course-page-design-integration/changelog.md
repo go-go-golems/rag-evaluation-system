@@ -249,3 +249,18 @@ Captured 22 original prototype page/widget screenshots using css-visual-diff jsv
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/07/RAGEVAL-CONTEXT-WINDOWS-DESIGN--transcript-context-window-annotation-and-course-page-design-integration/scripts/09_generate_standalone_html.py — Generates per-screen and widget standalone harnesses
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/07/RAGEVAL-CONTEXT-WINDOWS-DESIGN--transcript-context-window-annotation-and-course-page-design-integration/scripts/10_rag_prototype_cssvd.js — Project-local css-visual-diff jsverb capture commands
 
+
+## 2026-06-07
+
+Generalized course landing UI into reusable SectionBlock, SplitPane, KeyValueStrip, CheckList, StepList, and PersonSummary components.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/layout/SectionBlock/SectionBlock.tsx — Generic plain section layout
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/layout/SplitPane/SplitPane.tsx — Generic two-pane layout
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/CheckList/CheckList.tsx — Generic checked list
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/KeyValueStrip/KeyValueStrip.tsx — Generic meta/info strip
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/PersonSummary/PersonSummary.tsx — Generic person/instructor summary
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/StepList/StepList.tsx — Generic minimal step/agenda list
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/CourseLessonPanel/CourseLessonPanel.tsx — Refactored course landing composition
+

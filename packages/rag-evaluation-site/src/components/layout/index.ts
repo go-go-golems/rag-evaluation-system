@@ -6,3 +6,5 @@ export * from './AppShell';
 export * from './ScrollRegion';
 export * from './TabList';
 export * from './FormRow';
+export * from './SectionBlock';
+export * from './SplitPane';
