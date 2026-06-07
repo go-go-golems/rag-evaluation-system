@@ -898,3 +898,55 @@ This keeps the Classic Mac pattern language but prevents the pattern from fighti
 
 ### Technical details
 - The pattern-backed kind selectors include system, instruction, summary, annotation, retrieval, tool, result, and generated.
+
+## Step 14: Capture Context Diagram Storybook Visual Sweep
+
+I added and ran a ticket-local css-visual-diff sweep for the new context Storybook stories. The sweep filters package Storybook stories whose title contains `Context`, self-compares each story, and stores the resulting screenshots/reports under the context-viewer ticket.
+
+The sweep captured 18 context stories and every self-compare reported zero changed pixels. I removed the generated Storybook static directory from the ticket artifacts and kept the story list, Storybook index, summary, and css-visual-diff report outputs.
+
+### Prompt Context
+
+**User prompt (verbatim):** "good. continue"
+
+**Assistant interpretation:** Continue after the label readability fix by advancing the next ticket task, the package Storybook visual sweep.
+
+**Inferred user intent:** Keep progressing through the planned context diagram review workflow.
+
+### What I did
+- Added `scripts/07_context_storybook_visual_sweep.sh`.
+- Built package Storybook, served it locally, filtered context stories from `index.json`, and ran `css-visual-diff compare` for each context story.
+- Generated `sources/visual-parity/context-story-sweep/summary.tsv` and per-story reports.
+- Removed generated `storybook-static/` and transient HTTP server log from the committed artifact set.
+
+### Why
+- The context diagram slice now needs visual evidence before moving to transcript/annotation work.
+- A ticket-local sweep makes the visual review reproducible for handoff.
+
+### What worked
+- 18 context stories were captured.
+- `summary.tsv` reports `0` changed pixels and `0` changed percent for all captured stories.
+
+### What didn't work
+- The sweep emits verbose css-visual-diff logs to stdout; the script is still usable, but future cleanup could redirect compare logs unless debugging is needed.
+
+### What I learned
+- Filtering Storybook `index.json` by title containing `Context` captures the current atom, molecule, and organism context slice cleanly.
+
+### What was tricky to build
+- The script should keep review artifacts but avoid committing the full generated Storybook site. I removed `storybook-static/` after the run.
+
+### What warrants a second pair of eyes
+- Review the generated screenshots for the context diagram stories, especially treemap proportionality and selected-state clarity.
+
+### What should be done in the future
+- Ask for human feedback on the context diagram slice before starting transcript/annotation components.
+
+### Code review instructions
+- Start with `scripts/07_context_storybook_visual_sweep.sh`.
+- Inspect `sources/visual-parity/context-story-sweep/summary.tsv`.
+- Open selected `url1_screenshot.png` files under `sources/visual-parity/context-story-sweep/reports/`.
+
+### Technical details
+- Sweep output: `sources/visual-parity/context-story-sweep/`.
+- Story count: 18.

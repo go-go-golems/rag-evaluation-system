@@ -17,7 +17,7 @@
 - [x] Add ContextStackDiagram molecule with grouped context-window stories
 - [x] Add ContextTreemap molecule with proportional token stories
 - [x] Compose ContextDiagramPanel organism for switching diagram views
-- [ ] Run package Storybook build and capture visual sweep for context diagram components
+- [x] Run package Storybook build and capture visual sweep for context diagram components
 - [ ] Ask for human Storybook feedback on context diagram visuals before transcript work
 - [ ] Add TranscriptMessageCard atom/molecule split and stories
 - [ ] Add AnnotationBadge/AnnotationNoteCard molecules and stories

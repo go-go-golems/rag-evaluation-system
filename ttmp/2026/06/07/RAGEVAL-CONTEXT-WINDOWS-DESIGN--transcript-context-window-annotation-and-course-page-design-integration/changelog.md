@@ -162,3 +162,13 @@ Improved context diagram label readability on patterned backgrounds without chan
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextStripDiagram/ContextStripDiagram.module.css — Opaque strip labels
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextTreemap/ContextTreemap.module.css — Pattern-only label backing
 
+
+## 2026-06-07
+
+Captured css-visual-diff visual sweep for 18 context Storybook stories; all self-compares reported 0 changed pixels.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/07/RAGEVAL-CONTEXT-WINDOWS-DESIGN--transcript-context-window-annotation-and-course-page-design-integration/scripts/07_context_storybook_visual_sweep.sh — Reproducible context Storybook visual sweep script
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/ttmp/2026/06/07/RAGEVAL-CONTEXT-WINDOWS-DESIGN--transcript-context-window-annotation-and-course-page-design-integration/sources/visual-parity/context-story-sweep/summary.tsv — Visual sweep summary
+
