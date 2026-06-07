@@ -128,3 +128,14 @@ Added ContextLegend molecule with pattern/tone/outline Storybook stories and bro
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextLegend/ContextLegend.tsx — Legend molecule composed from context swatches
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/index.ts — Exports ContextLegend
 
+
+## 2026-06-07
+
+Added ContextBudgetBar and ContextStripDiagram molecules with Storybook states and browser sanity checks.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextBudgetBar/ContextBudgetBar.tsx — Budget usage molecule
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextStripDiagram/ContextStripDiagram.tsx — Context strip molecule
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/index.ts — Exports new context molecules
+

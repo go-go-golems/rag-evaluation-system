@@ -1,0 +1,17 @@
+.root { display: flex; flex-direction: column; gap: 6px; }
+.strip { display: flex; width: 100%; min-height: 54px; border: 1px solid var(--mac-border); background: var(--mac-surface); overflow: hidden; }
+.segment { position: relative; display: flex; align-items: center; justify-content: center; min-width: 2px; border-right: 1px solid var(--mac-border); box-sizing: border-box; overflow: hidden; }
+.segment:last-child { border-right: 0; }
+.label { padding: 0 3px; color: var(--mac-text); font: var(--rag-font-role-metadata); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; background: rgba(255,255,255,0.72); }
+.selected { outline: 3px solid var(--mac-accent); outline-offset: -4px; z-index: 1; }
+.caption { color: var(--mac-text-dim); font: var(--rag-font-role-caption, var(--rag-font-role-metadata)); }
+.kind_system,.kind_instruction { background: repeating-linear-gradient(45deg, var(--mac-border) 0 1px, var(--mac-surface) 1px 4px); }
+.kind_context,.kind_conversation,.kind_course,.kind_other { background: var(--mac-surface); }
+.kind_summary,.kind_annotation { background: repeating-linear-gradient(45deg, var(--mac-border) 0 1px, var(--mac-surface) 1px 7px); }
+.kind_retrieval,.kind_tool,.kind_result { background: radial-gradient(var(--mac-border) 1px, var(--mac-surface) 1px); background-size: 4px 4px; }
+.kind_generated { background: repeating-linear-gradient(45deg, var(--mac-border) 0 1px, var(--mac-surface) 1px 3px); }
+.kind_evicted { background: var(--mac-text-dim); }
+.kind_evicted .label { color: var(--mac-text-inv); background: rgba(0,0,0,0.42); }
+.kind_active { background: var(--mac-accent); }
+.kind_active .label { color: var(--mac-text-inv); background: transparent; }
+.kind_empty { background: var(--mac-surface); opacity: .72; }

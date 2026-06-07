@@ -1,0 +1,99 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--mac-text);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.track {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 24px;
+  overflow: hidden;
+  border: 1px solid var(--mac-border);
+  background: var(--mac-surface);
+}
+
+.segment {
+  min-width: 2px;
+  height: 100%;
+  border-right: 1px solid var(--mac-border);
+  box-sizing: border-box;
+}
+
+.selected {
+  outline: 2px solid var(--mac-accent);
+  outline-offset: -3px;
+  z-index: 1;
+}
+
+.limitMarker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: calc(100% - 2px);
+  width: 3px;
+  background: var(--mac-accent-2);
+}
+
+.nearBudget .track {
+  box-shadow: inset 0 0 0 2px var(--mac-amber);
+}
+
+.overBudget .track {
+  box-shadow: inset 0 0 0 2px var(--mac-accent-2);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.legendItem {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  color: var(--mac-text-dim);
+  font: var(--rag-font-role-metadata);
+}
+
+.legendItem[data-selected='true'] {
+  color: var(--mac-accent);
+  font-weight: 700;
+}
+
+.dot {
+  width: 10px;
+  height: 8px;
+  border: 1px solid var(--mac-border);
+  box-sizing: border-box;
+}
+
+.tokens {
+  color: var(--mac-text);
+}
+
+.kind_system,
+.kind_instruction { background: repeating-linear-gradient(45deg, var(--mac-border) 0 1px, var(--mac-surface) 1px 3px); }
+.kind_context,
+.kind_conversation,
+.kind_course,
+.kind_other { background: var(--mac-surface); }
+.kind_summary,
+.kind_annotation { background: repeating-linear-gradient(45deg, var(--mac-border) 0 1px, var(--mac-surface) 1px 6px); }
+.kind_retrieval,
+.kind_tool,
+.kind_result { background: radial-gradient(var(--mac-border) 1px, var(--mac-surface) 1px); background-size: 4px 4px; }
+.kind_generated { background: repeating-linear-gradient(45deg, var(--mac-border) 0 1px, var(--mac-surface) 1px 3px); }
+.kind_evicted { background: var(--mac-text-dim); }
+.kind_active { background: var(--mac-accent); }
+.kind_empty { background: var(--mac-surface); border-style: dashed; }

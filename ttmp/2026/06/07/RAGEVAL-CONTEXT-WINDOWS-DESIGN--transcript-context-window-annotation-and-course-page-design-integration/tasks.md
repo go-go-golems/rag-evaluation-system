@@ -12,8 +12,8 @@
 - [x] Define context component taxonomy and export style helpers for context kinds
 - [x] Add ContextKindSwatch atom with Storybook states
 - [x] Add ContextLegend molecule with pattern/tone/outline stories
-- [ ] Add ContextBudgetBar molecule with under/near/over-budget stories
-- [ ] Add ContextStripDiagram molecule with dense and selected segment stories
+- [x] Add ContextBudgetBar molecule with under/near/over-budget stories
+- [x] Add ContextStripDiagram molecule with dense and selected segment stories
 - [ ] Add ContextStackDiagram molecule with grouped context-window stories
 - [ ] Add ContextTreemap molecule with proportional token stories
 - [ ] Compose ContextDiagramPanel organism for switching diagram views

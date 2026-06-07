@@ -730,3 +730,61 @@ I also opened the new Storybook story in the running package Storybook and captu
 
 ### Technical details
 - Storybook build output used for validation: `/tmp/rag-package-storybook-context-legend`.
+
+## Step 11: Add Budget Bar and Strip Diagram Molecules
+
+After the legend review looked good, I continued with the next two context-window molecules: `ContextBudgetBar` and `ContextStripDiagram`. Both consume the package context-window DTOs and remain molecule-level components: they visualize one reusable data-display pattern but do not own page state, API loading, or multi-view orchestration.
+
+I validated both in Storybook and captured browser screenshots for sanity checks. The budget bar shows under-budget, near-limit, and over-budget states; the strip diagram shows a dense turn-14 context window with labels and a compact legend.
+
+### Prompt Context
+
+**User prompt (verbatim):** "looks great, continue, make a few more"
+
+**Assistant interpretation:** Continue implementing the next few granular context-viewer tasks now that the legend visuals were approved.
+
+**Inferred user intent:** Keep momentum through the package molecule layer while preserving commit/task checkpoints.
+
+### What I did
+- Added `packages/rag-evaluation-site/src/components/molecules/ContextBudgetBar/*`.
+- Added `packages/rag-evaluation-site/src/components/molecules/ContextStripDiagram/*`.
+- Exported both molecules from `packages/rag-evaluation-site/src/components/molecules/index.ts`.
+- Added Storybook states for budget states, selected budget segment, dense strip segments, selected strip segment, and limit comparison.
+- Ran package typecheck, package build, and package Storybook build.
+- Opened Storybook and captured `context-budget-states.png` and `context-strip-dense.png` for visual sanity checks.
+
+### Why
+- Budget and strip views are the next smallest diagram molecules after the legend.
+- They exercise token totals, selected part IDs, dense labels, overflow state, and the context-kind visual language before more complex stack/treemap renderers are built.
+
+### What worked
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `pnpm --dir packages/rag-evaluation-site build` passed.
+- `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-context-budget-strip` passed.
+- Browser screenshots showed rendered, readable components with no blank/loading/broken UI.
+
+### What didn't work
+- First `ContextBudgetBar` story typecheck failed because the Storybook meta had no required `snapshot` arg and TypeScript treated indexed fixture access as possibly undefined.
+- I fixed it by destructuring fixtures and adding a non-null `snapshot` arg to the story meta.
+
+### What I learned
+- Storybook stories for required-prop components should provide a default `args` object even when individual stories use custom render functions.
+- The current strip labels work for moderately dense examples; more extreme examples may need a tooltip-first or hover detail strategy.
+
+### What was tricky to build
+- Over-budget bars need to communicate both proportional composition and model limit. I kept the segment widths relative to the limit and added a red limit marker/outline for over-budget state.
+
+### What warrants a second pair of eyes
+- Visual review should check whether the over-budget state is obvious enough and whether strip labels are too busy for dense contexts.
+
+### What should be done in the future
+- Build stack and treemap molecules next, then compose all diagram molecules into a `ContextDiagramPanel` organism.
+
+### Code review instructions
+- Review `ContextBudgetBar.tsx` and `ContextStripDiagram.tsx` first.
+- Open Storybook stories:
+  - `Component Library / Molecules / ContextBudgetBar / Budget States`
+  - `Component Library / Molecules / ContextStripDiagram / Dense Segments`
+
+### Technical details
+- Storybook build output used for validation: `/tmp/rag-package-storybook-context-budget-strip`.
