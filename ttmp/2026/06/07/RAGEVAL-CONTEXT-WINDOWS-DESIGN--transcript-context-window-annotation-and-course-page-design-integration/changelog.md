@@ -184,3 +184,14 @@ Added transcript/annotation atoms and molecules with Storybook coverage after co
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/AnnotationNoteCard/AnnotationNoteCard.tsx — Annotation note molecule
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/TranscriptMessageCard/TranscriptMessageCard.tsx — Transcript message molecule
 
+
+## 2026-06-07
+
+Added TranscriptReaderPanel and AnnotationRailPanel organisms with controlled selection stories.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/AnnotationRailPanel/AnnotationRailPanel.tsx — Annotation rail organism
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/TranscriptReaderPanel/TranscriptReaderPanel.tsx — Transcript reader organism
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/index.ts — Exports transcript organisms
+

@@ -1007,3 +1007,58 @@ This keeps the same atomic split as the diagram work: atoms own the small marker
 
 ### Technical details
 - Storybook build output used for validation: `/tmp/rag-package-storybook-transcript-atoms`.
+
+## Step 16: Add Transcript Reader and Annotation Rail Organisms
+
+I composed the transcript/annotation molecules into the first transcript organisms. `TranscriptReaderPanel` renders a panel of transcript message cards with controlled annotation selection, while `AnnotationRailPanel` renders the annotation notes as a selectable side rail.
+
+This completes the transcript reader/rail organism task and gives the next work a stable package-level surface for building a combined transcript annotation page.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue"
+
+**Assistant interpretation:** Continue implementing the next ticket task after transcript/annotation atoms and molecules.
+
+**Inferred user intent:** Keep progressing through the package component layers toward full transcript annotation pages.
+
+### What I did
+- Added `packages/rag-evaluation-site/src/components/organisms/TranscriptReaderPanel/*`.
+- Added `packages/rag-evaluation-site/src/components/organisms/AnnotationRailPanel/*`.
+- Exported both organisms from the package organism barrel.
+- Added Storybook stories for annotated transcript, tool-heavy excerpt, and annotation rail selection.
+- Ran package typecheck, package build, and package Storybook build.
+- Opened the `TranscriptReaderPanel / Annotated Transcript` story and captured `transcript-reader-panel.png`.
+
+### Why
+- The package now needs feature-level transcript panels before web pages or Widget IR recipes can consume transcript/annotation concepts.
+- Keeping selection controlled via props lets future pages coordinate reader and rail state.
+
+### What worked
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `pnpm --dir packages/rag-evaluation-site build` passed.
+- `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-transcript-panels` passed.
+- Browser sanity check showed a rendered readable transcript reader panel.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- The transcript reader is usable as a package organism without needing web routing or backend state.
+
+### What was tricky to build
+- Storybook stories with controlled selection need small local state wrappers; the production components remain controlled and stateless with respect to selected annotation.
+
+### What warrants a second pair of eyes
+- Review whether the transcript cards should be denser before long real transcripts are loaded.
+- Review whether the annotation rail should use a dedicated CSS module instead of inline button reset styles.
+
+### What should be done in the future
+- Build anchored comment card/rail components from the prototype comment states.
+
+### Code review instructions
+- Review `TranscriptReaderPanel.tsx` and `AnnotationRailPanel.tsx`.
+- Open Storybook stories under `Component Library / Organisms / TranscriptReaderPanel` and `AnnotationRailPanel`.
+
+### Technical details
+- Storybook build output used for validation: `/tmp/rag-package-storybook-transcript-panels`.

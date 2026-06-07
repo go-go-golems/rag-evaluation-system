@@ -21,7 +21,7 @@
 - [x] Ask for human Storybook feedback on context diagram visuals before transcript work
 - [x] Add TranscriptMessageCard atom/molecule split and stories
 - [x] Add AnnotationBadge/AnnotationNoteCard molecules and stories
-- [ ] Add TranscriptReaderPanel and AnnotationRailPanel organisms with controlled selection stories
+- [x] Add TranscriptReaderPanel and AnnotationRailPanel organisms with controlled selection stories
 - [ ] Add AnchoredCommentCard/Rail components and stories from prototype comment states
 - [ ] Add CourseStepNav/CourseLessonPanel/CourseSlidePanel components and stories
 - [ ] Compose web ContextVisualizerPage from package components using fixtures
