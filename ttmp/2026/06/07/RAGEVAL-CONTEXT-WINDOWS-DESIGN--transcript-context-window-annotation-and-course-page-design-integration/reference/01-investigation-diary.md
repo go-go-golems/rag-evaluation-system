@@ -1545,3 +1545,74 @@ I made a follow-up typography adjustment to the generic slide key-point list. Af
 
 ### Technical details
 - Only CSS alignment changed; no API changes.
+
+## Step 26: Add Global Course Sidebar Shell
+
+I added the global left-sidebar shell shown in the course prototype: grouped navigation for Course, Slides, Visualize, Upload, Transcript, Comments, and Handout. The implementation keeps the structure package-first and layered: `SidebarShell` owns the left-rail/content viewport layout, `SidebarNav` owns the reusable grouped navigation list, and `CourseStudioShell` composes those generic pieces into the course/context-viewer product shell.
+
+This gives the course/studio surfaces a shared navigation frame without baking routing, RTK Query, or app state into the package. The web app can later adapt `onNavigate` to route state, while Storybook can validate the visual and interaction states with static fixtures.
+
+### Prompt Context
+
+**User prompt (verbatim):** "good. Noiw make a shell for the global sidebar to navigate the entire course. /tmp/pi-clipboard-b082bf29-4504-47c6-8216-214b6c05069d.png
+
+The thing on th eleft with Course / Slides / Visualize / etc..."
+
+**Assistant interpretation:** Implement the reusable global course/studio sidebar shown in the screenshot, with section headers and active navigation state.
+
+**Inferred user intent:** Provide a consistent app/course frame for navigating between the course landing, slide deck, context visualizer, upload workflow, transcript, comments, and handout screens.
+
+### What I did
+- Added `layout/SidebarShell` for a fixed left sidebar plus scrollable content viewport.
+- Added `molecules/SidebarNav` for grouped sidebar navigation sections and active item rendering.
+- Added `organisms/CourseStudioShell` as the domain composition for course/context-viewer navigation.
+- Added `courseStudioNavSections` fixture/config for Present, Analyze, Review, and Take-home groups.
+- Added Storybook stories for `SidebarShell`, `SidebarNav`, and `CourseStudioShell`.
+- Exported the new layout, molecule, and organism from their package barrels.
+- Ran typecheck, build, and package Storybook build.
+- Browser sanity checked `Component Library / Organisms / CourseStudioShell / Slides Active`.
+
+### Why
+- The screenshot's left rail is a navigation shell, not a slide-specific component.
+- The reusable layer should own static structure and presentation while keeping routing and backend state out of the package.
+- The future Widget IR path benefits from a stable semantic shell (`CourseStudioShell`) and lower-level generic pieces (`SidebarShell`, `SidebarNav`).
+
+### What worked
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `pnpm --dir packages/rag-evaluation-site build` passed.
+- `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-course-shell` passed.
+- Storybook loaded the new CourseStudioShell story with no console errors.
+- Visual check confirmed the left sidebar has the expected grouped hierarchy and active `Slides` row.
+
+### What didn't work
+- First typecheck failed because `CourseStudioShellProps` used a `title` prop while extending `HTMLAttributes<HTMLDivElement>`, which already has a string `title` attribute. I fixed it with `Omit<HTMLAttributes<HTMLDivElement>, 'title'>`.
+- First story edit missed a closing brace in the JSX `sidebarFooter` prop; I corrected the story and reran typecheck.
+
+### What I learned
+- `SidebarShell` and `SidebarNav` are generic enough to stay reusable; the named course sections belong in `CourseStudioShell` fixture/config.
+- The sidebar visual is close, but likely needs final tuning for width, section-label lightness, icon weight, and active-row height against the prototype.
+
+### What was tricky to build
+- The sharp edge was avoiding an app-router dependency. `SidebarNav` emits `onItemSelect(id)` and active state only; it does not know about routes. That keeps it Storybook-friendly and lets `web` map IDs to routes later.
+- A production fixture with ReactNode-like icons could become too opinionated. I kept icons as simple text markers for now so the config remains lightweight.
+
+### What warrants a second pair of eyes
+- Review whether the default sidebar width should be closer to the prototype before running visual parity.
+- Review whether `courseStudioNavSections` should remain exported as a package default or move into web/page composition once routes exist.
+- Review whether future Widget IR should expose `SidebarShell` + `SidebarNav` or only a higher-level course/studio shell node.
+
+### What should be done in the future
+- Tune the sidebar width, section-label contrast, icon weight, and row spacing against the prototype screenshot.
+- Wire the shell into web page stories once ContextVisualizerPage/TranscriptAnnotationPage/CourseCoursePage are composed.
+- Add semantic Widget IR support only after route/page composition settles.
+
+### Code review instructions
+- Start with `packages/rag-evaluation-site/src/components/layout/SidebarShell/SidebarShell.tsx`.
+- Then review `packages/rag-evaluation-site/src/components/molecules/SidebarNav/SidebarNav.tsx` and `packages/rag-evaluation-site/src/components/organisms/CourseStudioShell/CourseStudioShell.tsx`.
+- Validate Storybook stories:
+  - `Design System / Layout / SidebarShell / Course Sidebar`
+  - `Component Library / Molecules / SidebarNav / Course Navigation`
+  - `Component Library / Organisms / CourseStudioShell / Slides Active`
+
+### Technical details
+- The new shell uses `data-rag-layout="SidebarShell"`, `data-rag-molecule="SidebarNav"`, and `data-rag-organism="CourseStudioShell"` for visual-diff and future IR/extraction handles.

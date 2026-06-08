@@ -295,3 +295,15 @@ Aligned KeyPointList numeric markers to the text baseline for slide typography p
 
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/KeyPointList/KeyPointList.module.css — Baseline alignment for slide key-point markers
 
+
+## 2026-06-07
+
+Added package-owned global course sidebar shell with reusable SidebarShell, SidebarNav, and CourseStudioShell components.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/layout/SidebarShell/SidebarShell.tsx — Generic left-sidebar/content shell
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/SidebarNav/SidebarNav.tsx — Grouped sidebar navigation molecule
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/CourseStudioShell/CourseStudioShell.tsx — Course/studio shell composition
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/CourseStudioShell/courseStudioNav.ts — Default course navigation section config
+

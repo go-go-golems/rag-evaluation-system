@@ -4,3 +4,4 @@ export * from './AnnotationRailPanel';
 export * from './AnchoredCommentRail';
 export * from './CourseLessonPanel';
 export * from './CourseSlidePanel';
+export * from './CourseStudioShell';

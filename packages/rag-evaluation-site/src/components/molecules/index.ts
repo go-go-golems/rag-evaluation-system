@@ -16,3 +16,4 @@ export * from './StepList';
 export * from './PersonSummary';
 export * from './FigureBlock';
 export * from './KeyPointList';
+export * from './SidebarNav';

@@ -26,6 +26,7 @@
 - [x] Add CourseStepNav/CourseLessonPanel/CourseSlidePanel components and stories
 - [x] Add generic landing-page vocabulary for course surfaces (SectionBlock, SplitPane, KeyValueStrip, CheckList, StepList, PersonSummary)
 - [x] Add generic slide-shell vocabulary and refactor CourseSlidePanel to support visual-left or visual-right compositions
+- [x] Add global course sidebar shell for Course/Slides/Visualize/Upload/Transcript/Comments/Handout navigation
 - [ ] Compose web ContextVisualizerPage from package components using fixtures
 - [ ] Compose web TranscriptAnnotationPage from package components using fixtures
 - [ ] Compose web ContextCoursePage from package components using fixtures
