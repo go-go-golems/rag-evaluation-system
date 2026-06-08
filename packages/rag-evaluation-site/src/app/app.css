@@ -57,3 +57,47 @@
 .rag-evaluation-site-state {
   margin: 16px;
 }
+
+.rag-evaluation-site-route-pending {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 3px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--mac-accent, #007aff) 18%, transparent);
+}
+
+.rag-evaluation-site-route-pending__bar {
+  display: block;
+  width: 42%;
+  height: 100%;
+  background: var(--mac-accent, #007aff);
+  animation: rag-route-pending-slide 1s ease-in-out infinite;
+}
+
+.rag-evaluation-site-route-pending__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.rag-evaluation-site-inline-error {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1001;
+  max-width: min(420px, calc(100vw - 32px));
+  box-shadow: var(--mac-shadow-floating, 0 18px 44px rgba(0, 0, 0, 0.2));
+}
+
+@keyframes rag-route-pending-slide {
+  0% { transform: translateX(-110%); }
+  50% { transform: translateX(80%); }
+  100% { transform: translateX(250%); }
+}

@@ -54,7 +54,6 @@ export function useWidgetPage(url: string, options: UseWidgetPageOptions = {}): 
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
         setError(err instanceof Error ? err : new Error(String(err)));
-        setPage(null);
       })
       .finally(() => {
         if (!controller.signal.aborted) {

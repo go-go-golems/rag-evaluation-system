@@ -3,8 +3,9 @@ import { ErrorCallout } from '../components/atoms';
 import { Caption } from '../components/foundation';
 import { AppShell, Panel } from '../components/layout';
 import { AppNav } from '../components/molecules';
+import { CourseStudioShell } from '../components/organisms';
 import { WidgetRenderer } from '../widgets/WidgetRenderer';
-import type { ActionSpec, AppNavItemSpec, RenderableValue, WidgetNode } from '../widgets/ir';
+import type { ActionSpec, AppNavItemSpec, ComponentNode, CourseStudioShellWidgetProps, RenderableValue, WidgetNode } from '../widgets/ir';
 import { dispatchWidgetAction, type WidgetActionContext } from '../widgets/actions';
 import { useWidgetPage, type WidgetPageResponse } from '../hooks/useWidgetPage';
 import './app.css';
@@ -64,11 +65,11 @@ export function RagEvaluationSiteApp({ apiBase = '/api/widget', defaultPageId = 
     if (result.refresh) refresh();
   }
 
-  if (loading) {
+  if (loading && !page) {
     return <Panel className="rag-evaluation-site-state" title="RAG Evaluation Site" density="condensed"><Caption>Loading Widget IR…</Caption></Panel>;
   }
 
-  if (error) {
+  if (error && !page) {
     return <ErrorCallout className="rag-evaluation-site-state">Failed to load Widget IR page: {error.message}</ErrorCallout>;
   }
 
@@ -76,15 +77,40 @@ export function RagEvaluationSiteApp({ apiBase = '/api/widget', defaultPageId = 
     return <Panel className="rag-evaluation-site-state" title="RAG Evaluation Site" density="condensed"><Caption>No Widget IR returned.</Caption></Panel>;
   }
 
-  return renderPage(page, pageId, (action, context) => { void handleAction(action, context); });
+  return (
+    <>
+      {renderPage(page, pageId, (action, context) => { void handleAction(action, context); })}
+      {loading && <RoutePendingIndicator />}
+      {error && <ErrorCallout className="rag-evaluation-site-inline-error">Failed to refresh Widget IR page: {error.message}</ErrorCallout>}
+    </>
+  );
+}
+
+function RoutePendingIndicator(): ReactNode {
+  return (
+    <div className="rag-evaluation-site-route-pending" role="status" aria-live="polite" data-rag-route-pending="true">
+      <span className="rag-evaluation-site-route-pending__bar" />
+      <span className="rag-evaluation-site-route-pending__label">Loading next page…</span>
+    </div>
+  );
 }
 
 function renderPage(page: WidgetPageResponse, pageId: string, onAction: (action: ActionSpec, context: WidgetActionContext) => void): ReactNode {
   const meta = normalizeMeta(page.meta);
-  const renderedRoot = <WidgetRenderer node={page.root} onAction={onAction} />;
   const rootClassName = ['rag-evaluation-site-root', shouldUseDefaultShell(page, meta) ? 'rag-evaluation-site-root--shell' : 'rag-evaluation-site-root--raw']
     .filter(Boolean)
     .join(' ');
+
+  const courseShellNode = findRootCourseStudioShellNode(page.root);
+  if (courseShellNode) {
+    return (
+      <div className={rootClassName} data-rag-page="RagEvaluationSiteApp" data-page-id={page.id} data-rag-shell="course-studio">
+        {renderCourseStudioShellPage(courseShellNode, onAction)}
+      </div>
+    );
+  }
+
+  const renderedRoot = <WidgetRenderer node={page.root} onAction={onAction} />;
 
   if (!shouldUseDefaultShell(page, meta)) {
     return (
@@ -125,14 +151,56 @@ function renderPage(page: WidgetPageResponse, pageId: string, onAction: (action:
   );
 }
 
+function renderCourseStudioShellPage(node: ComponentNode, onAction: (action: ActionSpec, context: WidgetActionContext) => void): ReactNode {
+  const props = (node.props ?? {}) as CourseStudioShellWidgetProps;
+  return (
+    <CourseStudioShell
+      className={props.className}
+      sections={(props.sections ?? []).map((section) => ({
+        ...section,
+        label: renderRenderableValue(section.label, onAction),
+        items: section.items.map((item) => ({
+          ...item,
+          label: renderRenderableValue(item.label, onAction),
+          icon: renderRenderableValue(item.icon, onAction),
+          badge: renderRenderableValue(item.badge, onAction),
+        })),
+      }))}
+      activeItemId={props.activeItemId}
+      onNavigate={(itemId) => {
+        if (props.onNavigateAction) onAction(props.onNavigateAction, { itemId, value: itemId, componentType: 'CourseStudioShell' });
+      }}
+      title={renderRenderableValue(props.title, onAction)}
+      subtitle={renderRenderableValue(props.subtitle, onAction)}
+      sidebarFooter={props.sidebarFooter ? <WidgetRenderer node={props.sidebarFooter} onAction={onAction} /> : undefined}
+    >
+      {(node.children ?? []).map((child, index) => <WidgetRenderer key={widgetNodeKey(child, index)} node={child} onAction={onAction} />)}
+    </CourseStudioShell>
+  );
+}
+
 function shouldUseDefaultShell(page: WidgetPageResponse, meta: WidgetPageMeta): boolean {
   if (meta.shell === 'none') return false;
   if (isAppShellNode(page.root)) return false;
+  if (findRootCourseStudioShellNode(page.root)) return false;
   return true;
 }
 
 function isAppShellNode(node: WidgetNode): boolean {
   return node.kind === 'component' && node.type === 'AppShell';
+}
+
+function findRootCourseStudioShellNode(node: WidgetNode): ComponentNode | null {
+  if (node.kind !== 'component') return null;
+  if (node.type === 'CourseStudioShell') return node;
+  const children = node.children ?? [];
+  const onlyChild = children[0];
+  if (children.length !== 1 || !onlyChild) return null;
+  return isCourseStudioShellNode(onlyChild) ? onlyChild : null;
+}
+
+function isCourseStudioShellNode(node: WidgetNode): node is ComponentNode {
+  return node.kind === 'component' && node.type === 'CourseStudioShell';
 }
 
 function normalizeMeta(meta: Record<string, unknown> | undefined): WidgetPageMeta {
@@ -160,10 +228,30 @@ function isAppNavItemSpec(value: unknown): value is AppNavItemSpec {
 }
 
 function renderNavLabel(label: RenderableValue): ReactNode {
-  if (label && typeof label === 'object' && 'kind' in label) {
-    return <WidgetRenderer node={label as WidgetNode} />;
+  return renderRenderableValue(label);
+}
+
+function renderRenderableValue(value: RenderableValue | undefined, onAction?: (action: ActionSpec, context: WidgetActionContext) => void): ReactNode {
+  if (value && typeof value === 'object' && 'kind' in value) {
+    return <WidgetRenderer node={value as WidgetNode} onAction={onAction} />;
   }
-  return String(label ?? '');
+  return value == null ? null : String(value);
+}
+
+function widgetNodeKey(node: WidgetNode, fallback: number): string | number {
+  if (node.kind === 'component') {
+    const props = (node.props ?? {}) as { id?: unknown; key?: unknown };
+    if (typeof props.key === 'string' || typeof props.key === 'number') return props.key;
+    if (typeof props.id === 'string' || typeof props.id === 'number') return props.id;
+    return `${node.type}-${fallback}`;
+  }
+  if (node.kind === 'element') {
+    const attrs = (node.attrs ?? {}) as { id?: unknown; key?: unknown };
+    if (typeof attrs.key === 'string' || typeof attrs.key === 'number') return attrs.key;
+    if (typeof attrs.id === 'string' || typeof attrs.id === 'number') return attrs.id;
+    return `${node.tag}-${fallback}`;
+  }
+  return fallback;
 }
 
 function contentClassName(maxWidth: PageMaxWidth | undefined): string {
@@ -176,7 +264,8 @@ function navigateToPage(pageId: string): void {
   const url = new URL(window.location.href);
   url.pathname = `/pages/${encodeURIComponent(pageId)}`;
   url.searchParams.delete('page');
-  window.location.assign(url.toString());
+  window.history.pushState({}, '', url.toString());
+  window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
 function readSearchFromLocation(_locationVersion: number): string {
