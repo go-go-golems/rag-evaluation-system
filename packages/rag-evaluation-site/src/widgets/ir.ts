@@ -230,6 +230,11 @@ export interface ContextDiagramPanelWidgetProps extends BaseWidgetProps {
   snapshot: ContextWindowSnapshot;
   initialView?: ContextDiagramView;
   selectedPartId?: string;
+  views?: ContextDiagramView[];
+  showLegend?: boolean;
+  legendKinds?: ContextPartKind[];
+  legendMode?: ContextDiagramStyle;
+  showPartDetails?: boolean;
 }
 
 export interface TranscriptSessionHeaderWidgetProps extends BaseWidgetProps {

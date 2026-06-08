@@ -332,7 +332,7 @@ function renderContextTreemap(node: ComponentNode): ReactNode {
 
 function renderContextDiagramPanel(node: ComponentNode): ReactNode {
   const props = (node.props ?? {}) as ContextDiagramPanelWidgetProps;
-  return <ContextDiagramPanel className={props.className} snapshot={props.snapshot} initialView={props.initialView} selectedPartId={props.selectedPartId} />;
+  return <ContextDiagramPanel className={props.className} snapshot={props.snapshot} initialView={props.initialView} selectedPartId={props.selectedPartId} views={props.views} showLegend={props.showLegend} legendKinds={props.legendKinds} legendMode={props.legendMode} showPartDetails={props.showPartDetails} />;
 }
 
 function renderTranscriptSessionHeader(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {

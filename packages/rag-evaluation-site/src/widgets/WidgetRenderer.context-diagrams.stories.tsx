@@ -8,6 +8,21 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const snapshot = contextWindowSnapshots[0]!;
+const contentSnapshot = {
+  id: 'widget-ir-content-blocks',
+  title: 'Widget IR content blocks',
+  subtitle: 'Server-provided parts correspond to transcript/tool blocks.',
+  limit: 16_000,
+  selectedPartId: 'tool-result',
+  parts: [
+    { id: 'system', label: 'system', kind: 'system', tokens: 720, note: 'Instructions and tool policy.', contentPreview: 'You are an expert coding assistant...' },
+    { id: 'user-turn', label: 'T4 user', kind: 'conversation', tokens: 180, note: 'User asks for content-level context visualization.', contentPreview: 'I want the context view visualization to be more about the actual content...' },
+    { id: 'tool-call', label: 'T5 bash call', kind: 'tool', tokens: 90, note: 'Search command.', contentPreview: '$ rg -n ContextDiagramPanel packages pkg -S', metadata: { turn: 5, toolName: 'bash' } },
+    { id: 'tool-result', label: 'T5 search output', kind: 'result', tokens: 1180, note: 'Search results showing the files to change.', contentPreview: 'packages/rag-evaluation-site/src/widgets/ir.ts:229...\npackages/rag-evaluation-site/src/components/organisms/ContextDiagramPanel...', metadata: { turn: 5, fullBytes: 4720 } },
+    { id: 'answer', label: 'T6 assistant', kind: 'active', tokens: 340, note: 'Current answer draft.', contentPreview: 'Yes — the current panel hard-codes a generic legend...' },
+    { id: 'free', label: 'free', kind: 'empty', tokens: 13_490 },
+  ],
+};
 const overBudgetSnapshot = {
   ...contextWindowSnapshots[1]!,
   id: 'over-budget-widget-ir',
@@ -43,6 +58,18 @@ export const ContextDiagramPanelModes: Story = {
       component('ContextDiagramPanel', { snapshot, initialView: 'stack', selectedPartId: snapshot.selectedPartId }),
       component('ContextDiagramPanel', { snapshot, initialView: 'treemap', selectedPartId: snapshot.selectedPartId }),
     ]),
+  },
+};
+
+export const ContextDiagramPanelContentDetails: Story = {
+  args: {
+    node: component('ContextDiagramPanel', {
+      snapshot: contentSnapshot,
+      initialView: 'stack',
+      views: ['stack', 'strip', 'budget'],
+      showPartDetails: true,
+      legendKinds: ['conversation', 'tool', 'result', 'active', 'empty'],
+    }),
   },
 };
 

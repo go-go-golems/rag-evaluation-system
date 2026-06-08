@@ -1,1 +1,58 @@
 .viewport { min-height: 96px; }
+
+.detail {
+  border: 1px solid var(--mac-border);
+  border-radius: 5px;
+  background: var(--mac-surface);
+  padding: 12px;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.detailNote {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.preview {
+  max-height: 180px;
+  overflow: auto;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--mac-border);
+  border-radius: 4px;
+  background: var(--mac-surface-2);
+  color: var(--mac-text);
+  font: var(--rag-font-role-code);
+  white-space: pre-wrap;
+}
+
+.metadata {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 6px 12px;
+  margin: 10px 0 0;
+}
+
+.metadataItem {
+  min-width: 0;
+}
+
+.metadataItem dt {
+  color: var(--mac-text-dim);
+  font: var(--rag-font-role-label);
+}
+
+.metadataItem dd {
+  margin: 2px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--rag-font-role-metadata);
+}

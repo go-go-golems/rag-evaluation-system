@@ -33,6 +33,8 @@ export interface ContextWindowPart {
   kind: ContextPartKind;
   tokens: number;
   note?: string;
+  contentPreview?: string;
+  content?: string;
   sourceId?: string;
   startToken?: number;
   endToken?: number;
