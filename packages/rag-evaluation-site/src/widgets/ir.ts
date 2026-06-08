@@ -1,7 +1,7 @@
 import type { CaptionTone, CaptionTransform, RagStatus, TextAlign, TextAs, TextSize, TextTone, TextWeight } from '../components/foundation';
 import type { ButtonSize, ButtonVariant, ContextKindSwatchSize } from '../components/atoms';
 import type { DashboardGridRecipe, InlineGap, InlineJustify, StackAlign, StackGap } from '../components/layout';
-import type { AnchoredComment, ContextDiagramStyle, ContextDiagramView, ContextPartKind, ContextWindowSnapshot, TranscriptAnnotation, TranscriptMessage, TranscriptRole } from '../context';
+import type { AnchoredComment, ContextCourse, ContextCourseAgendaItem, ContextDiagramStyle, ContextDiagramView, ContextHandoutDocument, ContextSlide, ContextPartKind, ContextWindowSnapshot, TranscriptAnnotation, TranscriptMessage, TranscriptRole } from '../context';
 
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -46,6 +46,7 @@ export type RagWidgetType =
   | 'SectionBlock'
   | 'SelectInput'
   | 'SidebarShell'
+  | 'SlideShell'
   | 'SplitPane'
   | 'Stack'
   | 'StatusText'
@@ -60,7 +61,22 @@ export type RagWidgetType =
   | 'TranscriptReaderPanel'
   | 'TranscriptWorkspacePanel'
   | 'AnchoredCommentCard'
-  | 'AnchoredCommentRail';
+  | 'AnchoredCommentRail'
+  | 'KeyValueStrip'
+  | 'CheckList'
+  | 'StepList'
+  | 'PersonSummary'
+  | 'FigureBlock'
+  | 'KeyPointList'
+  | 'SidebarNav'
+  | 'CourseStepNav'
+  | 'MarkdownArticle'
+  | 'DocumentListPanel'
+  | 'DocumentPreviewToolbar'
+  | 'CourseLessonPanel'
+  | 'CourseSlidePanel'
+  | 'CourseStudioShell'
+  | 'HandoutDocumentShell';
 
 export interface ComponentNode {
   kind: 'component';
@@ -275,6 +291,27 @@ export interface AnchoredCommentRailWidgetProps extends BaseWidgetProps {
   onCommentSelectAction?: ActionSpec;
 }
 
+export interface KeyValueStripWidgetProps extends BaseWidgetProps { items: Array<{ key: RenderableValue; value: RenderableValue }>; }
+export interface CheckListWidgetProps extends BaseWidgetProps { items: Array<{ id?: string; text: RenderableValue } | RenderableValue>; marker?: RenderableValue; }
+export interface StepListWidgetProps extends BaseWidgetProps { items: Array<{ id: string; index: RenderableValue; title: RenderableValue; description?: RenderableValue; meta?: RenderableValue }>; activeItemId?: string; onItemSelectAction?: ActionSpec; }
+export interface PersonSummaryWidgetProps extends BaseWidgetProps { name: RenderableValue; subtitle?: RenderableValue; bio?: RenderableValue; avatar?: RenderableValue; }
+export interface FigureBlockWidgetProps extends BaseWidgetProps { as?: 'figure' | 'div'; caption?: RenderableValue; legend?: WidgetNode; frame?: 'none' | 'bordered' | 'inset'; }
+export interface KeyPointListWidgetProps extends BaseWidgetProps { items: Array<{ id?: string; index?: RenderableValue; title?: RenderableValue; text: RenderableValue; meta?: RenderableValue } | RenderableValue>; markerTone?: 'accent' | 'muted'; }
+
+export interface SidebarNavItemWidgetSpec { id: string; label: RenderableValue; icon?: RenderableValue; badge?: RenderableValue; disabled?: boolean; }
+export interface SidebarNavSectionWidgetSpec { id: string; label: RenderableValue; items: SidebarNavItemWidgetSpec[]; }
+export interface SidebarNavWidgetProps extends BaseWidgetProps { sections: SidebarNavSectionWidgetSpec[]; activeItemId?: string; onItemSelectAction?: ActionSpec; ariaLabel?: string; }
+
+export interface CourseStepNavWidgetProps extends BaseWidgetProps { items: ContextCourseAgendaItem[]; activeItemId?: string; onItemSelectAction?: ActionSpec; }
+export interface MarkdownArticleWidgetProps extends BaseWidgetProps { source: string; }
+export interface DocumentListItemWidgetSpec { id: string; title: RenderableValue; format?: RenderableValue; size?: RenderableValue; description?: RenderableValue; icon?: RenderableValue; disabled?: boolean; }
+export interface DocumentListPanelWidgetProps extends BaseWidgetProps { title: RenderableValue; description?: RenderableValue; items: DocumentListItemWidgetSpec[]; selectedItemId?: string; onItemSelectAction?: ActionSpec; onDownloadAllAction?: ActionSpec; downloadAllLabel?: RenderableValue; emptyMessage?: RenderableValue; showItemDescriptions?: boolean; }
+export interface DocumentPreviewToolbarWidgetProps extends BaseWidgetProps { file: RenderableValue; format?: RenderableValue; size?: RenderableValue; onDownloadAction?: ActionSpec; downloadLabel?: RenderableValue; rightSlot?: WidgetNode; }
+export interface CourseLessonPanelWidgetProps extends BaseWidgetProps { course: ContextCourse; activeAgendaItemId?: string; onAgendaItemSelectAction?: ActionSpec; }
+export interface CourseSlidePanelWidgetProps extends BaseWidgetProps { slide: ContextSlide; snapshot: ContextWindowSnapshot; index?: number; total?: number; visualSide?: 'left' | 'right'; onPreviousAction?: ActionSpec; onNextAction?: ActionSpec; }
+export interface CourseStudioShellWidgetProps extends BaseWidgetProps { sections: SidebarNavSectionWidgetSpec[]; activeItemId?: string; onNavigateAction?: ActionSpec; title?: RenderableValue; subtitle?: RenderableValue; sidebarFooter?: WidgetNode; }
+export interface HandoutDocumentShellWidgetProps extends BaseWidgetProps { intro: RenderableValue; documents: ContextHandoutDocument[]; selectedDocumentId?: string; onDocumentSelectAction?: ActionSpec; onDownloadAction?: ActionSpec; onDownloadAllAction?: ActionSpec; title?: RenderableValue; emptyMessage?: RenderableValue; }
+
 export interface CaptionWidgetProps extends BaseWidgetProps {
   tone?: CaptionTone;
   transform?: CaptionTransform;
@@ -415,6 +452,20 @@ export interface SidebarShellWidgetProps extends BaseWidgetProps {
   footer?: WidgetNode;
 }
 
+export interface SlideShellWidgetProps extends BaseWidgetProps {
+  as?: 'article' | 'section' | 'div';
+  eyebrow?: RenderableValue;
+  counter?: RenderableValue;
+  title: RenderableValue;
+  subtitle?: RenderableValue;
+  primary: WidgetNode;
+  secondary?: WidgetNode;
+  primarySide?: 'left' | 'right';
+  ratio?: 'balanced' | 'primaryWide' | 'secondaryWide';
+  divider?: boolean;
+  footer?: WidgetNode;
+}
+
 export interface SelectInputWidgetProps extends BaseWidgetProps {
   name?: string;
   value?: string | number;
@@ -485,6 +536,21 @@ export type WidgetProps =
   | TranscriptWorkspacePanelWidgetProps
   | AnchoredCommentCardWidgetProps
   | AnchoredCommentRailWidgetProps
+  | KeyValueStripWidgetProps
+  | CheckListWidgetProps
+  | StepListWidgetProps
+  | PersonSummaryWidgetProps
+  | FigureBlockWidgetProps
+  | KeyPointListWidgetProps
+  | SidebarNavWidgetProps
+  | CourseStepNavWidgetProps
+  | MarkdownArticleWidgetProps
+  | DocumentListPanelWidgetProps
+  | DocumentPreviewToolbarWidgetProps
+  | CourseLessonPanelWidgetProps
+  | CourseSlidePanelWidgetProps
+  | CourseStudioShellWidgetProps
+  | HandoutDocumentShellWidgetProps
   | CaptionWidgetProps
   | DashboardGridWidgetProps
   | DataTableWidgetProps
@@ -496,6 +562,7 @@ export type WidgetProps =
   | SectionBlockWidgetProps
   | SplitPaneWidgetProps
   | SidebarShellWidgetProps
+  | SlideShellWidgetProps
   | SelectInputWidgetProps
   | StackWidgetProps
   | StatusTextWidgetProps

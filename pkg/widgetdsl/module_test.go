@@ -296,6 +296,42 @@ func TestTranscriptAndCommentHelpersAreJSONSerializable(t *testing.T) {
 	assertString(t, children[3].(map[string]any), "type", "AnchoredCommentRail")
 }
 
+func TestCourseAndHandoutHelpersAreJSONSerializable(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const rag = require("widget.dsl");
+		const course = { id: "course", title: "Context", tagline: "Learn windows", outcomes: ["Trace tokens"], agenda: [{ id: "intro", number: "01", title: "Intro", description: "Start", duration: "10m" }] };
+		const snapshot = { id: "ctx", title: "Window", limit: 1000, parts: [{ id: "p", label: "Prompt", kind: "conversation", tokens: 300 }] };
+		const slide = { id: "s1", number: "01", title: "Window shape", view: "budget", snapshotId: "ctx", notes: ["Budget matters"] };
+		const docs = [{ id: "d1", title: "Guide", file: "guide.md", format: "markdown", description: "Guide", body: "# Guide\n\nRead me." }];
+		const sections = [{ id: "course", label: "Course", items: [{ id: "slides", label: "Slides", icon: "▣" }] }];
+		const page = rag.page({ id: "course", title: "Course", sections: [
+			rag.courseStudioShell({ sections, activeItemId: "slides", title: "Studio" }, rag.courseSlidePanel({ slide, snapshot, index: 0, total: 1 })),
+			rag.courseLessonPanel({ course, activeAgendaItemId: "intro", onAgendaItemSelectAction: rag.action.server("select-agenda") }),
+			rag.handoutDocumentShell({ intro: "Docs", documents: docs, selectedDocumentId: "d1", onDocumentSelectAction: rag.action.server("select-doc") }),
+			rag.slideShell({ title: "Custom", primary: rag.figureBlock({ caption: "Budget" }, rag.contextBudgetBar({ snapshot })), secondary: rag.keyPointList({ items: ["One", "Two"] }) })
+		]});
+		JSON.stringify(page);
+	`)
+	if err != nil {
+		t.Fatalf("build course/handout IR: %v", err)
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal([]byte(value.String()), &decoded); err != nil {
+		t.Fatalf("course/handout page is not JSON: %v\n%s", err, value.String())
+	}
+	root := decoded["root"].(map[string]any)
+	children := root["children"].([]any)
+	assertString(t, children[0].(map[string]any), "type", "CourseStudioShell")
+	assertString(t, children[1].(map[string]any), "type", "CourseLessonPanel")
+	assertString(t, children[2].(map[string]any), "type", "HandoutDocumentShell")
+	assertString(t, children[3].(map[string]any), "type", "SlideShell")
+}
+
 func TestSemanticRecipesAndActionsAreJSONSerializable(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()

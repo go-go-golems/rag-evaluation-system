@@ -498,3 +498,67 @@ The new Storybook subgroup `Widget IR/Renderer/Transcript and Notes` includes no
   - `{ annotationId, value: annotationId, componentType }`
 - Comment rail selection context shape:
   - `{ commentId, value: commentId, componentType: 'AnchoredCommentRail' }`
+
+## Step 7: Add Course, Studio, Handout, and Document Widget IR Support
+
+I added Widget IR support for the course and handout surfaces: generic content molecules, slide shell, sidebar navigation, course lesson and slide panels, course studio shell, markdown article rendering, document list/toolbar, and the full handout document shell. This completes the major React component families that were recently added to the package.
+
+The new `Widget IR/Renderer/Course Studio` story file includes course landing, slide with context visual, custom teaching slide composition, handout shell, course-plus-handout split view, and document-list-plus-preview-toolbar compositions. These stories intentionally combine multiple component layers to prove that Widget IR can build real product surfaces, not just isolated widgets.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 4)
+
+**Assistant interpretation:** Continue executing the Widget IR implementation plan with diary updates and commits.
+
+**Inferred user intent:** Keep progressing through all planned component families so the expanded design-system package is usable from Widget IR.
+
+### What I did
+- Added IR prop interfaces for:
+  - `SlideShell`, `KeyValueStrip`, `CheckList`, `StepList`, `PersonSummary`, `FigureBlock`, `KeyPointList`
+  - `SidebarNav`, `CourseStepNav`, `MarkdownArticle`, `DocumentListPanel`, `DocumentPreviewToolbar`
+  - `CourseLessonPanel`, `CourseSlidePanel`, `CourseStudioShell`, `HandoutDocumentShell`
+- Added renderer cases and render helpers for those components.
+- Added action binding for item/document/nav/agenda selection and download actions.
+- Added `WidgetRenderer.course-handout.stories.tsx` under `Widget IR/Renderer/Course Studio`.
+- Added Goja helper mappings and schema names for the new components.
+- Added Go JSON serialization coverage for course/handout helpers.
+
+### Why
+- Course, studio, and handout surfaces are the most page-like components in the package and prove that IR can compose beyond dashboard panels.
+- The handout/document shell also validates markdown/document DTO rendering through semantic nodes.
+
+### What worked
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `pnpm --dir packages/rag-evaluation-site build` passed.
+- `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-widget-ir-phase-5` passed.
+- `go test ./pkg/widgetdsl ./pkg/widgetrunner ./pkg/widgetserver ./pkg/widgetschema -count=1` passed.
+
+### What didn't work
+- No blocking failures in this phase after fixing missing `SlideShell` renderer support while implementing the course composition story.
+
+### What I learned
+- The page-like components need careful conversion of `RenderableValue` fields back into React nodes. This is especially visible in `SidebarNav`, `DocumentListPanel`, and `CourseStudioShell`.
+- `SlideShell` belongs in this phase because course stories need custom slide composition, not only `CourseSlidePanel`.
+
+### What was tricky to build
+- Several molecule props contain arrays of objects with nested `ReactNode`-like fields. The renderer now maps those nested fields through `renderRenderableValue` rather than passing JSON objects directly.
+- Download actions have no natural selected id in some molecules, so the renderer binds component-level contexts for toolbar/download-all and document-id contexts for handout document downloads.
+
+### What warrants a second pair of eyes
+- Review whether the compressed one-line IR interfaces in `ir.ts` should be expanded for readability before final merge.
+- Review action context names for document and nav selection.
+- Review whether `DocumentPreviewToolbar.onDownloadAction` should include file metadata in context.
+
+### What should be done in the future
+- Add semantic recipes on top of these direct nodes.
+- Add end-to-end xgoja example pages using course/handout recipes.
+
+### Code review instructions
+- Start with `WidgetRenderer.course-handout.stories.tsx` to see the intended compositions.
+- Review nested renderable mapping in `WidgetRenderer.tsx` for list/document/sidebar props.
+- Validate with package typecheck/build/Storybook and targeted Go tests.
+
+### Technical details
+- New subgroup: `Widget IR/Renderer/Course Studio`.
+- `SlideShell` is now a direct IR node with `primary`, `secondary`, and `footer` slot props.

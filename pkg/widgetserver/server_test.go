@@ -56,7 +56,7 @@ func TestSchemaAndHealthEndpoints(t *testing.T) {
 	if len(components) == 0 || len(schema["cellKinds"].([]any)) == 0 {
 		t.Fatalf("schema lists are empty: %#v", schema)
 	}
-	for _, component := range []string{"Text", "ContextKindSwatch", "SectionBlock", "SplitPane", "SidebarShell", "ContextDiagramPanel", "ContextBudgetBar", "TranscriptWorkspacePanel", "AnnotationRailPanel", "AnchoredCommentRail"} {
+	for _, component := range []string{"Text", "ContextKindSwatch", "SectionBlock", "SplitPane", "SidebarShell", "SlideShell", "ContextDiagramPanel", "ContextBudgetBar", "TranscriptWorkspacePanel", "AnnotationRailPanel", "AnchoredCommentRail", "CourseStudioShell", "CourseSlidePanel", "HandoutDocumentShell"} {
 		if !containsString(components, component) {
 			t.Fatalf("schema components missing %s: %#v", component, components)
 		}

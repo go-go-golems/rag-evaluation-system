@@ -1,9 +1,9 @@
 import { createElement, type CSSProperties, type ReactNode } from 'react';
 import { AnnotationBadge, Button, ContextKindSwatch, ErrorCallout, SelectInput, TextInput, TranscriptRoleBadge } from '../components/atoms';
 import { Caption, CodeText, Divider, StatusText, Text } from '../components/foundation';
-import { AppShell, DashboardGrid, FormRow, Inline, Panel, ScrollRegion, SectionBlock, SidebarShell, SplitPane, Stack, TabList } from '../components/layout';
-import { AnnotationNoteCard, AnchoredCommentCard, AppNav, ContextBudgetBar, ContextLegend, ContextStackDiagram, ContextStripDiagram, ContextTreemap, DataTable, MetadataGrid, TranscriptMessageCard, TranscriptSessionHeader } from '../components/molecules';
-import { AnnotationRailPanel, AnchoredCommentRail, ContextDiagramPanel, TranscriptReaderPanel, TranscriptWorkspacePanel } from '../components/organisms';
+import { AppShell, DashboardGrid, FormRow, Inline, Panel, ScrollRegion, SectionBlock, SidebarShell, SlideShell, SplitPane, Stack, TabList } from '../components/layout';
+import { AnnotationNoteCard, AnchoredCommentCard, AppNav, CheckList, ContextBudgetBar, ContextLegend, ContextStackDiagram, ContextStripDiagram, ContextTreemap, CourseStepNav, DataTable, DocumentListPanel, DocumentPreviewToolbar, FigureBlock, KeyPointList, KeyValueStrip, MarkdownArticle, MetadataGrid, PersonSummary, SidebarNav, StepList, TranscriptMessageCard, TranscriptSessionHeader } from '../components/molecules';
+import { AnnotationRailPanel, AnchoredCommentRail, ContextDiagramPanel, CourseLessonPanel, CourseSlidePanel, CourseStudioShell, HandoutDocumentShell, TranscriptReaderPanel, TranscriptWorkspacePanel } from '../components/organisms';
 import type {
   ActionSpec,
   AnchoredCommentCardWidgetProps,
@@ -15,6 +15,7 @@ import type {
   AnnotationBadgeWidgetProps,
   ButtonWidgetProps,
   CaptionWidgetProps,
+  CheckListWidgetProps,
   CodeTextWidgetProps,
   ComponentNode,
   ContextBudgetBarWidgetProps,
@@ -24,20 +25,35 @@ import type {
   ContextStackDiagramWidgetProps,
   ContextStripDiagramWidgetProps,
   ContextTreemapWidgetProps,
+  CourseLessonPanelWidgetProps,
+  CourseSlidePanelWidgetProps,
+  CourseStepNavWidgetProps,
+  CourseStudioShellWidgetProps,
   DashboardGridWidgetProps,
   DividerWidgetProps,
   DataTableWidgetProps,
+  DocumentListPanelWidgetProps,
+  DocumentPreviewToolbarWidgetProps,
   ElementNode,
+  FigureBlockWidgetProps,
   FormRowWidgetProps,
+  HandoutDocumentShellWidgetProps,
   InlineWidgetProps,
   JsonObject,
+  KeyPointListWidgetProps,
+  KeyValueStripWidgetProps,
+  MarkdownArticleWidgetProps,
   MetadataGridWidgetProps,
   PanelWidgetProps,
+  PersonSummaryWidgetProps,
   ScrollRegionWidgetProps,
   SectionBlockWidgetProps,
   SelectInputWidgetProps,
+  SidebarNavWidgetProps,
   SidebarShellWidgetProps,
+  SlideShellWidgetProps,
   SplitPaneWidgetProps,
+  StepListWidgetProps,
   StackWidgetProps,
   StatusTextWidgetProps,
   TabListWidgetProps,
@@ -134,6 +150,36 @@ function renderComponentNode(node: ComponentNode, onAction?: WidgetActionHandler
       return renderAnchoredCommentCard(node, onAction);
     case 'AnchoredCommentRail':
       return renderAnchoredCommentRail(node, onAction);
+    case 'KeyValueStrip':
+      return renderKeyValueStrip(node, onAction);
+    case 'CheckList':
+      return renderCheckList(node, onAction);
+    case 'StepList':
+      return renderStepList(node, onAction);
+    case 'PersonSummary':
+      return renderPersonSummary(node, onAction);
+    case 'FigureBlock':
+      return renderFigureBlock(node, onAction);
+    case 'KeyPointList':
+      return renderKeyPointList(node, onAction);
+    case 'SidebarNav':
+      return renderSidebarNav(node, onAction);
+    case 'CourseStepNav':
+      return renderCourseStepNav(node, onAction);
+    case 'MarkdownArticle':
+      return renderMarkdownArticle(node);
+    case 'DocumentListPanel':
+      return renderDocumentListPanel(node, onAction);
+    case 'DocumentPreviewToolbar':
+      return renderDocumentPreviewToolbar(node, onAction);
+    case 'CourseLessonPanel':
+      return renderCourseLessonPanel(node, onAction);
+    case 'CourseSlidePanel':
+      return renderCourseSlidePanel(node, onAction);
+    case 'CourseStudioShell':
+      return renderCourseStudioShell(node, onAction);
+    case 'HandoutDocumentShell':
+      return renderHandoutDocumentShell(node, onAction);
     case 'Caption':
       return renderCaption(node, onAction);
     case 'DashboardGrid':
@@ -156,6 +202,8 @@ function renderComponentNode(node: ComponentNode, onAction?: WidgetActionHandler
       return renderSplitPane(node, onAction);
     case 'SidebarShell':
       return renderSidebarShell(node, onAction);
+    case 'SlideShell':
+      return renderSlideShell(node, onAction);
     case 'SelectInput':
       return renderSelectInput(node, onAction);
     case 'Stack':
@@ -316,6 +364,94 @@ function renderAnchoredCommentRail(node: ComponentNode, onAction?: WidgetActionH
   return <AnchoredCommentRail className={props.className} title={props.title} comments={props.comments} selectedCommentId={props.selectedCommentId} onCommentSelect={props.onCommentSelectAction ? (commentId) => bindAndRun(props.onCommentSelectAction!, { commentId, value: commentId, componentType: 'AnchoredCommentRail' }, onAction) : undefined} />;
 }
 
+function renderKeyValueStrip(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as KeyValueStripWidgetProps;
+  return <KeyValueStrip className={props.className} items={props.items.map((item) => ({ key: renderRenderableValue(item.key, onAction), value: renderRenderableValue(item.value, onAction) }))} />;
+}
+
+function renderCheckList(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as CheckListWidgetProps;
+  return <CheckList className={props.className} marker={renderRenderableValue(props.marker, onAction)} items={props.items.map((item) => (isChecklistObject(item) ? { ...item, text: renderRenderableValue(item.text, onAction) } : renderRenderableValue(item, onAction)))} />;
+}
+
+function renderStepList(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as StepListWidgetProps;
+  return <StepList className={props.className} items={props.items.map((item) => ({ ...item, index: renderRenderableValue(item.index, onAction), title: renderRenderableValue(item.title, onAction), description: renderRenderableValue(item.description, onAction), meta: renderRenderableValue(item.meta, onAction) }))} activeItemId={props.activeItemId} onItemSelect={itemSelectHandler('StepList', props.onItemSelectAction, 'itemId', onAction)} />;
+}
+
+function renderPersonSummary(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as PersonSummaryWidgetProps;
+  return <PersonSummary className={props.className} name={renderRenderableValue(props.name, onAction)} subtitle={renderRenderableValue(props.subtitle, onAction)} bio={renderRenderableValue(props.bio, onAction)} avatar={renderRenderableValue(props.avatar, onAction)} />;
+}
+
+function renderFigureBlock(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as FigureBlockWidgetProps;
+  return <FigureBlock className={props.className} as={props.as} caption={renderRenderableValue(props.caption, onAction)} legend={renderNodeProp(props.legend, onAction)} frame={props.frame}>{renderChildren(node.children, onAction)}</FigureBlock>;
+}
+
+function renderKeyPointList(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as KeyPointListWidgetProps;
+  return <KeyPointList className={props.className} markerTone={props.markerTone} items={props.items.map((item) => (isKeyPointObject(item) ? { ...item, index: renderRenderableValue(item.index, onAction), title: renderRenderableValue(item.title, onAction), text: renderRenderableValue(item.text, onAction), meta: renderRenderableValue(item.meta, onAction) } : renderRenderableValue(item, onAction)))} />;
+}
+
+function renderSidebarNav(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as SidebarNavWidgetProps;
+  return <SidebarNav className={props.className} sections={props.sections.map((section) => ({ ...section, label: renderRenderableValue(section.label, onAction), items: section.items.map((item) => ({ ...item, label: renderRenderableValue(item.label, onAction), icon: renderRenderableValue(item.icon, onAction), badge: renderRenderableValue(item.badge, onAction) })) }))} activeItemId={props.activeItemId} ariaLabel={props.ariaLabel} onItemSelect={itemSelectHandler('SidebarNav', props.onItemSelectAction, 'itemId', onAction)} />;
+}
+
+function renderCourseStepNav(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as CourseStepNavWidgetProps;
+  return <CourseStepNav className={props.className} items={props.items} activeItemId={props.activeItemId} onItemSelect={itemSelectHandler('CourseStepNav', props.onItemSelectAction, 'itemId', onAction)} />;
+}
+
+function renderMarkdownArticle(node: ComponentNode): ReactNode {
+  const props = (node.props ?? {}) as MarkdownArticleWidgetProps;
+  return <MarkdownArticle className={props.className} source={props.source} />;
+}
+
+function renderDocumentListPanel(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as DocumentListPanelWidgetProps;
+  return <DocumentListPanel className={props.className} title={renderRenderableValue(props.title, onAction)} description={renderRenderableValue(props.description, onAction)} items={props.items.map((item) => ({ ...item, title: renderRenderableValue(item.title, onAction), format: renderRenderableValue(item.format, onAction), size: renderRenderableValue(item.size, onAction), description: renderRenderableValue(item.description, onAction), icon: renderRenderableValue(item.icon, onAction) }))} selectedItemId={props.selectedItemId} onItemSelect={itemSelectHandler('DocumentListPanel', props.onItemSelectAction, 'itemId', onAction)} onDownloadAll={props.onDownloadAllAction ? () => bindAndRun(props.onDownloadAllAction!, { componentType: 'DocumentListPanel' }, onAction) : undefined} downloadAllLabel={renderRenderableValue(props.downloadAllLabel, onAction)} emptyMessage={renderRenderableValue(props.emptyMessage, onAction)} showItemDescriptions={props.showItemDescriptions} />;
+}
+
+function renderDocumentPreviewToolbar(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as DocumentPreviewToolbarWidgetProps;
+  return <DocumentPreviewToolbar className={props.className} file={renderRenderableValue(props.file, onAction)} format={renderRenderableValue(props.format, onAction)} size={renderRenderableValue(props.size, onAction)} onDownload={props.onDownloadAction ? () => bindAndRun(props.onDownloadAction!, { componentType: 'DocumentPreviewToolbar' }, onAction) : undefined} downloadLabel={renderRenderableValue(props.downloadLabel, onAction)} rightSlot={renderNodeProp(props.rightSlot, onAction)} />;
+}
+
+function renderCourseLessonPanel(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as CourseLessonPanelWidgetProps;
+  return <CourseLessonPanel className={props.className} course={props.course} activeAgendaItemId={props.activeAgendaItemId} onAgendaItemSelect={itemSelectHandler('CourseLessonPanel', props.onAgendaItemSelectAction, 'agendaItemId', onAction)} />;
+}
+
+function renderCourseSlidePanel(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as CourseSlidePanelWidgetProps;
+  return <CourseSlidePanel className={props.className} slide={props.slide} snapshot={props.snapshot} index={props.index} total={props.total} visualSide={props.visualSide} onPrevious={props.onPreviousAction ? () => bindAndRun(props.onPreviousAction!, { componentType: 'CourseSlidePanel', value: 'previous' }, onAction) : undefined} onNext={props.onNextAction ? () => bindAndRun(props.onNextAction!, { componentType: 'CourseSlidePanel', value: 'next' }, onAction) : undefined} />;
+}
+
+function renderCourseStudioShell(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as CourseStudioShellWidgetProps;
+  return <CourseStudioShell className={props.className} sections={props.sections.map((section) => ({ ...section, label: renderRenderableValue(section.label, onAction), items: section.items.map((item) => ({ ...item, label: renderRenderableValue(item.label, onAction), icon: renderRenderableValue(item.icon, onAction), badge: renderRenderableValue(item.badge, onAction) })) }))} activeItemId={props.activeItemId} onNavigate={itemSelectHandler('CourseStudioShell', props.onNavigateAction, 'itemId', onAction)} title={renderRenderableValue(props.title, onAction)} subtitle={renderRenderableValue(props.subtitle, onAction)} sidebarFooter={renderNodeProp(props.sidebarFooter, onAction)}>{renderChildren(node.children, onAction)}</CourseStudioShell>;
+}
+
+function renderHandoutDocumentShell(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as HandoutDocumentShellWidgetProps;
+  return <HandoutDocumentShell className={props.className} intro={renderRenderableValue(props.intro, onAction)} documents={props.documents} selectedDocumentId={props.selectedDocumentId} onDocumentSelect={itemSelectHandler('HandoutDocumentShell', props.onDocumentSelectAction, 'documentId', onAction)} onDownload={props.onDownloadAction ? (documentId) => bindAndRun(props.onDownloadAction!, { documentId, value: documentId, componentType: 'HandoutDocumentShell' }, onAction) : undefined} onDownloadAll={props.onDownloadAllAction ? () => bindAndRun(props.onDownloadAllAction!, { componentType: 'HandoutDocumentShell' }, onAction) : undefined} title={renderRenderableValue(props.title, onAction)} emptyMessage={renderRenderableValue(props.emptyMessage, onAction)} />;
+}
+
+function isChecklistObject(value: unknown): value is { id?: string; text: unknown } {
+  return typeof value === 'object' && value !== null && 'text' in value;
+}
+
+function isKeyPointObject(value: unknown): value is { id?: string; index?: unknown; title?: unknown; text: unknown; meta?: unknown } {
+  return typeof value === 'object' && value !== null && 'text' in value;
+}
+
+function itemSelectHandler(componentType: string, action: ActionSpec | undefined, contextKey: string, onAction?: WidgetActionHandler): ((itemId: string) => void) | undefined {
+  if (!action) return undefined;
+  return (itemId) => bindAndRun(action, { [contextKey]: itemId, value: itemId, componentType }, onAction);
+}
+
 function annotationSelectHandler(componentType: string, action: ActionSpec | undefined, onAction?: WidgetActionHandler): ((annotationId: string) => void) | undefined {
   if (!action) return undefined;
   return (annotationId) => bindAndRun(action, { annotationId, value: annotationId, componentType }, onAction);
@@ -418,6 +554,11 @@ function renderSplitPane(node: ComponentNode, onAction?: WidgetActionHandler): R
 function renderSidebarShell(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
   const props = (node.props ?? {}) as SidebarShellWidgetProps;
   return <SidebarShell className={props.className} sidebar={renderNodeProp(props.sidebar, onAction)} sidebarWidth={props.sidebarWidth} header={renderNodeProp(props.header, onAction)} footer={renderNodeProp(props.footer, onAction)}>{renderChildren(node.children, onAction)}</SidebarShell>;
+}
+
+function renderSlideShell(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as SlideShellWidgetProps;
+  return <SlideShell className={props.className} as={props.as} eyebrow={renderRenderableValue(props.eyebrow, onAction)} counter={renderRenderableValue(props.counter, onAction)} title={renderRenderableValue(props.title, onAction)} subtitle={renderRenderableValue(props.subtitle, onAction)} primary={renderWidgetNode(props.primary, onAction)} secondary={renderNodeProp(props.secondary, onAction)} primarySide={props.primarySide} ratio={props.ratio} divider={props.divider} footer={renderNodeProp(props.footer, onAction)} />;
 }
 
 function renderSelectInput(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
