@@ -129,3 +129,63 @@ See /home/manuel/code/wesen/go-go-golems/go-go-parc/Projects/2026/06/06/RAG-EVAL
   - Add direct semantic component nodes for stable JSON-compatible components.
   - Add high-level recipes for context/transcript/course/handout page compositions.
   - Keep React components as the rendering source of truth.
+
+## Step 2: Add Granular Phase Task List
+
+I added a separate phased implementation task list so the design guide now has an executable companion checklist. The new document decomposes the whole Widget IR expansion into baseline, renderer, Goja helper, context diagram, transcript, course/handout, recipe, schema/docs, validation, and handoff phases.
+
+The plan clarifies that Phase 1 extends the existing `WidgetRenderer` in place, then subsequent phases add Goja helpers, schema entries, DTO-heavy components, semantic recipes, and end-to-end validation. Each phase includes files to edit, component scope, tests, Storybook stories, and done criteria.
+
+### Prompt Context
+
+**User prompt (verbatim):** "create phases and then per phase, granular detailed list of tasks for the whoel thing."
+
+**Assistant interpretation:** Add a full phase-by-phase implementation task plan for the entire semantic Widget IR effort, detailed enough for an intern to execute.
+
+**Inferred user intent:** Turn the high-level design guide into an actionable implementation checklist with clear sequencing and review boundaries.
+
+### What I did
+- Added `reference/02-phased-implementation-task-list.md`.
+- Broke the work into phases 0 through 9.
+- Added granular checklists for TypeScript IR, React renderer, WidgetRenderer stories, Goja helpers, schema updates, tests, validation, docs, commits, and handoff.
+- Updated `tasks.md` to mark the task list as complete.
+
+### Why
+- The main design guide explains the architecture, but implementers need a concrete task board.
+- The phase split reduces risk by proving foundation/atom/layout support before context, transcript, course, and recipe work.
+- The checklist makes it harder to forget synchronization points such as `pkg/widgetschema/schema.go` or `pkg/widgetdsl/module_test.go`.
+
+### What worked
+- The task list now states the exact extension points and done criteria for each phase.
+- Phase 1 is clearly scoped as an in-place extension of existing Widget IR and `WidgetRenderer`.
+
+### What didn't work
+- N/A
+
+### What I learned
+- The implementation needs two early phases, not one: TypeScript renderer support first, then Goja/schema support for the same low-risk components.
+- Separating semantic recipes into their own later phase keeps direct renderer support reviewable.
+
+### What was tricky to build
+- The main tricky part was balancing granularity with sequence. If Goja helpers are added before renderer stories, authors can produce nodes that are not yet visually proven. The plan therefore asks for renderer stories before broad recipe work.
+
+### What warrants a second pair of eyes
+- Review whether `SlideShell` should be Phase 1 or Phase 5.
+- Review whether Phase 2 should be merged with Phase 1 in one commit or kept separate.
+
+### What should be done in the future
+- Use `reference/02-phased-implementation-task-list.md` as the checklist when coding starts.
+- Update checkboxes after each implementation phase.
+
+### Code review instructions
+- Review `reference/02-phased-implementation-task-list.md` for phase order and scope.
+- Confirm the proposed commit slices match the desired PR/review cadence.
+
+### Technical details
+- The plan uses these recurring synchronization points:
+  - `packages/rag-evaluation-site/src/widgets/ir.ts`
+  - `packages/rag-evaluation-site/src/widgets/WidgetRenderer.tsx`
+  - `packages/rag-evaluation-site/src/widgets/WidgetRenderer.stories.tsx`
+  - `pkg/widgetdsl/module.go`
+  - `pkg/widgetdsl/module_test.go`
+  - `pkg/widgetschema/schema.go`
