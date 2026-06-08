@@ -1,0 +1,38 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+}
+
+.media {
+  min-width: 0;
+}
+
+.bordered .media {
+  border: 1px solid var(--mac-border);
+  padding: 14px;
+  background: var(--mac-surface);
+}
+
+.inset .media {
+  border: 1px solid var(--mac-border-subtle);
+  padding: 14px;
+  background: var(--mac-surface-2);
+}
+
+.supporting {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.caption {
+  color: var(--mac-text-dim);
+}
+
+.legend {
+  min-width: 0;
+}

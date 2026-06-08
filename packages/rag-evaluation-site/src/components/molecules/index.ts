@@ -14,3 +14,5 @@ export * from './KeyValueStrip';
 export * from './CheckList';
 export * from './StepList';
 export * from './PersonSummary';
+export * from './FigureBlock';
+export * from './KeyPointList';

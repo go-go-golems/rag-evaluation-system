@@ -2,6 +2,21 @@
 
 React Widget IR renderer and default RAG evaluation site shell.
 
+## Component ownership
+
+This package is the canonical reusable UI layer. Keep package components API-free and Storybook-first:
+
+- `components/foundation`: text, captions, status, code, dividers, accessibility helpers.
+- `components/atoms`: basic controls and semantic markers.
+- `components/layout`: generic structure primitives such as shells, panes, stacks, panels, and grids.
+- `components/molecules`: reusable data-display/content patterns with no backend hooks.
+- `components/organisms`: feature panels with DTO-shaped props and callbacks.
+- `widgets`: JSON-compatible Widget IR types and the React `WidgetRenderer`.
+
+Storybook ownership follows the same boundary. Use `Design System/Layout/<Name>` for layout primitives, `Design System/Foundation/<Name>` for foundation, and `Component Library/Molecules/<Name>` / `Component Library/Organisms/<Name>` for reusable product components. Add or update stories before exposing a new public component.
+
+When adding a component that should later be available from the Widget IR/Goja DSL, stabilize the React API first, keep props JSON-shaped where practical, add `data-rag-*` identity attributes, and only then extend `src/widgets/ir.ts` and `WidgetRenderer.tsx` with semantic component types.
+
 ## Install
 
 ```bash

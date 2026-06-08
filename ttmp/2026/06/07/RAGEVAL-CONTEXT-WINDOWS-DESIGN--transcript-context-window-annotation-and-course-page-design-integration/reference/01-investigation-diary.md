@@ -1370,3 +1370,82 @@ I converted the course landing refactor from course-specific widgets into reusab
   - `pnpm --dir packages/rag-evaluation-site typecheck`
   - `pnpm --dir packages/rag-evaluation-site build`
   - `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-course-generic`
+
+## Step 23: Generalize the Slide Shell and Re-check Package Placement Rules
+
+I extended the same generalization pattern from the course landing page to slide presentation surfaces. The new `SlideShell` is a package layout primitive with generic slots for header metadata, title, primary content, secondary content, side selection, ratios, divider, and footer. `FigureBlock` and `KeyPointList` are package molecules, while `CourseSlidePanel` remains a domain organism that composes the generic shell with context diagrams and slide notes.
+
+After the first implementation pass, I reread the design-system unification diary and the recovered React design-system guidelines to verify the placement. That review changed the Storybook titles for the new layout primitives: `SectionBlock`, `SplitPane`, and `SlideShell` now live under `Design System/Layout/...`, while reusable content molecules remain under `Component Library/Molecules/...`. I also documented this package ownership and future Widget IR guidance in the package README.
+
+### Prompt Context
+
+**User prompt (verbatim):** "it's nice, continue with doing the same for a slide shell, /tmp/pi-clipboard-e3e0fd1a-e78a-4556-a171-11f71614775f.png .
+
+It doesn't always have to be a diagram on the left either."
+
+**User prompt (verbatim, continuation):** "fromt he previous ticket (or maybe this ticket?) reread the diary and the sources relevant to how to lay out the react widgets and where to store them, to make sure we properly follow the guidelines of our design system, properly storing Layout components in the design system stories. 
+
+We want to keep things consistent and make a nice reusable package, especially as we work towards a proper IR DSL and WidgetRenderer"
+
+**Assistant interpretation:** Build a reusable slide-shell vocabulary, support non-diagram/content-first and visual-on-right layouts, then audit the new files against the established package/design-system/Storybook and Widget IR rules before committing.
+
+**Inferred user intent:** Keep the package coherent and reusable, avoid course/prototype-specific one-offs, and make the React component APIs a stable foundation for future semantic Widget IR/Goja recipes.
+
+### What I did
+- Reread the design-system unification diary and context-window integration diary.
+- Reread the design-system unification guide, context-viewer post-unification plan, recovered RAG React design-system guidelines, Widget DSL mapping guidance, current package README, WidgetRenderer, and Widget IR types.
+- Added `layout/SlideShell` with generic `primary`/`secondary` slots, `primarySide`, `ratio`, divider, header metadata, title/subtitle, and footer support.
+- Added molecule `FigureBlock` for visual/media content with caption/legend slots.
+- Added molecule `KeyPointList` for numbered slide/prose points.
+- Refactored `CourseSlidePanel` into a domain organism that composes `SlideShell`, `FigureBlock`, `KeyPointList`, and context diagram molecules.
+- Added Storybook stories for `SlideShell`, `FigureBlock`, `KeyPointList`, and a `CourseSlidePanel` visual-on-right state.
+- Corrected layout story titles to `Design System/Layout/...` for `SectionBlock`, `SplitPane`, and `SlideShell`.
+- Updated `packages/rag-evaluation-site/README.md` with package layer ownership, Storybook title conventions, and Widget IR extension guidance.
+
+### Why
+- The slide shell is a generic structure, not a course-only organism and not a diagram-only component.
+- The design-system guidance says reusable layout primitives belong in `components/layout`, reusable content/data patterns belong in `components/molecules`, and domain panels with DTO-shaped props belong in `components/organisms`.
+- Future Widget IR support should target stable semantic components after React APIs settle, so the current step keeps the IR-compatible boundary in mind without prematurely expanding `WidgetRenderer`.
+
+### What worked
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `pnpm --dir packages/rag-evaluation-site build` passed.
+- `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-slide-shell-guidelines` passed.
+- Browser sanity check loaded `Design System / Layout / SlideShell / Visual On Right` with no console errors.
+
+### What didn't work
+- The first image comparison call against the user screenshot timed out after 120 seconds. I continued by using the visible screenshot structure and the design-system docs directly.
+- My first Storybook titles for the new layout primitives used `Component Library/Layout/...`; after rereading the guidelines, I corrected them to `Design System/Layout/...`.
+
+### What I learned
+- The package README was too sparse for ongoing component placement work, so it now records the layer and Storybook conventions directly next to the code.
+- `SlideShell` should remain generic enough for visual-first, content-first, visual-on-right, and single-pane slides; `CourseSlidePanel` is the place where context-window slide DTOs and diagrams become concrete.
+- The current Widget IR should not be extended with half-stable low-level visual fragments. Add semantic IR component types only after the React vocabulary has settled.
+
+### What was tricky to build
+- The sharp edge was separating layout from content. `SlideShell` can own the two-pane shell, header, rule, divider, and slot ordering, but it must not know about context diagrams or slide-note data. `FigureBlock` and `KeyPointList` carry reusable content patterns, and `CourseSlidePanel` binds those to `ContextSlide` and `ContextWindowSnapshot`.
+- Supporting “visual on the right” required the layout API to describe primary/secondary placement rather than hard-coding a left diagram and right notes.
+
+### What warrants a second pair of eyes
+- Review whether `SlideShell` should keep its outer border by default or offer a frameless mode for full-page slide decks.
+- Review whether `KeyPointList` should grow keyboard/selection affordances or stay purely presentational.
+- Review whether future Widget IR should expose `SlideShell`, `FigureBlock`, and `KeyPointList` directly or provide a higher-level `CourseSlide`/`PresentationSlide` semantic node.
+
+### What should be done in the future
+- Run css-visual-diff against the prototype slide screenshot/selector and the new package Storybook slide states.
+- Add Widget IR component types only after visual parity and API naming are accepted.
+
+### Code review instructions
+- Start with `packages/rag-evaluation-site/src/components/layout/SlideShell/SlideShell.tsx`.
+- Then review `FigureBlock`, `KeyPointList`, and `CourseSlidePanel` composition.
+- Validate Storybook stories:
+  - `Design System / Layout / SlideShell / Visual On Right`
+  - `Component Library / Organisms / CourseSlidePanel / Visual On Right`
+- Re-run:
+  - `pnpm --dir packages/rag-evaluation-site typecheck`
+  - `pnpm --dir packages/rag-evaluation-site build`
+  - `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-slide-shell-guidelines`
+
+### Technical details
+- The current `WidgetRenderer` supports established semantic components such as `Panel`, `Stack`, `Inline`, `DashboardGrid`, `DataTable`, and `MetadataGrid`.
+- New slide-shell components intentionally include `data-rag-layout="SlideShell"` and `data-rag-molecule="FigureBlock"` / `data-rag-molecule="KeyPointList"` as future extraction and visual-diff handles.

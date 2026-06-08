@@ -8,3 +8,4 @@ export * from './TabList';
 export * from './FormRow';
 export * from './SectionBlock';
 export * from './SplitPane';
+export * from './SlideShell';

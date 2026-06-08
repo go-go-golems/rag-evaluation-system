@@ -1,0 +1,133 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+  padding: 30px;
+  background: var(--mac-surface);
+  color: var(--mac-text);
+  border: 1px solid var(--mac-border);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--mac-border);
+}
+
+.metaRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: baseline;
+}
+
+.title {
+  margin: 0;
+  max-width: 920px;
+  color: var(--mac-text);
+  font: 700 34px/1.08 var(--font-body);
+  letter-spacing: -.018em;
+}
+
+.subtitle {
+  margin: 0;
+  max-width: 760px;
+  color: #333;
+  font: 400 14px/1.5 var(--font-body);
+}
+
+.body {
+  min-width: 0;
+  align-items: start;
+}
+
+.twoPane {
+  display: grid;
+  gap: 24px;
+}
+
+.singlePane {
+  display: block;
+}
+
+.primaryWide.primary-left,
+.primaryWide.primary-right {
+  grid-template-columns: minmax(0, 1.28fr) minmax(240px, .72fr);
+}
+
+.secondaryWide.primary-left,
+.secondaryWide.primary-right {
+  grid-template-columns: minmax(240px, .72fr) minmax(0, 1.28fr);
+}
+
+.balanced {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.primary-left .primary { grid-column: 1; }
+.primary-left .secondary { grid-column: 2; }
+.primary-right .primary { grid-column: 2; grid-row: 1; }
+.primary-right .secondary { grid-column: 1; grid-row: 1; }
+
+.primary-right.primaryWide,
+.primary-left.secondaryWide {
+  grid-template-columns: minmax(240px, .72fr) minmax(0, 1.28fr);
+}
+
+.primary-right.secondaryWide,
+.primary-left.primaryWide {
+  grid-template-columns: minmax(0, 1.28fr) minmax(240px, .72fr);
+}
+
+.primary,
+.secondary {
+  min-width: 0;
+}
+
+.divider.primary-left .secondary,
+.divider.primary-right .primary {
+  border-left: 1px solid var(--mac-border);
+  padding-left: 24px;
+}
+
+.footer {
+  padding-top: 4px;
+}
+
+@media (max-width: 900px) {
+  .root {
+    padding: 22px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .twoPane,
+  .primary-right.primaryWide,
+  .primary-left.secondaryWide,
+  .primary-right.secondaryWide,
+  .primary-left.primaryWide,
+  .balanced {
+    grid-template-columns: 1fr;
+  }
+
+  .primary-left .primary,
+  .primary-left .secondary,
+  .primary-right .primary,
+  .primary-right .secondary {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .divider.primary-left .secondary,
+  .divider.primary-right .primary {
+    border-left: 0;
+    padding-left: 0;
+    border-top: 1px solid var(--mac-border);
+    padding-top: 18px;
+  }
+}

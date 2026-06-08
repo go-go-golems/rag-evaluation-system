@@ -264,3 +264,16 @@ Generalized course landing UI into reusable SectionBlock, SplitPane, KeyValueStr
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/StepList/StepList.tsx — Generic minimal step/agenda list
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/CourseLessonPanel/CourseLessonPanel.tsx — Refactored course landing composition
 
+
+## 2026-06-07
+
+Added generic SlideShell/FigureBlock/KeyPointList vocabulary, refactored CourseSlidePanel, and rechecked package placement rules against the design-system docs.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/README.md — Package ownership and Widget IR guidance
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/layout/SlideShell/SlideShell.tsx — Generic slide shell layout primitive
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/FigureBlock/FigureBlock.tsx — Generic figure/media block molecule
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/KeyPointList/KeyPointList.tsx — Generic numbered key-point list molecule
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/CourseSlidePanel/CourseSlidePanel.tsx — Domain slide organism now composes generic vocabulary
+
