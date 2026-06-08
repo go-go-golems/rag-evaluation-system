@@ -1,5 +1,6 @@
 # Binaries
 /rag-eval
+/dist/
 /tmp/
 .bin/
 

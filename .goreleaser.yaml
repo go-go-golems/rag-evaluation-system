@@ -1,0 +1,37 @@
+version: 2
+
+project_name: rag-evaluation-system
+
+dist: dist
+
+builds:
+  - id: rag-eval
+    main: ./cmd/rag-eval
+    binary: rag-eval
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - linux
+    goarch:
+      - amd64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+archives:
+  - id: rag-eval
+    ids:
+      - rag-eval
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ .Version }}-snapshot"
+
+changelog:
+  use: git
+  sort: asc
