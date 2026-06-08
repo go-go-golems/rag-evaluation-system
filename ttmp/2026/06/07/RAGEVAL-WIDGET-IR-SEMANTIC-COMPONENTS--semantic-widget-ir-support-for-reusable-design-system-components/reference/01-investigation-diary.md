@@ -625,3 +625,65 @@ The new recipes cover context diagrams, annotated transcripts, course studio she
 
 ### Technical details
 - Recipes are pure expansions and do not call APIs, mutate state, or render HTML.
+
+## Step 9: Final Documentation and Full Validation
+
+I updated the package README with the expanded Widget IR coverage and ran the full validation set for the completed implementation slices. The README now points reviewers and authors to the grouped `Widget IR/Renderer/...` Storybook stories and documents that Goja authors can use both direct helpers and semantic recipes.
+
+This final pass confirms that the expanded renderer, DSL helpers, schema entries, stories, and recipe tests all build together after the foundation, context diagram, transcript, course, handout, and recipe commits.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 4)
+
+**Assistant interpretation:** Continue through the implementation plan and leave the repo in a validated, documented state.
+
+**Inferred user intent:** Return from swimming to a pushed branch with the expanded Widget IR work completed and reviewable.
+
+### What I did
+- Updated `packages/rag-evaluation-site/README.md` with a Widget IR coverage section.
+- Ran final validation:
+  - `pnpm --dir packages/rag-evaluation-site typecheck`
+  - `pnpm --dir packages/rag-evaluation-site build`
+  - `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-widget-ir-complete`
+  - `go test ./pkg/widgetdsl ./pkg/widgetrunner ./pkg/widgetserver ./pkg/widgetschema -count=1`
+  - `docmgr doctor --ticket RAGEVAL-WIDGET-IR-SEMANTIC-COMPONENTS --stale-after 30`
+
+### Why
+- The implementation added a large authoring surface; the README needed to summarize where to find examples and how authors should think about direct helpers versus semantic recipes.
+- Final validation ensures the independent phase commits work together.
+
+### What worked
+- All final validation commands passed.
+- `docmgr doctor` passed for the ticket.
+
+### What didn't work
+- N/A
+
+### What I learned
+- Grouped Storybook files are essential now; the old single `WidgetRenderer.stories.tsx` would be too large for this expanded surface.
+
+### What was tricky to build
+- The overall tricky part was keeping TypeScript, React renderer, Goja helpers, schema list, Storybook stories, and Go tests synchronized over multiple commits. The phase plan helped keep the surfaces aligned.
+
+### What warrants a second pair of eyes
+- Review the larger `WidgetRenderer.tsx` for readability. It may eventually need a registry or split renderer modules, but explicit cases were safer for this implementation.
+- Review recipe naming and defaulting behavior before documenting it as permanent API.
+
+### What should be done in the future
+- Add xgoja example pages that use the new recipes end-to-end.
+- Consider splitting `WidgetRenderer.tsx` by component family if it becomes hard to maintain.
+- Add browser screenshot capture for the grouped Widget IR stories.
+
+### Code review instructions
+- Review commits in order:
+  - foundation/atom/layout nodes
+  - context diagram nodes
+  - transcript annotation nodes
+  - course handout nodes
+  - semantic recipes
+  - README/docs update
+- Run the final validation commands above.
+
+### Technical details
+- Final Storybook build output: `/tmp/rag-package-storybook-widget-ir-complete`.

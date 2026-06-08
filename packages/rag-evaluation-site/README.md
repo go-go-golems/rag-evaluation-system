@@ -17,6 +17,19 @@ Storybook ownership follows the same boundary. Use `Design System/Layout/<Name>`
 
 When adding a component that should later be available from the Widget IR/Goja DSL, stabilize the React API first, keep props JSON-shaped where practical, add `data-rag-*` identity attributes, and only then extend `src/widgets/ir.ts` and `WidgetRenderer.tsx` with semantic component types.
 
+## Widget IR coverage
+
+`WidgetRenderer` supports both the original dashboard vocabulary and the newer semantic context-viewer vocabulary:
+
+- foundation/atoms/layout nodes such as `Text`, `CodeText`, `ContextKindSwatch`, `SectionBlock`, `SplitPane`, `SlideShell`, and `SidebarShell`;
+- context diagram nodes such as `ContextBudgetBar`, `ContextStripDiagram`, `ContextTreemap`, and `ContextDiagramPanel`;
+- transcript/comment nodes such as `TranscriptWorkspacePanel`, `AnnotationRailPanel`, and `AnchoredCommentRail`;
+- course/handout nodes such as `CourseStudioShell`, `CourseSlidePanel`, `MarkdownArticle`, and `HandoutDocumentShell`.
+
+Review package Storybook under `Widget IR/Renderer/...` for IR-authored examples grouped by Foundation and Atoms, Layout Recipes, Context Diagrams, Transcript and Notes, and Course Studio.
+
+Goja authors can use direct helpers from `require("widget.dsl")` / `require("rag.dsl")`, plus semantic recipes under `rag.recipes` such as `contextDiagram`, `annotatedTranscript`, `courseStudio`, `courseSlide`, and `handout`.
+
 ## Install
 
 ```bash
