@@ -1,7 +1,7 @@
 import type { CaptionTone, CaptionTransform, RagStatus, TextAlign, TextAs, TextSize, TextTone, TextWeight } from '../components/foundation';
 import type { ButtonSize, ButtonVariant, ContextKindSwatchSize } from '../components/atoms';
 import type { DashboardGridRecipe, InlineGap, InlineJustify, StackAlign, StackGap } from '../components/layout';
-import type { ContextDiagramStyle, ContextDiagramView, ContextPartKind, ContextWindowSnapshot, TranscriptRole } from '../context';
+import type { AnchoredComment, ContextDiagramStyle, ContextDiagramView, ContextPartKind, ContextWindowSnapshot, TranscriptAnnotation, TranscriptMessage, TranscriptRole } from '../context';
 
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -52,7 +52,15 @@ export type RagWidgetType =
   | 'TabList'
   | 'Text'
   | 'TextInput'
-  | 'TranscriptRoleBadge';
+  | 'TranscriptRoleBadge'
+  | 'TranscriptSessionHeader'
+  | 'TranscriptMessageCard'
+  | 'AnnotationNoteCard'
+  | 'AnnotationRailPanel'
+  | 'TranscriptReaderPanel'
+  | 'TranscriptWorkspacePanel'
+  | 'AnchoredCommentCard'
+  | 'AnchoredCommentRail';
 
 export interface ComponentNode {
   kind: 'component';
@@ -199,6 +207,72 @@ export interface ContextDiagramPanelWidgetProps extends BaseWidgetProps {
   snapshot: ContextWindowSnapshot;
   initialView?: ContextDiagramView;
   selectedPartId?: string;
+}
+
+export interface TranscriptSessionHeaderWidgetProps extends BaseWidgetProps {
+  title: RenderableValue;
+  subtitle?: RenderableValue;
+  messageCount?: number;
+  annotationCount?: number;
+  tokenTotal?: number;
+  rightSlot?: WidgetNode;
+}
+
+export interface TranscriptMessageCardWidgetProps extends BaseWidgetProps {
+  message: TranscriptMessage;
+  annotations?: TranscriptAnnotation[];
+  selectedAnnotationId?: string;
+  showAnnotationChips?: boolean;
+  onAnnotationSelectAction?: ActionSpec;
+}
+
+export interface AnnotationNoteCardWidgetProps extends BaseWidgetProps {
+  annotation: TranscriptAnnotation;
+  selected?: boolean;
+  index?: number;
+}
+
+export interface AnnotationRailPanelWidgetProps extends BaseWidgetProps {
+  title?: string;
+  description?: string;
+  annotations: TranscriptAnnotation[];
+  selectedAnnotationId?: string;
+  onAnnotationSelectAction?: ActionSpec;
+}
+
+export interface TranscriptReaderPanelWidgetProps extends BaseWidgetProps {
+  title?: string;
+  subtitle?: string;
+  messages: TranscriptMessage[];
+  annotations?: TranscriptAnnotation[];
+  selectedAnnotationId?: string;
+  showAnnotationChips?: boolean;
+  onAnnotationSelectAction?: ActionSpec;
+}
+
+export interface TranscriptWorkspacePanelWidgetProps extends BaseWidgetProps {
+  title?: string;
+  subtitle?: string;
+  messages: TranscriptMessage[];
+  annotations?: TranscriptAnnotation[];
+  selectedAnnotationId?: string;
+  showNotes?: boolean;
+  onAnnotationSelectAction?: ActionSpec;
+}
+
+export interface AnchoredCommentCardWidgetProps extends BaseWidgetProps {
+  comment: AnchoredComment;
+  index?: number;
+  selected?: boolean;
+  compact?: boolean;
+  onDismissAction?: ActionSpec;
+}
+
+export interface AnchoredCommentRailWidgetProps extends BaseWidgetProps {
+  title?: string;
+  comments: AnchoredComment[];
+  selectedCommentId?: string;
+  onCommentSelectAction?: ActionSpec;
 }
 
 export interface CaptionWidgetProps extends BaseWidgetProps {
@@ -403,6 +477,14 @@ export type WidgetProps =
   | ContextStackDiagramWidgetProps
   | ContextTreemapWidgetProps
   | ContextDiagramPanelWidgetProps
+  | TranscriptSessionHeaderWidgetProps
+  | TranscriptMessageCardWidgetProps
+  | AnnotationNoteCardWidgetProps
+  | AnnotationRailPanelWidgetProps
+  | TranscriptReaderPanelWidgetProps
+  | TranscriptWorkspacePanelWidgetProps
+  | AnchoredCommentCardWidgetProps
+  | AnchoredCommentRailWidgetProps
   | CaptionWidgetProps
   | DashboardGridWidgetProps
   | DataTableWidgetProps

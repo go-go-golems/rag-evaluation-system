@@ -259,6 +259,43 @@ func TestContextDiagramHelpersAreJSONSerializable(t *testing.T) {
 	assertString(t, children[2].(map[string]any), "type", "ContextLegend")
 }
 
+func TestTranscriptAndCommentHelpersAreJSONSerializable(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const rag = require("widget.dsl");
+		const messages = [{ id: "m1", role: "user", text: "hello", tokens: 3, annotationIds: ["a1"] }];
+		const annotations = [{ id: "a1", targetMessageId: "m1", kind: "context", label: "framing", text: "Important setup", confidence: 0.9 }];
+		const comments = [{ id: "c1", anchorX: 10, anchorY: 20, author: "Manuel", text: "Review this", status: "open" }];
+		const page = rag.page({
+			id: "transcript",
+			title: "Transcript",
+			sections: [
+				rag.transcriptWorkspacePanel({ title: "Session", messages, annotations, selectedAnnotationId: "a1", onAnnotationSelectAction: rag.action.server("select-annotation") }),
+				rag.transcriptMessageCard({ message: messages[0], annotations, selectedAnnotationId: "a1" }),
+				rag.annotationRailPanel({ annotations, selectedAnnotationId: "a1", onAnnotationSelectAction: rag.action.server("select-annotation") }),
+				rag.anchoredCommentRail({ comments, selectedCommentId: "c1", onCommentSelectAction: rag.action.server("select-comment") })
+			]
+		});
+		JSON.stringify(page);
+	`)
+	if err != nil {
+		t.Fatalf("build transcript IR: %v", err)
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal([]byte(value.String()), &decoded); err != nil {
+		t.Fatalf("transcript page is not JSON: %v\n%s", err, value.String())
+	}
+	root := decoded["root"].(map[string]any)
+	children := root["children"].([]any)
+	assertString(t, children[0].(map[string]any), "type", "TranscriptWorkspacePanel")
+	assertString(t, children[2].(map[string]any), "type", "AnnotationRailPanel")
+	assertString(t, children[3].(map[string]any), "type", "AnchoredCommentRail")
+}
+
 func TestSemanticRecipesAndActionsAreJSONSerializable(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()

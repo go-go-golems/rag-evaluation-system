@@ -78,3 +78,17 @@ Added context diagram Widget IR nodes, grouped stories, Goja helpers, schema ent
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/pkg/widgetdsl/module_test.go — Context diagram JSON serialization test
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/pkg/widgetschema/schema.go — Context diagram schema names
 
+
+## 2026-06-07
+
+Added transcript, annotation, and anchored comment Widget IR nodes with action binding, grouped stories, Goja helpers, schema entries, and tests.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/widgets/WidgetRenderer.transcript-notes.stories.tsx — Transcript and notes Widget IR stories
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/widgets/WidgetRenderer.tsx — Transcript and comment renderer cases/action binding
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/widgets/ir.ts — Transcript and comment IR props
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/pkg/widgetdsl/module.go — Transcript/comment Goja helpers
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/pkg/widgetdsl/module_test.go — Transcript/comment JSON serialization test
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/pkg/widgetschema/schema.go — Transcript/comment schema names
+

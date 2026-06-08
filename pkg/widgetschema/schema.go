@@ -34,6 +34,14 @@ var ComponentTypes = []string{
 	"Text",
 	"TextInput",
 	"TranscriptRoleBadge",
+	"TranscriptSessionHeader",
+	"TranscriptMessageCard",
+	"AnnotationNoteCard",
+	"AnnotationRailPanel",
+	"TranscriptReaderPanel",
+	"TranscriptWorkspacePanel",
+	"AnchoredCommentCard",
+	"AnchoredCommentRail",
 }
 
 var CellKinds = []string{"field", "number", "status", "caption", "template", "link", "constant"}

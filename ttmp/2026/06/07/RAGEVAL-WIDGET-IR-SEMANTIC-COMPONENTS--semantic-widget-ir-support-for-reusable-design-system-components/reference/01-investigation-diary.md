@@ -418,3 +418,83 @@ I also added a grouped Storybook file under `Widget IR/Renderer/Context Diagrams
 ### Technical details
 - New Storybook subgroup: `Widget IR/Renderer/Context Diagrams`.
 - The over-budget story uses a modified fixture with a lower token limit to force warning/over-budget behavior.
+
+## Step 6: Add Transcript, Annotation, and Comment Widget IR Support
+
+I added Widget IR support for the polished transcript family: session headers, message cards, note cards, annotation rails, transcript reader/workspace panels, anchored comment cards, and anchored comment rails. This phase also wires selection/dismiss-like callbacks through existing `ActionSpec` props, so JSON-authored transcript widgets can still participate in the same action dispatch system as buttons and tables.
+
+The new Storybook subgroup `Widget IR/Renderer/Transcript and Notes` includes no-notes and with-notes workspace stories, manual reader-plus-rail composition, message card state coverage, anchored comments next to transcript content, and an action logger harness. This directly addresses the requirement to see interesting combinations under the Widget IR mantle.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 4)
+
+**Assistant interpretation:** Continue implementing the Widget IR phase plan with frequent diary updates and coherent commits.
+
+**Inferred user intent:** Complete the renderer/DSL coverage for the newly polished transcript UI so it is usable from semantic Widget IR.
+
+### What I did
+- Added transcript/comment DTO prop interfaces to `packages/rag-evaluation-site/src/widgets/ir.ts`.
+- Added `ActionSpec` callback props for annotation selection, anchored comment selection, and anchored comment dismiss.
+- Added renderer imports, switch cases, and render helpers in `WidgetRenderer.tsx` for:
+  - `TranscriptSessionHeader`
+  - `TranscriptMessageCard`
+  - `AnnotationNoteCard`
+  - `AnnotationRailPanel`
+  - `TranscriptReaderPanel`
+  - `TranscriptWorkspacePanel`
+  - `AnchoredCommentCard`
+  - `AnchoredCommentRail`
+- Added `annotationSelectHandler()` helper to bind annotation selection action context consistently.
+- Added `WidgetRenderer.transcript-notes.stories.tsx`.
+- Added Goja helper mappings in `pkg/widgetdsl/module.go`.
+- Added schema component names in `pkg/widgetschema/schema.go`.
+- Added Go JSON serialization coverage in `pkg/widgetdsl/module_test.go`.
+- Extended schema endpoint test coverage in `pkg/widgetserver/server_test.go`.
+
+### Why
+- Transcript and notes are one of the primary context-viewer surfaces and were recently stabilized visually.
+- This phase validates both direct high-level authoring (`TranscriptWorkspacePanel`) and lower-level custom composition (`TranscriptReaderPanel` + `AnnotationRailPanel`).
+- Action props are necessary because React callbacks cannot cross the JSON boundary.
+
+### What worked
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed after the story fix.
+- `pnpm --dir packages/rag-evaluation-site build` passed.
+- `pnpm --dir packages/rag-evaluation-site exec storybook build --output-dir /tmp/rag-package-storybook-widget-ir-phase-4` passed.
+- `go test ./pkg/widgetdsl ./pkg/widgetrunner ./pkg/widgetserver ./pkg/widgetschema -count=1` passed.
+
+### What didn't work
+- First typecheck failed for the `TranscriptActionLogger` story because Storybook's `Story` type required `args` even though the story used a custom `render` function.
+- Exact error:
+  - `Property 'args' is missing in type '{ render: () => React.JSX.Element; }' but required...`
+- I fixed it by adding a minimal `args` node to the story.
+
+### What I learned
+- The transcript family needs both direct nodes and high-level nodes. Direct nodes are useful for custom composition; `TranscriptWorkspacePanel` is the ergonomic default.
+- Existing `ActionSpec` is sufficient for annotation/comment selection as long as renderer helpers include useful context payloads.
+
+### What was tricky to build
+- The callback conversion is the main sharp edge. React expects functions such as `onAnnotationSelect`, but IR must carry JSON. The renderer now converts `onAnnotationSelectAction` into a callback that sends `{ annotationId, value, componentType }`.
+- `AnchoredCommentCard` has `onDismiss?: () => void`, so the renderer must derive the comment id from the card's `comment` prop rather than from callback arguments.
+
+### What warrants a second pair of eyes
+- Review the `componentType` strings used in action contexts; they are intentionally the rendered component names but could be standardized later.
+- Review whether `onDismissAction` belongs on `AnchoredCommentCard` now, or should wait until the card's dismiss behavior is used in package stories.
+- `AnchoredCommentRail` still contains inline button styles from prior work; that is outside this IR task but should be cleaned up later.
+
+### What should be done in the future
+- Continue with course/sidebar/handout/document Widget IR support.
+- Add browser sanity screenshots for the transcript Widget IR stories.
+- Consider a shared action logger decorator for all action-related Widget IR stories.
+
+### Code review instructions
+- Start with `WidgetRenderer.transcript-notes.stories.tsx` to see intended combinations.
+- Review `ir.ts` transcript/comment prop interfaces.
+- Review `WidgetRenderer.tsx` action binding helpers and component render helpers.
+- Validate with package typecheck/build/Storybook and targeted Go tests.
+
+### Technical details
+- Annotation selection context shape:
+  - `{ annotationId, value: annotationId, componentType }`
+- Comment rail selection context shape:
+  - `{ commentId, value: commentId, componentType: 'AnchoredCommentRail' }`

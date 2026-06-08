@@ -2,10 +2,14 @@ import { createElement, type CSSProperties, type ReactNode } from 'react';
 import { AnnotationBadge, Button, ContextKindSwatch, ErrorCallout, SelectInput, TextInput, TranscriptRoleBadge } from '../components/atoms';
 import { Caption, CodeText, Divider, StatusText, Text } from '../components/foundation';
 import { AppShell, DashboardGrid, FormRow, Inline, Panel, ScrollRegion, SectionBlock, SidebarShell, SplitPane, Stack, TabList } from '../components/layout';
-import { AppNav, ContextBudgetBar, ContextLegend, ContextStackDiagram, ContextStripDiagram, ContextTreemap, DataTable, MetadataGrid } from '../components/molecules';
-import { ContextDiagramPanel } from '../components/organisms';
+import { AnnotationNoteCard, AnchoredCommentCard, AppNav, ContextBudgetBar, ContextLegend, ContextStackDiagram, ContextStripDiagram, ContextTreemap, DataTable, MetadataGrid, TranscriptMessageCard, TranscriptSessionHeader } from '../components/molecules';
+import { AnnotationRailPanel, AnchoredCommentRail, ContextDiagramPanel, TranscriptReaderPanel, TranscriptWorkspacePanel } from '../components/organisms';
 import type {
   ActionSpec,
+  AnchoredCommentCardWidgetProps,
+  AnchoredCommentRailWidgetProps,
+  AnnotationNoteCardWidgetProps,
+  AnnotationRailPanelWidgetProps,
   AppNavWidgetProps,
   AppShellWidgetProps,
   AnnotationBadgeWidgetProps,
@@ -39,7 +43,11 @@ import type {
   TabListWidgetProps,
   TextInputWidgetProps,
   TextWidgetProps,
+  TranscriptMessageCardWidgetProps,
+  TranscriptReaderPanelWidgetProps,
   TranscriptRoleBadgeWidgetProps,
+  TranscriptSessionHeaderWidgetProps,
+  TranscriptWorkspacePanelWidgetProps,
   WidgetNode,
 } from './ir';
 import { bindAction, type WidgetActionContext, type WidgetActionHandler } from './actions';
@@ -110,6 +118,22 @@ function renderComponentNode(node: ComponentNode, onAction?: WidgetActionHandler
       return renderContextTreemap(node);
     case 'ContextDiagramPanel':
       return renderContextDiagramPanel(node);
+    case 'TranscriptSessionHeader':
+      return renderTranscriptSessionHeader(node, onAction);
+    case 'TranscriptMessageCard':
+      return renderTranscriptMessageCard(node, onAction);
+    case 'AnnotationNoteCard':
+      return renderAnnotationNoteCard(node);
+    case 'AnnotationRailPanel':
+      return renderAnnotationRailPanel(node, onAction);
+    case 'TranscriptReaderPanel':
+      return renderTranscriptReaderPanel(node, onAction);
+    case 'TranscriptWorkspacePanel':
+      return renderTranscriptWorkspacePanel(node, onAction);
+    case 'AnchoredCommentCard':
+      return renderAnchoredCommentCard(node, onAction);
+    case 'AnchoredCommentRail':
+      return renderAnchoredCommentRail(node, onAction);
     case 'Caption':
       return renderCaption(node, onAction);
     case 'DashboardGrid':
@@ -250,6 +274,51 @@ function renderContextTreemap(node: ComponentNode): ReactNode {
 function renderContextDiagramPanel(node: ComponentNode): ReactNode {
   const props = (node.props ?? {}) as ContextDiagramPanelWidgetProps;
   return <ContextDiagramPanel className={props.className} snapshot={props.snapshot} initialView={props.initialView} selectedPartId={props.selectedPartId} />;
+}
+
+function renderTranscriptSessionHeader(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as TranscriptSessionHeaderWidgetProps;
+  return <TranscriptSessionHeader className={props.className} title={renderRenderableValue(props.title, onAction)} subtitle={renderRenderableValue(props.subtitle, onAction)} messageCount={props.messageCount} annotationCount={props.annotationCount} tokenTotal={props.tokenTotal} rightSlot={renderNodeProp(props.rightSlot, onAction)} />;
+}
+
+function renderTranscriptMessageCard(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as TranscriptMessageCardWidgetProps;
+  return <TranscriptMessageCard className={props.className} message={props.message} annotations={props.annotations} selectedAnnotationId={props.selectedAnnotationId} showAnnotationChips={props.showAnnotationChips} onAnnotationSelect={annotationSelectHandler('TranscriptMessageCard', props.onAnnotationSelectAction, onAction)} />;
+}
+
+function renderAnnotationNoteCard(node: ComponentNode): ReactNode {
+  const props = (node.props ?? {}) as AnnotationNoteCardWidgetProps;
+  return <AnnotationNoteCard className={props.className} annotation={props.annotation} selected={props.selected} index={props.index} />;
+}
+
+function renderAnnotationRailPanel(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as AnnotationRailPanelWidgetProps;
+  return <AnnotationRailPanel className={props.className} title={props.title} description={props.description} annotations={props.annotations} selectedAnnotationId={props.selectedAnnotationId} onAnnotationSelect={annotationSelectHandler('AnnotationRailPanel', props.onAnnotationSelectAction, onAction)} />;
+}
+
+function renderTranscriptReaderPanel(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as TranscriptReaderPanelWidgetProps;
+  return <TranscriptReaderPanel className={props.className} title={props.title} subtitle={props.subtitle} messages={props.messages} annotations={props.annotations} selectedAnnotationId={props.selectedAnnotationId} showAnnotationChips={props.showAnnotationChips} onAnnotationSelect={annotationSelectHandler('TranscriptReaderPanel', props.onAnnotationSelectAction, onAction)} />;
+}
+
+function renderTranscriptWorkspacePanel(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as TranscriptWorkspacePanelWidgetProps;
+  return <TranscriptWorkspacePanel className={props.className} title={props.title} subtitle={props.subtitle} messages={props.messages} annotations={props.annotations} selectedAnnotationId={props.selectedAnnotationId} showNotes={props.showNotes} onAnnotationSelect={annotationSelectHandler('TranscriptWorkspacePanel', props.onAnnotationSelectAction, onAction)} />;
+}
+
+function renderAnchoredCommentCard(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as AnchoredCommentCardWidgetProps;
+  return <AnchoredCommentCard className={props.className} comment={props.comment} index={props.index} selected={props.selected} compact={props.compact} onDismiss={props.onDismissAction ? () => bindAndRun(props.onDismissAction!, { commentId: props.comment.id, value: props.comment.id, componentType: 'AnchoredCommentCard' }, onAction) : undefined} />;
+}
+
+function renderAnchoredCommentRail(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
+  const props = (node.props ?? {}) as AnchoredCommentRailWidgetProps;
+  return <AnchoredCommentRail className={props.className} title={props.title} comments={props.comments} selectedCommentId={props.selectedCommentId} onCommentSelect={props.onCommentSelectAction ? (commentId) => bindAndRun(props.onCommentSelectAction!, { commentId, value: commentId, componentType: 'AnchoredCommentRail' }, onAction) : undefined} />;
+}
+
+function annotationSelectHandler(componentType: string, action: ActionSpec | undefined, onAction?: WidgetActionHandler): ((annotationId: string) => void) | undefined {
+  if (!action) return undefined;
+  return (annotationId) => bindAndRun(action, { annotationId, value: annotationId, componentType }, onAction);
 }
 
 function renderCaption(node: ComponentNode, onAction?: WidgetActionHandler): ReactNode {
