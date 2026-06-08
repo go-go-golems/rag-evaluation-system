@@ -2,6 +2,8 @@
 .strip { display: flex; width: 100%; min-height: 54px; border: 1px solid var(--mac-border); background: var(--mac-surface); overflow: hidden; }
 .segment { position: relative; display: flex; align-items: center; justify-content: center; min-width: 2px; border-right: 1px solid var(--mac-border); box-sizing: border-box; overflow: hidden; }
 .segment:last-child { border-right: 0; }
+.segment[role='button'] { cursor: pointer; }
+.segment[role='button']:focus-visible { outline: 2px solid var(--mac-accent); outline-offset: -3px; z-index: 2; }
 .label { padding: 1px 3px; color: var(--mac-text); font: var(--rag-font-role-metadata); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; background: var(--mac-surface); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .selected { outline: 3px solid var(--mac-accent); outline-offset: -4px; z-index: 1; }
 .caption { color: var(--mac-text-dim); font: var(--rag-font-role-caption, var(--rag-font-role-metadata)); }

@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from 'react';
+import type { HTMLAttributes, KeyboardEvent } from 'react';
 import {
   contextWindowFillRatio,
   contextWindowTokenTotal,
@@ -15,6 +15,7 @@ export interface ContextBudgetBarProps extends HTMLAttributes<HTMLDivElement> {
   mode?: ContextDiagramStyle;
   showLegend?: boolean;
   selectedPartId?: string;
+  onPartSelect?: (partId: string) => void;
 }
 
 function formatTokens(tokens: number) {
@@ -25,7 +26,15 @@ function usedParts(parts: ContextWindowPart[]) {
   return parts.filter((part) => part.kind !== 'empty' && part.tokens > 0);
 }
 
-export function ContextBudgetBar({ snapshot, mode = 'pattern', showLegend = true, selectedPartId, className, ...rest }: ContextBudgetBarProps) {
+function handlePartKeyDown(event: KeyboardEvent<HTMLDivElement>, partId: string, onPartSelect?: (partId: string) => void) {
+  if (!onPartSelect) return;
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    onPartSelect(partId);
+  }
+}
+
+export function ContextBudgetBar({ snapshot, mode = 'pattern', showLegend = true, selectedPartId, onPartSelect, className, ...rest }: ContextBudgetBarProps) {
   const total = contextWindowTokenTotal(snapshot);
   const ratio = contextWindowFillRatio(snapshot);
   const overBudget = total > snapshot.limit;
@@ -49,12 +58,19 @@ export function ContextBudgetBar({ snapshot, mode = 'pattern', showLegend = true
       <div className={styles.track} role="img" aria-label={`${snapshot.title}: ${formatTokens(total)} of ${formatTokens(snapshot.limit)} used`}>
         {parts.map((part) => {
           const width = snapshot.limit > 0 ? Math.max(0.5, (part.tokens / snapshot.limit) * 100) : 0;
+          const selected = effectiveSelectedPartId === part.id;
+          const interactive = Boolean(onPartSelect);
           return (
             <div
               key={part.id}
-              className={[styles.segment, styles[`kind_${part.kind}`] ?? styles.kind_other, effectiveSelectedPartId === part.id ? styles.selected : ''].filter(Boolean).join(' ')}
+              className={[styles.segment, styles[`kind_${part.kind}`] ?? styles.kind_other, selected ? styles.selected : ''].filter(Boolean).join(' ')}
               style={{ width: `${width}%` }}
               title={`${part.label}: ${formatTokens(part.tokens)} (${getContextKindLabel(part.kind)})`}
+              role={interactive ? 'button' : undefined}
+              tabIndex={interactive ? 0 : undefined}
+              aria-pressed={interactive ? selected : undefined}
+              onClick={interactive ? () => onPartSelect?.(part.id) : undefined}
+              onKeyDown={interactive ? (event) => handlePartKeyDown(event, part.id, onPartSelect) : undefined}
             />
           );
         })}

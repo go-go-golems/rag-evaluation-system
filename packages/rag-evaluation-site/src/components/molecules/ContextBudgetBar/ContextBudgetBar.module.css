@@ -29,6 +29,9 @@
   box-sizing: border-box;
 }
 
+.segment[role='button'] { cursor: pointer; }
+.segment[role='button']:focus-visible { outline: 2px solid var(--mac-accent); outline-offset: -3px; z-index: 2; }
+
 .selected {
   outline: 2px solid var(--mac-accent);
   outline-offset: -3px;

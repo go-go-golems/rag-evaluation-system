@@ -2,6 +2,8 @@
 .layers { display: flex; flex-direction: column; border: 1px solid var(--mac-border); background: var(--mac-surface); }
 .layer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 8px; border-bottom: 1px solid var(--mac-border); box-sizing: border-box; color: var(--mac-text); }
 .layer:last-child { border-bottom: 0; }
+.layer[role='button'] { cursor: pointer; }
+.layer[role='button']:focus-visible { outline: 2px solid var(--mac-accent); outline-offset: -3px; z-index: 2; }
 .label { font: var(--rag-font-role-metadata); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tokens { flex: none; color: var(--mac-text-dim); font: var(--rag-font-role-metadata); }
 

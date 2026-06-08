@@ -31,7 +31,7 @@ const DEFAULT_NAV_ITEMS: AppNavItemSpec[] = [
 ];
 
 export function RagEvaluationSiteApp({ apiBase = '/api/widget', defaultPageId = 'index' }: RagEvaluationSiteAppProps) {
-  const [, setLocationVersion] = useState(0);
+  const [locationVersion, setLocationVersion] = useState(0);
 
   useEffect(() => {
     const handleLocationChange = () => setLocationVersion((version) => version + 1);
@@ -40,8 +40,9 @@ export function RagEvaluationSiteApp({ apiBase = '/api/widget', defaultPageId = 
   }, []);
 
   const pageId = readPageIdFromLocation(defaultPageId);
+  const pageSearch = readSearchFromLocation(locationVersion);
   const cleanApiBase = apiBase.replace(/\/$/, '');
-  const { page, loading, error, refresh } = useWidgetPage(`${cleanApiBase}/pages/${encodeURIComponent(pageId)}`);
+  const { page, loading, error, refresh } = useWidgetPage(`${cleanApiBase}/pages/${encodeURIComponent(pageId)}${pageSearch}`);
 
   async function handleAction(action: ActionSpec, context: WidgetActionContext): Promise<void> {
     if (action.kind !== 'server') {
@@ -176,6 +177,11 @@ function navigateToPage(pageId: string): void {
   url.pathname = `/pages/${encodeURIComponent(pageId)}`;
   url.searchParams.delete('page');
   window.location.assign(url.toString());
+}
+
+function readSearchFromLocation(_locationVersion: number): string {
+  if (typeof window === 'undefined') return '';
+  return window.location.search || '';
 }
 
 function readPageIdFromLocation(defaultPageId: string): string {

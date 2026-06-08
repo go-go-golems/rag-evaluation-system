@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ContextDiagramStyle, ContextDiagramView, ContextPartKind, ContextWindowPart, ContextWindowSnapshot } from '../../../context';
 import { Button } from '../../atoms';
 import { Caption, Text } from '../../foundation';
@@ -80,8 +80,13 @@ export function ContextDiagramPanel({
 }: ContextDiagramPanelProps) {
   const availableViews = views.length > 0 ? views : defaultViews;
   const initialActiveView: ContextDiagramView = availableViews.includes(initialView) ? initialView : (availableViews[0] ?? 'strip');
+  const initialSelectedPartId = selectedPartId ?? snapshot.selectedPartId ?? snapshot.parts.find((part) => part.kind !== 'empty')?.id;
   const [view, setView] = useState<ContextDiagramView>(initialActiveView);
-  const selected = selectedPartId ?? snapshot.selectedPartId;
+  const [activePartId, setActivePartId] = useState<string | undefined>(initialSelectedPartId);
+  useEffect(() => {
+    setActivePartId(selectedPartId ?? snapshot.selectedPartId ?? snapshot.parts.find((part) => part.kind !== 'empty')?.id);
+  }, [selectedPartId, snapshot]);
+  const selected = activePartId;
   const selectedPart = selected ? snapshot.parts.find((part) => part.id === selected) : undefined;
   const effectiveLegendKinds = useMemo(() => legendKinds && legendKinds.length > 0 ? legendKinds : uniquePartKinds(snapshot), [legendKinds, snapshot]);
 
@@ -89,10 +94,10 @@ export function ContextDiagramPanel({
     <Stack gap="sm">
       {snapshot.subtitle && <Caption>{snapshot.subtitle}</Caption>}
       <div className={styles.viewport}>
-        {view === 'strip' && <ContextStripDiagram snapshot={snapshot} selectedPartId={selected} />}
-        {view === 'stack' && <ContextStackDiagram snapshot={snapshot} selectedPartId={selected} />}
-        {view === 'budget' && <ContextBudgetBar snapshot={snapshot} selectedPartId={selected} />}
-        {view === 'treemap' && <ContextTreemap snapshot={snapshot} selectedPartId={selected} />}
+        {view === 'strip' && <ContextStripDiagram snapshot={snapshot} selectedPartId={selected} onPartSelect={setActivePartId} />}
+        {view === 'stack' && <ContextStackDiagram snapshot={snapshot} selectedPartId={selected} onPartSelect={setActivePartId} />}
+        {view === 'budget' && <ContextBudgetBar snapshot={snapshot} selectedPartId={selected} onPartSelect={setActivePartId} />}
+        {view === 'treemap' && <ContextTreemap snapshot={snapshot} selectedPartId={selected} onPartSelect={setActivePartId} />}
       </div>
       {showLegend && <ContextLegend compact kinds={effectiveLegendKinds} mode={legendMode} selectedKind={selectedPart?.kind} />}
       {showPartDetails && renderPartDetail(selectedPart)}
