@@ -136,7 +136,7 @@ function demo() {
       title: "Demo",
       root: rag.panel({ title: "Demo" },
         rag.caption({ tone: "muted" }, "Rendered by React"),
-        rag.button({ label: "Refresh", variant: "primary" })
+        rag.button({ variant: "primary" }, "Refresh")
       )
     })
   })

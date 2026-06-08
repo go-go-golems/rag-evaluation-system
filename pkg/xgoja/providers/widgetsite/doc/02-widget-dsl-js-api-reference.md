@@ -101,8 +101,8 @@ Result:
 
 ```js
 const controls = widget.fragment(
-  widget.button({ label: "Run" }),
-  widget.button({ label: "Cancel", variant: "secondary" })
+  widget.button({}, "Run"),
+  widget.button({ variant: "primary" }, "Cancel")
 )
 ```
 
@@ -504,10 +504,9 @@ Buttons and other interactive widgets may carry action specifications in props. 
 
 ```js
 widget.button({
-  label: "Refresh",
   variant: "primary",
   action: { kind: "server", name: "refresh", payload: { source: "demo" } }
-})
+}, "Refresh")
 ```
 
 The React app posts server actions to `/api/widget/actions/{name}`. The exact action contract is owned by the WidgetRenderer server or jsverb site. The DSL only preserves the action object.
