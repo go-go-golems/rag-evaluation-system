@@ -1449,3 +1449,51 @@ We want to keep things consistent and make a nice reusable package, especially a
 ### Technical details
 - The current `WidgetRenderer` supports established semantic components such as `Panel`, `Stack`, `Inline`, `DashboardGrid`, `DataTable`, and `MetadataGrid`.
 - New slide-shell components intentionally include `data-rag-layout="SlideShell"` and `data-rag-molecule="FigureBlock"` / `data-rag-molecule="KeyPointList"` as future extraction and visual-diff handles.
+
+## Step 24: Remove Slide Key-Point Row Rules
+
+I made a small visual tuning pass on the generic slide content list. The slide shell was structurally correct, but the faint horizontal rules around each point made the content read more like a dashboard table than a clean teaching slide.
+
+The `KeyPointList` molecule now keeps the numbered-point rhythm but removes the top and per-item border lines, leaving typography and spacing to carry the hierarchy.
+
+### Prompt Context
+
+**User prompt (verbatim):** "remove horizontal lines in the content (like above each bullet point, the faint thin lines)"
+
+**Assistant interpretation:** Remove the faint divider rules from the slide content/key-point list.
+
+**Inferred user intent:** Make the slide content area cleaner and less table-like, closer to the reference slide design.
+
+### What I did
+- Removed `border-top` from `KeyPointList.module.css` root.
+- Removed `border-bottom` from each key-point item.
+- Ran package typecheck.
+
+### Why
+- The rules were generic list styling, but they were visually too prominent for a slide shell.
+- Slide content should read as sparse presentation prose, not as separated data rows.
+
+### What worked
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+
+### What didn't work
+- N/A
+
+### What I learned
+- `KeyPointList` should be lighter than `StepList`; `StepList` is good for agenda/navigation rows, while slide key points should be mostly typographic.
+
+### What was tricky to build
+- N/A; this was a CSS-only visual tuning pass.
+
+### What warrants a second pair of eyes
+- Confirm whether spacing between points still feels sufficient without row dividers.
+
+### What should be done in the future
+- Compare the updated slide shell against the prototype slide screenshot during visual parity work.
+
+### Code review instructions
+- Review `packages/rag-evaluation-site/src/components/molecules/KeyPointList/KeyPointList.module.css`.
+- Validate with `pnpm --dir packages/rag-evaluation-site typecheck` and the `SlideShell` / `CourseSlidePanel` Storybook stories.
+
+### Technical details
+- The molecule still exposes `data-rag-molecule="KeyPointList"`; only separator styling changed.

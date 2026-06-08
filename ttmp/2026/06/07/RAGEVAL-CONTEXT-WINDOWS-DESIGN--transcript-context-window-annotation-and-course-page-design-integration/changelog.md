@@ -277,3 +277,12 @@ Added generic SlideShell/FigureBlock/KeyPointList vocabulary, refactored CourseS
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/KeyPointList/KeyPointList.tsx — Generic numbered key-point list molecule
 - /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/CourseSlidePanel/CourseSlidePanel.tsx — Domain slide organism now composes generic vocabulary
 
+
+## 2026-06-07
+
+Removed faint horizontal divider rules from KeyPointList slide content.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-27/rag-evaluation-system/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/KeyPointList/KeyPointList.module.css — Slide key-point visual tuning
+
