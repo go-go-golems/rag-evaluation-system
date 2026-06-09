@@ -1,0 +1,17 @@
+schemaVersion: widget-manifest/v1
+type: TranscriptSessionHeader
+module: context_window.dsl
+helper: transcriptSessionHeader
+props: TranscriptSessionHeaderWidgetProps
+adapter:
+  path: ./TranscriptSessionHeader.widget.tsx
+  export: transcriptSessionHeaderWidget
+reactComponent: TranscriptSessionHeader
+children: false
+slots:
+  - title
+  - subtitle
+  - rightSlot
+actions: []
+status: stable
+docs: Header for transcript sessions with renderable title/subtitle and optional right widget slot.

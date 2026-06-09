@@ -1,0 +1,17 @@
+schemaVersion: widget-manifest/v1
+type: ContextUploadDropArea
+module: context_window.dsl
+helper: contextUploadDropArea
+props: ContextUploadDropAreaWidgetProps
+adapter:
+  path: ./ContextUploadDropArea.widget.tsx
+  export: contextUploadDropAreaWidget
+reactComponent: ContextUploadDropArea
+children: false
+slots:
+  - title
+  - description
+actions:
+  - onFilesSelectedAction
+status: stable
+docs: Upload/drop-area organism that serializes selected files into a Widget IR action context.

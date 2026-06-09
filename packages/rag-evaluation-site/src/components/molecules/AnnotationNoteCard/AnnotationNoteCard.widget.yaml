@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: AnnotationNoteCard
+module: context_window.dsl
+helper: annotationNoteCard
+props: AnnotationNoteCardWidgetProps
+adapter:
+  path: ./AnnotationNoteCard.widget.tsx
+  export: annotationNoteCardWidget
+reactComponent: AnnotationNoteCard
+children: false
+slots: []
+actions: []
+status: stable
+docs: Card for a single transcript annotation note.

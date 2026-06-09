@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: ContextDiagramPanel
+module: context_window.dsl
+helper: contextDiagramPanel
+props: ContextDiagramPanelWidgetProps
+adapter:
+  path: ./ContextDiagramPanel.widget.tsx
+  export: contextDiagramPanelWidget
+reactComponent: ContextDiagramPanel
+children: false
+slots: []
+actions: []
+status: stable
+docs: Interactive context-window diagram panel with selectable diagram views, legend, and part details.

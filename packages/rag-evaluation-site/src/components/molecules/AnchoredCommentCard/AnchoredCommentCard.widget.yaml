@@ -1,0 +1,15 @@
+schemaVersion: widget-manifest/v1
+type: AnchoredCommentCard
+module: context_window.dsl
+helper: anchoredCommentCard
+props: AnchoredCommentCardWidgetProps
+adapter:
+  path: ./AnchoredCommentCard.widget.tsx
+  export: anchoredCommentCardWidget
+reactComponent: AnchoredCommentCard
+children: false
+slots: []
+actions:
+  - onDismissAction
+status: stable
+docs: Anchored comment card with optional serializable dismiss action.

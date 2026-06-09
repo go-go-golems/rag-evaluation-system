@@ -1,0 +1,15 @@
+schemaVersion: widget-manifest/v1
+type: TranscriptMessageCard
+module: context_window.dsl
+helper: transcriptMessageCard
+props: TranscriptMessageCardWidgetProps
+adapter:
+  path: ./TranscriptMessageCard.widget.tsx
+  export: transcriptMessageCardWidget
+reactComponent: TranscriptMessageCard
+children: false
+slots: []
+actions:
+  - onAnnotationSelectAction
+status: stable
+docs: Transcript message card with annotation chips and serializable annotation-select action.

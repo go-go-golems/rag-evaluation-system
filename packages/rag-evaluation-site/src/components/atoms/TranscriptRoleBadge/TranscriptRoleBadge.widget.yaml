@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: TranscriptRoleBadge
+module: context_window.dsl
+helper: transcriptRoleBadge
+props: TranscriptRoleBadgeWidgetProps
+adapter:
+  path: ./TranscriptRoleBadge.widget.tsx
+  export: transcriptRoleBadgeWidget
+reactComponent: TranscriptRoleBadge
+children: false
+slots: []
+actions: []
+status: stable
+docs: Transcript role badge atom for user, assistant, tool, and system turns.

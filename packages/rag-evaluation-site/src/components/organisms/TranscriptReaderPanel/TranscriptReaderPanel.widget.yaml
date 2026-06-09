@@ -1,0 +1,15 @@
+schemaVersion: widget-manifest/v1
+type: TranscriptReaderPanel
+module: context_window.dsl
+helper: transcriptReaderPanel
+props: TranscriptReaderPanelWidgetProps
+adapter:
+  path: ./TranscriptReaderPanel.widget.tsx
+  export: transcriptReaderPanelWidget
+reactComponent: TranscriptReaderPanel
+children: false
+slots: []
+actions:
+  - onAnnotationSelectAction
+status: stable
+docs: Transcript reader panel with messages, annotations, chips, and serializable annotation-select action.

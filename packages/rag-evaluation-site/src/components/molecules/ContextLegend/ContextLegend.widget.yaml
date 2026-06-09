@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: ContextLegend
+module: context_window.dsl
+helper: contextLegend
+props: ContextLegendWidgetProps
+adapter:
+  path: ./ContextLegend.widget.tsx
+  export: contextLegendWidget
+reactComponent: ContextLegend
+children: false
+slots: []
+actions: []
+status: stable
+docs: Legend for context-window part kinds and rendering modes.

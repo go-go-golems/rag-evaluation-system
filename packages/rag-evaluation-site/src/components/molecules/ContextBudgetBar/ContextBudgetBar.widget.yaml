@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: ContextBudgetBar
+module: context_window.dsl
+helper: contextBudgetBar
+props: ContextBudgetBarWidgetProps
+adapter:
+  path: ./ContextBudgetBar.widget.tsx
+  export: contextBudgetBarWidget
+reactComponent: ContextBudgetBar
+children: false
+slots: []
+actions: []
+status: stable
+docs: Context-window budget bar visualization for token usage snapshots.

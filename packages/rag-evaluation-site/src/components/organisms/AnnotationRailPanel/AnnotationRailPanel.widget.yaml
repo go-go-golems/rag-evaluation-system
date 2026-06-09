@@ -1,0 +1,15 @@
+schemaVersion: widget-manifest/v1
+type: AnnotationRailPanel
+module: context_window.dsl
+helper: annotationRailPanel
+props: AnnotationRailPanelWidgetProps
+adapter:
+  path: ./AnnotationRailPanel.widget.tsx
+  export: annotationRailPanelWidget
+reactComponent: AnnotationRailPanel
+children: false
+slots: []
+actions:
+  - onAnnotationSelectAction
+status: stable
+docs: Annotation rail panel for transcript annotations with serializable annotation-select action.
