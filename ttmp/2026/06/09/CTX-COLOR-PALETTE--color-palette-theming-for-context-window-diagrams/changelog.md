@@ -86,3 +86,12 @@ Step 13: made transcript side-note headers palette-aware with explicit foregroun
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/AnnotationNoteCard/AnnotationNoteCard.module.css — Side-note title-bar foreground
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/AnnotationNoteCard/AnnotationNoteCard.tsx — Side-note style-set consumption and palette variables
 
+
+## 2026-06-09
+
+Step 14: improved inline transcript note-link contrast
+
+### Related Files
+
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/TranscriptMessageCard/TranscriptMessageCard.module.css — Inline note-chip contrast and selected foreground rules
+

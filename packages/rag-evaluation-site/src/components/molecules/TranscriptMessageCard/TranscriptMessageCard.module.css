@@ -84,9 +84,10 @@
 
 .noteChip {
   appearance: none;
-  border: 1px solid var(--ctx-line, var(--mac-accent));
+  border: 1px solid color-mix(in srgb, var(--ctx-line, var(--mac-accent)) 68%, var(--mac-border));
+  border-left-width: 3px;
   background: var(--mac-surface);
-  color: var(--ctx-line, var(--mac-accent));
+  color: var(--mac-text);
   padding: 1px 5px;
   font: var(--rag-font-role-metadata);
   cursor: pointer;
@@ -94,8 +95,8 @@
 
 .noteChip:hover,
 .noteChip[data-selected='true'] {
-  background: var(--ctx-line, var(--mac-accent));
-  color: var(--mac-text-inv);
+  background: var(--ctx-fill, var(--mac-accent));
+  color: var(--ctx-label, var(--mac-text));
 }
 
 .tokenChip {

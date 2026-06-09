@@ -16,7 +16,9 @@ RelatedFiles:
     - Path: packages/rag-evaluation-site/src/components/molecules/AnnotationNoteCard/AnnotationNoteCard.tsx
       Note: Side-note palette foreground behavior recorded in Step 13
     - Path: packages/rag-evaluation-site/src/components/molecules/TranscriptMessageCard/TranscriptMessageCard.module.css
-      Note: Title-bar-only palette chrome and neutral body behavior recorded in Step 12
+      Note: |-
+        Title-bar-only palette chrome and neutral body behavior recorded in Step 12
+        Inline note-link contrast recorded in Step 14
     - Path: packages/rag-evaluation-site/src/components/molecules/TranscriptMessageCard/TranscriptMessageCard.tsx
       Note: Transcript palette foreground and token chip behavior recorded in Step 12
     - Path: packages/rag-evaluation-site/src/widgets/WidgetRenderer.transcript-notes.stories.tsx
@@ -27,6 +29,7 @@ LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -1118,3 +1121,78 @@ The key visual target was the annotation rail and side-note cards that appear al
 - Side-note header foreground comes from `--ctx-label`.
 - Side-note body background remains `var(--mac-surface)`.
 - Confidence metadata uses a mostly-white chip background mixed slightly with the note palette fill.
+
+## Step 14: Inline Transcript Note-Link Contrast
+
+This step fixes the inline `note 4`, `note 5`, and similar note-link chips rendered inside transcript message title bars. The prior version used palette line color as the chip text color, which could become too faint depending on the selected palette and annotation style.
+
+The updated rule keeps each note chip readable by default: it uses a neutral white/surface background and normal text color, while the annotation palette is used as a stronger border/accent. Hovered or selected chips switch to the palette fill and its matching palette foreground.
+
+### Prompt Context
+
+**User prompt (verbatim):** "the note links on the transcrit itself, like note 5 or note 4 are pretty hard to read contrast wise as well."
+
+**Assistant interpretation:** Improve contrast for the inline note-link chips inside transcript message cards, not just the side-note cards in the rail.
+
+**Inferred user intent:** The user wants every transcript annotation affordance to remain readable across all palettes, including compact note buttons embedded in message headers.
+
+**Commit (code):** pending — "Frontend: improve transcript note-link contrast"
+
+### What I did
+
+- Updated `.noteChip` in `TranscriptMessageCard.module.css`.
+- Default note chips now use:
+  - neutral `var(--mac-surface)` background,
+  - normal `var(--mac-text)` foreground,
+  - palette-derived border/accent with a thicker left border.
+- Hovered and selected note chips now use:
+  - `--ctx-fill` background,
+  - `--ctx-label` foreground.
+- Validated with:
+  - `cd packages/rag-evaluation-site && pnpm typecheck`
+  - `cd packages/rag-evaluation-site && pnpm build-storybook`
+
+### Why
+
+- Palette line colors are not guaranteed to be high-contrast enough as tiny text on white or tinted headers.
+- The note chip should be legible first and palette-coded second.
+- A left-border accent preserves annotation color identity without sacrificing text contrast.
+
+### What worked
+
+- This was a CSS-only fix because `TranscriptMessageCard` already resolves per-annotation style variables onto each note chip.
+- TypeScript and Storybook builds both passed.
+
+### What didn't work
+
+- N/A.
+
+### What I learned
+
+- Tiny metadata controls need stronger contrast rules than larger headers or swatches.
+- Palette color should often appear as accent chrome, not as foreground text.
+
+### What was tricky to build
+
+- The chip needs to remain recognizable as annotation-colored while not using the annotation line color as the text itself. The thicker left border provides that mapping without reducing readability.
+
+### What warrants a second pair of eyes
+
+- Whether the left-border accent is visually strong enough in dense transcript headers.
+- Whether selected chips should use a darker solid palette line instead of palette fill for some palettes.
+
+### What should be done in the future
+
+- Visually inspect note chips across all transcript palettes, especially small `note 4`/`note 5` labels.
+
+### Code review instructions
+
+- Review `packages/rag-evaluation-site/src/components/molecules/TranscriptMessageCard/TranscriptMessageCard.module.css`, specifically `.noteChip` and selected/hover states.
+- Validate with:
+  - `cd packages/rag-evaluation-site && pnpm typecheck`
+  - `cd packages/rag-evaluation-site && pnpm build-storybook`
+
+### Technical details
+
+- Default note-link foreground is `var(--mac-text)`.
+- Selected/hover foreground is `var(--ctx-label)` over `var(--ctx-fill)`.
