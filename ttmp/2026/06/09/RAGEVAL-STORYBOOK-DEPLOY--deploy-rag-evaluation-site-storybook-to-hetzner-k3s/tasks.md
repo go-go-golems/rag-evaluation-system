@@ -18,10 +18,10 @@
 
 ## Phase 2 — Source repository CI and GitOps handoff
 
-- [ ] Add `deploy/gitops-targets.json` with `patch_strategy: static-publisher-job`
-- [ ] Add `.github/workflows/publish-rag-evaluation-storybook.yml` caller workflow for infra-tooling
-- [ ] Validate workflow YAML and deployment target metadata shape locally
-- [ ] Record Phase 2 diary entry and commit focused source CI/GitOps handoff changes
+- [x] Add `deploy/gitops-targets.json` with `patch_strategy: static-publisher-job`
+- [x] Add `.github/workflows/publish-rag-evaluation-storybook.yml` caller workflow for infra-tooling
+- [x] Validate workflow YAML and deployment target metadata shape locally
+- [x] Record Phase 2 diary entry and commit focused source CI/GitOps handoff changes
 
 ## Phase 3 — K3s GitOps static-site manifests
 

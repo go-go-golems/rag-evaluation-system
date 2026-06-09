@@ -1,0 +1,59 @@
+name: publish-rag-evaluation-storybook
+
+on:
+  pull_request:
+    paths:
+      - Dockerfile.storybook-static
+      - .dockerignore
+      - .github/workflows/publish-rag-evaluation-storybook.yml
+      - deploy/gitops-targets.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - packages/rag-evaluation-site/**
+  push:
+    branches:
+      - main
+    paths:
+      - Dockerfile.storybook-static
+      - .dockerignore
+      - .github/workflows/publish-rag-evaluation-storybook.yml
+      - deploy/gitops-targets.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - packages/rag-evaluation-site/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: publish-rag-evaluation-storybook-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    uses: go-go-golems/infra-tooling/.github/workflows/publish-ghcr-image.yml@main
+    secrets: inherit
+    with:
+      dockerfile: ./Dockerfile.storybook-static
+      build_context: .
+      go_version_file: go.mod
+      go_cache_dependency_path: go.sum
+      test_command: |
+        corepack enable
+        pnpm install --frozen-lockfile
+        pnpm --dir packages/rag-evaluation-site typecheck
+        pnpm --dir packages/rag-evaluation-site build-storybook
+        test -f packages/rag-evaluation-site/storybook-static/index.html
+      image_name: ghcr.io/go-go-golems/rag-evaluation-storybook
+      gitops_target_config: deploy/gitops-targets.json
+      push_image: ${{ github.event_name != 'pull_request' }}
+      open_gitops_pr: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+      gitops_pr_token_source: vault
+      vault_role: rag-evaluation-system-gitops-pr
+      vault_secret_path: kv/data/ci/github/rag-evaluation-system/gitops-pr-token
+      tooling_repository: go-go-golems/infra-tooling
+      tooling_ref: main

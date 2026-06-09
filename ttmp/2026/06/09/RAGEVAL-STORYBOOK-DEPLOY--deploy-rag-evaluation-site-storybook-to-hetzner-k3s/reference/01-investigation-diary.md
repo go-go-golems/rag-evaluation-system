@@ -291,3 +291,78 @@ This step deliberately avoided committing generated Storybook files. The generat
   - output inside image: `/site/`
   - invariant: `/site/index.html` must exist
 - Successful validation image tag: `rag-evaluation-storybook:test`
+
+## Step 4: Add the source CI workflow and GitOps target metadata
+
+I connected the Storybook artifact contract from Phase 1 to the existing infra-tooling release path. The source repo now has target metadata telling `open-gitops-pr` which K3s manifest to patch, and a GitHub Actions workflow that builds the package-local Storybook, packages it as a GHCR image, and opens a GitOps PR only for pushes to `main`.
+
+This step keeps pull requests safe: PR runs validate the Storybook build and Docker packaging path but do not push images or open GitOps PRs. Only a merged `main` commit can publish `ghcr.io/go-go-golems/rag-evaluation-storybook:sha-*` and hand off to the K3s repo.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 2)
+
+**Assistant interpretation:** Execute Phase 2: add source-side infra-tooling workflow and GitOps target metadata, validate the metadata locally, update the diary, and commit the focused source handoff changes.
+
+**Inferred user intent:** Make Storybook deployment reproducible from CI using the same source-to-GitOps release chain as other static sites.
+
+**Commit (code):** pending — source CI/GitOps handoff changes.
+
+### What I did
+- Added `/home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/deploy/gitops-targets.json`.
+- Added `/home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/.github/workflows/publish-rag-evaluation-storybook.yml`.
+- Configured the target metadata to patch `gitops/kustomize/rag-evaluation-storybook/publish-job.yaml` in `wesen/2026-03-27--hetzner-k3s`.
+- Set `patch_strategy` to `static-publisher-job` so the Job name, release label, image tag, and shell release token change together.
+- Configured the workflow to call `go-go-golems/infra-tooling/.github/workflows/publish-ghcr-image.yml@main`.
+- Configured the workflow test command to run:
+  - `corepack enable`
+  - `pnpm install --frozen-lockfile`
+  - `pnpm --dir packages/rag-evaluation-site typecheck`
+  - `pnpm --dir packages/rag-evaluation-site build-storybook`
+  - `test -f packages/rag-evaluation-site/storybook-static/index.html`
+- Validated JSON formatting with `python3 -m json.tool deploy/gitops-targets.json`.
+- Validated target metadata with:
+  - `python3 /home/manuel/code/wesen/go-go-golems/infra-tooling/scripts/gitops/validate_gitops_targets.py deploy/gitops-targets.json`
+- Parsed the workflow with Python/PyYAML and ran sanity checks for the reusable workflow, Storybook build command, and Vault role.
+
+### Why
+- The K3s static-sites deployment model depends on a source workflow opening GitOps PRs with immutable image tags.
+- `deploy/gitops-targets.json` is the source-owned API contract that tells infra-tooling where the deployment manifest lives.
+- Pull request runs should be validation-only to avoid publishing unmerged Storybook artifacts.
+
+### What worked
+- `python3 -m json.tool deploy/gitops-targets.json` succeeded.
+- `validate_gitops_targets.py` reported: `deploy/gitops-targets.json: OK (1 target(s))`.
+- Workflow YAML parsed successfully with PyYAML.
+
+### What didn't work
+- N/A. The local metadata and workflow sanity validations passed.
+
+### What I learned
+- The shared infra-tooling workflow already has the exact switches needed here: `push_image`, `open_gitops_pr`, Vault-backed GitOps token inputs, and the static publisher patch strategy.
+- The deployment target metadata can be very small because the static-site-specific release rewriting lives in infra-tooling.
+
+### What was tricky to build
+- The workflow has two different conditions that must stay aligned: `push_image` and `open_gitops_pr`. If `push_image` were true on PRs, CI would publish unmerged artifacts. If `open_gitops_pr` were true outside `main`, GitOps PRs could point at unreviewed commits. Both are now restricted to non-PR pushes, with GitOps PRs further restricted to `refs/heads/main`.
+- The workflow relies on the Phase 1 Dockerfile but does not build Storybook inside Docker. The `test_command` must therefore create `storybook-static/` before Docker Buildx runs.
+
+### What warrants a second pair of eyes
+- Confirm the source repository's default branch is `main`.
+- Confirm the Vault role name `rag-evaluation-system-gitops-pr` and secret path `kv/data/ci/github/rag-evaluation-system/gitops-pr-token` match the K3s Vault files that will be added in Phase 4.
+- Confirm whether the GHCR image should be named `rag-evaluation-storybook` or include the repo name, for example `rag-evaluation-system-storybook`.
+
+### What should be done in the future
+- Phase 3 should add the K3s static-site manifests at the path referenced by `deploy/gitops-targets.json`.
+
+### Code review instructions
+- Review `deploy/gitops-targets.json` and verify `manifest_path` matches the K3s publisher Job file.
+- Review `.github/workflows/publish-rag-evaluation-storybook.yml` and verify PRs do not publish images or open GitOps PRs.
+- Re-run:
+  - `python3 -m json.tool deploy/gitops-targets.json`
+  - `python3 /home/manuel/code/wesen/go-go-golems/infra-tooling/scripts/gitops/validate_gitops_targets.py deploy/gitops-targets.json`
+
+### Technical details
+- GHCR image: `ghcr.io/go-go-golems/rag-evaluation-storybook`
+- GitOps target repo: `wesen/2026-03-27--hetzner-k3s`
+- GitOps target manifest: `gitops/kustomize/rag-evaluation-storybook/publish-job.yaml`
+- Patch strategy: `static-publisher-job`
