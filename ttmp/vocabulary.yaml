@@ -103,6 +103,12 @@ topics:
       description: Widget IR, WidgetRenderer, and semantic UI JSON contracts
     - slug: rag-evaluation
       description: RAG Evaluation System project and package work
+    - slug: theming
+      description: Visual theming, palettes, and style-token work
+    - slug: context-window
+      description: Context-window modeling, visualization, and token-budget UI
+    - slug: visualization
+      description: Data visualization and visual encoding work
 docTypes:
     - slug: design-doc
       description: Structured rationale and architecture notes
