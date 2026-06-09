@@ -26,7 +26,13 @@ func NewScanner(queries *db.Queries) *Scanner {
 func (s *Scanner) ScanDir(sourceID, dirPath string) ([]string, error) {
 	var docIDs []string
 
-	err := filepath.WalkDir(dirPath, func(path string, d fs.DirEntry, err error) error {
+	root, err := os.OpenRoot(dirPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open scan root %s: %w", dirPath, err)
+	}
+	defer func() { _ = root.Close() }()
+
+	err = filepath.WalkDir(dirPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -39,8 +45,8 @@ func (s *Scanner) ScanDir(sourceID, dirPath string) ([]string, error) {
 			return nil
 		}
 
-		// Skip hidden files and non-text files
-		if strings.HasPrefix(d.Name(), ".") {
+		// Skip hidden files, symlinks, and non-text files.
+		if strings.HasPrefix(d.Name(), ".") || d.Type()&fs.ModeSymlink != 0 {
 			return nil
 		}
 
@@ -49,15 +55,15 @@ func (s *Scanner) ScanDir(sourceID, dirPath string) ([]string, error) {
 			return nil
 		}
 
-		content, err := os.ReadFile(path)
-		if err != nil {
-			return fmt.Errorf("failed to read %s: %w", path, err)
-		}
-
-		// Generate stable ID from path hash
+		// Generate stable ID from path hash.
 		relPath, err := filepath.Rel(dirPath, path)
 		if err != nil {
-			relPath = path
+			return fmt.Errorf("failed to resolve relative path for %s: %w", path, err)
+		}
+
+		content, err := root.ReadFile(relPath)
+		if err != nil {
+			return fmt.Errorf("failed to read %s: %w", path, err)
 		}
 
 		docID := "doc-" + hashString(sourceID + ":" + relPath)[:16]

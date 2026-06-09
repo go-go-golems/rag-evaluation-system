@@ -11,136 +11,147 @@ import (
 	"github.com/go-go-golems/go-go-goja/modules"
 )
 
-const ModuleName = "widget.dsl"
+const (
+	UIModuleName            = "ui.dsl"
+	DataModuleName          = "data.dsl"
+	ContextWindowModuleName = "context_window.dsl"
+	CourseModuleName        = "course.dsl"
+)
+
+type moduleSpec struct {
+	name    string
+	doc     string
+	helpers map[string]string
+	page    bool
+	cell    bool
+	action  bool
+	recipes []string
+}
 
 var templatePattern = regexp.MustCompile(`\$\{([^}]+)\}|\$([A-Za-z0-9_.-]+)`)
 
-var componentNames = []string{
-	"appShell",
-	"appNav",
-	"button",
-	"caption",
-	"codeText",
-	"contextKindSwatch",
-	"contextStudioNavIcon",
-	"annotationBadge",
-	"contextLegend",
-	"contextBudgetBar",
-	"contextStripDiagram",
-	"contextStackDiagram",
-	"contextTreemap",
-	"contextDiagramPanel",
-	"dashboardGrid",
-	"dataTable",
-	"divider",
-	"formRow",
-	"inline",
-	"metadataGrid",
-	"panel",
-	"scrollRegion",
-	"sectionBlock",
-	"selectInput",
-	"sidebarShell",
-	"slideShell",
-	"splitPane",
-	"stack",
-	"statusText",
-	"tabList",
-	"textBlock",
-	"textInput",
-	"transcriptRoleBadge",
-	"transcriptSessionHeader",
-	"transcriptMessageCard",
-	"annotationNoteCard",
-	"annotationRailPanel",
-	"transcriptReaderPanel",
-	"transcriptWorkspacePanel",
-	"anchoredCommentCard",
-	"anchoredCommentRail",
-	"keyValueStrip",
-	"checkList",
-	"stepList",
-	"personSummary",
-	"figureBlock",
-	"keyPointList",
-	"sidebarNav",
-	"courseStepNav",
-	"markdownArticle",
-	"documentListPanel",
-	"documentPreviewToolbar",
-	"courseLessonPanel",
-	"courseSlidePanel",
-	"courseStudioShell",
-	"handoutDocumentShell",
-	"contextUploadDropArea",
+var uiHelpers = map[string]string{
+	"appShell":      "AppShell",
+	"appNav":        "AppNav",
+	"button":        "Button",
+	"caption":       "Caption",
+	"checkList":     "CheckList",
+	"codeText":      "CodeText",
+	"dashboardGrid": "DashboardGrid",
+	"divider":       "Divider",
+	"figureBlock":   "FigureBlock",
+	"formRow":       "FormRow",
+	"inline":        "Inline",
+	"keyPointList":  "KeyPointList",
+	"keyValueStrip": "KeyValueStrip",
+	"metadataGrid":  "MetadataGrid",
+	"panel":         "Panel",
+	"personSummary": "PersonSummary",
+	"scrollRegion":  "ScrollRegion",
+	"sectionBlock":  "SectionBlock",
+	"selectInput":   "SelectInput",
+	"sidebarNav":    "SidebarNav",
+	"sidebarShell":  "SidebarShell",
+	"splitPane":     "SplitPane",
+	"stack":         "Stack",
+	"statusText":    "StatusText",
+	"stepList":      "StepList",
+	"tabList":       "TabList",
+	"textBlock":     "Text",
+	"textInput":     "TextInput",
 }
 
-var componentTypes = map[string]string{
-	"appShell":                 "AppShell",
-	"appNav":                   "AppNav",
-	"button":                   "Button",
-	"caption":                  "Caption",
-	"codeText":                 "CodeText",
-	"contextKindSwatch":        "ContextKindSwatch",
-	"contextStudioNavIcon":     "ContextStudioNavIcon",
-	"annotationBadge":          "AnnotationBadge",
-	"contextLegend":            "ContextLegend",
-	"contextBudgetBar":         "ContextBudgetBar",
-	"contextStripDiagram":      "ContextStripDiagram",
-	"contextStackDiagram":      "ContextStackDiagram",
-	"contextTreemap":           "ContextTreemap",
-	"contextDiagramPanel":      "ContextDiagramPanel",
-	"dashboardGrid":            "DashboardGrid",
-	"dataTable":                "DataTable",
-	"divider":                  "Divider",
-	"formRow":                  "FormRow",
-	"inline":                   "Inline",
-	"metadataGrid":             "MetadataGrid",
-	"panel":                    "Panel",
-	"scrollRegion":             "ScrollRegion",
-	"sectionBlock":             "SectionBlock",
-	"selectInput":              "SelectInput",
-	"sidebarShell":             "SidebarShell",
-	"slideShell":               "SlideShell",
-	"splitPane":                "SplitPane",
-	"stack":                    "Stack",
-	"statusText":               "StatusText",
-	"tabList":                  "TabList",
-	"textBlock":                "Text",
-	"textInput":                "TextInput",
-	"transcriptRoleBadge":      "TranscriptRoleBadge",
-	"transcriptSessionHeader":  "TranscriptSessionHeader",
-	"transcriptMessageCard":    "TranscriptMessageCard",
-	"annotationNoteCard":       "AnnotationNoteCard",
-	"annotationRailPanel":      "AnnotationRailPanel",
-	"transcriptReaderPanel":    "TranscriptReaderPanel",
-	"transcriptWorkspacePanel": "TranscriptWorkspacePanel",
+var dataHelpers = map[string]string{
+	"dataTable": "DataTable",
+}
+
+var contextWindowHelpers = map[string]string{
 	"anchoredCommentCard":      "AnchoredCommentCard",
 	"anchoredCommentRail":      "AnchoredCommentRail",
-	"keyValueStrip":            "KeyValueStrip",
-	"checkList":                "CheckList",
-	"stepList":                 "StepList",
-	"personSummary":            "PersonSummary",
-	"figureBlock":              "FigureBlock",
-	"keyPointList":             "KeyPointList",
-	"sidebarNav":               "SidebarNav",
-	"courseStepNav":            "CourseStepNav",
-	"markdownArticle":          "MarkdownArticle",
-	"documentListPanel":        "DocumentListPanel",
-	"documentPreviewToolbar":   "DocumentPreviewToolbar",
-	"courseLessonPanel":        "CourseLessonPanel",
-	"courseSlidePanel":         "CourseSlidePanel",
-	"courseStudioShell":        "CourseStudioShell",
-	"handoutDocumentShell":     "HandoutDocumentShell",
+	"annotationBadge":          "AnnotationBadge",
+	"annotationNoteCard":       "AnnotationNoteCard",
+	"annotationRailPanel":      "AnnotationRailPanel",
+	"contextBudgetBar":         "ContextBudgetBar",
+	"contextDiagramPanel":      "ContextDiagramPanel",
+	"contextKindSwatch":        "ContextKindSwatch",
+	"contextLegend":            "ContextLegend",
+	"contextStackDiagram":      "ContextStackDiagram",
+	"contextStripDiagram":      "ContextStripDiagram",
+	"contextTreemap":           "ContextTreemap",
 	"contextUploadDropArea":    "ContextUploadDropArea",
+	"transcriptMessageCard":    "TranscriptMessageCard",
+	"transcriptReaderPanel":    "TranscriptReaderPanel",
+	"transcriptRoleBadge":      "TranscriptRoleBadge",
+	"transcriptSessionHeader":  "TranscriptSessionHeader",
+	"transcriptWorkspacePanel": "TranscriptWorkspacePanel",
 }
 
-type module struct{}
+var courseHelpers = map[string]string{
+	"contextStudioNavIcon":   "ContextStudioNavIcon",
+	"courseLessonPanel":      "CourseLessonPanel",
+	"courseSlidePanel":       "CourseSlidePanel",
+	"courseStepNav":          "CourseStepNav",
+	"courseStudioShell":      "CourseStudioShell",
+	"documentListPanel":      "DocumentListPanel",
+	"documentPreviewToolbar": "DocumentPreviewToolbar",
+	"handoutDocumentShell":   "HandoutDocumentShell",
+	"markdownArticle":        "MarkdownArticle",
+	"slideShell":             "SlideShell",
+}
+
+var moduleSpecs = []moduleSpec{
+	{
+		name:    UIModuleName,
+		helpers: uiHelpers,
+		page:    true,
+		action:  true,
+		recipes: []string{"metrics", "actionToolbar"},
+		doc:     "ui.dsl provides generic Widget IR page, layout, primitive, and foundation helpers.",
+	},
+	{
+		name:    DataModuleName,
+		helpers: dataHelpers,
+		cell:    true,
+		action:  true,
+		recipes: []string{"masterDetailTable"},
+		doc:     "data.dsl provides data-display helpers, table cell helpers, and data recipes.",
+	},
+	{
+		name:    ContextWindowModuleName,
+		helpers: contextWindowHelpers,
+		action:  true,
+		recipes: []string{"contextDiagram", "annotatedTranscript"},
+		doc:     "context_window.dsl provides context-window, transcript, annotation, and anchored-comment helpers.",
+	},
+	{
+		name:    CourseModuleName,
+		helpers: courseHelpers,
+		action:  true,
+		recipes: []string{"courseStudio", "courseSlide", "handout"},
+		doc:     "course.dsl provides course, lesson, slide, handout, and course-studio helpers.",
+	},
+}
+
+var moduleSpecsByName = func() map[string]moduleSpec {
+	out := map[string]moduleSpec{}
+	for _, spec := range moduleSpecs {
+		out[spec.name] = spec
+	}
+	return out
+}()
+
+type module struct {
+	spec moduleSpec
+}
 
 var _ modules.NativeModule = (*module)(nil)
 
-func NewLoader() require.ModuleLoader {
-	mod := &module{}
+func NewLoader(moduleName string) require.ModuleLoader {
+	spec, ok := moduleSpecsByName[moduleName]
+	if !ok {
+		panic(fmt.Sprintf("unknown widget DSL module %q", moduleName))
+	}
+	mod := &module{spec: spec}
 	return mod.Loader
 }
 
@@ -148,54 +159,56 @@ func Register(reg *require.Registry) {
 	if reg == nil {
 		return
 	}
-	loader := NewLoader()
-	reg.RegisterNativeModule(ModuleName, loader)
-	reg.RegisterNativeModule("rag.dsl", loader)
+	for _, spec := range moduleSpecs {
+		reg.RegisterNativeModule(spec.name, NewLoader(spec.name))
+	}
 }
 
-func (module) Name() string { return ModuleName }
+func (m *module) Name() string { return m.spec.name }
 
-func (module) Doc() string {
-	return `
-widget.dsl is a RAG Evaluation System authoring DSL for producing JSON-compatible
-Widget IR. The returned IR is intended to be rendered by the React WidgetRenderer,
-not by Go-side HTML generation.
-
-Example:
-
-  const rag = require("widget.dsl");
-  exports.page = () => rag.panel({title: "Demo"},
-    rag.caption({tone: "success"}, "Rendered by React")
-  );
-`
-}
+func (m *module) Doc() string { return m.spec.doc }
 
 func (m *module) Loader(vm *goja.Runtime, moduleObj *goja.Object) {
 	rt := &runtime{vm: vm}
 	exports := moduleObj.Get("exports").(*goja.Object)
-	rt.install(exports)
+	rt.install(exports, m.spec)
 }
 
 func init() {
-	modules.Register(&module{})
+	for _, spec := range moduleSpecs {
+		modules.Register(&module{spec: spec})
+	}
 }
 
 type runtime struct {
 	vm *goja.Runtime
 }
 
-func (r *runtime) install(exports *goja.Object) {
+func (r *runtime) install(exports *goja.Object, spec moduleSpec) {
 	setExport(exports, "text", r.text)
 	setExport(exports, "element", r.element)
 	setExport(exports, "component", r.component)
 	setExport(exports, "fragment", r.fragment)
-	setExport(exports, "page", r.page)
+	if spec.page {
+		setExport(exports, "page", r.page)
+	}
 
-	for _, name := range componentNames {
-		componentType := componentTypes[name]
+	for name, componentType := range spec.helpers {
 		setExport(exports, name, r.componentFactory(componentType))
 	}
 
+	if spec.cell {
+		setExport(exports, "cell", r.cellObject())
+	}
+	if spec.action {
+		setExport(exports, "action", r.actionObject())
+	}
+	if len(spec.recipes) > 0 {
+		setExport(exports, "recipes", r.recipesObject(spec.recipes))
+	}
+}
+
+func (r *runtime) cellObject() *goja.Object {
 	cell := r.vm.NewObject()
 	setExport(cell, "field", func(field string, options ...goja.Value) map[string]any {
 		out := map[string]any{"kind": "field", "field": field}
@@ -228,8 +241,10 @@ func (r *runtime) install(exports *goja.Object) {
 	setExport(cell, "constant", func(value goja.Value) any {
 		return map[string]any{"kind": "constant", "value": r.exportRenderable(value)}
 	})
-	setExport(exports, "cell", cell)
+	return cell
+}
 
+func (r *runtime) actionObject() *goja.Object {
 	action := r.vm.NewObject()
 	setExport(action, "server", func(name string, options ...goja.Value) map[string]any {
 		out := map[string]any{"kind": "server", "name": name}
@@ -249,18 +264,32 @@ func (r *runtime) install(exports *goja.Object) {
 	setExport(action, "copy", func(value string) map[string]any {
 		return map[string]any{"kind": "copy", "value": value}
 	})
-	setExport(exports, "action", action)
+	return action
+}
 
+func (r *runtime) recipesObject(names []string) *goja.Object {
 	recipes := r.vm.NewObject()
-	setExport(recipes, "metrics", r.metricsRecipe)
-	setExport(recipes, "actionToolbar", r.actionToolbarRecipe)
-	setExport(recipes, "masterDetailTable", r.masterDetailTableRecipe)
-	setExport(recipes, "contextDiagram", r.contextDiagramRecipe)
-	setExport(recipes, "annotatedTranscript", r.annotatedTranscriptRecipe)
-	setExport(recipes, "courseStudio", r.courseStudioRecipe)
-	setExport(recipes, "courseSlide", r.courseSlideRecipe)
-	setExport(recipes, "handout", r.handoutRecipe)
-	setExport(exports, "recipes", recipes)
+	for _, name := range names {
+		switch name {
+		case "metrics":
+			setExport(recipes, name, r.metricsRecipe)
+		case "actionToolbar":
+			setExport(recipes, name, r.actionToolbarRecipe)
+		case "masterDetailTable":
+			setExport(recipes, name, r.masterDetailTableRecipe)
+		case "contextDiagram":
+			setExport(recipes, name, r.contextDiagramRecipe)
+		case "annotatedTranscript":
+			setExport(recipes, name, r.annotatedTranscriptRecipe)
+		case "courseStudio":
+			setExport(recipes, name, r.courseStudioRecipe)
+		case "courseSlide":
+			setExport(recipes, name, r.courseSlideRecipe)
+		case "handout":
+			setExport(recipes, name, r.handoutRecipe)
+		}
+	}
+	return recipes
 }
 
 func (r *runtime) text(value goja.Value) map[string]any {
@@ -269,11 +298,11 @@ func (r *runtime) text(value goja.Value) map[string]any {
 
 func (r *runtime) element(call goja.FunctionCall) goja.Value {
 	if len(call.Arguments) == 0 {
-		panic(r.vm.NewGoError(fmt.Errorf("widget.dsl element(tag, attrs?, ...children) requires a tag")))
+		panic(r.vm.NewGoError(fmt.Errorf("widget DSL element(tag, attrs?, ...children) requires a tag")))
 	}
 	tag := strings.TrimSpace(call.Arguments[0].String())
 	if tag == "" {
-		panic(r.vm.NewGoError(fmt.Errorf("widget.dsl element tag must not be empty")))
+		panic(r.vm.NewGoError(fmt.Errorf("widget DSL element tag must not be empty")))
 	}
 	attrs := map[string]any{}
 	childStart := 1
@@ -294,11 +323,11 @@ func (r *runtime) element(call goja.FunctionCall) goja.Value {
 
 func (r *runtime) component(call goja.FunctionCall) goja.Value {
 	if len(call.Arguments) == 0 {
-		panic(r.vm.NewGoError(fmt.Errorf("widget.dsl component(type, props?, ...children) requires a type")))
+		panic(r.vm.NewGoError(fmt.Errorf("widget DSL component(type, props?, ...children) requires a type")))
 	}
 	componentType := strings.TrimSpace(call.Arguments[0].String())
 	if componentType == "" {
-		panic(r.vm.NewGoError(fmt.Errorf("widget.dsl component type must not be empty")))
+		panic(r.vm.NewGoError(fmt.Errorf("widget DSL component type must not be empty")))
 	}
 	props, childStart := propsAndChildStart(call.Arguments, 1)
 	return r.vm.ToValue(r.buildComponent(componentType, props, call.Arguments[childStart:]))
@@ -317,7 +346,7 @@ func (r *runtime) fragment(call goja.FunctionCall) []any {
 
 func (r *runtime) page(call goja.FunctionCall) goja.Value {
 	if len(call.Arguments) == 0 || !isPlainObject(call.Arguments[0]) {
-		panic(r.vm.NewGoError(fmt.Errorf("widget.dsl page(options) requires an options object")))
+		panic(r.vm.NewGoError(fmt.Errorf("ui.dsl page(options) requires an options object")))
 	}
 	options := exportObject(call.Arguments[0])
 	id := stringFromMap(options, "id", "page")

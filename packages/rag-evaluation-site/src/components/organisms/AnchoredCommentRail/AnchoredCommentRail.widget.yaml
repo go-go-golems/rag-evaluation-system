@@ -1,0 +1,15 @@
+schemaVersion: widget-manifest/v1
+type: AnchoredCommentRail
+module: context_window.dsl
+helper: anchoredCommentRail
+props: AnchoredCommentRailWidgetProps
+adapter:
+  path: ./AnchoredCommentRail.widget.tsx
+  export: anchoredCommentRailWidget
+reactComponent: AnchoredCommentRail
+children: false
+slots: []
+actions:
+  - onCommentSelectAction
+status: stable
+docs: Rail of anchored comments with serializable comment-select action.

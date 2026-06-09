@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: TextInput
+module: ui.dsl
+helper: textInput
+props: TextInputWidgetProps
+adapter:
+  path: ./TextInput.widget.tsx
+  export: textInputWidget
+reactComponent: TextInput
+children: false
+slots: []
+actions: []
+status: stable
+docs: Read-only text input atom for rendering serializable form-like Widget IR state.

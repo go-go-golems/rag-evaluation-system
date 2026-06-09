@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { anchoredCommentFixtures, transcriptFixture } from '../context';
 import { WidgetRenderer } from './WidgetRenderer';
+import { defaultWidgetRegistry } from './defaultRegistry';
 import { component, text, type WidgetNode } from './ir';
 
-const meta = { title: 'Widget IR/Renderer/Transcript and Notes', component: WidgetRenderer } satisfies Meta<typeof WidgetRenderer>;
+const meta = { title: 'Widget IR/Renderer/Transcript and Notes', component: WidgetRenderer, args: { registry: defaultWidgetRegistry } } satisfies Meta<typeof WidgetRenderer>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -107,6 +108,7 @@ export const TranscriptActionLogger: Story = {
           onAnnotationSelectAction: { kind: 'event', event: 'widget-ir:annotation-select' },
         }),
       ])}
+      registry={defaultWidgetRegistry}
       onAction={(action, context) => {
         console.info('Widget IR action', { action, context });
       }}

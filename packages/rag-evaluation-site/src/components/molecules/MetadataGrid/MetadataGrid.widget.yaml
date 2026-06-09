@@ -1,0 +1,16 @@
+schemaVersion: widget-manifest/v1
+type: MetadataGrid
+module: ui.dsl
+helper: metadataGrid
+props: MetadataGridWidgetProps
+adapter:
+  path: ./MetadataGrid.widget.tsx
+  export: metadataGridWidget
+reactComponent: MetadataGrid
+children: false
+slots:
+  - items.key
+  - items.value
+actions: []
+status: stable
+docs: Metadata grid molecule with renderable keys/values and optional copy values.

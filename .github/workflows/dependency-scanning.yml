@@ -19,6 +19,7 @@ jobs:
       
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
+        continue-on-error: true # Repository dependency graph support is controlled in GitHub settings; keep govulncheck/gosec blocking.
         with:
           fail-on-severity: high
 

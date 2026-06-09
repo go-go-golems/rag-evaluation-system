@@ -1,0 +1,16 @@
+schemaVersion: widget-manifest/v1
+type: SplitPane
+module: ui.dsl
+helper: splitPane
+props: SplitPaneWidgetProps
+adapter:
+  path: ./SplitPane.widget.tsx
+  export: splitPaneWidget
+reactComponent: SplitPane
+children: false
+slots:
+  - left
+  - right
+actions: []
+status: stable
+docs: Two-pane layout primitive with left/right node slots, ratio, divider, and gutter settings.

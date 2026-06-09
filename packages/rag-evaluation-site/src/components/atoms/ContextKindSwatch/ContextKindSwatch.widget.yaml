@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: ContextKindSwatch
+module: context_window.dsl
+helper: contextKindSwatch
+props: ContextKindSwatchWidgetProps
+adapter:
+  path: ./ContextKindSwatch.widget.tsx
+  export: contextKindSwatchWidget
+reactComponent: ContextKindSwatch
+children: false
+slots: []
+actions: []
+status: stable
+docs: Context-window atom that renders a colored swatch for a context part kind.

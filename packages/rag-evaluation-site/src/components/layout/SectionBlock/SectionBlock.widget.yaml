@@ -1,0 +1,16 @@
+schemaVersion: widget-manifest/v1
+type: SectionBlock
+module: ui.dsl
+helper: sectionBlock
+props: SectionBlockWidgetProps
+adapter:
+  path: ./SectionBlock.widget.tsx
+  export: sectionBlockWidget
+reactComponent: SectionBlock
+children: true
+slots:
+  - label
+  - caption
+actions: []
+status: stable
+docs: Section layout primitive with renderable label, renderable caption, density, divider, and child body content.

@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: Stack
+module: ui.dsl
+helper: stack
+props: StackWidgetProps
+adapter:
+  path: ./Stack.widget.tsx
+  export: stackWidget
+reactComponent: Stack
+children: true
+slots: []
+actions: []
+status: stable
+docs: Vertical layout primitive with configurable gap and alignment for child Widget IR nodes.

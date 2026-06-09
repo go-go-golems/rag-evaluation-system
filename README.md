@@ -116,9 +116,7 @@ internal/services/    Business logic
 pkg/                  Reusable libraries
   defaultspa/         Embedded WidgetRenderer SPA (Go embed.FS)
   widgetdsl/          Goja Widget IR DSL
-  widgetrunner/       WidgetRenderer pipeline (Goja + JSON)
   widgetschema/       Widget IR schema validation
-  widgetserver/       Widget server with API + frontend modes
   xgoja/providers/widgetsite/  xgoja Widget DSL provider + help docs
 
 packages/rag-evaluation-site/  React component library
@@ -128,14 +126,14 @@ packages/rag-evaluation-site/  React component library
 
 ## Widget IR frontend
 
-The frontend uses a Widget IR (Interchange Representation) — a JSON-compatible data format that describes pages as trees of component nodes. The Go backend emits Widget IR at `/api/widget/pages/{id}`, and the React `WidgetRenderer` renders it in the browser.
+The frontend uses a Widget IR (Interchange Representation) — a JSON-compatible data format that describes pages as trees of component nodes. Host applications expose Widget IR at routes such as `/api/widget/pages/{id}`, and the React `WidgetRenderer` renders it in the browser.
 
 ### Programming models
 
 | Model | How the frontend is bundled |
 | --- | --- |
-| **Go embedded** | `pkg/defaultspa.Handler()` serves the prebuilt SPA via `embed.FS` |
-| **xgoja embedded** | Build the React app, copy `app-dist` into `assets/`, mount with `fs:assets` and `app.spaFromAssetsModule(...)` |
+| **Go embedded** | `pkg/defaultspa.Handler()` serves the prebuilt SPA via `embed.FS`; the host Go app owns the Widget IR API routes |
+| **xgoja embedded** | Build the React app, copy `app-dist` into `assets/`, mount with `fs:assets` and `app.spaFromAssetsModule(...)`; the xgoja/Express app owns the Widget IR API routes |
 | **Development proxy** | Proxy to the Vite dev server during frontend changes |
 | **API-only** | Host app renders Widget IR in its own React shell |
 
@@ -146,22 +144,23 @@ See the provider documentation for full bundling instructions:
 
 ### Semantic recipes
 
-The Goja `widget.dsl` provider includes semantic helpers for common RAG views:
+The Goja `rag-widget-site` provider exposes split semantic helpers for common RAG views:
 
 ```js
-const rag = require("widget.dsl")
+const contextWindow = require("context_window.dsl")
+const course = require("course.dsl")
 
 // Returns Widget IR for a context window diagram
-rag.recipes.contextDiagram({ snapshot, view: "budget" })
+contextWindow.recipes.contextDiagram({ snapshot, view: "budget" })
 
 // Returns Widget IR for a teaching page with sidebar navigation
-rag.recipes.courseStudio({
+course.recipes.courseStudio({
   sections: [{ id: "course", label: "Course", items: [{ id: "slides", label: "Slides" }] }],
-  main: rag.recipes.courseSlide({ slide, snapshot, index: 0, total: 1 })
+  main: course.recipes.courseSlide({ slide, snapshot, index: 0, total: 1 })
 })
 
 // Returns Widget IR for an annotated transcript
-rag.recipes.annotatedTranscript({ transcript, annotations })
+contextWindow.recipes.annotatedTranscript({ transcript, annotations })
 ```
 
 ## Build

@@ -1,0 +1,16 @@
+schemaVersion: widget-manifest/v1
+type: KeyValueStrip
+module: ui.dsl
+helper: keyValueStrip
+props: KeyValueStripWidgetProps
+adapter:
+  path: ./KeyValueStrip.widget.tsx
+  export: keyValueStripWidget
+reactComponent: KeyValueStrip
+children: false
+slots:
+  - items.key
+  - items.value
+actions: []
+status: stable
+docs: Compact key/value strip molecule with renderable keys and values.

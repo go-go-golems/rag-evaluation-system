@@ -1,7 +1,7 @@
 ---
 Title: "Widget DSL Getting Started"
 Slug: widget-dsl-getting-started
-Short: "Author React-rendered Widget IR pages in xgoja with require(\"widget.dsl\")."
+Short: "Author React-rendered Widget IR pages in xgoja with split Widget DSL modules."
 Topics:
 - xgoja
 - widget-dsl
@@ -21,188 +21,95 @@ ShowPerDefault: true
 SectionType: Tutorial
 ---
 
-This tutorial explains how to use the `rag-widget-site` xgoja provider to write JavaScript that produces Widget IR. Widget IR is JSON-compatible data. It is not HTML, and it is not a Go-side imitation of the React component tree. The generated xgoja binary runs JavaScript, the JavaScript returns Widget IR, and the React `RagEvaluationSiteApp` renders that IR with the package's real component library.
+This tutorial explains how to use the `rag-widget-site` xgoja provider to write JavaScript that produces Widget IR. Widget IR is JSON-compatible data rendered by the React `RagEvaluationSiteApp`; JavaScript authors describe page structure and data, while React owns CSS modules, accessibility, event handling, and component behavior.
 
-The boundary matters. JavaScript authors describe a page as data; React owns rendering, CSS modules, event handling, table behavior, and accessibility details. This separation keeps the xgoja script small while preserving the frontend system that already exists.
+## Modules
 
-## The smallest useful page
+The provider exposes four clean-break domain modules:
 
-A Widget DSL script starts by requiring the module selected in `xgoja.yaml`:
+| Module | Owns |
+| --- | --- |
+| `ui.dsl` | page wrapper, text/element/component helpers, generic layout, primitive, foundation, and UI recipes |
+| `data.dsl` | `DataTable`, `cell.*` helpers, and data recipes |
+| `context_window.dsl` | context-window diagrams, transcript, annotation, comment, and upload helpers |
+| `course.dsl` | course, slide, handout, course-studio helpers, and `contextStudioNavIcon` |
 
-```js
-const rag = require("widget.dsl")
+Select the modules you use in `xgoja.yaml`:
+
+```yaml
+packages:
+  - id: rag-widget-site
+    import: github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite
+
+modules:
+  - package: rag-widget-site
+    name: ui.dsl
+    as: ui.dsl
+  - package: rag-widget-site
+    name: data.dsl
+    as: data.dsl
+  - package: rag-widget-site
+    name: context_window.dsl
+    as: context_window.dsl
+  - package: rag-widget-site
+    name: course.dsl
+    as: course.dsl
 ```
 
-The `rag` object contains constructors for Widget IR nodes. A constructor returns a plain JavaScript object that can be serialized as JSON. For example, this code creates a panel with one status line:
+For local development, add a `replace` entry that points to the RAG repository root.
+
+## Smallest page
 
 ```js
-const page = {
-  schemaVersion: "0.1.0",
+const ui = require("ui.dsl")
+
+const page = ui.page({
   id: "demo",
   title: "Demo",
-  root: rag.panel({ title: "Demo" },
-    rag.statusText({ status: "succeeded", icon: true }, "Rows: 2")
+  root: ui.panel({ title: "Demo" },
+    ui.statusText({ status: "succeeded", icon: true }, "Rows: 2")
   )
-}
-```
-
-The resulting object has the shape expected by the React application:
-
-```json
-{
-  "schemaVersion": "0.1.0",
-  "id": "demo",
-  "title": "Demo",
-  "root": {
-    "kind": "component",
-    "type": "Panel",
-    "props": { "title": "Demo" },
-    "children": [
-      {
-        "kind": "component",
-        "type": "StatusText",
-        "props": { "status": "succeeded", "icon": true },
-        "children": [{ "kind": "text", "text": "Rows: 2" }]
-      }
-    ]
-  }
-}
-```
-
-The page wrapper contains metadata. The `root` field is the Widget IR tree. `rag.panel(...)` creates a `Panel` component node, and the string child is normalized into a text node. You do not need to write the text-node object manually unless you want to.
-
-## Select the provider in xgoja.yaml
-
-A generated binary can only require modules that are selected by its build specification. The widget provider is selected as a normal xgoja package:
-
-```yaml
-packages:
-  - id: rag-widget-site
-    import: github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite
-
-modules:
-  - package: rag-widget-site
-    name: widget.dsl
-    as: widget.dsl
-```
-
-For local development, add a `replace` entry that points to the RAG repository root:
-
-```yaml
-packages:
-  - id: rag-widget-site
-    import: github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite
-    replace: ../../..
-```
-
-The module name and alias are usually the same. The provider also exposes `rag.dsl` as an alias for RAG-oriented scripts:
-
-```yaml
-modules:
-  - package: rag-widget-site
-    name: rag.dsl
-    as: rag.dsl
-```
-
-Use one alias consistently inside a script. The two modules expose the same helpers.
-
-## Serve a WidgetRenderer page from a jsverb
-
-The HTTP provider supplies `require("express")`. The host provider can expose embedded assets as `require("fs:assets")`. A WidgetRenderer site usually combines those modules with `widget.dsl`:
-
-```js
-__package__({ name: "sites", short: "WidgetRenderer sites" })
-
-__verb__("demo", {
-  name: "demo",
-  output: "text",
-  short: "Serve a WidgetRenderer demo"
 })
-function demo() {
-  const express = require("express")
-  const assets = require("fs:assets")
-  const rag = require("widget.dsl")
-
-  const app = express.app()
-  app.spaFromAssetsModule("/", assets, "/app/public", {
-    excludePrefixes: ["/api", "/healthz", "/favicon.ico"]
-  })
-
-  app.get("/healthz", (_req, res) => res.json({ ok: true }))
-  app.get("/api/widget/pages/demo", (_req, res) => {
-    res.json({
-      schemaVersion: "0.1.0",
-      id: "demo",
-      title: "Demo",
-      root: rag.panel({ title: "Demo" },
-        rag.caption({ tone: "muted" }, "Rendered by React"),
-        rag.button({ variant: "primary" }, "Refresh")
-      )
-    })
-  })
-}
 ```
 
-The SPA route serves the React application. The API route serves Widget IR. The `excludePrefixes` option is important when the SPA is mounted at `/`; without it, the static handler would answer API requests before the dynamic routes see them.
+`ui.page(...)` returns a page object with `schemaVersion`, `id`, `title`, and `root`. Strings and numbers used as children are normalized into text nodes.
 
-## Use data from a database
-
-The Widget DSL does not know where data came from. It accepts plain JavaScript objects. That means database rows, HTTP results, computed summaries, and constants all enter the renderer through the same Widget IR boundary.
+## Data table example
 
 ```js
+const ui = require("ui.dsl")
+const data = require("data.dsl")
+
 const rows = db.query("SELECT id, name, status FROM queries ORDER BY id")
 
-return {
-  schemaVersion: "0.1.0",
+return ui.page({
   id: "queries",
   title: "Queries",
-  root: rag.panel({ title: "Queries" },
-    rag.dataTable({
-      rows,
-      getRowKey: "id",
-      columns: [
-        { id: "id", header: "ID", cell: rag.cell.field("id") },
-        { id: "name", header: "Name", cell: rag.cell.field("name") },
-        { id: "status", header: "Status", cell: rag.cell.status("status") }
-      ]
-    })
-  )
-}
-```
-
-The table is still rendered by React. The JavaScript author only supplies serializable rows and serializable cell specifications. Avoid function-valued cell renderers; they cannot cross the JSON boundary and they are not part of Widget IR.
-
-## Use recipes for common dashboards
-
-Low-level helpers are useful when you need full control, but common RAG dashboard pages should use semantic recipes where possible. Recipes return ordinary Widget IR, so they remain JSON-compatible and render through the same React components.
-
-```js
-const rows = db.query("SELECT id, name, status FROM queries ORDER BY id")
-
-return rag.page({
-  id: "actions",
-  title: "Actions",
   sections: [
-    rag.recipes.metrics({ items: [
-      { label: "Total", value: rows.length, status: "ready" },
-      { label: "Running", value: rows.filter(row => row.status === "running").length, status: "running" }
-    ]}),
-    rag.recipes.actionToolbar({
-      title: "Queue controls",
-      actions: [
-        { label: "Add query", variant: "primary", action: "add-query" },
-        { label: "Reset", action: rag.action.server("reset-demo") }
-      ]
-    })
+    ui.panel({ title: "Queries" },
+      data.dataTable({
+        rows,
+        getRowKey: "id",
+        columns: [
+          { id: "id", header: "ID", cell: data.cell.field("id") },
+          { id: "name", header: "Name", cell: data.cell.field("name") },
+          { id: "status", header: "Status", cell: data.cell.status("status") }
+        ]
+      })
+    )
   ]
 })
 ```
 
-The current recipe set includes dashboard recipes (`metrics`, `actionToolbar`, `masterDetailTable`) and semantic context-viewer recipes (`contextDiagram`, `annotatedTranscript`, `courseStudio`, `courseSlide`, `handout`). Use recipes to make scripts read like page intent, then drop down to component helpers such as `panel`, `dataTable`, `transcriptWorkspacePanel`, `courseSlidePanel`, and `handoutDocumentShell` for custom sections.
+The table is still rendered by React. The JavaScript author supplies serializable rows and serializable cell specifications.
 
-For example, a jsverb can expose a context-window teaching page without building React-specific markup:
+## Semantic page example
 
 ```js
+const ui = require("ui.dsl")
+const contextWindow = require("context_window.dsl")
+const course = require("course.dsl")
+
 const snapshot = {
   id: "ctx",
   title: "Context Window",
@@ -222,72 +129,67 @@ const slide = {
   notes: ["Retrieved documents dominate this example."]
 }
 
-return rag.page({
+return ui.page({
   id: "semantic",
   title: "Semantic context page",
   sections: [
-    rag.recipes.contextDiagram({ snapshot, view: "budget" }),
-    rag.recipes.courseStudio({
+    contextWindow.recipes.contextDiagram({ snapshot, view: "budget" }),
+    course.recipes.courseStudio({
       sections: [{ id: "course", label: "Course", items: [{ id: "slides", label: "Slides" }] }],
       activeItemId: "slides",
-      main: rag.recipes.courseSlide({ slide, snapshot, index: 0, total: 1 })
+      main: course.recipes.courseSlide({ slide, snapshot, index: 0, total: 1 })
     })
   ]
 })
 ```
 
-## Build and run
+## Serve from a jsverb
 
-Run the normal xgoja checks before building:
+```js
+__package__({ name: "sites", short: "WidgetRenderer sites" })
 
-```bash
-xgoja doctor -f xgoja.yaml
-xgoja list-modules -f xgoja.yaml
-xgoja build -f xgoja.yaml --xgoja-replace /path/to/go-go-goja
+__verb__("demo", { name: "demo", output: "text", short: "Serve a WidgetRenderer demo" })
+function demo() {
+  const express = require("express")
+  const assets = require("fs:assets")
+  const ui = require("ui.dsl")
+
+  const app = express.app()
+  app.spaFromAssetsModule("/", assets, "/app/public", {
+    excludePrefixes: ["/api", "/healthz", "/favicon.ico"]
+  })
+
+  app.get("/healthz", (_req, res) => res.json({ ok: true }))
+  app.get("/api/widget/pages/demo", (_req, res) => {
+    res.json(ui.page({
+      id: "demo",
+      title: "Demo",
+      root: ui.panel({ title: "Demo" },
+        ui.caption({ tone: "muted" }, "Rendered by React"),
+        ui.button({ variant: "primary" }, "Refresh")
+      )
+    }))
+  })
+}
 ```
-
-Then start the jsverb-backed site:
-
-```bash
-dist/rag-widget-xgoja-site serve sites demo --http-listen 127.0.0.1:18793
-```
-
-Open a frontend route handled by the SPA fallback:
-
-```text
-http://127.0.0.1:18793/pages/demo
-```
-
-The bundled widget-site example also exposes semantic pages for the expanded component library:
-
-```text
-http://127.0.0.1:18793/pages/semantic
-http://127.0.0.1:18793/pages/transcripts
-http://127.0.0.1:18793/pages/slides
-http://127.0.0.1:18793/pages/handouts
-http://127.0.0.1:18793/pages/course-examples
-```
-
-The browser asks the React app to render `demo`. The app calls `/api/widget/pages/demo`, receives Widget IR, and renders the page.
 
 ## What to remember
 
-- Widget DSL constructors return JSON-compatible Widget IR. They do not return HTML strings or React elements.
-- The page endpoint returns a page object with `schemaVersion`, `id`, `title`, and `root`.
-- Strings and numbers used as children are converted to text nodes automatically.
-- Tables use serializable `rag.cell.*` specifications instead of JavaScript render functions.
-- The `widget.dsl` and `rag.dsl` modules expose the same helpers; choose one alias per script.
-- The React app fetches `/api/widget/pages/{id}` and renders the returned `root` field.
+- DSL constructors return JSON-compatible Widget IR; they do not return HTML strings or React elements.
+- `ui.dsl` owns `page(...)`.
+- `data.dsl` owns `cell.*` helpers.
+- `context_window.dsl` owns transcript, annotation, anchored-comment, context diagram, and upload helpers.
+- `course.dsl` owns course, slide, handout, and course-studio helpers.
+- Import only the domain modules you use; there is no compatibility bucket module.
 
 ## Troubleshooting
 
 | Problem | Cause | Solution |
 | --- | --- | --- |
-| `Cannot find module "widget.dsl"` | The module was not selected in `xgoja.yaml`. | Add a `modules:` entry for package `rag-widget-site`, name `widget.dsl`, alias `widget.dsl`. |
+| `Cannot find module "ui.dsl"` | The module was not selected in `xgoja.yaml`. | Add a `modules:` entry for package `rag-widget-site`, name `ui.dsl`, alias `ui.dsl`. |
 | `xgoja build` tries to fetch the local provider from GitHub. | The provider package is local but the build spec has no `replace`. | Add `replace: ../../..` or another path to the RAG module root. |
 | The browser route `/pages/demo` returns `404`. | The React app is served as static files without SPA fallback. | Use `app.spaFromAssetsModule("/", assets, "/app/public", { excludePrefixes: ["/api"] })`. |
 | API routes return `index.html`. | The root SPA static handler is catching `/api/...`. | Add `/api` to `excludePrefixes`. |
-| A status icon renders as `?`. | The status is not in the renderer's status vocabulary. | Use statuses such as `succeeded`, `running`, `warning`, `failed`, or `error`. |
 
 ## See Also
 

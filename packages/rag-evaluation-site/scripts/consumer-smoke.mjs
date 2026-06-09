@@ -57,7 +57,7 @@ await mkdir(join(smokeDir, 'src'));
 await writeFile(join(smokeDir, 'src/vite-env.d.ts'), '/// <reference types="vite/client" />\n');
 await writeFile(join(smokeDir, 'src/main.tsx'), `
 import { createRoot } from 'react-dom/client';
-import { WidgetRenderer, type WidgetNode } from '@go-go-golems/rag-evaluation-site';
+import { WidgetRenderer, defaultWidgetRegistry, type WidgetNode } from '@go-go-golems/rag-evaluation-site';
 import '@go-go-golems/rag-evaluation-site/styles.css';
 import type { RagEvaluationSiteAppProps } from '@go-go-golems/rag-evaluation-site/app';
 
@@ -65,7 +65,7 @@ const node: WidgetNode = { kind: 'text', text: 'consumer smoke' };
 const props: RagEvaluationSiteAppProps = { apiBase: '/api/widget' };
 void props;
 
-createRoot(document.getElementById('root')!).render(<WidgetRenderer node={node} />);
+createRoot(document.getElementById('root')!).render(<WidgetRenderer node={node} registry={defaultWidgetRegistry} />);
 `);
 
 execFileSync('npm', ['install', '--silent'], { cwd: smokeDir, stdio: 'inherit' });

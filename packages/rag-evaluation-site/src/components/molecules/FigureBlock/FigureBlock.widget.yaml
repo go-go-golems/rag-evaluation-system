@@ -1,0 +1,16 @@
+schemaVersion: widget-manifest/v1
+type: FigureBlock
+module: ui.dsl
+helper: figureBlock
+props: FigureBlockWidgetProps
+adapter:
+  path: ./FigureBlock.widget.tsx
+  export: figureBlockWidget
+reactComponent: FigureBlock
+children: true
+slots:
+  - caption
+  - legend
+actions: []
+status: stable
+docs: Figure/media wrapper molecule with renderable caption, legend widget slot, frame style, and child media content.

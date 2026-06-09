@@ -1,0 +1,19 @@
+schemaVersion: widget-manifest/v1
+type: SidebarNav
+module: ui.dsl
+helper: sidebarNav
+props: SidebarNavWidgetProps
+adapter:
+  path: ./SidebarNav.widget.tsx
+  export: sidebarNavWidget
+reactComponent: SidebarNav
+children: false
+slots:
+  - sections.label
+  - sections.items.label
+  - sections.items.icon
+  - sections.items.badge
+actions:
+  - onItemSelectAction
+status: stable
+docs: Sectioned sidebar navigation molecule with renderable labels/icons/badges and serializable item-select action.

@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: ContextTreemap
+module: context_window.dsl
+helper: contextTreemap
+props: ContextTreemapWidgetProps
+adapter:
+  path: ./ContextTreemap.widget.tsx
+  export: contextTreemapWidget
+reactComponent: ContextTreemap
+children: false
+slots: []
+actions: []
+status: stable
+docs: Treemap context-window diagram for token distribution by part.

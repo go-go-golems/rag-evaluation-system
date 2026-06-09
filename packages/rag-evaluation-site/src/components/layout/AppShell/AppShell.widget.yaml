@@ -1,0 +1,16 @@
+schemaVersion: widget-manifest/v1
+type: AppShell
+module: ui.dsl
+helper: appShell
+props: AppShellWidgetProps
+adapter:
+  path: ./AppShell.widget.tsx
+  export: appShellWidget
+reactComponent: AppShell
+children: true
+slots:
+  - header
+  - sidebar
+actions: []
+status: stable
+docs: Application shell layout with optional header/sidebar widget slots and main child content.

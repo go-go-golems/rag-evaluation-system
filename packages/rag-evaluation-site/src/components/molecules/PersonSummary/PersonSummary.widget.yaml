@@ -1,0 +1,18 @@
+schemaVersion: widget-manifest/v1
+type: PersonSummary
+module: ui.dsl
+helper: personSummary
+props: PersonSummaryWidgetProps
+adapter:
+  path: ./PersonSummary.widget.tsx
+  export: personSummaryWidget
+reactComponent: PersonSummary
+children: false
+slots:
+  - name
+  - subtitle
+  - bio
+  - avatar
+actions: []
+status: stable
+docs: Person summary molecule with renderable name, subtitle, bio, and avatar fields.

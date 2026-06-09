@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: StatusText
+module: ui.dsl
+helper: statusText
+props: StatusTextWidgetProps
+adapter:
+  path: ./StatusText.widget.tsx
+  export: statusTextWidget
+reactComponent: StatusText
+children: true
+slots: []
+actions: []
+status: stable
+docs: Status label primitive that renders a status string, optional icon, and optional child override label.

@@ -12,8 +12,11 @@ import (
 // OpenDB opens a SQLite database in read-write mode with WAL enabled
 func OpenDB(dbPath string) (*sql.DB, error) {
 	// Ensure parent directory exists before SQLite creates the DB and WAL files.
+	// The CLI intentionally accepts a caller-selected SQLite database path.
 	dir := filepath.Dir(dbPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	// codeql[go/path-injection] dbPath is an explicit CLI/config value for the local SQLite database location.
+	// lgtm[go/path-injection]
+	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return nil, fmt.Errorf("failed to create database directory %s: %w", dir, err)
 	}
 

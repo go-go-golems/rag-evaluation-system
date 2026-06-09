@@ -1,0 +1,15 @@
+schemaVersion: widget-manifest/v1
+type: CourseLessonPanel
+module: course.dsl
+helper: courseLessonPanel
+props: CourseLessonPanelWidgetProps
+adapter:
+  path: ./CourseLessonPanel.widget.tsx
+  export: courseLessonPanelWidget
+reactComponent: CourseLessonPanel
+children: false
+slots: []
+actions:
+  - onAgendaItemSelectAction
+status: stable
+docs: Course lesson panel with serializable agenda item-select action.

@@ -1,0 +1,15 @@
+schemaVersion: widget-manifest/v1
+type: Button
+module: ui.dsl
+helper: button
+props: ButtonWidgetProps
+adapter:
+  path: ./Button.widget.tsx
+  export: buttonWidget
+reactComponent: Button
+children: true
+slots: []
+actions:
+  - action
+status: stable
+docs: Clickable UI primitive that renders child content and dispatches the serializable base action when clicked.

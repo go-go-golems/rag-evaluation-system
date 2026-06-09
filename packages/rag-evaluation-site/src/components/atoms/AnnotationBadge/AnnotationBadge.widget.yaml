@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: AnnotationBadge
+module: context_window.dsl
+helper: annotationBadge
+props: AnnotationBadgeWidgetProps
+adapter:
+  path: ./AnnotationBadge.widget.tsx
+  export: annotationBadgeWidget
+reactComponent: AnnotationBadge
+children: false
+slots: []
+actions: []
+status: stable
+docs: Annotation badge atom for context/result/generated/active annotations.

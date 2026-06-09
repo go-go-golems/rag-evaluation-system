@@ -1,0 +1,20 @@
+schemaVersion: widget-manifest/v1
+type: HandoutDocumentShell
+module: course.dsl
+helper: handoutDocumentShell
+props: HandoutDocumentShellWidgetProps
+adapter:
+  path: ./HandoutDocumentShell.widget.tsx
+  export: handoutDocumentShellWidget
+reactComponent: HandoutDocumentShell
+children: false
+slots:
+  - intro
+  - title
+  - emptyMessage
+actions:
+  - onDocumentSelectAction
+  - onDownloadAction
+  - onDownloadAllAction
+status: stable
+docs: Handout document shell with renderable intro/title/empty message and serializable document/download actions.

@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: Inline
+module: ui.dsl
+helper: inline
+props: InlineWidgetProps
+adapter:
+  path: ./Inline.widget.tsx
+  export: inlineWidget
+reactComponent: Inline
+children: true
+slots: []
+actions: []
+status: stable
+docs: Horizontal layout primitive with gap, justification, wrapping, and child content.

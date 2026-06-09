@@ -1,0 +1,17 @@
+schemaVersion: widget-manifest/v1
+type: FormRow
+module: ui.dsl
+helper: formRow
+props: FormRowWidgetProps
+adapter:
+  path: ./FormRow.widget.tsx
+  export: formRowWidget
+reactComponent: FormRow
+children: false
+slots:
+  - label
+  - control
+  - hint
+actions: []
+status: stable
+docs: Form row layout primitive that renders a label, a widget-node control slot, and optional renderable hint.

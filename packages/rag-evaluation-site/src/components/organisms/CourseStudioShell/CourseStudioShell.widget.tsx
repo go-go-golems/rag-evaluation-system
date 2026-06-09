@@ -1,0 +1,32 @@
+import { CourseStudioShell } from './CourseStudioShell';
+import { defineWidget } from '../../../widgets/registry';
+import type { CourseStudioShellWidgetProps } from '../../../widgets/ir';
+
+export const courseStudioShellWidget = defineWidget<CourseStudioShellWidgetProps>({
+  type: 'CourseStudioShell',
+  module: 'course.dsl',
+  render: (props, children, ctx) => (
+    <CourseStudioShell
+      className={props.className}
+      sections={props.sections.map((section) => ({
+        ...section,
+        label: ctx.renderValue(section.label),
+        items: section.items.map((item) => ({
+          ...item,
+          label: ctx.renderValue(item.label),
+          icon: ctx.renderValue(item.icon),
+          badge: ctx.renderValue(item.badge),
+        })),
+      }))}
+      activeItemId={props.activeItemId}
+      onNavigate={props.onNavigateAction
+        ? (itemId) => ctx.dispatchAction(props.onNavigateAction!, { itemId, value: itemId, componentType: 'CourseStudioShell' })
+        : undefined}
+      title={ctx.renderValue(props.title)}
+      subtitle={ctx.renderValue(props.subtitle)}
+      sidebarFooter={props.sidebarFooter ? ctx.renderNode(props.sidebarFooter) : undefined}
+    >
+      {children}
+    </CourseStudioShell>
+  ),
+});

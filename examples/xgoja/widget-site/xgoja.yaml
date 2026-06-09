@@ -37,8 +37,17 @@ modules:
       driverName: sqlite3
       dataSourceName: ':memory:'
   - package: rag-widget-site
-    name: widget.dsl
-    as: widget.dsl
+    name: ui.dsl
+    as: ui.dsl
+  - package: rag-widget-site
+    name: data.dsl
+    as: data.dsl
+  - package: rag-widget-site
+    name: context_window.dsl
+    as: context_window.dsl
+  - package: rag-widget-site
+    name: course.dsl
+    as: course.dsl
 commands:
   jsverbs:
     enabled: true

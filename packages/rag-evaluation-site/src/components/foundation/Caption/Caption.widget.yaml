@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: Caption
+module: ui.dsl
+helper: caption
+props: CaptionWidgetProps
+adapter:
+  path: ./Caption.widget.tsx
+  export: captionWidget
+reactComponent: Caption
+children: true
+slots: []
+actions: []
+status: stable
+docs: Small helper text and metadata primitive with tone, transform, truncation, and child content.

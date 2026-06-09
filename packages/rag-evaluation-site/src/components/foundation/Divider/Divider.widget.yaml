@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: Divider
+module: ui.dsl
+helper: divider
+props: DividerWidgetProps
+adapter:
+  path: ./Divider.widget.tsx
+  export: dividerWidget
+reactComponent: Divider
+children: false
+slots: []
+actions: []
+status: stable
+docs: Horizontal or vertical separator primitive for visually dividing layout regions.

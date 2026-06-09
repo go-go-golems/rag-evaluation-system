@@ -9,29 +9,43 @@ import (
 
 const PackageID = "rag-widget-site"
 
-// Register exposes the RAG WidgetRenderer authoring modules to generated xgoja
-// binaries. Selecting widget.dsl or rag.dsl in xgoja.yaml makes the same
-// JSON-compatible Widget IR DSL available to JavaScript via require().
+// Register exposes the split RAG WidgetRenderer authoring modules to generated
+// xgoja binaries. Former bucket-style compatibility modules are intentionally
+// not provided; scripts must import the domain module they use.
 func Register(registry *providerapi.ProviderRegistry) error {
-	loader := func(providerapi.ModuleSetupContext) (require.ModuleLoader, error) {
-		return widgetdsl.NewLoader(), nil
+	loader := func(moduleName string) func(providerapi.ModuleSetupContext) (require.ModuleLoader, error) {
+		return func(providerapi.ModuleSetupContext) (require.ModuleLoader, error) {
+			return widgetdsl.NewLoader(moduleName), nil
+		}
 	}
 	return registry.Package(PackageID,
 		providerapi.Module{
-			Name:             "widget.dsl",
-			DefaultAs:        "widget.dsl",
-			Description:      "RAG WidgetRenderer authoring DSL for JSON-compatible Widget IR pages.",
-			NewModuleFactory: loader,
+			Name:             widgetdsl.UIModuleName,
+			DefaultAs:        widgetdsl.UIModuleName,
+			Description:      "Generic Widget IR page, layout, primitive, and foundation helpers.",
+			NewModuleFactory: loader(widgetdsl.UIModuleName),
 		},
 		providerapi.Module{
-			Name:             "rag.dsl",
-			DefaultAs:        "rag.dsl",
-			Description:      "Alias for widget.dsl in RAG-oriented xgoja scripts.",
-			NewModuleFactory: loader,
+			Name:             widgetdsl.DataModuleName,
+			DefaultAs:        widgetdsl.DataModuleName,
+			Description:      "Widget IR data-display helpers, table cell helpers, and data recipes.",
+			NewModuleFactory: loader(widgetdsl.DataModuleName),
+		},
+		providerapi.Module{
+			Name:             widgetdsl.ContextWindowModuleName,
+			DefaultAs:        widgetdsl.ContextWindowModuleName,
+			Description:      "Context-window, transcript, annotation, and anchored-comment Widget IR helpers.",
+			NewModuleFactory: loader(widgetdsl.ContextWindowModuleName),
+		},
+		providerapi.Module{
+			Name:             widgetdsl.CourseModuleName,
+			DefaultAs:        widgetdsl.CourseModuleName,
+			Description:      "Course, lesson, slide, handout, and course-studio Widget IR helpers.",
+			NewModuleFactory: loader(widgetdsl.CourseModuleName),
 		},
 		providerapi.HelpSource{
 			Name:        "widget-dsl",
-			Description: "Getting started and JavaScript API reference for widget.dsl and rag.dsl.",
+			Description: "Getting started and JavaScript API reference for split Widget IR DSL modules.",
 			FS:          doc.FS,
 			Root:        ".",
 		},

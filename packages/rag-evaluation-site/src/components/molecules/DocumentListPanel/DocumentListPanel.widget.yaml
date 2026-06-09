@@ -1,0 +1,25 @@
+schemaVersion: widget-manifest/v1
+type: DocumentListPanel
+module: course.dsl
+helper: documentListPanel
+props: DocumentListPanelWidgetProps
+adapter:
+  path: ./DocumentListPanel.widget.tsx
+  export: documentListPanelWidget
+reactComponent: DocumentListPanel
+children: false
+slots:
+  - title
+  - description
+  - items.title
+  - items.format
+  - items.size
+  - items.description
+  - items.icon
+  - downloadAllLabel
+  - emptyMessage
+actions:
+  - onItemSelectAction
+  - onDownloadAllAction
+status: stable
+docs: Course/handout document list panel with renderable item fields and serializable select/download-all actions.

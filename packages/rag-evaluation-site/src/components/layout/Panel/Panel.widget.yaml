@@ -1,0 +1,16 @@
+schemaVersion: widget-manifest/v1
+type: Panel
+module: ui.dsl
+helper: panel
+props: PanelWidgetProps
+adapter:
+  path: ./Panel.widget.tsx
+  export: panelWidget
+reactComponent: Panel
+children: true
+slots:
+  - title
+  - actions
+actions: []
+status: stable
+docs: Section container with optional renderable title, renderable actions, density, fill, and child content.

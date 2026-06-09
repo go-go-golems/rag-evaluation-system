@@ -1,0 +1,20 @@
+schemaVersion: widget-manifest/v1
+type: DocumentPreviewToolbar
+module: course.dsl
+helper: documentPreviewToolbar
+props: DocumentPreviewToolbarWidgetProps
+adapter:
+  path: ./DocumentPreviewToolbar.widget.tsx
+  export: documentPreviewToolbarWidget
+reactComponent: DocumentPreviewToolbar
+children: false
+slots:
+  - file
+  - format
+  - size
+  - downloadLabel
+  - rightSlot
+actions:
+  - onDownloadAction
+status: stable
+docs: Document preview toolbar with renderable file metadata, right widget slot, and serializable download action.

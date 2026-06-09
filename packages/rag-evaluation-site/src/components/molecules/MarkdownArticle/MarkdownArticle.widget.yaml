@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: MarkdownArticle
+module: course.dsl
+helper: markdownArticle
+props: MarkdownArticleWidgetProps
+adapter:
+  path: ./MarkdownArticle.widget.tsx
+  export: markdownArticleWidget
+reactComponent: MarkdownArticle
+children: false
+slots: []
+actions: []
+status: stable
+docs: Markdown article renderer used by course and handout pages.

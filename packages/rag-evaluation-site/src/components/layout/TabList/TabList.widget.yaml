@@ -1,0 +1,16 @@
+schemaVersion: widget-manifest/v1
+type: TabList
+module: ui.dsl
+helper: tabList
+props: TabListWidgetProps
+adapter:
+  path: ./TabList.widget.tsx
+  export: tabListWidget
+reactComponent: TabList
+children: false
+slots:
+  - items.label
+actions:
+  - onChange
+status: stable
+docs: Accessible tablist layout primitive with renderable labels and serializable change action.

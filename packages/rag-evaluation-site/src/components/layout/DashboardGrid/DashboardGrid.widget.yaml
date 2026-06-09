@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: DashboardGrid
+module: ui.dsl
+helper: dashboardGrid
+props: DashboardGridWidgetProps
+adapter:
+  path: ./DashboardGrid.widget.tsx
+  export: dashboardGridWidget
+reactComponent: DashboardGrid
+children: true
+slots: []
+actions: []
+status: stable
+docs: Dashboard layout grid with named layout recipes and child panels/regions.

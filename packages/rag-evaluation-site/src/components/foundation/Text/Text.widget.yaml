@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: Text
+module: ui.dsl
+helper: text
+props: TextWidgetProps
+adapter:
+  path: ./Text.widget.tsx
+  export: textWidget
+reactComponent: Text
+children: true
+slots: []
+actions: []
+status: stable
+docs: Typography primitive for body, compact, metadata, label, and metric text with tone, weight, alignment, and truncation options.

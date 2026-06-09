@@ -1,0 +1,21 @@
+schemaVersion: widget-manifest/v1
+type: SlideShell
+module: course.dsl
+helper: slideShell
+props: SlideShellWidgetProps
+adapter:
+  path: ./SlideShell.widget.tsx
+  export: slideShellWidget
+reactComponent: SlideShell
+children: false
+slots:
+  - eyebrow
+  - counter
+  - title
+  - subtitle
+  - primary
+  - secondary
+  - footer
+actions: []
+status: stable
+docs: Slide layout shell with renderable headings and primary/secondary/footer widget slots.

@@ -9,21 +9,31 @@ import (
 	"github.com/dop251/goja"
 	"github.com/go-go-golems/go-go-goja/pkg/xgoja/app"
 	"github.com/go-go-golems/go-go-goja/pkg/xgoja/providerapi"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl"
 )
 
-func TestRegisterExposesWidgetModules(t *testing.T) {
+func TestRegisterExposesSplitWidgetModules(t *testing.T) {
 	registry := providerapi.NewProviderRegistry()
 	if err := Register(registry); err != nil {
 		t.Fatalf("register provider: %v", err)
 	}
-	for _, name := range []string{"widget.dsl", "rag.dsl"} {
-		mod, ok := registry.ResolveModule(PackageID, name)
+	cases := []struct {
+		name   string
+		helper string
+	}{
+		{widgetdsl.UIModuleName, "panel"},
+		{widgetdsl.DataModuleName, "dataTable"},
+		{widgetdsl.ContextWindowModuleName, "contextDiagramPanel"},
+		{widgetdsl.CourseModuleName, "courseStudioShell"},
+	}
+	for _, tc := range cases {
+		mod, ok := registry.ResolveModule(PackageID, tc.name)
 		if !ok {
-			t.Fatalf("expected module %q", name)
+			t.Fatalf("expected module %q", tc.name)
 		}
-		loader, err := mod.NewModuleFactory(providerapi.ModuleSetupContext{Context: context.Background(), Name: name, As: name})
+		loader, err := mod.NewModuleFactory(providerapi.ModuleSetupContext{Context: context.Background(), Name: tc.name, As: tc.name})
 		if err != nil {
-			t.Fatalf("new loader for %s: %v", name, err)
+			t.Fatalf("new loader for %s: %v", tc.name, err)
 		}
 		vm := goja.New()
 		moduleObj := vm.NewObject()
@@ -32,8 +42,13 @@ func TestRegisterExposesWidgetModules(t *testing.T) {
 			t.Fatalf("set exports: %v", err)
 		}
 		loader(vm, moduleObj)
-		if got := exports.Get("panel"); got == nil || got.String() == "undefined" {
-			t.Fatalf("module %s did not expose panel(): %#v", name, got)
+		if got := exports.Get(tc.helper); got == nil || got.String() == "undefined" {
+			t.Fatalf("module %s did not expose %s(): %#v", tc.name, tc.helper, got)
+		}
+	}
+	for _, oldName := range []string{"widget.dsl", "rag.dsl"} {
+		if _, ok := registry.ResolveModule(PackageID, oldName); ok {
+			t.Fatalf("old bucket module %q should not be exposed", oldName)
 		}
 	}
 }
@@ -71,18 +86,19 @@ func TestRegisterExposesWidgetDSLHelpSource(t *testing.T) {
 	}
 }
 
-func TestGeneratedRuntimeCanRequireWidgetDSL(t *testing.T) {
+func TestGeneratedRuntimeCanRequireSplitWidgetDSLModules(t *testing.T) {
 	registry := providerapi.NewProviderRegistry()
 	if err := Register(registry); err != nil {
 		t.Fatalf("register provider: %v", err)
 	}
 	runtimeSpec := &app.RuntimeSpec{
 		Name: "widgetsite-provider-test",
-		Modules: []app.ModuleInstanceSpec{{
-			Package: PackageID,
-			Name:    "widget.dsl",
-			As:      "widget.dsl",
-		}},
+		Modules: []app.ModuleInstanceSpec{
+			{Package: PackageID, Name: widgetdsl.UIModuleName, As: widgetdsl.UIModuleName},
+			{Package: PackageID, Name: widgetdsl.DataModuleName, As: widgetdsl.DataModuleName},
+			{Package: PackageID, Name: widgetdsl.ContextWindowModuleName, As: widgetdsl.ContextWindowModuleName},
+			{Package: PackageID, Name: widgetdsl.CourseModuleName, As: widgetdsl.CourseModuleName},
+		},
 	}
 	host := app.NewHost(registry, runtimeSpec)
 	rt, err := host.Factory.NewRuntime(context.Background())
@@ -91,10 +107,17 @@ func TestGeneratedRuntimeCanRequireWidgetDSL(t *testing.T) {
 	}
 	defer func() { _ = rt.Close(context.Background()) }()
 
-	ret, err := rt.Owner.Call(context.Background(), "widgetsite-provider.require-widget-dsl", func(_ context.Context, vm *goja.Runtime) (any, error) {
+	ret, err := rt.Owner.Call(context.Background(), "widgetsite-provider.require-split-dsl", func(_ context.Context, vm *goja.Runtime) (any, error) {
 		value, runErr := vm.RunString(`
-			const rag = require("widget.dsl");
-			const node = rag.panel({ title: "Demo" }, "ok");
+			const ui = require("ui.dsl");
+			const data = require("data.dsl");
+			const contextWindow = require("context_window.dsl");
+			const course = require("course.dsl");
+			const node = ui.panel({ title: "Demo" },
+				data.dataTable({ rows: [], getRowKey: "id", columns: [{ id: "name", header: "Name", cell: data.cell.field("name") }] }),
+				contextWindow.contextDiagramPanel({ snapshot: { id: "ctx", title: "Window", limit: 0, parts: [] } }),
+				course.courseStudioShell({ sections: [], title: "Course" })
+			);
 			JSON.stringify(node);
 		`)
 		if runErr != nil {
@@ -106,7 +129,7 @@ func TestGeneratedRuntimeCanRequireWidgetDSL(t *testing.T) {
 		t.Fatalf("run script: %v", err)
 	}
 	json := ret.(string)
-	for _, want := range []string{`"kind":"component"`, `"type":"Panel"`, `"title":"Demo"`} {
+	for _, want := range []string{`"kind":"component"`, `"type":"Panel"`, `"title":"Demo"`, `"type":"DataTable"`, `"type":"ContextDiagramPanel"`, `"type":"CourseStudioShell"`} {
 		if !strings.Contains(json, want) {
 			t.Fatalf("result missing %s: %s", want, json)
 		}

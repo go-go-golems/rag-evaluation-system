@@ -64,6 +64,11 @@
   color: var(--mac-text-inv);
 }
 
+.item[data-active='true']:hover:not(:disabled) {
+  background: #333333;
+  color: var(--mac-text-inv);
+}
+
 .icon {
   display: inline-flex;
   align-items: center;

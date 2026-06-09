@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: ContextStripDiagram
+module: context_window.dsl
+helper: contextStripDiagram
+props: ContextStripDiagramWidgetProps
+adapter:
+  path: ./ContextStripDiagram.widget.tsx
+  export: contextStripDiagramWidget
+reactComponent: ContextStripDiagram
+children: false
+slots: []
+actions: []
+status: stable
+docs: Horizontal context-window strip diagram for part distribution.

@@ -1,0 +1,15 @@
+schemaVersion: widget-manifest/v1
+type: SelectInput
+module: ui.dsl
+helper: selectInput
+props: SelectInputWidgetProps
+adapter:
+  path: ./SelectInput.widget.tsx
+  export: selectInputWidget
+reactComponent: SelectInput
+children: true
+slots:
+  - options.label
+actions: []
+status: stable
+docs: Read-only select atom that renders serializable options and optional child option nodes.

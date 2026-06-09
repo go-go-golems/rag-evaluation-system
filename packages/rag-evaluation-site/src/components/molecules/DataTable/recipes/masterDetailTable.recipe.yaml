@@ -1,0 +1,10 @@
+schemaVersion: recipe-manifest/v1
+name: masterDetailTable
+module: data.dsl
+input: MasterDetailTableRecipeOptions
+output: WidgetNode
+implementation:
+  path: pkg/widgetdsl/module.go
+  symbol: masterDetailTableRecipe
+status: stable
+docs: Builds a master/detail table layout from rows, columns, selection state, and detail content.

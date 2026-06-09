@@ -1,0 +1,22 @@
+import { TranscriptWorkspacePanel } from './TranscriptWorkspacePanel';
+import { defineWidget } from '../../../widgets/registry';
+import type { TranscriptWorkspacePanelWidgetProps } from '../../../widgets/ir';
+
+export const transcriptWorkspacePanelWidget = defineWidget<TranscriptWorkspacePanelWidgetProps>({
+  type: 'TranscriptWorkspacePanel',
+  module: 'context_window.dsl',
+  render: (props, _children, ctx) => (
+    <TranscriptWorkspacePanel
+      className={props.className}
+      title={props.title}
+      subtitle={props.subtitle}
+      messages={props.messages}
+      annotations={props.annotations}
+      selectedAnnotationId={props.selectedAnnotationId}
+      showNotes={props.showNotes}
+      onAnnotationSelect={props.onAnnotationSelectAction
+        ? (annotationId) => ctx.dispatchAction(props.onAnnotationSelectAction!, { annotationId, value: annotationId, componentType: 'TranscriptWorkspacePanel' })
+        : undefined}
+    />
+  ),
+});

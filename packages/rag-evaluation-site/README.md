@@ -28,7 +28,7 @@ When adding a component that should later be available from the Widget IR/Goja D
 
 Review package Storybook under `Widget IR/Renderer/...` for IR-authored examples grouped by Foundation and Atoms, Layout Recipes, Context Diagrams, Transcript and Notes, and Course Studio.
 
-Goja authors can use direct helpers from `require("widget.dsl")` / `require("rag.dsl")`, plus semantic recipes under `rag.recipes` such as `contextDiagram`, `annotatedTranscript`, `courseStudio`, `courseSlide`, and `handout`.
+Goja authors can use direct helpers from split modules such as `require("ui.dsl")`, `require("data.dsl")`, `require("context_window.dsl")`, and `require("course.dsl")`. Semantic recipes live under their owning domains, for example `contextWindow.recipes.contextDiagram`, `contextWindow.recipes.annotatedTranscript`, `course.recipes.courseStudio`, `course.recipes.courseSlide`, and `course.recipes.handout`.
 
 ## Install
 
@@ -52,14 +52,14 @@ For the first publish of a brand-new package, create `@go-go-golems/rag-evaluati
 ## Renderer usage
 
 ```tsx
-import { WidgetRenderer, useWidgetPage } from '@go-go-golems/rag-evaluation-site';
+import { WidgetRenderer, defaultWidgetRegistry, useWidgetPage } from '@go-go-golems/rag-evaluation-site';
 import '@go-go-golems/rag-evaluation-site/styles.css';
 
 export function Page() {
   const { page, loading, error } = useWidgetPage('/api/widget/pages/demo');
   if (loading) return <div>Loading…</div>;
   if (error || !page) return <div>Failed to load page</div>;
-  return <WidgetRenderer node={page.root} />;
+  return <WidgetRenderer node={page.root} registry={defaultWidgetRegistry} />;
 }
 ```
 

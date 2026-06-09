@@ -1,0 +1,16 @@
+schemaVersion: widget-manifest/v1
+type: CheckList
+module: ui.dsl
+helper: checkList
+props: CheckListWidgetProps
+adapter:
+  path: ./CheckList.widget.tsx
+  export: checkListWidget
+reactComponent: CheckList
+children: false
+slots:
+  - marker
+  - items.text
+actions: []
+status: stable
+docs: Checklist molecule with renderable marker and renderable item text values.

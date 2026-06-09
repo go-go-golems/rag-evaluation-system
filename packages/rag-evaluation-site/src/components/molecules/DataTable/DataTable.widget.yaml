@@ -1,0 +1,18 @@
+schemaVersion: widget-manifest/v1
+type: DataTable
+module: data.dsl
+helper: dataTable
+props: DataTableWidgetProps
+adapter:
+  path: ./DataTable.widget.tsx
+  export: dataTableWidget
+reactComponent: DataTable
+children: false
+slots:
+  - emptyMessage
+  - columns.header
+  - columns.cell.constant.value
+actions:
+  - onRowSelect
+status: stable
+docs: JSON row table that converts serializable column and cell specs into React table render callbacks.

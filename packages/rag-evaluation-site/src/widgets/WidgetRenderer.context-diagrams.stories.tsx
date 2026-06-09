@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { contextWindowSnapshots } from '../context';
 import { WidgetRenderer } from './WidgetRenderer';
+import { defaultWidgetRegistry } from './defaultRegistry';
 import { component, text, type WidgetNode } from './ir';
 
-const meta = { title: 'Widget IR/Renderer/Context Diagrams', component: WidgetRenderer } satisfies Meta<typeof WidgetRenderer>;
+const meta = { title: 'Widget IR/Renderer/Context Diagrams', component: WidgetRenderer, args: { registry: defaultWidgetRegistry } } satisfies Meta<typeof WidgetRenderer>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 

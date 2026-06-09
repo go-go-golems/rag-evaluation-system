@@ -26,8 +26,8 @@ func Handler() http.Handler {
 }
 
 // SPAHandler serves files from publicFS and falls back to index.html for unknown
-// paths. It is intentionally local to defaultspa so widgetserver can depend on
-// defaultspa without creating an import cycle.
+// paths. Host applications can use it when they want to serve the default
+// WidgetRenderer SPA while owning their own Widget IR API routes.
 func SPAHandler(publicFS fs.FS) http.Handler {
 	fileServer := http.FileServer(http.FS(publicFS))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

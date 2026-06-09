@@ -1,0 +1,17 @@
+schemaVersion: widget-manifest/v1
+type: SidebarShell
+module: ui.dsl
+helper: sidebarShell
+props: SidebarShellWidgetProps
+adapter:
+  path: ./SidebarShell.widget.tsx
+  export: sidebarShellWidget
+reactComponent: SidebarShell
+children: true
+slots:
+  - sidebar
+  - header
+  - footer
+actions: []
+status: stable
+docs: Sidebar layout shell with sidebar/header/footer widget slots and scrollable main child content.

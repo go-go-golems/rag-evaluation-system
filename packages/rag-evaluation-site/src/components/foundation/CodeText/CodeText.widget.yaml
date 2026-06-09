@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: CodeText
+module: ui.dsl
+helper: codeText
+props: CodeTextWidgetProps
+adapter:
+  path: ./CodeText.widget.tsx
+  export: codeTextWidget
+reactComponent: CodeText
+children: true
+slots: []
+actions: []
+status: stable
+docs: Inline or block monospace text primitive for code-like identifiers, paths, model names, and copyable labels.

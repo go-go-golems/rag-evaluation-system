@@ -1,0 +1,10 @@
+schemaVersion: recipe-manifest/v1
+name: metrics
+module: ui.dsl
+input: MetricsRecipeOptions
+output: WidgetNode
+implementation:
+  path: pkg/widgetdsl/module.go
+  symbol: metricsRecipe
+status: stable
+docs: Builds dashboard metric/status panels from item data.

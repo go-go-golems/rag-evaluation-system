@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: ScrollRegion
+module: ui.dsl
+helper: scrollRegion
+props: ScrollRegionWidgetProps
+adapter:
+  path: ./ScrollRegion.widget.tsx
+  export: scrollRegionWidget
+reactComponent: ScrollRegion
+children: true
+slots: []
+actions: []
+status: stable
+docs: Scrollable layout region for x, y, or both axes with child content.

@@ -1,0 +1,16 @@
+schemaVersion: widget-manifest/v1
+type: CourseSlidePanel
+module: course.dsl
+helper: courseSlidePanel
+props: CourseSlidePanelWidgetProps
+adapter:
+  path: ./CourseSlidePanel.widget.tsx
+  export: courseSlidePanelWidget
+reactComponent: CourseSlidePanel
+children: false
+slots: []
+actions:
+  - onPreviousAction
+  - onNextAction
+status: stable
+docs: Course slide panel with previous/next serializable navigation actions.

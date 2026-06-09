@@ -1,0 +1,10 @@
+schemaVersion: recipe-manifest/v1
+name: courseStudio
+module: course.dsl
+input: CourseStudioRecipeOptions
+output: WidgetNode
+implementation:
+  path: pkg/widgetdsl/module.go
+  symbol: courseStudioRecipe
+status: stable
+docs: Builds a CourseStudioShell page composition from sidebar sections, active item state, and main content.

@@ -1,0 +1,51 @@
+schemaVersion: dsl-modules/v1
+modules:
+  ui.dsl:
+    description: Generic Widget IR page, layout, primitive, and foundation helpers.
+    packageId: rag-widget-site
+    dependsOn: []
+    folderRoots:
+      - packages/rag-evaluation-site/src/components/atoms
+      - packages/rag-evaluation-site/src/components/foundation
+      - packages/rag-evaluation-site/src/components/layout
+      - packages/rag-evaluation-site/src/components/molecules
+    ownsPageHelper: true
+    ownsCellHelpers: false
+
+  data.dsl:
+    description: Generic data-display widgets, table cell helpers, and dashboard/data recipes.
+    packageId: rag-widget-site
+    dependsOn:
+      - ui.dsl
+    folderRoots:
+      - packages/rag-evaluation-site/src/components/molecules
+    ownsPageHelper: false
+    ownsCellHelpers: true
+
+  context_window.dsl:
+    description: Context-window, transcript, annotation, and anchored-comment helpers.
+    packageId: rag-widget-site
+    dependsOn:
+      - ui.dsl
+      - data.dsl
+    folderRoots:
+      - packages/rag-evaluation-site/src/components/atoms
+      - packages/rag-evaluation-site/src/components/molecules
+      - packages/rag-evaluation-site/src/components/organisms
+    ownsPageHelper: false
+    ownsCellHelpers: false
+
+  course.dsl:
+    description: Course, lesson, slide, handout, and course/studio navigation helpers.
+    packageId: rag-widget-site
+    dependsOn:
+      - ui.dsl
+      - data.dsl
+      - context_window.dsl
+    folderRoots:
+      - packages/rag-evaluation-site/src/components/atoms
+      - packages/rag-evaluation-site/src/components/layout
+      - packages/rag-evaluation-site/src/components/molecules
+      - packages/rag-evaluation-site/src/components/organisms
+    ownsPageHelper: false
+    ownsCellHelpers: false

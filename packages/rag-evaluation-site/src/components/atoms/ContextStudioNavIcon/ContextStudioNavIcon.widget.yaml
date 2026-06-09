@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: ContextStudioNavIcon
+module: course.dsl
+helper: contextStudioNavIcon
+props: ContextStudioNavIconWidgetProps
+adapter:
+  path: ./ContextStudioNavIcon.widget.tsx
+  export: contextStudioNavIconWidget
+reactComponent: ContextStudioNavIcon
+children: false
+slots: []
+actions: []
+status: stable
+docs: Course/studio navigation icon atom, owned by course.dsl by accepted Phase 0 decision.

@@ -1,0 +1,19 @@
+schemaVersion: widget-manifest/v1
+type: StepList
+module: ui.dsl
+helper: stepList
+props: StepListWidgetProps
+adapter:
+  path: ./StepList.widget.tsx
+  export: stepListWidget
+reactComponent: StepList
+children: false
+slots:
+  - items.index
+  - items.title
+  - items.description
+  - items.meta
+actions:
+  - onItemSelectAction
+status: stable
+docs: Ordered step list molecule with renderable item fields and serializable item-select action.

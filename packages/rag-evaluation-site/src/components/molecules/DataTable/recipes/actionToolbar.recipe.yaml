@@ -1,0 +1,10 @@
+schemaVersion: recipe-manifest/v1
+name: actionToolbar
+module: ui.dsl
+input: ActionToolbarRecipeOptions
+output: WidgetNode
+implementation:
+  path: pkg/widgetdsl/module.go
+  symbol: actionToolbarRecipe
+status: stable
+docs: Builds an action toolbar panel from serializable action specs.

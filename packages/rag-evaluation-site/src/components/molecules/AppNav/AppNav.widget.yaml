@@ -1,0 +1,17 @@
+schemaVersion: widget-manifest/v1
+type: AppNav
+module: ui.dsl
+helper: appNav
+props: AppNavWidgetProps
+adapter:
+  path: ./AppNav.widget.tsx
+  export: appNavWidget
+reactComponent: AppNav
+children: false
+slots:
+  - brand
+  - items.label
+actions:
+  - items.action
+status: stable
+docs: Primary app navigation molecule with renderable brand, renderable item labels, active item, and item actions.

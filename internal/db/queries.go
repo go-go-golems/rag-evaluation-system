@@ -273,13 +273,13 @@ func (q *Queries) ListChunksForStrategySourcesDocuments(strategyID string, sourc
 	`
 	args := []interface{}{strategyID}
 	if len(sourceIDs) > 0 {
-		query += ` AND d.source_id IN (` + placeholders(len(sourceIDs)) + `)`
+		query += ` AND d.source_id IN (` + placeholders(len(sourceIDs)) + `)` // #nosec G202 -- placeholder count is derived from slice length; values are bound below.
 		for _, sourceID := range sourceIDs {
 			args = append(args, sourceID)
 		}
 	}
 	if len(documentIDs) > 0 {
-		query += ` AND c.document_id IN (` + placeholders(len(documentIDs)) + `)`
+		query += ` AND c.document_id IN (` + placeholders(len(documentIDs)) + `)` // #nosec G202 -- placeholder count is derived from slice length; values are bound below.
 		for _, documentID := range documentIDs {
 			args = append(args, documentID)
 		}
