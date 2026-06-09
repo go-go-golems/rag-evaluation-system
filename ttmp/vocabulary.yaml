@@ -103,6 +103,12 @@ topics:
       description: Widget IR, WidgetRenderer, and semantic UI JSON contracts
     - slug: rag-evaluation
       description: RAG Evaluation System project and package work
+    - slug: deployment
+      description: Deployment workflows, release handoffs, and rollout operations
+    - slug: kubernetes
+      description: Kubernetes workloads, manifests, and cluster operations
+    - slug: static-sites
+      description: Static site packaging, hosting, and GitOps publishing
 docTypes:
     - slug: design-doc
       description: Structured rationale and architecture notes

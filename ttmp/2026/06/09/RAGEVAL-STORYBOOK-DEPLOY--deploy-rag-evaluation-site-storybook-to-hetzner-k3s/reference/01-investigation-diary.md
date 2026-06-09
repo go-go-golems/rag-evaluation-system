@@ -650,3 +650,113 @@ The upload replaced the previous bundle with the updated implementation-aware ve
 ### Technical details
 - reMarkable path: `/ai/2026/06/09/RAGEVAL-STORYBOOK-DEPLOY`
 - Uploaded file name: `RAGEVAL-STORYBOOK-DEPLOY Guide.pdf`
+
+## Step 9: Roll out the Storybook static site live
+
+I completed the live rollout after the implementation commits were merged. The happy path was mostly successful, but the source GitHub Actions workflow failed at startup, so I used the same artifact and GitOps contracts manually for the first deployment: build/push the GHCR image, patch the K3s publisher Job from `sha-0000000` to `sha-09d7628`, merge that GitOps PR, apply the Argo CD Application, and smoke test HTTPS.
+
+The site is now live at `https://rag-evaluation-storybook.yolo.scapegoat.dev/`. The Argo CD Application is `Synced Healthy`, the publisher Job completed, Vault Secret Operator created the GHCR pull secret, cert-manager issued the TLS secret, and Caddy serves the Storybook HTML with HTTP 200.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead"
+
+**Assistant interpretation:** Proceed from the planned next steps into the live rollout: merge scaffolding, bootstrap Vault, publish the first static image, patch GitOps to a real release token, apply Argo, and validate the public URL.
+
+**Inferred user intent:** Move beyond documentation/scaffold into an actual deployed Storybook site.
+
+**Commit (code):** pending — rollout diary update.
+
+### What I did
+- Created clean worktrees to avoid unrelated local changes:
+  - `/tmp/rag-storybook-source-deploy`
+  - `/tmp/rag-storybook-k3s-deploy`
+- Cherry-picked the source implementation commits onto a clean source branch and opened PR #4:
+  - `https://github.com/go-go-golems/rag-evaluation-system/pull/4`
+- Cherry-picked the K3s scaffold commits onto a clean K3s branch and opened/merged PR #108:
+  - `https://github.com/wesen/2026-03-27--hetzner-k3s/pull/108`
+- Bootstrapped live Vault policy/role config:
+  - `./scripts/bootstrap-vault-kubernetes-auth.sh`
+  - `./scripts/bootstrap-vault-github-actions-oidc.sh`
+- Seeded live Vault paths without printing token values:
+  - `kv/apps/rag-evaluation-storybook/prod/image-pull`
+  - `kv/ci/github/rag-evaluation-system/gitops-pr-token`
+- Merged source PR #4 after checks passed.
+- Observed that `publish-rag-evaluation-storybook` on `main` failed with `startup_failure` before jobs were created.
+- Manually built and pushed the first release image:
+  - `ghcr.io/go-go-golems/rag-evaluation-storybook:sha-09d7628`
+- Created and merged K3s release PR #109:
+  - `https://github.com/wesen/2026-03-27--hetzner-k3s/pull/109`
+  - changed all publisher Job release tokens from `sha-0000000` to `sha-09d7628`
+- Applied the Argo CD Application once:
+  - `kubectl apply -f gitops/applications/rag-evaluation-storybook.yaml`
+  - `kubectl -n argocd annotate application rag-evaluation-storybook argocd.argoproj.io/refresh=hard --overwrite`
+- Observed the app initially reached `Healthy` but remained `OutOfSync` because `VaultConnection/vault` was shared with `dmeta-examples`.
+- Created and merged K3s PR #110 to give Storybook a dedicated VaultConnection:
+  - `https://github.com/wesen/2026-03-27--hetzner-k3s/pull/110`
+  - `VaultConnection` name: `rag-evaluation-storybook-vault`
+  - `VaultAuth.spec.vaultConnectionRef`: `rag-evaluation-storybook-vault`
+- Refreshed Argo and confirmed final status:
+  - `Synced Healthy 982d63aa2f69d118b7aa7bdd6fc0673beedadc21`
+- Smoke tested HTTPS:
+  - `curl -fsSI https://rag-evaluation-storybook.yolo.scapegoat.dev/`
+  - `curl -fsSL https://rag-evaluation-storybook.yolo.scapegoat.dev/ | head`
+
+### Why
+- The static-site scaffold needed a real immutable release image before it could be safely applied.
+- The source workflow startup failure blocked the intended automated first publish, but the artifact contract was simple enough to execute manually without changing the target architecture.
+- The shared VaultConnection warning would have left Argo in an undesirable state, so I fixed the manifest ownership boundary with a dedicated VaultConnection.
+
+### What worked
+- Source PR checks for PR #4 passed before merge.
+- K3s PR #108 merged and provided the static-site scaffold and Vault files.
+- Vault bootstrap completed and included the new `rag-evaluation-storybook` Kubernetes role plus `rag-evaluation-system-gitops-pr` GitHub Actions role.
+- Docker pushed `ghcr.io/go-go-golems/rag-evaluation-storybook:sha-09d7628` successfully.
+- K3s release PR #109 patched all `sha-*` tokens consistently.
+- Publisher Job `publish-rag-evaluation-storybook-sha-09d7628` completed.
+- `VaultAuth` and `VaultStaticSecret` became healthy/ready.
+- TLS secret `rag-evaluation-storybook-tls` was issued.
+- HTTPS returned `HTTP/2 200` and served Storybook HTML.
+
+### What didn't work
+- The source workflow run on `main` failed before creating jobs:
+  - workflow: `publish-rag-evaluation-storybook`
+  - run: `https://github.com/go-go-golems/rag-evaluation-system/actions/runs/27237183294`
+  - conclusion: `startup_failure`
+  - jobs: `[]`
+- Because no job existed, there was no job log to inspect with `gh run view --log-failed`.
+- The first Argo sync reported `OutOfSync Healthy` due to a shared `VaultConnection/vault` resource also owned by `dmeta-examples`. This was fixed in PR #110 by renaming Storybook's VaultConnection to `rag-evaluation-storybook-vault`.
+
+### What I learned
+- The static artifact contract is robust enough to recover from CI handoff failure: as long as `/site/index.html` can be built and pushed to GHCR, the K3s static-sites flow works.
+- Argo shared-resource ownership matters for reusable VSO support resources. Static-site packages should use unique `VaultConnection` names unless the shared resource is intentionally managed by a separate platform app.
+- A completed publisher Job and successful HTTPS smoke test are the strongest rollout proof for this pattern.
+
+### What was tricky to build
+- The workflow startup failure happened after merge and before any reusable-workflow job logs existed. I did not block the rollout on it because manual publish plus GitOps PR preserved the same deployment artifact and release-token semantics. The follow-up is to debug/fix the reusable workflow invocation or replace it with an in-repo workflow that calls infra-tooling differently.
+- The Argo app was healthy but out of sync because of shared `VaultConnection/vault`, which is a subtle ownership issue rather than a runtime failure. The symptom was `SharedResourceWarning` and `VaultConnection/vault` shown as `OutOfSync`; the fix was a dedicated VaultConnection name and matching VaultAuth reference.
+
+### What warrants a second pair of eyes
+- Debug the GitHub Actions `startup_failure` for `.github/workflows/publish-rag-evaluation-storybook.yml`; future automated releases are not proven until that is fixed.
+- Decide whether all static-site packages should use dedicated VaultConnection names to avoid shared-resource warnings.
+- Confirm GHCR package visibility and long-term token scope for image pulls.
+
+### What should be done in the future
+- Fix and re-run the source workflow so future Storybook releases are fully automated.
+- Consider extracting the final diary into a standalone static Storybook deployment playbook.
+- Add a cleanup policy for old `/srv/sites/rag-evaluation-storybook.yolo.scapegoat.dev/releases/sha-*` directories if releases become frequent.
+
+### Code review instructions
+- Review K3s PRs #108, #109, and #110 in order.
+- Verify Argo status with:
+  - `kubectl -n argocd get application rag-evaluation-storybook`
+- Verify runtime resources with:
+  - `kubectl -n static-sites get job,pod,vaultauth,vaultstaticsecret,secret,ingress | rg 'rag-evaluation-storybook|NAME'`
+- Verify the public site with:
+  - `curl -fsSI https://rag-evaluation-storybook.yolo.scapegoat.dev/`
+
+### Technical details
+- Live URL: `https://rag-evaluation-storybook.yolo.scapegoat.dev/`
+- Release image: `ghcr.io/go-go-golems/rag-evaluation-storybook:sha-09d7628`
+- K3s final sync revision: `982d63aa2f69d118b7aa7bdd6fc0673beedadc21`
+- Successful HTTP status: `HTTP/2 200`

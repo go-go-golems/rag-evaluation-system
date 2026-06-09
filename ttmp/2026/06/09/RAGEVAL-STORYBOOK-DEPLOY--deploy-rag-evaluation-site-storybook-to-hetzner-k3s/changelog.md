@@ -35,3 +35,12 @@ Implemented Storybook static artifact packaging, source CI/GitOps handoff, K3s s
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/Dockerfile.storybook-static — Source packaging implementation
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/ttmp/2026/06/09/RAGEVAL-STORYBOOK-DEPLOY--deploy-rag-evaluation-site-storybook-to-hetzner-k3s/reference/01-investigation-diary.md — Playbook-quality implementation diary
 
+
+## 2026-06-09
+
+Rolled out rag-evaluation-storybook live at https://rag-evaluation-storybook.yolo.scapegoat.dev/ using image sha-09d7628; recorded workflow startup_failure and VaultConnection ownership fix.
+
+### Related Files
+
+- /tmp/rag-storybook-source-deploy/ttmp/2026/06/09/RAGEVAL-STORYBOOK-DEPLOY--deploy-rag-evaluation-site-storybook-to-hetzner-k3s/reference/01-investigation-diary.md — Live rollout evidence and follow-ups
+

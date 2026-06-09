@@ -1307,6 +1307,28 @@ kubectl -n argocd annotate application rag-evaluation-storybook argocd.argoproj.
 
 6. Validate `Application` health, `VaultStaticSecret`, publisher Job completion, TLS, and HTTPS smoke tests.
 
+
+### Live rollout result
+
+The first live rollout completed after the initial implementation. The final public URL is:
+
+```text
+https://rag-evaluation-storybook.yolo.scapegoat.dev/
+```
+
+Rollout evidence:
+
+- Source PR #4 merged: `https://github.com/go-go-golems/rag-evaluation-system/pull/4`.
+- K3s scaffold PR #108 merged: `https://github.com/wesen/2026-03-27--hetzner-k3s/pull/108`.
+- First release image pushed manually because the source workflow startup failed: `ghcr.io/go-go-golems/rag-evaluation-storybook:sha-09d7628`.
+- K3s release PR #109 merged: `https://github.com/wesen/2026-03-27--hetzner-k3s/pull/109`.
+- K3s VaultConnection ownership fix PR #110 merged: `https://github.com/wesen/2026-03-27--hetzner-k3s/pull/110`.
+- Argo CD final state: `Synced Healthy 982d63aa2f69d118b7aa7bdd6fc0673beedadc21`.
+- Publisher Job final state: `publish-rag-evaluation-storybook-sha-09d7628` completed.
+- HTTPS smoke test returned `HTTP/2 200`.
+
+Important follow-up: `.github/workflows/publish-rag-evaluation-storybook.yml` failed with `startup_failure` on the first `main` push before jobs were created. The first deployment was completed manually using the same artifact and GitOps contracts. Future automated releases require debugging that workflow startup failure.
+
 ## Open questions
 
 1. **Final hostname.** This guide uses `rag-evaluation-storybook.yolo.scapegoat.dev`. Confirm this is the desired public hostname before live rollout.
