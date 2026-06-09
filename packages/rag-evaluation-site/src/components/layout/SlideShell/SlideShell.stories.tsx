@@ -1,10 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { contextDefaultStyleSet, contextSlides, contextWindowSnapshots } from '../../../context';
+import { contextDefaultStyleSet, contextPaletteOptions, contextSlides, contextStyleSetForPalette, contextWindowSnapshots, type ContextPaletteName } from '../../../context';
 import { ContextStackDiagram, FigureBlock, KeyPointList } from '../../molecules';
-import { SlideShell } from './SlideShell';
+import { SlideShell, type SlideShellProps } from './SlideShell';
 
 const slide = contextSlides[1]!;
 const snapshot = contextWindowSnapshots.find((item) => item.id === slide.snapshotId)!;
+
+type PaletteControlsArgs = SlideShellProps & { palette: ContextPaletteName };
+
+function figureForPalette(palette: ContextPaletteName) {
+  const styleSet = contextStyleSetForPalette(palette);
+  return (
+    <FigureBlock caption="context window — 200,000 tokens" frame="none">
+      <ContextStackDiagram snapshot={snapshot} styleSet={styleSet} />
+    </FigureBlock>
+  );
+}
 
 const figure = (
   <FigureBlock caption="context window — 200,000 tokens" frame="none">
@@ -28,6 +39,25 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const PaletteControls: StoryObj<PaletteControlsArgs> = {
+  args: {
+    eyebrow: slide.kicker,
+    counter: '02 / 06',
+    title: slide.title,
+    palette: 'Dusty Magenta / Blue',
+    primarySide: 'right',
+    ratio: 'primaryWide',
+  },
+  argTypes: {
+    palette: { control: 'select', options: contextPaletteOptions },
+    primarySide: { control: 'select', options: ['left', 'right'] },
+    ratio: { control: 'select', options: ['equal', 'primaryWide', 'secondaryWide'] },
+    primary: { control: false },
+    secondary: { control: false },
+  },
+  render: ({ palette, ...args }) => <SlideShell {...args} primary={figureForPalette(palette)} secondary={points} />,
+};
 
 export const VisualFirst: Story = {};
 

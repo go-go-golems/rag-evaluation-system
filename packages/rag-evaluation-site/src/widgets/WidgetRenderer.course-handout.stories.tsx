@@ -1,12 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { contextCourseFixture, contextDefaultStyleSet, contextHandoutFixture, contextSlides, contextWindowSnapshots } from '../context';
-import { WidgetRenderer } from './WidgetRenderer';
+import { contextCourseFixture, contextDefaultStyleSet, contextHandoutFixture, contextPaletteOptions, contextSlides, contextStyleSetForPalette, contextWindowSnapshots, type ContextPaletteName, type ContextStyleSet } from '../context';
+import { WidgetRenderer, type WidgetRendererProps } from './WidgetRenderer';
 import { defaultWidgetRegistry } from './defaultRegistry';
 import { component, text, type WidgetNode } from './ir';
 
 const meta = { title: 'Widget IR/Renderer/Course Studio', component: WidgetRenderer, args: { registry: defaultWidgetRegistry } } satisfies Meta<typeof WidgetRenderer>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+type PaletteControlsArgs = WidgetRendererProps & { palette: ContextPaletteName };
 
 const snapshot = contextWindowSnapshots[0]!;
 const slide = contextSlides[0]!;
@@ -30,6 +31,34 @@ function studio(main: WidgetNode, activeItemId = 'slides'): WidgetNode {
   }, [main]);
 }
 
+function courseSlideWithContextVisualNode(styleSet: ContextStyleSet): WidgetNode {
+  return studio(component('CourseSlidePanel', {
+    slide,
+    snapshot,
+    styleSet,
+    index: 0,
+    total: contextSlides.length,
+    visualSide: 'right',
+    onPreviousAction: { kind: 'event', event: 'widget-ir:slide-prev' },
+    onNextAction: { kind: 'event', event: 'widget-ir:slide-next' },
+  }), 'slides');
+}
+
+export const PaletteControls: StoryObj<PaletteControlsArgs> = {
+  args: {
+    registry: defaultWidgetRegistry,
+    palette: 'Dusty Magenta / Blue',
+    node: courseSlideWithContextVisualNode(contextDefaultStyleSet),
+  },
+  argTypes: {
+    palette: { control: 'select', options: contextPaletteOptions },
+    node: { control: false },
+    registry: { control: false },
+    onAction: { control: false },
+  },
+  render: ({ palette, registry, onAction }) => <WidgetRenderer registry={registry} onAction={onAction} node={courseSlideWithContextVisualNode(contextStyleSetForPalette(palette))} />,
+};
+
 export const CourseLessonLanding: Story = {
   args: {
     node: studio(component('CourseLessonPanel', {
@@ -42,15 +71,7 @@ export const CourseLessonLanding: Story = {
 
 export const CourseSlideWithContextVisual: Story = {
   args: {
-    node: studio(component('CourseSlidePanel', {
-      slide,
-      snapshot,
-      index: 0,
-      total: contextSlides.length,
-      visualSide: 'right',
-      onPreviousAction: { kind: 'event', event: 'widget-ir:slide-prev' },
-      onNextAction: { kind: 'event', event: 'widget-ir:slide-next' },
-    }), 'slides'),
+    node: courseSlideWithContextVisualNode(contextDefaultStyleSet),
   },
 };
 
@@ -64,8 +85,8 @@ export const TeachingSlideComposition: Story = {
       primary: component('FigureBlock', {
         frame: 'bordered',
         caption: 'Context budget rendered inside a FigureBlock slot',
-        legend: component('ContextLegend', { compact: true }),
-      }, [component('ContextBudgetBar', { snapshot })]),
+        legend: component('ContextLegend', { items: contextDefaultStyleSet.legend, styles: contextDefaultStyleSet.styles, size: 'sm' }),
+      }, [component('ContextBudgetBar', { snapshot, styleSet: contextDefaultStyleSet })]),
       secondary: component('KeyPointList', { items: [
         { id: 'one', title: 'Direct nodes', text: 'Use low-level nodes when the page needs custom structure.' },
         { id: 'two', title: 'Recipes later', text: 'Use recipes when the product composition is stable.' },
@@ -98,7 +119,7 @@ export const CoursePlusHandoutSplitView: Story = {
     node: component('SplitPane', {
       ratio: 'balanced',
       divider: true,
-      left: component('CourseSlidePanel', { slide, snapshot, index: 0, total: contextSlides.length }),
+      left: component('CourseSlidePanel', { slide, snapshot, styleSet: contextDefaultStyleSet, index: 0, total: contextSlides.length }),
       right: component('HandoutDocumentShell', {
         intro: contextHandoutFixture.intro,
         documents: contextHandoutFixture.docs,

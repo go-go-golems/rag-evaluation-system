@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { contextCobaltSandStyleSet, contextDefaultStyleSet, contextSignalOrangeStyleSet, contextWindowSnapshots } from '../../../context';
+import { contextCobaltSandStyleSet, contextDefaultStyleSet, contextPaletteOptions, contextSignalOrangeStyleSet, contextStyleSetForPalette, contextWindowSnapshots, type ContextPaletteName } from '../../../context';
 import { Panel, Stack } from '../../layout';
-import { ContextBudgetBar } from './ContextBudgetBar';
+import { ContextBudgetBar, type ContextBudgetBarProps } from './ContextBudgetBar';
 
 const [underBudget, selectedBudget, nearLimit, overBudget] = contextWindowSnapshots;
+
+type PaletteControlsArgs = Omit<ContextBudgetBarProps, 'styleSet'> & { palette: ContextPaletteName };
 
 const meta = {
   title: 'Component Library/Molecules/ContextBudgetBar',
@@ -13,6 +15,26 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const PaletteControls: StoryObj<PaletteControlsArgs> = {
+  args: {
+    snapshot: selectedBudget!,
+    palette: 'Dusty Magenta / Blue',
+    selectedPartId: 't14-file-reads',
+    showLegend: true,
+  },
+  argTypes: {
+    palette: { control: 'select', options: contextPaletteOptions },
+    snapshot: { control: false },
+    selectedPartId: { control: 'text' },
+    showLegend: { control: 'boolean' },
+  },
+  render: ({ palette, ...args }) => (
+    <Panel title={`budget bar · ${palette}`}>
+      <ContextBudgetBar {...args} styleSet={contextStyleSetForPalette(palette)} />
+    </Panel>
+  ),
+};
 
 export const BudgetStates: Story = {
   render: () => (

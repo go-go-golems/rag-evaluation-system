@@ -1,12 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { contextDefaultStyleSet } from '../context';
-import { WidgetRenderer } from './WidgetRenderer';
+import { contextDefaultStyleSet, contextPaletteOptions, contextStyleSetForPalette, type ContextPaletteName, type ContextStyleSet } from '../context';
+import { WidgetRenderer, type WidgetRendererProps } from './WidgetRenderer';
 import { defaultWidgetRegistry } from './defaultRegistry';
 import { component, text, type WidgetNode } from './ir';
 
 const meta = { title: 'Widget IR/Renderer/Layout Recipes', component: WidgetRenderer, args: { registry: defaultWidgetRegistry } } satisfies Meta<typeof WidgetRenderer>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+type PaletteControlsArgs = WidgetRendererProps & { palette: ContextPaletteName };
 
 function panel(title: string, children: WidgetNode[], actions?: WidgetNode): WidgetNode {
   return component('Panel', { title, density: 'condensed', actions }, children);
@@ -21,26 +22,45 @@ const sidebar = component('Stack', { gap: 'sm' }, [
   component('Caption', { tone: 'muted' }, [text('Widget IR slot props rendered by SidebarShell.')]),
 ]);
 
-export const SectionBlocksInAStack: Story = {
-  args: {
-    node: component('Stack', { gap: 'md' }, [
-      component('SectionBlock', { label: 'Overview', caption: 'A plain section rendered from Widget IR.' }, [
-        component('Text', { size: 'body' }, [text('Use SectionBlock to make editorial/course content without dashboard panel chrome.')]),
-      ]),
-      component('SectionBlock', { label: 'Implementation Notes', density: 'spacious', divider: 'top' }, [
-        component('Stack', { gap: 'sm' }, [
-          component('Text', { size: 'compact' }, [text('Slot props and children are both serialized as WidgetNode trees.')]),
-          component('CodeText', { display: 'block' }, [text("component('SectionBlock', { label: '...' }, [...])")]),
-        ]),
-      ]),
-      component('SectionBlock', { label: 'Review checklist', divider: 'both' }, [
-        component('Inline', { gap: 'sm' }, [
-          component('AnnotationBadge', { visualStyle: contextDefaultStyleSet.styles.active, label: 'renderer' }),
-          component('AnnotationBadge', { visualStyle: contextDefaultStyleSet.styles.course, label: 'storybook' }),
-          component('AnnotationBadge', { visualStyle: contextDefaultStyleSet.styles.result, label: 'typecheck' }),
-        ]),
+function sectionBlocksNode(styleSet: ContextStyleSet): WidgetNode {
+  return component('Stack', { gap: 'md' }, [
+    component('SectionBlock', { label: 'Overview', caption: 'A plain section rendered from Widget IR.' }, [
+      component('Text', { size: 'body' }, [text('Use SectionBlock to make editorial/course content without dashboard panel chrome.')]),
+    ]),
+    component('SectionBlock', { label: 'Implementation Notes', density: 'spacious', divider: 'top' }, [
+      component('Stack', { gap: 'sm' }, [
+        component('Text', { size: 'compact' }, [text('Slot props and children are both serialized as WidgetNode trees.')]),
+        component('CodeText', { display: 'block' }, [text("component('SectionBlock', { label: '...' }, [...])")]),
       ]),
     ]),
+    component('SectionBlock', { label: 'Review checklist', divider: 'both' }, [
+      component('Inline', { gap: 'sm' }, [
+        component('AnnotationBadge', { visualStyle: styleSet.styles.active, label: 'renderer' }),
+        component('AnnotationBadge', { visualStyle: styleSet.styles.course, label: 'storybook' }),
+        component('AnnotationBadge', { visualStyle: styleSet.styles.result, label: 'typecheck' }),
+      ]),
+    ]),
+  ]);
+}
+
+export const PaletteControls: StoryObj<PaletteControlsArgs> = {
+  args: {
+    registry: defaultWidgetRegistry,
+    palette: 'Dusty Magenta / Blue',
+    node: sectionBlocksNode(contextDefaultStyleSet),
+  },
+  argTypes: {
+    palette: { control: 'select', options: contextPaletteOptions },
+    node: { control: false },
+    registry: { control: false },
+    onAction: { control: false },
+  },
+  render: ({ palette, registry, onAction }) => <WidgetRenderer registry={registry} onAction={onAction} node={sectionBlocksNode(contextStyleSetForPalette(palette))} />,
+};
+
+export const SectionBlocksInAStack: Story = {
+  args: {
+    node: sectionBlocksNode(contextDefaultStyleSet),
   },
 };
 

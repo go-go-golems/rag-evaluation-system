@@ -1,12 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
-import { contextCobaltSandStyleSet, contextDefaultStyleSet, contextSignalOrangeStyleSet, contextSlateCoralStyleSet, contextWindowSnapshots, type ContextStyleSet } from '../../../context';
+import { contextCobaltSandStyleSet, contextDefaultStyleSet, contextPaletteOptions, contextSignalOrangeStyleSet, contextSlateCoralStyleSet, contextStyleSetForPalette, contextWindowSnapshots, type ContextPaletteName, type ContextStyleSet } from '../../../context';
 import { Button } from '../../atoms';
 import { Inline, Panel, Stack } from '../../layout';
 import { ContextLegend } from '../ContextLegend';
-import { ContextStripDiagram } from './ContextStripDiagram';
+import { ContextStripDiagram, type ContextStripDiagramProps } from './ContextStripDiagram';
 
 const [, deepBug, atLimit, overBudget] = contextWindowSnapshots;
+
+type PaletteControlsArgs = Omit<ContextStripDiagramProps, 'styleSet'> & { palette: ContextPaletteName; showLegend: boolean };
 
 const meta = {
   title: 'Component Library/Molecules/ContextStripDiagram',
@@ -16,6 +18,33 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const PaletteControls: StoryObj<PaletteControlsArgs> = {
+  args: {
+    snapshot: deepBug!,
+    palette: 'Dusty Magenta / Blue',
+    selectedPartId: 't14-file-reads',
+    showLegend: true,
+  },
+  argTypes: {
+    palette: { control: 'select', options: contextPaletteOptions },
+    snapshot: { control: false },
+    selectedPartId: { control: 'text' },
+    showLabels: { control: 'boolean' },
+    showLegend: { control: 'boolean' },
+  },
+  render: ({ palette, showLegend, ...args }) => {
+    const styleSet = contextStyleSetForPalette(palette);
+    return (
+      <Panel title={`strip diagram · ${palette}`}>
+        <Stack gap="sm">
+          <ContextStripDiagram {...args} styleSet={styleSet} />
+          {showLegend && <ContextLegend items={styleSet.legend} styles={styleSet.styles} size="sm" selectedId="result" />}
+        </Stack>
+      </Panel>
+    );
+  },
+};
 
 export const DenseSegments: Story = {
   render: () => (
