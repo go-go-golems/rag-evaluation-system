@@ -366,3 +366,83 @@ This step keeps pull requests safe: PR runs validate the Storybook build and Doc
 - GitOps target repo: `wesen/2026-03-27--hetzner-k3s`
 - GitOps target manifest: `gitops/kustomize/rag-evaluation-storybook/publish-job.yaml`
 - Patch strategy: `static-publisher-job`
+
+## Step 5: Add K3s static-site GitOps manifests
+
+I implemented the cluster-side static-site shape in the K3s GitOps repository. The new `rag-evaluation-storybook` Kustomize package follows the same shared-host pattern as `dmeta-examples`: a ServiceAccount with an image pull secret, Vault Secret Operator resources, a one-shot publisher Job, an Ingress pointing at `static-sites-host`, and an Argo CD Application in the `static-sites` project.
+
+This phase still uses `sha-0000000` as an intentional placeholder in the publisher Job. That lets the manifest render and lets infra-tooling know which tokens to rewrite, but it must be replaced by the first real `sha-*` GHCR image before a live sync is expected to succeed.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 2)
+
+**Assistant interpretation:** Execute Phase 3: add K3s static-site manifests matching the source `deploy/gitops-targets.json` handoff path, validate Kustomize rendering, commit K3s changes, and record the result.
+
+**Inferred user intent:** Put the cluster desired-state scaffold in place so the source workflow has a concrete publisher Job manifest to patch.
+
+**Commit (code):** `7094ddccee1ab5d0c9a5838baf086f0a072780ca` — "gitops: add rag evaluation Storybook static site"
+
+### What I did
+- Added K3s Kustomize package:
+  - `/home/manuel/code/wesen/2026-03-27--hetzner-k3s/gitops/kustomize/rag-evaluation-storybook/kustomization.yaml`
+  - `/home/manuel/code/wesen/2026-03-27--hetzner-k3s/gitops/kustomize/rag-evaluation-storybook/serviceaccount.yaml`
+  - `/home/manuel/code/wesen/2026-03-27--hetzner-k3s/gitops/kustomize/rag-evaluation-storybook/vault-connection.yaml`
+  - `/home/manuel/code/wesen/2026-03-27--hetzner-k3s/gitops/kustomize/rag-evaluation-storybook/vault-auth.yaml`
+  - `/home/manuel/code/wesen/2026-03-27--hetzner-k3s/gitops/kustomize/rag-evaluation-storybook/vault-static-secret-image-pull.yaml`
+  - `/home/manuel/code/wesen/2026-03-27--hetzner-k3s/gitops/kustomize/rag-evaluation-storybook/publish-job.yaml`
+  - `/home/manuel/code/wesen/2026-03-27--hetzner-k3s/gitops/kustomize/rag-evaluation-storybook/ingress.yaml`
+- Added Argo CD Application:
+  - `/home/manuel/code/wesen/2026-03-27--hetzner-k3s/gitops/applications/rag-evaluation-storybook.yaml`
+- Rendered the package with:
+  - `kubectl kustomize gitops/kustomize/rag-evaluation-storybook >/tmp/rag-evaluation-storybook-rendered.yaml`
+- Grepped the rendered output for the expected app name, placeholder release token, `static-sites-host`, `static-sites-content`, `VaultStaticSecret`, and `Ingress`.
+- Committed only the new Storybook GitOps files in the K3s repo. Pre-existing unrelated modified `ttmp` files in that repo were left unstaged.
+
+### Why
+- The source workflow added in Phase 2 points at `gitops/kustomize/rag-evaluation-storybook/publish-job.yaml`; that file must exist for `open-gitops-pr` to patch it.
+- The static-sites-host model requires a publisher Job to copy `/site` into the shared PVC and an Ingress that routes the hostname to the shared Caddy service.
+- The Argo CD Application must be in project `static-sites` to match the cluster's static-site project restrictions.
+
+### What worked
+- `kubectl kustomize gitops/kustomize/rag-evaluation-storybook` succeeded.
+- The rendered output contained:
+  - the ServiceAccount and imagePullSecret name;
+  - the publisher Job with `sha-0000000` in the Job name, release label, image tag, and shell release variable;
+  - the `static-sites-content` PVC mount;
+  - the Ingress backend pointing at `static-sites-host` port `http`;
+  - VaultAuth and VaultStaticSecret resources.
+- The K3s commit succeeded while leaving unrelated modified docs in the worktree untouched.
+
+### What didn't work
+- N/A. Kustomize rendering and the focused K3s commit both succeeded.
+
+### What I learned
+- The static-site package is small enough to review as one K3s commit: seven Kustomize resources plus one Argo CD Application.
+- Keeping the same host string in the Ingress and publisher Job is essential because `static-sites-host` maps `{host}` directly into `/srv/sites/{host}/current`.
+
+### What was tricky to build
+- The placeholder release token is necessary but dangerous. It gives `static-publisher-job` a token to rewrite and makes the manifest structurally valid, but if someone applies the Argo Application before a real image patch lands, the Job will try to pull `ghcr.io/go-go-golems/rag-evaluation-storybook:sha-0000000` and fail. The guide and diary call this out explicitly.
+- Another subtlety is that the Argo CD Application is not part of the Kustomize package. It lives under `gitops/applications/` and must be applied once to bootstrap reconciliation.
+
+### What warrants a second pair of eyes
+- Confirm `rag-evaluation-storybook.yolo.scapegoat.dev` is the intended hostname.
+- Confirm the placeholder token should remain until the first source workflow publishes a real image and opens a GitOps PR.
+- Confirm `spec.project: static-sites` is correct for this cluster's current Argo project setup.
+
+### What should be done in the future
+- Phase 4 should add the Vault policy and role files that back the VSO image-pull secret and GitHub Actions GitOps PR token access.
+
+### Code review instructions
+- In the K3s repo, start at `gitops/kustomize/rag-evaluation-storybook/publish-job.yaml` and verify all `sha-0000000` occurrences are intentional and consistent.
+- Review `ingress.yaml` and confirm its host matches the publisher Job `host` variable.
+- Review `gitops/applications/rag-evaluation-storybook.yaml` and confirm project `static-sites`.
+- Re-run:
+  - `cd /home/manuel/code/wesen/2026-03-27--hetzner-k3s`
+  - `kubectl kustomize gitops/kustomize/rag-evaluation-storybook >/tmp/rag-evaluation-storybook-rendered.yaml`
+
+### Technical details
+- K3s commit: `7094ddccee1ab5d0c9a5838baf086f0a072780ca`
+- Hostname: `rag-evaluation-storybook.yolo.scapegoat.dev`
+- Placeholder release token: `sha-0000000`
+- Publisher image placeholder: `ghcr.io/go-go-golems/rag-evaluation-storybook:sha-0000000`

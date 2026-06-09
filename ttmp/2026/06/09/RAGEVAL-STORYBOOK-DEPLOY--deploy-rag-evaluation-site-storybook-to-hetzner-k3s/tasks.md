@@ -25,13 +25,13 @@
 
 ## Phase 3 — K3s GitOps static-site manifests
 
-- [ ] Add `gitops/kustomize/rag-evaluation-storybook/kustomization.yaml`
-- [ ] Add static-site ServiceAccount, VaultConnection, VaultAuth, and VaultStaticSecret manifests
-- [ ] Add publisher Job manifest using a clearly marked initial `sha-0000000` placeholder
-- [ ] Add Ingress manifest for `rag-evaluation-storybook.yolo.scapegoat.dev`
-- [ ] Add Argo CD Application manifest in the `static-sites` project
-- [ ] Validate `kubectl kustomize gitops/kustomize/rag-evaluation-storybook`
-- [ ] Record Phase 3 diary entry and commit focused K3s static-site manifest changes
+- [x] Add `gitops/kustomize/rag-evaluation-storybook/kustomization.yaml`
+- [x] Add static-site ServiceAccount, VaultConnection, VaultAuth, and VaultStaticSecret manifests
+- [x] Add publisher Job manifest using a clearly marked initial `sha-0000000` placeholder
+- [x] Add Ingress manifest for `rag-evaluation-storybook.yolo.scapegoat.dev`
+- [x] Add Argo CD Application manifest in the `static-sites` project
+- [x] Validate `kubectl kustomize gitops/kustomize/rag-evaluation-storybook`
+- [x] Record Phase 3 diary entry and commit focused K3s static-site manifest changes
 
 ## Phase 4 — K3s Vault policy and role manifests
 
