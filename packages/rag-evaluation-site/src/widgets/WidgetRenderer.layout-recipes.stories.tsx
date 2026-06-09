@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { contextDefaultStyleSet } from '../context';
 import { WidgetRenderer } from './WidgetRenderer';
 import { defaultWidgetRegistry } from './defaultRegistry';
 import { component, text, type WidgetNode } from './ir';
@@ -34,9 +35,9 @@ export const SectionBlocksInAStack: Story = {
       ]),
       component('SectionBlock', { label: 'Review checklist', divider: 'both' }, [
         component('Inline', { gap: 'sm' }, [
-          component('AnnotationBadge', { kind: 'active', label: 'renderer' }),
-          component('AnnotationBadge', { kind: 'course', label: 'storybook' }),
-          component('AnnotationBadge', { kind: 'result', label: 'typecheck' }),
+          component('AnnotationBadge', { visualStyle: contextDefaultStyleSet.styles.active, label: 'renderer' }),
+          component('AnnotationBadge', { visualStyle: contextDefaultStyleSet.styles.course, label: 'storybook' }),
+          component('AnnotationBadge', { visualStyle: contextDefaultStyleSet.styles.result, label: 'typecheck' }),
         ]),
       ]),
     ]),

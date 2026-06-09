@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { contextDefaultStyleSet } from '../context';
 import { WidgetRenderer } from './WidgetRenderer';
 import { defaultWidgetRegistry } from './defaultRegistry';
 import { component, text, type WidgetNode } from './ir';
@@ -7,9 +8,7 @@ const meta = { title: 'Widget IR/Renderer/Foundation and Atoms', component: Widg
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function panel(title: string, children: WidgetNode[]): WidgetNode {
-  return component('Panel', { title, density: 'condensed' }, children);
-}
+function panel(title: string, children: WidgetNode[]): WidgetNode { return component('Panel', { title, density: 'condensed' }, children); }
 
 export const TypographyTokenSampler: Story = {
   args: {
@@ -38,19 +37,19 @@ export const TypographyTokenSampler: Story = {
 export const SemanticBadgesAndSwatches: Story = {
   args: {
     node: component('Stack', { gap: 'md' }, [
-      panel('Context kind swatches', [
-        component('Inline', { gap: 'md', wrap: true }, ['system', 'instruction', 'conversation', 'retrieval', 'tool', 'result', 'generated', 'active', 'evicted'].map((kind, index) =>
+      panel('Context style swatches', [
+        component('Inline', { gap: 'md', wrap: true }, Object.entries(contextDefaultStyleSet.styles).slice(0, 9).map(([styleKey, visualStyle], index) =>
           component('Inline', { gap: 'xs', wrap: false }, [
-            component('ContextKindSwatch', { kind, selected: index === 2 }),
-            component('Text', { size: 'compact' }, [text(kind)]),
+            component('ContextStyleSwatch', { visualStyle, selected: index === 2 }),
+            component('Text', { size: 'compact' }, [text(styleKey)]),
           ]),
         )),
       ]),
       panel('Annotation and role badges', [
         component('Inline', { gap: 'sm', wrap: true }, [
-          component('AnnotationBadge', { kind: 'context', label: 'task framing' }),
-          component('AnnotationBadge', { kind: 'result', label: 'tool result', selected: true }),
-          component('AnnotationBadge', { kind: 'generated', label: 'scratchpad' }),
+          component('AnnotationBadge', { visualStyle: contextDefaultStyleSet.styles.context, label: 'task framing' }),
+          component('AnnotationBadge', { visualStyle: contextDefaultStyleSet.styles.result, label: 'tool result', selected: true }),
+          component('AnnotationBadge', { visualStyle: contextDefaultStyleSet.styles.generated, label: 'scratchpad' }),
           component('TranscriptRoleBadge', { role: 'user' }),
           component('TranscriptRoleBadge', { role: 'assistant' }),
           component('TranscriptRoleBadge', { role: 'tool', name: 'read_file' }),
@@ -66,7 +65,7 @@ export const InlineStatusHeader: Story = {
       component('Inline', { gap: 'sm', justify: 'between', wrap: true }, [
         component('Inline', { gap: 'sm', wrap: true }, [
           component('StatusText', { status: 'running', icon: true }, [text('running')]),
-          component('AnnotationBadge', { kind: 'active', label: 'active context', selected: true }),
+          component('AnnotationBadge', { visualStyle: contextDefaultStyleSet.styles.active, label: 'active context', selected: true }),
           component('Caption', { tone: 'muted' }, [text('3 notes · 8 messages')]),
         ]),
         component('Inline', { gap: 'sm', wrap: true }, [

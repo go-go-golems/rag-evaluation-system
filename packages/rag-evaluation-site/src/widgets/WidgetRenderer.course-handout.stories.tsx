@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { contextCourseFixture, contextHandoutFixture, contextSlides, contextWindowSnapshots } from '../context';
+import { contextCourseFixture, contextDefaultStyleSet, contextHandoutFixture, contextSlides, contextWindowSnapshots } from '../context';
 import { WidgetRenderer } from './WidgetRenderer';
 import { defaultWidgetRegistry } from './defaultRegistry';
 import { component, text, type WidgetNode } from './ir';
@@ -129,7 +129,7 @@ export const DocumentListAndPreviewToolbar: Story = {
           format: selectedDoc.format,
           size: selectedDoc.size,
           onDownloadAction: { kind: 'event', event: 'widget-ir:document-download' },
-          rightSlot: component('AnnotationBadge', { kind: 'course', label: 'selected' }),
+          rightSlot: component('AnnotationBadge', { visualStyle: contextDefaultStyleSet.styles.course, label: 'selected' }),
         }),
         component('MarkdownArticle', { source: selectedDoc.body }),
       ]),

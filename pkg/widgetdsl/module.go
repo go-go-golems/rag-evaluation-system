@@ -73,7 +73,7 @@ var contextWindowHelpers = map[string]string{
 	"annotationRailPanel":      "AnnotationRailPanel",
 	"contextBudgetBar":         "ContextBudgetBar",
 	"contextDiagramPanel":      "ContextDiagramPanel",
-	"contextKindSwatch":        "ContextKindSwatch",
+	"contextStyleSwatch":       "ContextStyleSwatch",
 	"contextLegend":            "ContextLegend",
 	"contextStackDiagram":      "ContextStackDiagram",
 	"contextStripDiagram":      "ContextStripDiagram",
@@ -203,6 +203,9 @@ func (r *runtime) install(exports *goja.Object, spec moduleSpec) {
 	if spec.action {
 		setExport(exports, "action", r.actionObject())
 	}
+	if spec.name == ContextWindowModuleName {
+		r.installContextWindowStyleHelpers(exports)
+	}
 	if len(spec.recipes) > 0 {
 		setExport(exports, "recipes", r.recipesObject(spec.recipes))
 	}
@@ -265,6 +268,155 @@ func (r *runtime) actionObject() *goja.Object {
 		return map[string]any{"kind": "copy", "value": value}
 	})
 	return action
+}
+
+func (r *runtime) installContextWindowStyleHelpers(exports *goja.Object) {
+	setExport(exports, "visualStyle", func(options goja.Value) map[string]any {
+		out := exportObject(options)
+		if _, ok := out["pattern"]; !ok {
+			out["pattern"] = "none"
+		}
+		if _, ok := out["fill"]; !ok {
+			out["fill"] = "var(--mac-surface)"
+		}
+		return out
+	})
+	setExport(exports, "legendItem", func(id string, label string, options ...goja.Value) map[string]any {
+		out := map[string]any{"id": id, "label": label}
+		mergeOptions(out, exportOptions(options))
+		return out
+	})
+	setExport(exports, "styleSet", func(options goja.Value) map[string]any {
+		out := exportObject(options)
+		if _, ok := out["legend"]; !ok {
+			out["legend"] = []any{}
+		}
+		if _, ok := out["styles"]; !ok {
+			out["styles"] = map[string]any{}
+		}
+		return out
+	})
+	setExport(exports, "contextPart", func(id string, label string, styleKey string, tokens int, options ...goja.Value) map[string]any {
+		out := map[string]any{"id": id, "label": label, "styleKey": styleKey, "tokens": tokens}
+		mergeOptions(out, exportOptions(options))
+		return out
+	})
+	setExport(exports, "contextSnapshot", func(options goja.Value) map[string]any {
+		out := exportObject(options)
+		if _, ok := out["id"]; !ok {
+			out["id"] = "ctx"
+		}
+		if _, ok := out["title"]; !ok {
+			out["title"] = "Context"
+		}
+		if _, ok := out["limit"]; !ok {
+			out["limit"] = 0
+		}
+		if _, ok := out["parts"]; !ok {
+			out["parts"] = []any{}
+		}
+		return out
+	})
+	setExport(exports, "paletteStyleSet", func(options goja.Value) map[string]any {
+		return buildPaletteStyleSet(exportObject(options))
+	})
+}
+
+func buildPaletteStyleSet(options map[string]any) map[string]any {
+	paletteName := stringFromMap(options, "palette", "Dusty Magenta / Blue")
+	colors := paletteColors(paletteName)
+	entries := anySlice(options["entries"])
+	legend := []any{}
+	styles := map[string]any{}
+	for _, raw := range entries {
+		entry, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		id := stringFromMap(entry, "id", "")
+		if id == "" {
+			continue
+		}
+		label := stringFromMap(entry, "label", id)
+		accent := colorByAccent(colors, stringFromMap(entry, "accent", "a"))
+		pattern := stringFromMap(entry, "pattern", "diagonal")
+		solid := pattern == "solid" || boolFromMap(entry, "solid", false)
+		fillPct := numberFromMap(entry, "fillPct", 18)
+		linePct := numberFromMap(entry, "linePct", 60)
+		fill := colorMix(accent, fillPct, colors["paper"])
+		line := colorMix(accent, linePct, colors["paper"])
+		labelColor := colors["ink"]
+		if solid {
+			fill = accent
+			line = "transparent"
+			labelColor = "#ffffff"
+		}
+		styles[id] = map[string]any{"pattern": pattern, "fill": fill, "line": line, "stroke": colors["ink"], "labelColor": labelColor}
+		legendItem := map[string]any{"id": id, "label": label}
+		if desc, ok := entry["description"]; ok {
+			legendItem["description"] = desc
+		}
+		if hidden, ok := entry["hidden"]; ok {
+			legendItem["hidden"] = hidden
+		}
+		legend = append(legend, legendItem)
+	}
+	out := map[string]any{"legend": legend, "styles": styles}
+	copyIfPresent(out, options, "id")
+	copyIfPresent(out, options, "name")
+	copyIfPresent(out, options, "legendSize")
+	copyIfPresent(out, options, "swatchSize")
+	return out
+}
+
+func paletteColors(name string) map[string]string {
+	switch name {
+	case "Signal Orange / Cyan":
+		return map[string]string{"paper": "#F5F1E8", "ink": "#141414", "grid": "#BDB7AA", "shadow": "#7E7A72", "accent_a": "#D86F2A", "accent_b": "#2EA6A6", "accent_c": "#F0B45A"}
+	case "Slate / Coral":
+		return map[string]string{"paper": "#F2F3EF", "ink": "#111314", "grid": "#B8BDBB", "shadow": "#707878", "accent_a": "#5F7F89", "accent_b": "#C46A55", "accent_c": "#D8E0DF"}
+	case "Cobalt / Sand":
+		return map[string]string{"paper": "#F3EEDC", "ink": "#111318", "grid": "#BFB59A", "shadow": "#766F5E", "accent_a": "#315D91", "accent_b": "#D2A84A", "accent_c": "#A8B8CC"}
+	default:
+		return map[string]string{"paper": "#F2EEF2", "ink": "#141214", "grid": "#C0B5C1", "shadow": "#776C7A", "accent_a": "#9C527E", "accent_b": "#4F74A8", "accent_c": "#D6B8CB"}
+	}
+}
+
+func colorByAccent(colors map[string]string, accent string) string {
+	switch accent {
+	case "b":
+		return colors["accent_b"]
+	case "c":
+		return colors["accent_c"]
+	case "grid":
+		return colors["grid"]
+	case "shadow":
+		return colors["shadow"]
+	case "ink":
+		return colors["ink"]
+	default:
+		return colors["accent_a"]
+	}
+}
+
+func colorMix(color string, pct float64, paper string) string {
+	return fmt.Sprintf("color-mix(in srgb, %s %.0f%%, %s)", color, pct, paper)
+}
+
+func numberFromMap(m map[string]any, key string, fallback float64) float64 {
+	if value, ok := m[key]; ok {
+		switch typed := value.(type) {
+		case int:
+			return float64(typed)
+		case int64:
+			return float64(typed)
+		case float64:
+			return typed
+		case float32:
+			return float64(typed)
+		}
+	}
+	return fallback
 }
 
 func (r *runtime) recipesObject(names []string) *goja.Object {
@@ -455,8 +607,17 @@ func (r *runtime) actionToolbarRecipe(call goja.FunctionCall) goja.Value {
 
 func (r *runtime) contextDiagramRecipe(call goja.FunctionCall) goja.Value {
 	options := firstObject(call.Arguments)
+	styleSet := options["styleSet"]
+	if styleSet == nil {
+		if options["palette"] != nil && options["entries"] != nil {
+			styleSet = buildPaletteStyleSet(options)
+		} else {
+			panic(r.vm.NewGoError(fmt.Errorf("context_window.dsl recipes.contextDiagram requires styleSet or palette+entries")))
+		}
+	}
 	props := map[string]any{
 		"snapshot": valueOrDefault(options["snapshot"], map[string]any{"id": "empty", "title": "Context", "limit": 0, "parts": []any{}}),
+		"styleSet": styleSet,
 	}
 	if value := options["view"]; value != nil {
 		props["initialView"] = value

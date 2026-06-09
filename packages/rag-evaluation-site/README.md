@@ -21,7 +21,7 @@ When adding a component that should later be available from the Widget IR/Goja D
 
 `WidgetRenderer` supports both the original dashboard vocabulary and the newer semantic context-viewer vocabulary:
 
-- foundation/atoms/layout nodes such as `Text`, `CodeText`, `ContextKindSwatch`, `SectionBlock`, `SplitPane`, `SlideShell`, and `SidebarShell`;
+- foundation/atoms/layout nodes such as `Text`, `CodeText`, `ContextStyleSwatch`, `SectionBlock`, `SplitPane`, `SlideShell`, and `SidebarShell`;
 - context diagram nodes such as `ContextBudgetBar`, `ContextStripDiagram`, `ContextTreemap`, and `ContextDiagramPanel`;
 - transcript/comment nodes such as `TranscriptWorkspacePanel`, `AnnotationRailPanel`, and `AnchoredCommentRail`;
 - course/handout nodes such as `CourseStudioShell`, `CourseSlidePanel`, `MarkdownArticle`, and `HandoutDocumentShell`.

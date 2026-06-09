@@ -61,7 +61,7 @@ Use these roles instead of local typography whenever possible.
 
 Atoms own small controls and semantic markers. They may use foundation typography and theme tokens, but they should not own page layout.
 
-Examples: `Button`, `TextInput`, `SelectInput`, `CheckboxRow`, `IconButton`, `ContextKindSwatch`, `AnnotationBadge`.
+Examples: `Button`, `TextInput`, `SelectInput`, `CheckboxRow`, `IconButton`, `ContextStyleSwatch`, `AnnotationBadge`.
 
 ### Layout
 

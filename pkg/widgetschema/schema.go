@@ -8,7 +8,7 @@ var ComponentTypes = []string{
 	"Button",
 	"Caption",
 	"CodeText",
-	"ContextKindSwatch",
+	"ContextStyleSwatch",
 	"ContextStudioNavIcon",
 	"AnnotationBadge",
 	"ContextLegend",

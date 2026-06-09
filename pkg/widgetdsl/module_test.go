@@ -3,6 +3,7 @@ package widgetdsl
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/dop251/goja"
@@ -29,6 +30,10 @@ func TestSplitModulesExportExpectedHelpersAndOmitCrossDomainHelpers(t *testing.T
 			dataCellField: typeof data.cell.field,
 			dataPage: typeof data.page,
 			contextDiagramPanel: typeof contextWindow.contextDiagramPanel,
+			contextStyleSwatch: typeof contextWindow.contextStyleSwatch,
+			contextVisualStyle: typeof contextWindow.visualStyle,
+			contextStyleSet: typeof contextWindow.styleSet,
+			contextPart: typeof contextWindow.contextPart,
 			contextStudioNavIconFromContext: typeof contextWindow.contextStudioNavIcon,
 			courseStudioNavIcon: typeof course.contextStudioNavIcon,
 			courseStudioShell: typeof course.courseStudioShell,
@@ -38,7 +43,7 @@ func TestSplitModulesExportExpectedHelpersAndOmitCrossDomainHelpers(t *testing.T
 		t.Fatalf("require split modules: %v", err)
 	}
 	got := value.Export().(map[string]any)
-	wantFunctions := []string{"uiPage", "uiPanel", "dataTable", "dataCellField", "contextDiagramPanel", "courseStudioNavIcon", "courseStudioShell"}
+	wantFunctions := []string{"uiPage", "uiPanel", "dataTable", "dataCellField", "contextDiagramPanel", "contextStyleSwatch", "contextVisualStyle", "contextStyleSet", "contextPart", "courseStudioNavIcon", "courseStudioShell"}
 	for _, name := range wantFunctions {
 		if got[name] != "function" {
 			t.Fatalf("%s export = %#v, want function (all: %#v)", name, got[name], got)
@@ -84,7 +89,8 @@ func TestBuildsWidgetIRAcrossSplitModules(t *testing.T) {
 		const data = require("data.dsl");
 		const contextWindow = require("context_window.dsl");
 		const course = require("course.dsl");
-		const snapshot = { id: "ctx", title: "Window", limit: 1000, parts: [{ id: "p", label: "Prompt", kind: "conversation", tokens: 300 }] };
+		const styleSet = contextWindow.styleSet({ legend: [contextWindow.legendItem("prompt", "Prompt")], styles: { prompt: contextWindow.visualStyle({ pattern: "checker", fill: "#dde6f2", line: "#4f74a8" }) } });
+		const snapshot = { id: "ctx", title: "Window", limit: 1000, parts: [contextWindow.contextPart("p", "Prompt", "prompt", 300)] };
 		const slide = { id: "s1", number: "01", title: "Window", view: "budget", snapshotId: "ctx", notes: ["Budget"] };
 		const page = ui.page({
 			id: "split",
@@ -98,7 +104,7 @@ func TestBuildsWidgetIRAcrossSplitModules(t *testing.T) {
 						{ id: "status", header: "Status", cell: data.cell.status("status", { icon: true }) }
 					]
 				})),
-				contextWindow.contextDiagramPanel({ snapshot, initialView: "budget" }),
+				contextWindow.contextDiagramPanel({ snapshot, styleSet, initialView: "budget" }),
 				course.courseStudioShell({
 					sections: [{ id: "course", label: "Course", items: [{ id: "slides", label: "Slides", icon: course.contextStudioNavIcon({ id: "slides" }) }] }],
 					activeItemId: "slides",
@@ -135,7 +141,8 @@ func TestSplitModuleRecipesAreJSONSerializable(t *testing.T) {
 		const contextWindow = require("context_window.dsl");
 		const course = require("course.dsl");
 		const rows = [{ id: 1, name: "Alpha", status: "running" }];
-		const snapshot = { id: "ctx", title: "Window", limit: 1000, parts: [{ id: "p", label: "Prompt", kind: "conversation", tokens: 300 }] };
+		const styleSet = contextWindow.styleSet({ legend: [contextWindow.legendItem("prompt", "Prompt")], styles: { prompt: contextWindow.visualStyle({ pattern: "checker", fill: "#dde6f2", line: "#4f74a8" }) } });
+		const snapshot = { id: "ctx", title: "Window", limit: 1000, parts: [contextWindow.contextPart("p", "Prompt", "prompt", 300)] };
 		const transcript = { title: "Session", messages: [{ id: "m1", role: "user", text: "hello" }], annotations: [] };
 		const slide = { id: "s1", number: "01", title: "Window", view: "budget", snapshotId: "ctx", notes: ["Budget"] };
 		const bundle = { intro: "Docs", docs: [{ id: "d1", title: "Guide", file: "guide.md", format: "markdown", description: "Guide", body: "# Guide" }] };
@@ -149,7 +156,7 @@ func TestSplitModuleRecipesAreJSONSerializable(t *testing.T) {
 				selectedKey: 1,
 				detail: row => ui.panel({ title: "Selected" }, row.name)
 			}),
-			contextWindow.recipes.contextDiagram({ snapshot, view: "budget" }),
+			contextWindow.recipes.contextDiagram({ snapshot, styleSet, view: "budget" }),
 			contextWindow.recipes.annotatedTranscript({ transcript, onAnnotationSelect: contextWindow.action.server("select-annotation") }),
 			course.recipes.courseStudio({ sections, activeItemId: "slides", main: course.recipes.courseSlide({ slide, snapshot, index: 0, total: 1 }) }),
 			course.recipes.handout({ bundle, selectedDocumentId: "d1", onSelect: course.action.server("select-doc") })
@@ -171,6 +178,70 @@ func TestSplitModuleRecipesAreJSONSerializable(t *testing.T) {
 	assertString(t, children[2].(map[string]any), "type", "DashboardGrid")
 	assertString(t, children[3].(map[string]any), "type", "ContextDiagramPanel")
 	assertString(t, children[5].(map[string]any), "type", "CourseStudioShell")
+}
+
+func TestContextWindowStyleSetHelpersBuildExpectedShape(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const contextWindow = require("context_window.dsl");
+		const styleSet = contextWindow.paletteStyleSet({
+			palette: "Signal Orange / Cyan",
+			entries: [
+				{ id: "prompt", label: "Prompt", accent: "b", pattern: "checker" },
+				{ id: "evidence", label: "Evidence", accent: "a", pattern: "stipple" },
+				{ id: "answer", label: "Answer", accent: "a", pattern: "solid" },
+			]
+		});
+		const snapshot = contextWindow.contextSnapshot({
+			id: "ctx",
+			title: "Window",
+			limit: 1000,
+			parts: [contextWindow.contextPart("p", "Prompt", "prompt", 300)]
+		});
+		JSON.stringify({ styleSet, snapshot });
+	`)
+	if err != nil {
+		t.Fatalf("build style helpers: %v", err)
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal([]byte(value.String()), &decoded); err != nil {
+		t.Fatalf("style helper output is not JSON: %v", err)
+	}
+	styleSet := decoded["styleSet"].(map[string]any)
+	styles := styleSet["styles"].(map[string]any)
+	if _, ok := styles["prompt"].(map[string]any); !ok {
+		t.Fatalf("styleSet.styles.prompt missing: %#v", styleSet)
+	}
+	snapshot := decoded["snapshot"].(map[string]any)
+	parts := snapshot["parts"].([]any)
+	part := parts[0].(map[string]any)
+	assertString(t, part, "styleKey", "prompt")
+	if _, hasKind := part["kind"]; hasKind {
+		t.Fatalf("contextPart emitted forbidden kind field: %#v", part)
+	}
+}
+
+func TestContextDiagramRecipeRequiresStyleSet(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	_, err := vm.RunString(`
+		const contextWindow = require("context_window.dsl");
+		const snapshot = { id: "ctx", title: "Window", limit: 1000, parts: [] };
+		contextWindow.recipes.contextDiagram({ snapshot, view: "budget" });
+	`)
+	if err == nil {
+		t.Fatalf("contextDiagram recipe without styleSet should fail")
+	}
+	if !strings.Contains(err.Error(), "requires styleSet") {
+		t.Fatalf("error = %v, want useful styleSet message", err)
+	}
 }
 
 func TestEngineRegistrarRegistersSplitModulesOnly(t *testing.T) {

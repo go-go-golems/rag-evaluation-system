@@ -110,15 +110,23 @@ const ui = require("ui.dsl")
 const contextWindow = require("context_window.dsl")
 const course = require("course.dsl")
 
-const snapshot = {
+const styleSet = contextWindow.paletteStyleSet({
+  palette: "Dusty Magenta / Blue",
+  entries: [
+    { id: "system", label: "System", accent: "b", pattern: "checker" },
+    { id: "retrieval", label: "Retrieved docs", accent: "a", pattern: "stipple" }
+  ]
+})
+
+const snapshot = contextWindow.contextSnapshot({
   id: "ctx",
   title: "Context Window",
   limit: 16000,
   parts: [
-    { id: "system", label: "System", kind: "system", tokens: 600 },
-    { id: "retrieval", label: "Retrieved docs", kind: "retrieval", tokens: 7000 }
+    contextWindow.contextPart("system", "System", "system", 600),
+    contextWindow.contextPart("retrieval", "Retrieved docs", "retrieval", 7000)
   ]
-}
+})
 
 const slide = {
   id: "budget",
@@ -133,7 +141,7 @@ return ui.page({
   id: "semantic",
   title: "Semantic context page",
   sections: [
-    contextWindow.recipes.contextDiagram({ snapshot, view: "budget" }),
+    contextWindow.recipes.contextDiagram({ snapshot, styleSet, view: "budget" }),
     course.recipes.courseStudio({
       sections: [{ id: "course", label: "Course", items: [{ id: "slides", label: "Slides" }] }],
       activeItemId: "slides",

@@ -306,3 +306,81 @@ This is the foundation needed before Widget IR and Goja DSL can be updated. The 
 
 - Validation run: `pnpm typecheck` in `packages/rag-evaluation-site`.
 - Final result: typecheck passed after story/component fixes.
+
+## Step 5: Widget IR and Goja DSL StyleSet Cutover
+
+This implementation slice carried the hard-cutover contract through Widget IR stories, the Go widget DSL module, the xgoja provider documentation, and schema metadata. The JavaScript-facing `context_window.dsl` module now has helpers for building visual styles, legend items, style sets, context parts, snapshots, and palette-derived style sets.
+
+### Prompt Context
+
+**User prompt (verbatim):** "create it, then continue working"
+
+**Assistant interpretation:** Create the Goja DSL design note, update tasks, then continue implementing the cutover through the DSL layer.
+
+**Inferred user intent:** The user wants the DSL implementation to follow a documented contract and keep progressing beyond frontend-only changes.
+
+**Commit (code):** pending — Widget IR and Goja DSL cutover
+
+### What I did
+
+- Created `design-doc/03-goja-dsl-styleset-cutover.md` defining the Goja DSL contract.
+- Updated `tasks.md` with a Goja DSL hard-cutover checklist and marked completed frontend/DSL tasks.
+- Updated `WidgetRenderer.context-diagrams.stories.tsx` so all context diagram IR examples include `styleSet` and use `styleKey` parts.
+- Updated `WidgetRenderer.foundation-atoms.stories.tsx`, `WidgetRenderer.layout-recipes.stories.tsx`, and `WidgetRenderer.course-handout.stories.tsx` to use `ContextStyleSwatch` and `AnnotationBadge.visualStyle`.
+- Removed `ContextKindSwatch` from the Go widget schema component list and replaced it with `ContextStyleSwatch`.
+- Updated `pkg/widgetdsl/module.go`:
+  - removed `contextKindSwatch`,
+  - added `contextStyleSwatch`,
+  - added `visualStyle`, `legendItem`, `styleSet`, `contextPart`, `contextSnapshot`, and `paletteStyleSet`,
+  - updated `recipes.contextDiagram` to require `styleSet` or `palette + entries`.
+- Updated `pkg/widgetdsl/module_test.go` for style-set helpers, JSON shape, and missing-styleSet errors.
+- Updated xgoja provider docs to show `styleKey` + `styleSet` instead of `kind`.
+
+### Why
+
+The React hard cutover is only useful if server/Goja-generated IR can express the same contract. The DSL must make the correct API easy and must fail when callers omit required styling information.
+
+### What worked
+
+- The DSL's generic component factory already copies props through, so most component helper behavior needed no special-case code.
+- Adding focused JSON-constructor helpers in `context_window.dsl` kept the Go implementation compact.
+- The forbidden API search found only documentation references after the code cutover, which were straightforward to update.
+
+### What didn't work
+
+- The existing `recipes.contextDiagram` silently constructed a panel without style information. That had to become a deliberate error to enforce the new contract.
+
+### What I learned
+
+- The Goja DSL layer is mostly a JSON builder; this style-set cutover fits its existing helper pattern well.
+- Tests at the DSL level are valuable because they assert the emitted JSON shape, not just React type correctness.
+
+### What was tricky to build
+
+- Ensuring the Go DSL can construct useful palette-derived style sets without pulling in a heavy color library. I used CSS `color-mix(...)` strings, which are JSON-compatible and resolved by the browser.
+- Keeping the missing-styleSet behavior strict while still allowing a convenience path via `palette + entries`.
+
+### What warrants a second pair of eyes
+
+- Whether `paletteStyleSet` should support all 16 imported JSON palettes or only the four preferred palettes for now.
+- Whether `contextSnapshot` should validate that every part styleKey exists in the styleSet. Currently that validation is left to React/style resolution and recipe requirements.
+
+### What should be done in the future
+
+- Add a full app/package build after committing this slice.
+- Audit `ClubMedMeetup/` and any backend API examples for runtime pages that still emit old context diagram props.
+
+### Code review instructions
+
+- Review `pkg/widgetdsl/module.go` helper exports and `contextDiagramRecipe` first.
+- Then review `pkg/widgetdsl/module_test.go` to understand the expected JS-facing API.
+- Validate with `go test ./pkg/widgetdsl ./pkg/widgetschema ./internal/widgetmanifest -count=1`, `pnpm --dir packages/rag-evaluation-site typecheck`, and `pnpm --dir packages/rag-evaluation-site build-storybook`.
+
+### Technical details
+
+Validation passed:
+
+- `pnpm typecheck` in `packages/rag-evaluation-site`
+- `go test ./pkg/widgetdsl ./pkg/widgetschema ./internal/widgetmanifest -count=1`
+- `pnpm build-storybook` in `packages/rag-evaluation-site`
+- forbidden API search for `ContextKindSwatch`, `ContextPartKind`, `legendKinds`, `legendMode`, `.kind_`, and context-diagram `kind:` data
