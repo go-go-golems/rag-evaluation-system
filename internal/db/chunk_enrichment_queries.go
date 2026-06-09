@@ -52,6 +52,7 @@ func (q *Queries) ListChunksForDocuments(strategyID string, documentIDs []string
 	if len(documentIDs) == 0 {
 		return nil, nil
 	}
+	// #nosec G202 -- placeholder count is derived from documentIDs length; IDs are bound in args below.
 	query := `
 		SELECT id, document_id, strategy_id, chunk_index, text, token_count,
 		       COALESCE(start_offset, 0), COALESCE(end_offset, 0), created_at
