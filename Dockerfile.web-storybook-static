@@ -1,0 +1,30 @@
+# syntax=docker/dockerfile:1
+
+FROM alpine:3.20
+
+LABEL org.opencontainers.image.title="rag-evaluation-page-storybook"
+LABEL org.opencontainers.image.description="Static Storybook artifact for the RAG Evaluation web app pages"
+LABEL org.opencontainers.image.source="https://github.com/go-go-golems/rag-evaluation-system"
+
+WORKDIR /
+COPY web/storybook-static/ /site/
+
+# Storybook emits relative asset URLs (for example ./sb-manager/runtime.js).
+# The static-sites host intentionally serves index.html as an SPA fallback for
+# unknown paths, so an accidental entry URL such as /%60/ makes those relative
+# imports resolve under /%60/ and the browser receives text/html for JS modules.
+# Root-absolute asset URLs keep the static bundle robust for deep links and
+# malformed-but-recoverable entry paths. The manager itself still uses the
+# current browser path to construct preview iframe and index URLs, so normalize
+# the known accidental backtick segment before Storybook runtime starts.
+RUN for file in /site/index.html /site/iframe.html; do \
+      sed -i \
+        -e 's#href="\./#href="/#g' \
+        -e 's#src="\./#src="/#g' \
+        -e "s#import '\./#import '/#g" \
+        -e "s#url('\./#url('/#g" \
+        "$file"; \
+    done \
+  && sed -i '/<head>/a\    <script>\n      (() => {\n        const path = window.location.pathname;\n        if (path === "/%60" || path.startsWith("/%60/") || path === "/`" || path.startsWith("/`/")) {\n          const rest = path.replace(/^\\\/(?:%60|`)/, "") || "/";\n          window.location.replace(rest + window.location.search + window.location.hash);\n        }\n      })();\n    </script>' /site/index.html \
+  && find /site -type f | sort > /site-manifest.txt \
+  && test -f /site/index.html

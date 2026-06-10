@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
 import { Panel, ScrollRegion } from '@go-go-golems/rag-evaluation-site';
 import { DashboardGrid } from '@go-go-golems/rag-evaluation-site';
-import { TranscriptReaderPanel, AnnotationRailPanel, type TranscriptFixture, contextTranscriptFixture } from '@go-go-golems/rag-evaluation-site';
+import { TranscriptReaderPanel, AnnotationRailPanel, type TranscriptFixture, transcriptFixture } from '@go-go-golems/rag-evaluation-site';
 import styles from './TranscriptAnnotationPage.module.css';
 
-const FIXTURE: TranscriptFixture = contextTranscriptFixture;
+const FIXTURE: TranscriptFixture = transcriptFixture;
 
 export function TranscriptAnnotationPage() {
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | undefined>(undefined);
@@ -17,9 +17,12 @@ export function TranscriptAnnotationPage() {
     <DashboardGrid recipe="twoColumn" className={styles.root} data-rag-page="TranscriptAnnotationPage">
       <ScrollRegion>
         <TranscriptReaderPanel
-          transcript={FIXTURE}
+          title={FIXTURE.title}
+          subtitle={FIXTURE.subtitle}
+          messages={FIXTURE.messages}
+          annotations={FIXTURE.annotations}
           selectedAnnotationId={selectedAnnotationId}
-          onSelectAnnotation={handleSelectAnnotation}
+          onAnnotationSelect={handleSelectAnnotation}
         />
       </ScrollRegion>
       <Panel className={styles.rail} title="Annotations" density="condensed">
@@ -27,7 +30,7 @@ export function TranscriptAnnotationPage() {
           <AnnotationRailPanel
             annotations={FIXTURE.annotations}
             selectedAnnotationId={selectedAnnotationId}
-            onSelectAnnotation={handleSelectAnnotation}
+            onAnnotationSelect={handleSelectAnnotation}
           />
         </ScrollRegion>
       </Panel>

@@ -2,7 +2,7 @@ import { ErrorCallout } from '@go-go-golems/rag-evaluation-site';
 import { Caption } from '@go-go-golems/rag-evaluation-site';
 import { Panel } from '@go-go-golems/rag-evaluation-site';
 import { useGetDslPageQuery } from '../../../services/api';
-import { WidgetRenderer } from '@go-go-golems/rag-evaluation-site';
+import { WidgetRenderer, defaultWidgetRegistry } from '@go-go-golems/rag-evaluation-site';
 import styles from './DslPreviewPage.module.css';
 
 export interface DslPreviewPageProps {
@@ -26,7 +26,7 @@ export function DslPreviewPage({ pageId = 'demo' }: DslPreviewPageProps) {
 
   return (
     <div className={styles.root} data-rag-page="DslPreviewPage">
-      <WidgetRenderer node={data.root} />
+      <WidgetRenderer node={data.root} registry={defaultWidgetRegistry} />
     </div>
   );
 }

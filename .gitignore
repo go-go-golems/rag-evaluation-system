@@ -16,6 +16,7 @@ state/
 # Web build artifacts
 web/dist/
 web/node_modules/
+web/storybook-static/
 packages/rag-evaluation-site/storybook-static/
 /node_modules/
 
