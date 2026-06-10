@@ -9,7 +9,7 @@ require (
 	github.com/dop251/goja_nodejs v0.0.0-20260212111938-1f56ff5bcf14
 	github.com/go-go-golems/geppetto v0.13.3
 	github.com/go-go-golems/glazed v1.3.6
-	github.com/go-go-golems/go-go-goja v0.8.4
+	github.com/go-go-golems/go-go-goja v0.8.8
 	github.com/go-go-golems/logcopter v0.1.0
 	github.com/go-go-golems/scraper v0.0.3
 	github.com/mattn/go-sqlite3 v1.14.44
