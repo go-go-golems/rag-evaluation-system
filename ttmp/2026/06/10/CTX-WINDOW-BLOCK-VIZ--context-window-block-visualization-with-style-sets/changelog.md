@@ -184,3 +184,14 @@ Updated the design guide with the post-validation ContextGroupedStripDiagram, Co
 
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/ttmp/2026/06/10/CTX-WINDOW-BLOCK-VIZ--context-window-block-visualization-with-style-sets/design-doc/01-design-and-implementation-guide.md — Post-validation component and hover-detail documentation
 
+
+## 2026-06-10
+
+Step 15: added arrow-key navigation for selectable context diagram blocks across strip, grouped strip, stack, budget, and treemap (commit 81b13a7)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextStackDiagram/ContextStackDiagram.tsx — Vertical arrow navigation
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextStripDiagram/ContextStripDiagram.tsx — Horizontal arrow navigation
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/contextKeyboardNavigation.ts — Shared context block keyboard navigation helper
+

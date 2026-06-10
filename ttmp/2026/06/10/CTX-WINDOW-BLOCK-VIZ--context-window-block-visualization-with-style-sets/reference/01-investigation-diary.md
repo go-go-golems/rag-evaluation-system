@@ -42,7 +42,7 @@ RelatedFiles:
       Note: Primary planning deliverable written in this step
 ExternalSources: []
 Summary: Chronological diary for the context-window block visualization planning ticket.
-LastUpdated: 2026-06-10T17:18:00-04:00
+LastUpdated: 2026-06-10T18:08:00-04:00
 WhatFor: Use to resume or review the planning work for uploaded-session context-window block visualization.
 WhenToUse: Read before implementing the normalizer, Widget IR integration, turn pager, or grouped strip design.
 ---
@@ -1630,4 +1630,104 @@ Hover details now render as an in-component panel:
 
 ```text
 strip/groups -> caption -> tooltipPanel
+```
+
+## Step 15: Add Arrow-Key Navigation for Selectable Context Blocks
+
+This step added keyboard navigation for context diagrams when their blocks are selectable. The intent is that keyboard users can move the selected block without clicking every segment, using arrow directions that match each diagram's visual orientation.
+
+The implementation uses one shared helper so strip, grouped strip, stack, budget, and treemap keep consistent Enter/Space/Home/End behavior while still choosing orientation-specific arrow keys.
+
+### Prompt Context
+
+**User prompt (verbatim):** "when a block is selectable, like in the stacck or other panels, add support for arrow navigation (vertical for the stack, horizontal for the strip) to move from one block to the next.
+
+Keep a diary, continue committing atappropriately"
+
+**Assistant interpretation:** Add arrow-key selection movement to interactive context diagram blocks, use vertical arrows for stack diagrams and horizontal arrows for strip-like diagrams, validate, commit focused code, and record the work in the diary.
+
+**Inferred user intent:** The user wants better keyboard accessibility and more natural block-to-block review navigation in context-window panels.
+
+**Commit (code):** 81b13a7 — "Context diagrams: add arrow-key block navigation"
+
+### What I did
+
+- Added shared helper `components/molecules/contextKeyboardNavigation.ts`.
+- Wired horizontal navigation into:
+  - `ContextStripDiagram`
+  - `ContextGroupedStripDiagram`
+  - `ContextBudgetBar`
+- Wired vertical navigation into:
+  - `ContextStackDiagram`
+- Wired both-axis previous/next navigation into:
+  - `ContextTreemap`
+- Preserved existing Enter/Space activation behavior.
+- Added Home/End support to jump to first/last selectable block.
+
+### Why
+
+- Selectable context blocks already expose `role="button"` and `tabIndex`; arrow navigation makes the interaction faster and more accessible.
+- Directional arrows should match visual layout: horizontal strips move left/right; vertical stacks move up/down.
+
+### What worked
+
+- Typecheck passed:
+
+```bash
+pnpm --dir packages/rag-evaluation-site typecheck
+```
+
+- Storybook build passed:
+
+```bash
+pnpm --dir packages/rag-evaluation-site build-storybook
+```
+
+- Browser keyboard smoke via Storybook iframe passed:
+  - Stack view: click first selectable stack block, press `ArrowDown`, selected part changed to `user-turn`.
+  - Strip view: click first selectable strip block, press `ArrowRight`, selected part changed to `user-turn`.
+
+### What didn't work
+
+- N/A
+
+### What I learned
+
+- The context diagram panel already centralizes selected-part state, so individual diagram molecules only need to call `onPartSelect(nextPartId)`.
+- A shared helper avoids subtle divergence between Enter/Space, arrow, Home, and End handling across diagram types.
+
+### What was tricky to build
+
+- The key order differs by renderer: stack uses filtered visible parts, budget/treemap filter headroom, grouped strip uses flattened grouped order. Each component passes its own ordered part IDs into the shared helper.
+- Treemap does not have a single obvious axis, so it maps both horizontal and vertical arrow pairs to previous/next.
+
+### What warrants a second pair of eyes
+
+- Confirm whether treemap should eventually use spatial navigation instead of linear previous/next navigation.
+- Confirm whether focus should also move to the newly selected block, or whether moving selection while focus stays on the active control is acceptable for now.
+
+### What should be done in the future
+
+- Add explicit keyboard interaction tests if the package gains component testing infrastructure.
+- Consider roving `tabIndex` if we want focus to follow selected block state.
+
+### Code review instructions
+
+- Start with `contextKeyboardNavigation.ts`.
+- Then review each component's `orderedPartIds` construction and orientation:
+  - strip/grouped/budget: horizontal,
+  - stack: vertical,
+  - treemap: both.
+- Validate with Storybook `ContextDiagramPanelContentDetails` by clicking a block and pressing arrow keys.
+
+### Technical details
+
+Supported keys for selectable context blocks:
+
+```text
+Enter / Space: select current block
+ArrowLeft / ArrowRight: previous/next for horizontal diagrams
+ArrowUp / ArrowDown: previous/next for vertical diagrams
+ArrowLeft/Right and ArrowUp/Down: previous/next for treemap
+Home / End: first/last block
 ```
