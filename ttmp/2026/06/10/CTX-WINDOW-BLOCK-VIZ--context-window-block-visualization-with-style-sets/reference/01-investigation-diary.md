@@ -42,7 +42,7 @@ RelatedFiles:
       Note: Primary planning deliverable written in this step
 ExternalSources: []
 Summary: Chronological diary for the context-window block visualization planning ticket.
-LastUpdated: 2026-06-10T16:31:00-04:00
+LastUpdated: 2026-06-10T16:45:00-04:00
 WhatFor: Use to resume or review the planning work for uploaded-session context-window block visualization.
 WhenToUse: Read before implementing the normalizer, Widget IR integration, turn pager, or grouped strip design.
 ---
@@ -1242,4 +1242,106 @@ Kept annotation categories:
 ```text
 model change
 explicit compaction/context summary
+```
+
+## Step 11: Add Turn Pager and Grouped Strip Diagram
+
+This step added two reusable context-window UI surfaces requested during review: a grouped strip diagram for visually separating parts by turn/style/source, and a turn pager panel for stepping through multiple context-window snapshots. It also replaced the native browser tooltip delay on strip segments with a fast CSS tooltip.
+
+The implementation is available both as direct React components and as Widget IR registry entries so Storybook, JSON-driven pages, and future DSL helpers can render the same surfaces.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Add ContetxTurnPagerPanel and ContextGroupedStripDiagram. is it possible to have he tooltip appear faster?"
+
+**Assistant interpretation:** Add `ContextTurnPagerPanel` and `ContextGroupedStripDiagram` components, wire them into Widget IR/Storybook, and make context strip tooltips appear faster than native browser `title` tooltips.
+
+**Inferred user intent:** The user wants richer navigation and grouped context-window visualization, plus more responsive hover inspection during visual review.
+
+**Commit (code):** 982904b — "Context diagrams: add turn pager and grouped strip"
+
+### What I did
+
+- Added `ContextGroupedStripDiagram` under `packages/rag-evaluation-site/src/components/molecules/ContextGroupedStripDiagram/`.
+- Added `ContextTurnPagerPanel` under `packages/rag-evaluation-site/src/components/organisms/ContextTurnPagerPanel/`.
+- Exported both components from the molecule/organism barrels.
+- Added Widget IR prop types and registered both widgets in `defaultRegistry`.
+- Added Widget IR stories:
+  - `ContextGroupedStripByTurn`
+  - `ContextTurnPagerPanel`
+- Replaced native `title` tooltip usage in `ContextStripDiagram` with a CSS tooltip using a short 70ms hover/focus delay.
+
+### Why
+
+- The grouped strip makes uploaded-session context blocks easier to scan by turn without losing per-part style semantics.
+- The turn pager provides a compact review workflow for stepping across selected context snapshots.
+- Native browser tooltips are intentionally slow and not styleable; CSS tooltips provide much faster feedback.
+
+### What worked
+
+- Typecheck passed:
+
+```bash
+pnpm --dir packages/rag-evaluation-site typecheck
+```
+
+- Storybook build passed:
+
+```bash
+pnpm --dir packages/rag-evaluation-site build-storybook
+```
+
+### What didn't work
+
+- Initial typecheck caught two wiring issues:
+  - new widget adapters were missing the required `module: 'context_window.dsl'` metadata,
+  - `ContextTurnPagerPanel` used an unsupported `Inline align` prop.
+- Both were fixed before committing.
+
+### What I learned
+
+- Existing widget adapters require module metadata even for React-only additions because the registry exposes them through module-aware Widget IR plumbing.
+- For fast tooltips, replacing `title` is necessary; browsers do not expose a reliable native title delay control.
+
+### What was tricky to build
+
+- The grouped strip needs to keep global proportions while still rendering nested group-local part proportions. The implementation gives each group a width based on total window tokens, then each part a width inside its group based on group tokens.
+- Tooltip positioning needs overflow to remain visible, so the strip and segment CSS changed from clipped overflow to visible overflow.
+
+### What warrants a second pair of eyes
+
+- Confirm `groupBy: 'turn'` should remain the default rather than `styleKey` for general use.
+- Confirm whether `ContextDiagramPanel` should get a `grouped-strip` view option later, or whether the separate component/pager is enough.
+
+### What should be done in the future
+
+- Add DSL helper functions for these two widgets if authored DSL pages need concise constructors.
+- Consider adding visual regression captures for the two new stories.
+
+### Code review instructions
+
+- Start with:
+  - `ContextGroupedStripDiagram.tsx`
+  - `ContextTurnPagerPanel.tsx`
+  - `WidgetRenderer.context-diagrams.stories.tsx`
+- Validate with:
+
+```bash
+pnpm --dir packages/rag-evaluation-site typecheck
+pnpm --dir packages/rag-evaluation-site build-storybook
+```
+
+### Technical details
+
+New Widget IR types:
+
+```text
+ContextGroupedStripDiagram
+ContextTurnPagerPanel
+```
+
+Tooltip behavior:
+
+```text
+native title tooltip -> CSS data-tooltip with ~70ms hover/focus delay
 ```

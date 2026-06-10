@@ -134,3 +134,14 @@ Step 10: removed noisy derived annotations, preserving only model-change and exp
 
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/ClubMedMeetup/minitrace-viz/lib/course-session-data.js — Derived annotation filtering and context-note cleanup
 
+
+## 2026-06-10
+
+Step 11: added ContextGroupedStripDiagram, ContextTurnPagerPanel, Widget IR stories, and fast CSS strip tooltips (commit 982904b)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextGroupedStripDiagram/ContextGroupedStripDiagram.tsx — Grouped strip visualization
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextStripDiagram/ContextStripDiagram.module.css — Fast CSS tooltip behavior
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/ContextTurnPagerPanel/ContextTurnPagerPanel.tsx — Turn pager panel
+
