@@ -1,0 +1,32 @@
+[
+  {
+    "bounds": {
+      "height": 214.1875,
+      "width": 1408,
+      "x": 16,
+      "y": 16
+    },
+    "error": "",
+    "exists": true,
+    "name": "story-root",
+    "selector": "#storybook-root",
+    "source": "visual-smoke",
+    "textStart": "Widget IR three-label contextstripbudgettreemapEvidenceFreeWidget IR three-label context · 32,000 token windowPrompt scaffoldingRetrieved evidenceAnswer draftEv",
+    "visible": true
+  },
+  {
+    "bounds": {
+      "height": 214.1875,
+      "width": 1408,
+      "x": 16,
+      "y": 16
+    },
+    "error": "",
+    "exists": true,
+    "name": "context-panel",
+    "selector": "[data-rag-organism=\"ContextDiagramPanel\"]",
+    "source": "visual-smoke",
+    "textStart": "Widget IR three-label contextstripbudgettreemapEvidenceFreeWidget IR three-label context · 32,000 token windowPrompt scaffoldingRetrieved evidenceAnswer draftEv",
+    "visible": true
+  }
+]

@@ -1,0 +1,7 @@
+# css-visual-diff Inspect Index
+
+| Name | Source | Selector | Screenshot | HTML | CSS JSON | CSS Markdown | Inspect JSON |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| story-root |  | `#storybook-root` | story-root/screenshot.png | story-root/prepared.html | story-root/computed-css.json | story-root/computed-css.md | story-root/inspect.json |
+| course-shell |  | `[data-rag-organism="CourseStudioShell"]` | course-shell/screenshot.png | course-shell/prepared.html | course-shell/computed-css.json | course-shell/computed-css.md | course-shell/inspect.json |
+| handout-shell |  | `[data-rag-organism="HandoutDocumentShell"]` | handout-shell/screenshot.png | handout-shell/prepared.html | handout-shell/computed-css.json | handout-shell/computed-css.md | handout-shell/inspect.json |

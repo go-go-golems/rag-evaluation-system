@@ -1,0 +1,6 @@
+# css-visual-diff Inspect Index
+
+| Name | Source | Selector | Screenshot | HTML | CSS JSON | CSS Markdown | Inspect JSON |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| course-shell |  | `[data-rag-organism="CourseStudioShell"]` | course-shell/screenshot.png | course-shell/prepared.html | course-shell/computed-css.json | course-shell/computed-css.md | course-shell/inspect.json |
+| upload-drop |  | `[data-rag-organism="ContextUploadDropArea"]` | upload-drop/screenshot.png | upload-drop/prepared.html | upload-drop/computed-css.json | upload-drop/computed-css.md | upload-drop/inspect.json |

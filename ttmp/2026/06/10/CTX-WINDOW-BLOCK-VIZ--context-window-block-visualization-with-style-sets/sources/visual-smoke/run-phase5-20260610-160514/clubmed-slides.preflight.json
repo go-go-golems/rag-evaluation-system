@@ -1,0 +1,32 @@
+[
+  {
+    "bounds": {
+      "height": 1100,
+      "width": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "error": "",
+    "exists": true,
+    "name": "course-shell",
+    "selector": "[data-rag-organism=\"CourseStudioShell\"]",
+    "source": "visual-smoke",
+    "textStart": "Context Window EngineeringClub Med meetup · Widget IR rendered course studioPresentCourseSlidesAnalyzeUpload your sessionVisualize sessionReviewTranscriptTake-h",
+    "visible": true
+  },
+  {
+    "bounds": {
+      "height": 377.921875,
+      "width": 1200,
+      "x": 214,
+      "y": 26
+    },
+    "error": "",
+    "exists": true,
+    "name": "slide-panel",
+    "selector": "[data-rag-organism=\"CourseSlidePanel\"]",
+    "source": "visual-smoke",
+    "textStart": "MODULE 0101 / 02The context window is a fixed budgetTurn 14 — fixed budget95,200 tok / 200,000 tok · 48%system + policy7,200 tokproject context4,100 tokconversa",
+    "visible": true
+  }
+]

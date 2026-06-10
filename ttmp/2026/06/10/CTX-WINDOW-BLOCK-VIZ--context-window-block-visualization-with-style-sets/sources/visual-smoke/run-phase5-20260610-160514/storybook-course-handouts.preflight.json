@@ -1,0 +1,47 @@
+[
+  {
+    "bounds": {
+      "height": 1836.09375,
+      "width": 1408,
+      "x": 16,
+      "y": 16
+    },
+    "error": "",
+    "exists": true,
+    "name": "story-root",
+    "selector": "#storybook-root",
+    "source": "visual-smoke",
+    "textStart": "Course registry coverageCourse and handout widgets render through course.dsl adapters.CourseThe window as a budget20 minAnatomy of a call25 minGrowth \u0026 truncati",
+    "visible": true
+  },
+  {
+    "bounds": {
+      "height": 1836.09375,
+      "width": 1408,
+      "x": 16,
+      "y": 16
+    },
+    "error": "",
+    "exists": true,
+    "name": "course-shell",
+    "selector": "[data-rag-organism=\"CourseStudioShell\"]",
+    "source": "visual-smoke",
+    "textStart": "Course registry coverageCourse and handout widgets render through course.dsl adapters.CourseThe window as a budget20 minAnatomy of a call25 minGrowth \u0026 truncati",
+    "visible": true
+  },
+  {
+    "bounds": {
+      "height": 1193.390625,
+      "width": 615.875,
+      "x": 766.109375,
+      "y": 616.703125
+    },
+    "error": "",
+    "exists": true,
+    "name": "handout-shell",
+    "selector": "[data-rag-organism=\"HandoutDocumentShell\"]",
+    "source": "visual-smoke",
+    "textStart": "Take-home packetEverything from tonight, to take home. Slides, the diagram source, and a one-page field guide.¶The Context Window — Field GuideMarkdown · 11 KB▤",
+    "visible": true
+  }
+]

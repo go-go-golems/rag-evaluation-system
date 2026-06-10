@@ -1,0 +1,14 @@
+{
+  "exists": true,
+  "computed": {
+    "background-color": "rgb(246, 247, 248)",
+    "display": "grid",
+    "min-height": "1100px"
+  },
+  "bounds": {
+    "x": 0,
+    "y": 0,
+    "width": 1440,
+    "height": 1100
+  }
+}

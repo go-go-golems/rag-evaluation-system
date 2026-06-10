@@ -1,0 +1,47 @@
+[
+  {
+    "bounds": {
+      "height": 1100,
+      "width": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "error": "",
+    "exists": true,
+    "name": "app-root",
+    "selector": "[data-rag-page=\"RagEvaluationSiteApp\"]",
+    "source": "visual-smoke",
+    "textStart": "Context Window EngineeringClub Med meetup · Widget IR rendered course studioPresentCourseSlidesAnalyzeUpload your sessionVisualize sessionReviewTranscriptTake-h",
+    "visible": true
+  },
+  {
+    "bounds": {
+      "height": 1100,
+      "width": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "error": "",
+    "exists": true,
+    "name": "course-shell",
+    "selector": "[data-rag-organism=\"CourseStudioShell\"]",
+    "source": "visual-smoke",
+    "textStart": "Context Window EngineeringClub Med meetup · Widget IR rendered course studioPresentCourseSlidesAnalyzeUpload your sessionVisualize sessionReviewTranscriptTake-h",
+    "visible": true
+  },
+  {
+    "bounds": {
+      "height": 795.78125,
+      "width": 1200,
+      "x": 214,
+      "y": 26
+    },
+    "error": "",
+    "exists": true,
+    "name": "course-lesson",
+    "selector": "[data-rag-organism=\"CourseLessonPanel\"]",
+    "source": "visual-smoke",
+    "textStart": "CLUB MED MEETUP · LIVE WORKSHOPContext Window EngineeringUpload a real agent session, read the transcript, and inspect what fills the model context window.Reser",
+    "visible": true
+  }
+]

@@ -1285,3 +1285,48 @@ Only after first pass:
 - [ ] Reconsider `ContextTurnPagerPanel` only if a later ticket explicitly reopens page-through/live-session scope.
 - [ ] Consider grouped strip rendering.
 - [ ] Consider aggregation/virtualization for dense sessions.
+
+## Implementation Outcome — 2026-06-10
+
+The implementation completed the local-first path described in this guide. No upstream React design-system component changes and no Goja DSL/schema changes were required for the first working uploaded-session block visualization.
+
+Implemented in `ClubMedMeetup/minitrace-viz` commit `58ee4d3`:
+
+- The uploaded-session context legend now uses block-specific style keys: `system`, `user`, `agent`, `thinking`, `tool_call`, `tool_result`, `file_read`, `file_write`, `summary`, `tool_error`, `active`, `empty`, and `other`.
+- `buildContextWindowModel()` emits role-specific message blocks, thinking/scratchpad blocks, tool-call blocks, tool-result/tool-error blocks, and file read/write blocks.
+- File rows and operation metadata drive `file_read` versus `file_write` classification where available.
+- Successful file-heavy tool results are split so file blocks carry file-context weight and the residual tool-result block is a bounded status/result block.
+- The original upload is preserved as `original-upload.txt` beside the converted minitrace archive so the local app can fall back when normalized minitrace rows are empty.
+- The smoke fixture now asserts that uploaded-session context output contains `user`, `agent`, `tool_call`, `tool_result`, and `file_read` style keys.
+
+Validated behavior from the sample upload:
+
+```text
+turns 6 tools 5
+messages 11
+style keys ['agent', 'empty', 'file_read', 'system', 'thinking', 'tool_call', 'tool_result', 'user']
+```
+
+Phase 3 and Phase 4 were closed as no-change decisions:
+
+- `@go-go-golems/rag-evaluation-site` already supports the required rendering through `ContextDiagramPanel`, `ContextWindowPart.styleKey`, `ContextStyleSet`, and Widget IR props.
+- `context_window.dsl` already supports the necessary style-set, part, snapshot, and panel helpers.
+- Future reusable enhancements such as visible grouped turn separators or a multi-snapshot pager should be handled as separate Storybook-first design-system work if users request them.
+
+Final validation included:
+
+```bash
+# ClubMed/minitrace-viz
+pnpm --dir webapp typecheck
+scripts/sync-widget-spa.sh
+GOFLAGS=-buildvcs=false make test
+
+# RAG package / Storybook / DSL
+pnpm --dir packages/rag-evaluation-site typecheck
+pnpm --dir packages/rag-evaluation-site build-storybook
+go test ./pkg/widgetdsl ./pkg/xgoja/providers/widgetsite ./pkg/widgetschema -count=1
+
+# Browser and visual smoke
+Pi Playwright over course/upload/uploaded visualize/uploaded transcript/slides/handouts and three Storybook stories
+css-visual-diff run: sources/visual-smoke/run-phase5-20260610-160514
+```

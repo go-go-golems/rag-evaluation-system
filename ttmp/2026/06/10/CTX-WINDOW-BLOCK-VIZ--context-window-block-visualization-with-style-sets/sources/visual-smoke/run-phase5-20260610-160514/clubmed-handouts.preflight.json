@@ -1,0 +1,32 @@
+[
+  {
+    "bounds": {
+      "height": 1100,
+      "width": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "error": "",
+    "exists": true,
+    "name": "course-shell",
+    "selector": "[data-rag-organism=\"CourseStudioShell\"]",
+    "source": "visual-smoke",
+    "textStart": "Context Window EngineeringClub Med meetup · Widget IR rendered course studioPresentCourseSlidesAnalyzeUpload your sessionVisualize sessionReviewTranscriptTake-h",
+    "visible": true
+  },
+  {
+    "bounds": {
+      "height": 888.59375,
+      "width": 1200,
+      "x": 214,
+      "y": 26
+    },
+    "error": "",
+    "exists": true,
+    "name": "handout-shell",
+    "selector": "[data-rag-organism=\"HandoutDocumentShell\"]",
+    "source": "visual-smoke",
+    "textStart": "Workshop handoutsTake-home references and review checklists for the Context Window Engineering workshop.¶Context Window Checklistmarkdown · 1.4 KB¶Session Revie",
+    "visible": true
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "side": "script",
+  "target_name": "storybook-transcript-notes",
+  "url": "http://127.0.0.1:6009/iframe.html?id=widget-ir-renderer-transcript-and-notes--annotated-transcript-with-notes-rail\u0026viewMode=story",
+  "viewport": {
+    "width": 1440,
+    "height": 1100
+  },
+  "name": "message-card",
+  "selector": "[data-rag-molecule=\"TranscriptMessageCard\"]",
+  "selector_source": "",
+  "format": "css-json",
+  "created_at": "2026-06-10T20:05:24.356704191Z"
+}

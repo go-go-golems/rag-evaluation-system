@@ -1,0 +1,47 @@
+[
+  {
+    "bounds": {
+      "height": 965.921875,
+      "width": 1408,
+      "x": 16,
+      "y": 16
+    },
+    "error": "",
+    "exists": true,
+    "name": "story-root",
+    "selector": "#storybook-root",
+    "source": "visual-smoke",
+    "textStart": "Session: Coding-agent transcript — parser fix8,480 tok cumulativeAnnotated transcript fixture from the context-viewer prototype. · 10 messages · 5 annotations▸U",
+    "visible": true
+  },
+  {
+    "bounds": {
+      "height": 965.921875,
+      "width": 1408,
+      "x": 16,
+      "y": 16
+    },
+    "error": "",
+    "exists": true,
+    "name": "transcript-workspace",
+    "selector": "[data-rag-organism=\"TranscriptWorkspacePanel\"]",
+    "source": "visual-smoke",
+    "textStart": "Session: Coding-agent transcript — parser fix8,480 tok cumulativeAnnotated transcript fixture from the context-viewer prototype. · 10 messages · 5 annotations▸U",
+    "visible": true
+  },
+  {
+    "bounds": {
+      "height": 62.640625,
+      "width": 520,
+      "x": 606,
+      "y": 85.5
+    },
+    "error": "",
+    "exists": true,
+    "name": "message-card",
+    "selector": "[data-rag-molecule=\"TranscriptMessageCard\"]",
+    "source": "visual-smoke",
+    "textStart": "▸USER320 tokThe test `parser.test.ts › handles nested arrays` is failing on main. Can you fix it?",
+    "visible": true
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "side": "script",
+  "target_name": "storybook-context-diagram",
+  "url": "http://127.0.0.1:6009/iframe.html?id=widget-ir-renderer-context-diagrams--custom-three-label-widget-ir\u0026viewMode=story",
+  "viewport": {
+    "width": 1440,
+    "height": 1100
+  },
+  "name": "story-root",
+  "selector": "#storybook-root",
+  "selector_source": "",
+  "format": "css-json",
+  "created_at": "2026-06-10T20:05:22.652841729Z"
+}

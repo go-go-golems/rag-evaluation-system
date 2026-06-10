@@ -1,0 +1,7 @@
+# css-visual-diff Inspect Index
+
+| Name | Source | Selector | Screenshot | HTML | CSS JSON | CSS Markdown | Inspect JSON |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| app-root |  | `[data-rag-page="RagEvaluationSiteApp"]` | app-root/screenshot.png | app-root/prepared.html | app-root/computed-css.json | app-root/computed-css.md | app-root/inspect.json |
+| course-shell |  | `[data-rag-organism="CourseStudioShell"]` | course-shell/screenshot.png | course-shell/prepared.html | course-shell/computed-css.json | course-shell/computed-css.md | course-shell/inspect.json |
+| course-lesson |  | `[data-rag-organism="CourseLessonPanel"]` | course-lesson/screenshot.png | course-lesson/prepared.html | course-lesson/computed-css.json | course-lesson/computed-css.md | course-lesson/inspect.json |

@@ -1,0 +1,7 @@
+# css-visual-diff Inspect Index
+
+| Name | Source | Selector | Screenshot | HTML | CSS JSON | CSS Markdown | Inspect JSON |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| story-root |  | `#storybook-root` | story-root/screenshot.png | story-root/prepared.html | story-root/computed-css.json | story-root/computed-css.md | story-root/inspect.json |
+| transcript-workspace |  | `[data-rag-organism="TranscriptWorkspacePanel"]` | transcript-workspace/screenshot.png | transcript-workspace/prepared.html | transcript-workspace/computed-css.json | transcript-workspace/computed-css.md | transcript-workspace/inspect.json |
+| message-card |  | `[data-rag-molecule="TranscriptMessageCard"]` | message-card/screenshot.png | message-card/prepared.html | message-card/computed-css.json | message-card/computed-css.md | message-card/inspect.json |

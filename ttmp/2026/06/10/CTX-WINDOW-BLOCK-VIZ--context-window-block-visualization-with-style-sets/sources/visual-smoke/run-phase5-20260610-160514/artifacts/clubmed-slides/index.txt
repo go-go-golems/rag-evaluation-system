@@ -1,0 +1,6 @@
+# css-visual-diff Inspect Index
+
+| Name | Source | Selector | Screenshot | HTML | CSS JSON | CSS Markdown | Inspect JSON |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| course-shell |  | `[data-rag-organism="CourseStudioShell"]` | course-shell/screenshot.png | course-shell/prepared.html | course-shell/computed-css.json | course-shell/computed-css.md | course-shell/inspect.json |
+| slide-panel |  | `[data-rag-organism="CourseSlidePanel"]` | slide-panel/screenshot.png | slide-panel/prepared.html | slide-panel/computed-css.json | slide-panel/computed-css.md | slide-panel/inspect.json |

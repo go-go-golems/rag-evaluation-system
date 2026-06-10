@@ -1,0 +1,37 @@
+[
+  {
+    "name": "ClubMed course landing",
+    "slug": "clubmed-course",
+    "url": "http://127.0.0.1:18789/pages/course"
+  },
+  {
+    "name": "ClubMed upload workflow",
+    "slug": "clubmed-upload",
+    "url": "http://127.0.0.1:18789/pages/upload"
+  },
+  {
+    "name": "ClubMed restored slides page",
+    "slug": "clubmed-slides",
+    "url": "http://127.0.0.1:18789/pages/slides"
+  },
+  {
+    "name": "ClubMed restored handouts page",
+    "slug": "clubmed-handouts",
+    "url": "http://127.0.0.1:18789/pages/handouts"
+  },
+  {
+    "name": "Storybook context diagram custom legend",
+    "slug": "storybook-context-diagram",
+    "url": "http://127.0.0.1:6009/iframe.html?id=widget-ir-renderer-context-diagrams--custom-three-label-widget-ir\u0026viewMode=story"
+  },
+  {
+    "name": "Storybook transcript with notes rail",
+    "slug": "storybook-transcript-notes",
+    "url": "http://127.0.0.1:6009/iframe.html?id=widget-ir-renderer-transcript-and-notes--annotated-transcript-with-notes-rail\u0026viewMode=story"
+  },
+  {
+    "name": "Storybook course and handout registry surface",
+    "slug": "storybook-course-handouts",
+    "url": "http://127.0.0.1:6009/iframe.html?id=widget-ir-renderer-domain-registry-coverage--course-handout-registry-surface\u0026viewMode=story"
+  }
+]

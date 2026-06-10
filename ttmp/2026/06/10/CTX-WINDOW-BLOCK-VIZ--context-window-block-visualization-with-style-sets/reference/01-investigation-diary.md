@@ -42,7 +42,7 @@ RelatedFiles:
       Note: Primary planning deliverable written in this step
 ExternalSources: []
 Summary: Chronological diary for the context-window block visualization planning ticket.
-LastUpdated: 2026-06-10T16:08:00-04:00
+LastUpdated: 2026-06-10T16:12:00-04:00
 WhatFor: Use to resume or review the planning work for uploaded-session context-window block visualization.
 WhenToUse: Read before implementing the normalizer, Widget IR integration, turn pager, or grouped strip design.
 ---
@@ -997,4 +997,143 @@ Decision summary:
 Phase 3 upstream design-system changes: not required for current implementation.
 Phase 4 Goja DSL/schema changes: not required for current implementation.
 Reason: existing Widget IR + ContextStyleSet + context_window.dsl APIs express all Phase 2 output.
+```
+
+## Step 9: Run Final Validation and Close the Ticket Phases
+
+This step completed Phase 5 validation and delivery documentation. It validated the local ClubMed implementation, upstream package/Storybook surfaces, Goja DSL/schema packages, live browser rendering, and css-visual-diff visual evidence.
+
+The final validation included the uploaded sample session itself, not just static pages. The uploaded visualize page rendered `ContextDiagramPanel`, the uploaded transcript page rendered `TranscriptWorkspacePanel`, and API inspection confirmed the new block style keys are present.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 8)
+
+**Assistant interpretation:** Keep recording progress and finish the remaining validation/delivery phase with committed documentation.
+
+**Inferred user intent:** The user wants the work finished and reviewable when they return, with concrete validation evidence and no hidden uncommitted changes.
+
+**Commit (code):** N/A — final validation/docs only in this step.
+
+### What I did
+
+- Started fresh local servers for final browser/visual validation:
+  - ClubMed minitrace-viz on `127.0.0.1:18789`.
+  - Static Storybook on `127.0.0.1:6009`.
+- Uploaded `test-fixtures/sample-pi-session.jsonl` through the real `/upload` endpoint.
+- Verified `/api/sessions/:id/context-window-data` includes required style keys:
+  - `user`, `agent`, `tool_call`, `tool_result`, `file_read`.
+- Ran Pi Playwright browser smoke across:
+  - course landing,
+  - upload page,
+  - uploaded session visualize page,
+  - uploaded session transcript page,
+  - slides page,
+  - handouts page,
+  - context diagram Storybook story,
+  - transcript/notes Storybook story,
+  - course/handout Storybook story.
+- Ran css-visual-diff final smoke capture:
+  - `sources/visual-smoke/run-phase5-20260610-160514`.
+- Updated the design guide with an implementation outcome section.
+- Ran `docmgr doctor --ticket CTX-WINDOW-BLOCK-VIZ --stale-after 30`.
+
+### Why
+
+- Phase 5 requires final validation across changed areas and ticket documentation.
+- The previous visual-smoke script covered course/upload/slides/handouts and Storybook; final Playwright also needed to cover the uploaded-session visualize/transcript routes created by Phase 2.
+- Updating the design guide makes it clear which planned phases became code and which became explicit no-change decisions.
+
+### What worked
+
+- Fresh API inspection succeeded:
+
+```text
+uploaded session sess-mq8hylh0-pczjol
+style keys ['agent', 'empty', 'file_read', 'system', 'thinking', 'tool_call', 'tool_result', 'user']
+```
+
+- Pi Playwright rendered all nine targets and wrote screenshots under:
+
+```text
+/home/manuel/workspaces/2026-06-07/club-meetup-site/.playwright-mcp/*-phase5-2026-06-10.png
+```
+
+- The only Playwright console error was Storybook `favicon.ico` returning 404, which is static-server noise and not a story/runtime failure.
+- css-visual-diff succeeded and produced overlay/CSS evidence under:
+
+```text
+ttmp/2026/06/10/CTX-WINDOW-BLOCK-VIZ--context-window-block-visualization-with-style-sets/sources/visual-smoke/run-phase5-20260610-160514
+```
+
+### What didn't work
+
+- The first Phase 5 API inspection accidentally hit a stale server already bound to port `18788`. That stale server returned old `kind`-based parts, causing the style-key assertion to fail:
+
+```text
+style keys ['']
+missing keys: {'file_read', 'user', 'agent', 'tool_result', 'tool_call'}
+```
+
+- The server log revealed the fresh process had failed to bind:
+
+```text
+listen on 127.0.0.1:18788: listen tcp 127.0.0.1:18788: bind: address already in use
+```
+
+- Fix: killed the stale listener and restarted validation on fresh ports `18789` and `6009`.
+- An initial Playwright script attempted to use `require('fs')` inside the browser tool context and failed:
+
+```text
+ReferenceError: require is not defined
+```
+
+- Fix: read the session id separately and passed it as a string literal into the Playwright script.
+
+### What I learned
+
+- Fresh-port validation is safer than assuming a previous smoke server is gone.
+- Final validation should include API data-shape checks as well as visual rendering checks, because a stale server can render a page but expose outdated `kind`-based data.
+- Playwright browser-tool scripts run in a context where Node `require` is not available; pass fixture values explicitly.
+
+### What was tricky to build
+
+- The trickiest final-validation issue was stale server detection. The first server startup command did not fail the surrounding readiness check because an old process was already serving the health endpoint. I diagnosed this by inspecting the returned JSON and server log, then changed to fresh ports.
+- The second tricky issue was distinguishing real browser console errors from static Storybook favicon noise. Inspecting `.playwright-mcp/console-2026-06-10T20-04-25-196Z.log` confirmed the only error was `/favicon.ico`.
+
+### What warrants a second pair of eyes
+
+- Review the final visual evidence screenshots and overlays for readability of small file/tool blocks.
+- Review whether the `original-upload.txt` fallback should be documented as temporary until go-minitrace adapter coverage improves.
+- Review whether untracked `ClubMedMeetup/ttmp/2026/06/10/MINIVIZ-010...` belongs to another active workstream; I intentionally did not stage or modify it.
+
+### What should be done in the future
+
+- Add a file-write fixture so `file_write` is smoke-tested directly.
+- Add a dedicated visual-smoke target for uploaded visualize/transcript pages if repeated evidence captures should include dynamic uploaded sessions.
+- Consider adding Makefile support for `GOFLAGS=-buildvcs=false` if generated xgoja local builds keep requiring it.
+
+### Code review instructions
+
+- Review commits in order:
+  - ClubMed `58ee4d3` for local implementation.
+  - RAG `b8f270a`, `32159d0`, and the final Phase 5 docs commit for ticket updates.
+- Validate with the commands listed in the design guide's implementation outcome section.
+- Inspect final css-visual-diff summary:
+  - `ttmp/2026/06/10/CTX-WINDOW-BLOCK-VIZ--context-window-block-visualization-with-style-sets/sources/visual-smoke/run-phase5-20260610-160514/01-visual-smoke-summary.md`.
+
+### Technical details
+
+Final Playwright targets:
+
+```text
+http://127.0.0.1:18789/pages/course
+http://127.0.0.1:18789/pages/upload
+http://127.0.0.1:18789/pages/session-visualize--sess-mq8hylh0-pczjol
+http://127.0.0.1:18789/pages/session-transcript--sess-mq8hylh0-pczjol
+http://127.0.0.1:18789/pages/slides
+http://127.0.0.1:18789/pages/handouts
+http://127.0.0.1:6009/iframe.html?id=widget-ir-renderer-context-diagrams--custom-three-label-widget-ir&viewMode=story
+http://127.0.0.1:6009/iframe.html?id=widget-ir-renderer-transcript-and-notes--annotated-transcript-with-notes-rail&viewMode=story
+http://127.0.0.1:6009/iframe.html?id=widget-ir-renderer-domain-registry-coverage--course-handout-registry-surface&viewMode=story
 ```

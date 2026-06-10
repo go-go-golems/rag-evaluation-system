@@ -1,0 +1,65 @@
+{
+  "output_dir": "ttmp/2026/06/10/CTX-WINDOW-BLOCK-VIZ--context-window-block-visualization-with-style-sets/sources/visual-smoke/run-phase5-20260610-160514/artifacts/clubmed-slides",
+  "results": [
+    {
+      "metadata": {
+        "side": "script",
+        "target_name": "clubmed-slides",
+        "url": "http://127.0.0.1:18789/pages/slides",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "name": "course-shell",
+        "selector": "[data-rag-organism=\"CourseStudioShell\"]",
+        "selector_source": "",
+        "format": "css-json",
+        "created_at": "2026-06-10T20:05:19.321945021Z"
+      },
+      "style": {
+        "exists": true,
+        "computed": {
+          "background-color": "rgb(246, 247, 248)",
+          "display": "grid",
+          "min-height": "1100px"
+        },
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1100
+        }
+      }
+    },
+    {
+      "metadata": {
+        "side": "script",
+        "target_name": "clubmed-slides",
+        "url": "http://127.0.0.1:18789/pages/slides",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "name": "slide-panel",
+        "selector": "[data-rag-organism=\"CourseSlidePanel\"]",
+        "selector_source": "",
+        "format": "css-json",
+        "created_at": "2026-06-10T20:05:19.322577739Z"
+      },
+      "style": {
+        "exists": true,
+        "computed": {
+          "background-color": "rgb(255, 255, 255)",
+          "color": "rgb(29, 35, 42)",
+          "display": "flex"
+        },
+        "bounds": {
+          "x": 214,
+          "y": 26,
+          "width": 1200,
+          "height": 377.921875
+        }
+      }
+    }
+  ]
+}

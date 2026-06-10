@@ -1,0 +1,14 @@
+{
+  "side": "script",
+  "target_name": "storybook-course-handouts",
+  "url": "http://127.0.0.1:6009/iframe.html?id=widget-ir-renderer-domain-registry-coverage--course-handout-registry-surface\u0026viewMode=story",
+  "viewport": {
+    "width": 1440,
+    "height": 1100
+  },
+  "name": "course-shell",
+  "selector": "[data-rag-organism=\"CourseStudioShell\"]",
+  "selector_source": "",
+  "format": "css-json",
+  "created_at": "2026-06-10T20:05:26.111248849Z"
+}

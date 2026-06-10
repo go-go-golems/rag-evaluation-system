@@ -35,10 +35,10 @@
 ## Phase 4 — Goja DSL/schema support
 
 - [x] 4.1 Identify whether the current `context_window.dsl` helpers can express all minitrace-derived widget IR without changes.
-- [ ] 4.2 Add only necessary DSL/schema helpers for repeated minitrace mapping patterns; avoid duplicating app-specific logic in the DSL.
-- [ ] 4.3 Update TypeScript descriptors, provider docs, schema tests, and Go tests as needed.
-- [ ] 4.4 Validate Go packages with focused `go test` commands and frontend typecheck/storybook if contracts changed.
-- [ ] 4.5 Commit DSL/schema changes and diary updates.
+- [x] 4.2 Add only necessary DSL/schema helpers for repeated minitrace mapping patterns; avoid duplicating app-specific logic in the DSL.
+- [x] 4.3 Update TypeScript descriptors, provider docs, schema tests, and Go tests as needed.
+- [x] 4.4 Validate Go packages with focused `go test` commands and frontend typecheck/storybook if contracts changed.
+- [x] 4.5 Commit DSL/schema changes and diary updates.
 
 ## Phase 5 — Final validation and delivery
 

@@ -1,0 +1,66 @@
+{
+  "output_dir": "ttmp/2026/06/10/CTX-WINDOW-BLOCK-VIZ--context-window-block-visualization-with-style-sets/sources/visual-smoke/run-phase5-20260610-160514/artifacts/clubmed-upload",
+  "results": [
+    {
+      "metadata": {
+        "side": "script",
+        "target_name": "clubmed-upload",
+        "url": "http://127.0.0.1:18789/pages/upload",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "name": "course-shell",
+        "selector": "[data-rag-organism=\"CourseStudioShell\"]",
+        "selector_source": "",
+        "format": "css-json",
+        "created_at": "2026-06-10T20:05:17.669312261Z"
+      },
+      "style": {
+        "exists": true,
+        "computed": {
+          "background-color": "rgb(246, 247, 248)",
+          "display": "grid",
+          "min-height": "1100px"
+        },
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1100
+        }
+      }
+    },
+    {
+      "metadata": {
+        "side": "script",
+        "target_name": "clubmed-upload",
+        "url": "http://127.0.0.1:18789/pages/upload",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "name": "upload-drop",
+        "selector": "[data-rag-organism=\"ContextUploadDropArea\"]",
+        "selector_source": "",
+        "format": "css-json",
+        "created_at": "2026-06-10T20:05:17.670175517Z"
+      },
+      "style": {
+        "exists": true,
+        "computed": {
+          "background-color": "rgb(255, 255, 255)",
+          "border": "1px dashed rgb(104, 114, 125)",
+          "border-radius": "5px",
+          "padding": "32px 18px"
+        },
+        "bounds": {
+          "x": 214,
+          "y": 96.4375,
+          "width": 1200,
+          "height": 174
+        }
+      }
+    }
+  ]
+}

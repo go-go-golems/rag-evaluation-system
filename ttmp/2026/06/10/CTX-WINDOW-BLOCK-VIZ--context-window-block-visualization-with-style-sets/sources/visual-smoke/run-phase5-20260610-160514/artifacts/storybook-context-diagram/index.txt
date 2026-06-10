@@ -1,0 +1,6 @@
+# css-visual-diff Inspect Index
+
+| Name | Source | Selector | Screenshot | HTML | CSS JSON | CSS Markdown | Inspect JSON |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| story-root |  | `#storybook-root` | story-root/screenshot.png | story-root/prepared.html | story-root/computed-css.json | story-root/computed-css.md | story-root/inspect.json |
+| context-panel |  | `[data-rag-organism="ContextDiagramPanel"]` | context-panel/screenshot.png | context-panel/prepared.html | context-panel/computed-css.json | context-panel/computed-css.md | context-panel/inspect.json |
