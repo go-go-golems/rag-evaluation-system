@@ -14,18 +14,15 @@ const slide = contextSlides[0]!;
 const selectedDoc = contextHandoutFixture.docs[0]!;
 
 const irCourseStudioNavSections = [
-  { id: 'present', label: 'Present', items: [{ id: 'course', label: 'Course', icon: component('ContextStudioNavIcon', { id: 'course' }) }, { id: 'slides', label: 'Slides', icon: component('ContextStudioNavIcon', { id: 'slides' }) }] },
-  { id: 'analyze', label: 'Analyze', items: [{ id: 'visualize', label: 'Visualize', icon: component('ContextStudioNavIcon', { id: 'visualize' }) }, { id: 'upload', label: 'Upload', icon: component('ContextStudioNavIcon', { id: 'upload' }) }] },
-  { id: 'review', label: 'Review', items: [{ id: 'transcript', label: 'Transcript', icon: component('ContextStudioNavIcon', { id: 'transcript' }) }, { id: 'comments', label: 'Comments', icon: component('ContextStudioNavIcon', { id: 'comments' }) }] },
-  { id: 'take-home', label: 'Take-home', items: [{ id: 'handout', label: 'Handout', icon: component('ContextStudioNavIcon', { id: 'handout' }) }] },
+  { id: 'session', label: 'Session', items: [{ id: 'upload', label: 'Upload', icon: component('ContextStudioNavIcon', { id: 'upload' }) }, { id: 'visualize', label: 'Visualize', icon: component('ContextStudioNavIcon', { id: 'visualize' }) }, { id: 'transcript', label: 'Transcript', icon: component('ContextStudioNavIcon', { id: 'transcript' }) }] },
 ];
 
-function studio(main: WidgetNode, activeItemId = 'slides'): WidgetNode {
+function studio(main: WidgetNode, activeItemId = 'visualize'): WidgetNode {
   return component('CourseStudioShell', {
     sections: irCourseStudioNavSections,
     activeItemId,
-    title: 'Context Window Engineering',
-    subtitle: 'Widget IR rendered course studio',
+    title: 'Session workspace',
+    subtitle: 'Upload · visualize · transcript',
     sidebarFooter: component('Caption', { tone: 'muted' }, [text('IR story · no backend')]),
     onNavigateAction: { kind: 'event', event: 'widget-ir:navigate' },
   }, [main]);
@@ -41,7 +38,7 @@ function courseSlideWithContextVisualNode(styleSet: ContextStyleSet): WidgetNode
     visualSide: 'right',
     onPreviousAction: { kind: 'event', event: 'widget-ir:slide-prev' },
     onNextAction: { kind: 'event', event: 'widget-ir:slide-next' },
-  }), 'slides');
+  }), 'visualize');
 }
 
 export const PaletteControls: StoryObj<PaletteControlsArgs> = {
@@ -65,7 +62,7 @@ export const CourseLessonLanding: Story = {
       course: contextCourseFixture,
       activeAgendaItemId: contextCourseFixture.agenda[1]?.id,
       onAgendaItemSelectAction: { kind: 'event', event: 'widget-ir:agenda-select' },
-    }), 'course'),
+    }), 'visualize'),
   },
 };
 
