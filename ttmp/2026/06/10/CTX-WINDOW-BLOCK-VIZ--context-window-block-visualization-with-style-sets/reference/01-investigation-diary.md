@@ -42,7 +42,7 @@ RelatedFiles:
       Note: Primary planning deliverable written in this step
 ExternalSources: []
 Summary: Chronological diary for the context-window block visualization planning ticket.
-LastUpdated: 2026-06-10T16:45:00-04:00
+LastUpdated: 2026-06-10T16:52:00-04:00
 WhatFor: Use to resume or review the planning work for uploaded-session context-window block visualization.
 WhenToUse: Read before implementing the normalizer, Widget IR integration, turn pager, or grouped strip design.
 ---
@@ -1344,4 +1344,84 @@ Tooltip behavior:
 
 ```text
 native title tooltip -> CSS data-tooltip with ~70ms hover/focus delay
+```
+
+## Step 12: Make Turn Pager Swap the Visible Context Window
+
+This step corrected the turn pager semantics after review. The pager should not behave like a selection-only control over a full-session strip; each turn should show a context-window view scoped to that turn’s blocks.
+
+The updated default mode is `turn-only`: the panel derives the active turn from snapshot metadata, keeps only matching turn blocks, optionally retains global/system blocks, and recomputes the headroom block against the window limit.
+
+### Prompt Context
+
+**User prompt (verbatim):** "can the turn pager panel only move the selection? because I think we should switch out the entire contextwindow view to contain only that turns blocks."
+
+**Assistant interpretation:** Change `ContextTurnPagerPanel` so moving between turns swaps the visible context-window contents rather than only changing which part is selected.
+
+**Inferred user intent:** The user wants each turn page to be visually focused and comparable, without unrelated turns remaining in the diagram.
+
+**Commit (code):** 59dd5e9 — "Context turn pager: show turn-only snapshots"
+
+### What I did
+
+- Added `mode?: 'turn-only' | 'snapshot'` to `ContextTurnPagerPanel` and Widget IR props.
+- Made `turn-only` the default mode.
+- Added filtering that keeps:
+  - parts whose `metadata.turnIndex` / `metadata.turn` / `sourceId` matches the active snapshot turn,
+  - optional global/system parts,
+  - a recomputed headroom/empty part.
+- Updated the Storybook turn pager story to explicitly use `mode: 'turn-only'`.
+
+### Why
+
+- Selection-only paging is misleading: the viewer still sees unrelated turns and has to infer which blocks matter.
+- Turn-only paging makes each page a focused context-window slice.
+
+### What worked
+
+- Typecheck passed:
+
+```bash
+pnpm --dir packages/rag-evaluation-site typecheck
+```
+
+- Storybook build passed:
+
+```bash
+pnpm --dir packages/rag-evaluation-site build-storybook
+```
+
+### What didn't work
+
+- N/A
+
+### What I learned
+
+- The pager needs two useful semantics: `turn-only` for review focus and `snapshot` for callers that already provide fully materialized per-turn windows. The implementation now supports both.
+
+### What was tricky to build
+
+- Headroom has to be recomputed after filtering, otherwise the strip would still reflect the token budget from the full-session snapshot rather than the turn-specific slice.
+- Turn identity can come from multiple sources (`metadata.turnIndex`, `metadata.turn`, or `sourceId`), so the filter normalizes those forms.
+
+### What warrants a second pair of eyes
+
+- Confirm whether retaining global/system blocks by default is desirable, or whether strict turn-only should hide them too.
+
+### What should be done in the future
+
+- Wire the ClubMed uploaded-session context endpoint to emit explicit per-turn snapshots if the app adopts this panel directly.
+
+### Code review instructions
+
+- Review `turnOnlySnapshot()` in `ContextTurnPagerPanel.tsx`.
+- Check the Storybook story `ContextTurnPagerPanel` and verify Prev/Next changes the visible blocks, not just selection.
+
+### Technical details
+
+Default behavior:
+
+```text
+mode = 'turn-only'
+includeGlobalParts = true
 ```

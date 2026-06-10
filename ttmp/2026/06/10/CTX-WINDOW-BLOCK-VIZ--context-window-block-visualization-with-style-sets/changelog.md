@@ -145,3 +145,12 @@ Step 11: added ContextGroupedStripDiagram, ContextTurnPagerPanel, Widget IR stor
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextStripDiagram/ContextStripDiagram.module.css — Fast CSS tooltip behavior
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/ContextTurnPagerPanel/ContextTurnPagerPanel.tsx — Turn pager panel
 
+
+## 2026-06-10
+
+Step 12: changed ContextTurnPagerPanel to default to turn-only context-window slices instead of selection-only paging (commit 59dd5e9)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/ContextTurnPagerPanel/ContextTurnPagerPanel.tsx — Turn-only snapshot filtering and headroom recomputation
+
