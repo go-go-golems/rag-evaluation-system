@@ -56,3 +56,13 @@ Fixed web Storybook MIME errors on /%60/ paths by publishing sha-e78da8f with ro
 - /tmp/rag-web-storybook-source/Dockerfile.web-storybook-static — Rewrites generated Storybook asset URLs to host-root absolute paths
 - /tmp/storybook-wildcard-k3s/gitops/kustomize/rag-evaluation-page-storybook/publish-job.yaml — Publishes fixed sha-e78da8f image
 
+
+## 2026-06-09
+
+Fixed remaining backtick-path preview issue by publishing sha-eb4b80c, which redirects /%60?path=... to /?path=... before Storybook manager starts.
+
+### Related Files
+
+- /tmp/rag-web-storybook-source/Dockerfile.web-storybook-static — Injects early Storybook entry path normalization
+- /tmp/storybook-wildcard-k3s/gitops/kustomize/rag-evaluation-page-storybook/publish-job.yaml — Publishes fixed sha-eb4b80c image
+

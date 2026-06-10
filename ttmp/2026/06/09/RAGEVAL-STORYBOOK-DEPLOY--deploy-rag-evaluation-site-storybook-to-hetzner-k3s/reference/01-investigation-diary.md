@@ -16,7 +16,7 @@ RelatedFiles:
       Note: Primary design guide produced in this investigation
 ExternalSources: []
 Summary: Chronological diary for the rag-evaluation-site Storybook deployment design work.
-LastUpdated: 2026-06-10T00:08:30-04:00
+LastUpdated: 2026-06-10T00:17:30-04:00
 WhatFor: Use this to understand how the deployment guide was researched, what evidence was inspected, and what remains to implement.
 WhenToUse: Before continuing implementation of the Storybook deployment ticket.
 ---
@@ -874,3 +874,88 @@ Loading module from “https://rag-evaluation-page.storybook.yolo.scapegoat.dev/
 - Fixed image: `ghcr.io/go-go-golems/rag-evaluation-page-storybook:sha-e78da8f`
 - K3s Argo revision: `6ec7bbaea63f1d8119fb7dc7e30b5ebb372b4741`
 - Fixed Job: `static-sites/publish-rag-evaluation-page-storybook-sha-e78da8f`
+
+
+## Step 11: Normalize backtick-prefixed entry paths before Storybook manager starts
+
+The first asset-URL fix stopped the browser from loading manager JavaScript from `/%60/sb-manager/...`, but it did not fix Storybook's own preview URL construction. When opened at `/%60?path=...`, the manager still used the current pathname and requested ``/`/iframe.html`` and ``/`/index.json``, which returned the manager fallback instead of the preview data.
+
+I added an earlier guard in the packaged `index.html`: if the browser enters through `/%60...` or a literal backtick path, it redirects to the same query/hash at `/` before Storybook manager runtime starts. The deployed image is now `ghcr.io/go-go-golems/rag-evaluation-page-storybook:sha-eb4b80c`, and the exact user-reported URL redirects to the clean root URL while preserving the requested story.
+
+### Prompt Context
+
+**User prompt (verbatim):** "ceived preloadStories but was unable to determine the source of the event 4 globals-runtime.js:5814:58
+Navigated to https://rag-evaluation-page.storybook.yolo.scapegoat.dev/%60?path=/story/component-library-corpus-documentbrowser--loading
+GET
+https://rag-evaluation-page.storybook.yolo.scapegoat.dev/`?path=/story/component-library-corpus-documentbrowser--loading
+[HTTP/2 200  366ms]
+...
+I still don't see the story though"
+
+**Assistant interpretation:** The previous fix resolved module MIME errors but not actual story rendering; investigate why Storybook still loads preview resources under the stray backtick path and deploy a fix.
+
+**Inferred user intent:** Make the exact shared URL render the requested story visibly, not merely load the manager shell without module errors.
+
+**Commit (code):** `4d9ff169177011feba7eb6f3e793a1621a3eddd6` — PR #8 squash merge, "Normalize malformed web Storybook entry paths".
+
+### What I did
+- Identified that the manager was still constructing preview resources under the bad path:
+  - ``/`/iframe.html?id=...``
+  - ``/`/index.json``
+- Updated `/tmp/rag-web-storybook-source/Dockerfile.web-storybook-static` to inject an early `index.html` script that redirects:
+  - `/%60?path=...` -> `/?path=...`
+  - ``/`?path=...`` -> `/?path=...`
+  - with query string and hash preserved.
+- Built and pushed:
+  - `ghcr.io/go-go-golems/rag-evaluation-page-storybook:sha-eb4b80c`
+- Merged source PR #8:
+  - `https://github.com/go-go-golems/rag-evaluation-system/pull/8`
+- Merged K3s PR #113:
+  - `https://github.com/wesen/2026-03-27--hetzner-k3s/pull/113`
+- Refreshed Argo and observed the new publisher Job complete:
+  - `publish-rag-evaluation-page-storybook-sha-eb4b80c`
+- Verified the exact URL in Playwright:
+  - input: `https://rag-evaluation-page.storybook.yolo.scapegoat.dev/%60?path=/story/component-library-corpus-documentbrowser--loading`
+  - final URL: `https://rag-evaluation-page.storybook.yolo.scapegoat.dev/?path=/story/component-library-corpus-documentbrowser--loading`
+  - page title: `Component Library / Corpus / DocumentBrowser - Loading ⋅ Storybook`
+  - iframe URL: `https://rag-evaluation-page.storybook.yolo.scapegoat.dev/iframe.html?id=component-library-corpus-documentbrowser--loading&viewMode=story`
+  - iframe body text included: `TTC GUIDES — DOCUMENTS`, `0 DOCS`, `Loading...`
+
+### Why
+- Storybook manager derives iframe and index URLs from the current page path. Root-absolute asset URLs fix JavaScript imports, but they do not change Storybook's notion of its base path.
+- Normalizing the entry URL before Storybook runtime starts prevents both manager-module and preview-iframe path poisoning.
+
+### What worked
+- Source PR #8 passed CI checks.
+- K3s rollout completed at revision `a41be908ff98d4e8c22bcc3f03b6c4dfa17809f9`.
+- Playwright confirmed the requested story now visibly renders inside the preview iframe.
+
+### What didn't work
+- Fixing only asset URLs was incomplete because Storybook's runtime also constructs data/preview URLs from `window.location.pathname`.
+
+### What I learned
+- For Storybook static hosting, two path classes matter:
+  - static asset URLs (`sb-manager`, `assets`, fonts), and
+  - Storybook runtime base URLs (`iframe.html`, `index.json`).
+- A malformed entry path must be normalized before the manager runtime starts, otherwise the manager can load but the preview still fails.
+
+### What was tricky to build
+- The console errors changed from hard module failures to softer Storybook manager warnings, which made the page look closer to working while the preview iframe was still pointed at the wrong path.
+
+### What warrants a second pair of eyes
+- Review whether this redirect should be implemented at Caddy level for all static Storybook hosts instead of per-artifact.
+- Review if other malformed prefixes besides backtick should be normalized.
+
+### What should be done in the future
+- Add a smoke test that opens `/%60?path=/story/...` and asserts the iframe URL starts at `/iframe.html` and contains story body text.
+
+### Code review instructions
+- Review PR #8 for the source artifact normalization script.
+- Review PR #113 for the K3s release token update to `sha-eb4b80c`.
+- Validate with Playwright or browser devtools on the exact reported URL.
+
+### Technical details
+- Fixed image: `ghcr.io/go-go-golems/rag-evaluation-page-storybook:sha-eb4b80c`
+- K3s Argo revision: `a41be908ff98d4e8c22bcc3f03b6c4dfa17809f9`
+- Fixed Job: `static-sites/publish-rag-evaluation-page-storybook-sha-eb4b80c`
+- Remaining browser warning: Storybook 11 deprecation for `PopoverProvider ariaLabel`; not a rendering blocker.
