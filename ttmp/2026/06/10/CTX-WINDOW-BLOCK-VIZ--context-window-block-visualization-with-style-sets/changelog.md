@@ -175,3 +175,12 @@ Step 14: docked context hover details inside widgets, fixed grouped-by-turn aggr
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/ContextTurnPagerPanel/ContextTurnPagerPanel.tsx — Headroom metadata for turn-only slices
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/widgets/WidgetRenderer.context-diagrams.stories.tsx — Balanced grouped-by-turn story fixture
 
+
+## 2026-06-10
+
+Updated the design guide with the post-validation ContextGroupedStripDiagram, ContextTurnPagerPanel, and docked hover-detail decisions
+
+### Related Files
+
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/ttmp/2026/06/10/CTX-WINDOW-BLOCK-VIZ--context-window-block-visualization-with-style-sets/design-doc/01-design-and-implementation-guide.md — Post-validation component and hover-detail documentation
+

@@ -1330,3 +1330,116 @@ go test ./pkg/widgetdsl ./pkg/xgoja/providers/widgetsite ./pkg/widgetschema -cou
 Pi Playwright over course/upload/uploaded visualize/uploaded transcript/slides/handouts and three Storybook stories
 css-visual-diff run: sources/visual-smoke/run-phase5-20260610-160514
 ```
+
+## Post-validation addendum: grouped strip and turn pager components
+
+After the Phase 5 validation pass, the reusable design-system scope was reopened for two Storybook-first context-window components:
+
+1. `ContextGroupedStripDiagram`
+2. `ContextTurnPagerPanel`
+
+This supersedes the earlier Phase 4 no-change decision only for these explicitly requested reusable surfaces. The original local-first uploaded-session mapping decision remains unchanged.
+
+### `ContextGroupedStripDiagram`
+
+`ContextGroupedStripDiagram` is a molecule for context-window strips where visible group boundaries matter. It accepts one `ContextWindowSnapshot` and groups `ContextWindowPart` entries by one of three JSON-compatible keys:
+
+```ts
+type ContextGroupedStripGroupBy = 'turn' | 'styleKey' | 'sourceId';
+```
+
+The final grouping behavior aggregates all parts with the same group key while preserving first-seen group order. This matters because non-contiguous global/system/headroom entries should not produce duplicate `global` groups.
+
+Default use in Widget IR:
+
+```ts
+component('ContextGroupedStripDiagram', {
+  snapshot,
+  styleSet,
+  groupBy: 'turn',
+  showGroupLabels: true,
+  showPartLabels: true,
+})
+```
+
+Design-system constraints:
+
+- Use `styleKey + ContextStyleSet`; do not reintroduce `kind`/`ContextPartKind`.
+- Do not show a blue selected outline in static mode unless `showSelection` is explicitly true.
+- Use tokenized CSS module anatomy and foundation typography for hover details.
+- Keep hover details inside the widget bounds so Storybook iframes and parent panels cannot clip them.
+
+### `ContextTurnPagerPanel`
+
+`ContextTurnPagerPanel` is an organism for stepping through multiple context-window snapshots. It accepts `snapshots: ContextWindowSnapshot[]`, renders Prev/Next and per-turn buttons, and displays the active snapshot with either the grouped strip or normal strip renderer.
+
+The default behavior is **turn-only paging**, not selection-only paging:
+
+```ts
+mode = 'turn-only'
+includeGlobalParts = true
+```
+
+In `turn-only` mode, the panel derives the active turn from snapshot metadata, filters the visible context window to only that turn's blocks, optionally retains global/system blocks, and recomputes headroom/free space. This avoids a misleading full-session strip where the pager only moves the selected block.
+
+Callers that already provide fully materialized per-page snapshots can opt out:
+
+```ts
+component('ContextTurnPagerPanel', {
+  snapshots,
+  styleSet,
+  mode: 'snapshot',
+})
+```
+
+### Hover detail behavior
+
+The strip and grouped-strip components now render hover details as a docked in-widget panel instead of a floating tooltip. This was chosen because floating popups were clipped by Storybook iframe bounds and by diagram borders.
+
+The docked detail panel:
+
+- appears below the strip/group caption inside the widget root,
+- uses foundation `Text` primitives by default,
+- can be customized with `renderPartTooltip?: (part: ContextWindowPart) => ReactNode`,
+- avoids rounded popup styling,
+- renders once per hovered/focused segment.
+
+### Storybook review surfaces
+
+Use these Storybook iframe URLs for focused visual review:
+
+```text
+/iframe.html?id=widget-ir-renderer-context-diagrams--context-grouped-strip-by-turn&viewMode=story
+/iframe.html?id=widget-ir-renderer-context-diagrams--context-turn-pager-panel-story&viewMode=story
+```
+
+The grouped-by-turn story fixture was rebalanced so turn boundaries are visible in cropped widget screenshots. The expected visible groups are:
+
+```text
+global
+turn 4
+turn 5
+turn 6
+turn headroom
+```
+
+### Validation evidence
+
+Validation commands:
+
+```bash
+pnpm --dir packages/rag-evaluation-site typecheck
+pnpm --dir packages/rag-evaluation-site build-storybook
+docmgr doctor --ticket CTX-WINDOW-BLOCK-VIZ --stale-after 30
+```
+
+Cropped widget screenshots were captured with Playwright and inspected via `read()` during implementation:
+
+```text
+context-grouped-strip-widget.png
+context-turn-pager-widget.png
+context-turn-pager-hover-widget-2.png
+context-grouped-strip-hover-widget.png
+```
+
+The temporary screenshot files were removed after inspection; the diary records the observations.
