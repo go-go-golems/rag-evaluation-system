@@ -42,7 +42,7 @@ RelatedFiles:
       Note: Primary planning deliverable written in this step
 ExternalSources: []
 Summary: Chronological diary for the context-window block visualization planning ticket.
-LastUpdated: 2026-06-10T17:04:00-04:00
+LastUpdated: 2026-06-10T17:18:00-04:00
 WhatFor: Use to resume or review the planning work for uploaded-session context-window block visualization.
 WhenToUse: Read before implementing the normalizer, Widget IR integration, turn pager, or grouped strip design.
 ---
@@ -1512,4 +1512,122 @@ Tooltip extension point:
 
 ```text
 renderPartTooltip?: (part: ContextWindowPart) => ReactNode
+```
+
+## Step 14: Dock Hover Details Inside Context Widgets
+
+This step fixed visual issues found during Storybook review of the new grouped strip and turn pager components. Floating hover popups were replaced with an in-widget hover detail panel so details can no longer be clipped by the story iframe or the diagram border.
+
+I also corrected grouped-strip behavior so grouping aggregates by turn key rather than only by adjacent runs. The Storybook fixture now uses balanced turn-sized blocks, making turn boundaries visible in the cropped widget screenshot.
+
+### Prompt Context
+
+**User prompt (verbatim):** "make sure the tooltip hover doesn't render outside the div so that it stays visible (currently iti's cutoff by the border).
+
+same for the context grouped strip by turn, where the tooltip disappear against the top of the iframe.
+
+Also, I don't see any separation by turn in the storybook story. Make sure you assess by looking at a screenshot of the widget (not of the whole storybook part), using the read() tool. 
+
+There's also 2 global blocks in the context turn pager panel. with th etooltip appearing twice when hovering over one of them .
+
+Also, can"
+
+**Assistant interpretation:** Keep hover details inside the component bounds, fix iframe clipping, make grouped-by-turn separation visible, verify with cropped widget screenshots read through the tool, and remove duplicate global/headroom grouping and duplicate tooltip rendering.
+
+**Inferred user intent:** The user wants the new context widgets to be visually reliable in Storybook and reviewable from cropped widget evidence, not just code or full-page screenshots.
+
+**Commit (code):** f96daf6 — "Context diagrams: dock hover details inside widget"
+
+### What I did
+
+- Replaced floating hover tooltip positioning with a docked in-widget hover detail panel for both `ContextStripDiagram` and `ContextGroupedStripDiagram`.
+- Switched hover tracking to pointer events for reliable Storybook/Playwright behavior.
+- Changed `ContextGroupedStripDiagram` grouping from adjacent-run grouping to aggregate-by-key grouping.
+- Marked recomputed turn-pager headroom as `turnIndex: 'headroom'` / `blockType: 'headroom'` instead of carrying `global` metadata.
+- Rebalanced the `ContextGroupedStripByTurn` Storybook fixture so turn 4, turn 5, turn 6, and headroom are visually distinct.
+- Captured cropped widget-only screenshots with Playwright and inspected them via `read()`:
+  - `context-grouped-strip-widget.png`
+  - `context-turn-pager-widget.png`
+  - `context-turn-pager-hover-widget-2.png`
+  - `context-grouped-strip-hover-widget.png`
+
+### Why
+
+- Popups rendered outside a widget are vulnerable to clipping by iframe/document bounds.
+- A docked detail panel remains visible and stays within the design-system component box.
+- Grouping only adjacent runs made non-contiguous `global` parts appear as duplicate groups.
+
+### What worked
+
+- Typecheck passed:
+
+```bash
+pnpm --dir packages/rag-evaluation-site typecheck
+```
+
+- Storybook build passed:
+
+```bash
+pnpm --dir packages/rag-evaluation-site build-storybook
+```
+
+- Cropped widget screenshot inspection confirmed:
+  - grouped strip shows `global`, `turn 4`, `turn 5`, `turn 6`, and `turn headroom`,
+  - turn pager shows one system/global block and one separate headroom group,
+  - hover details render once inside the widget,
+  - hover details no longer clip against the top of the iframe.
+
+### What didn't work
+
+- The first hover screenshot still showed the placeholder detail text. Switching hover handling from mouse events to pointer events made Playwright/Storybook hover state update reliably.
+
+### What I learned
+
+- Floating tooltips are fragile in Storybook iframe contexts even when CSS overflow is adjusted.
+- For this design system, a docked hover detail panel is simpler, more stable, and easier to inspect in visual regression screenshots.
+
+### What was tricky to build
+
+- The grouped strip originally preserved input order by opening a new group whenever the key changed. That caused duplicate groups for non-contiguous keys such as `global`. The fix preserves first-seen group order while aggregating later parts with the same key.
+- Headroom needed its own grouping metadata after turn-only filtering; otherwise it inherited `global` from the source fixture and looked like a second global block.
+
+### What warrants a second pair of eyes
+
+- Confirm whether the docked detail panel should always reserve vertical space or appear conditionally. It currently reserves a stable detail area to avoid layout jumps.
+- Confirm whether `turn headroom` should be labeled simply `headroom` in grouped strip labels.
+
+### What should be done in the future
+
+- Add direct molecule/organism stories for the new components with screenshot baselines.
+- Consider extracting a shared `ContextPartHoverDetails` molecule if budget/treemap/stack need the same docked-detail behavior.
+
+### Code review instructions
+
+- Review grouping logic in `ContextGroupedStripDiagram.tsx`.
+- Review the docked detail panel in both strip CSS modules.
+- Reproduce visual checks with:
+
+```bash
+pnpm --dir packages/rag-evaluation-site storybook --port 6007
+```
+
+Then open:
+
+```text
+/iframe.html?id=widget-ir-renderer-context-diagrams--context-grouped-strip-by-turn&viewMode=story
+/iframe.html?id=widget-ir-renderer-context-diagrams--context-turn-pager-panel-story&viewMode=story
+```
+
+### Technical details
+
+Grouped strip now aggregates groups by key:
+
+```text
+Map<groupKey, Group> while preserving first-seen group order
+```
+
+Hover details now render as an in-component panel:
+
+```text
+strip/groups -> caption -> tooltipPanel
 ```

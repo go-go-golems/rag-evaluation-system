@@ -164,3 +164,14 @@ Step 13: aligned strip/grouped-strip selection and tooltips with design-system g
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextGroupedStripDiagram/ContextGroupedStripDiagram.tsx — Selection gating and renderable tooltip
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextStripDiagram/ContextStripDiagram.tsx — Selection gating and renderable tooltip
 
+
+## 2026-06-10
+
+Step 14: docked context hover details inside widgets, fixed grouped-by-turn aggregation, and verified with cropped screenshots (commit f96daf6)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/ContextGroupedStripDiagram/ContextGroupedStripDiagram.tsx — Grouped aggregation and docked hover details
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/ContextTurnPagerPanel/ContextTurnPagerPanel.tsx — Headroom metadata for turn-only slices
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/src/widgets/WidgetRenderer.context-diagrams.stories.tsx — Balanced grouped-by-turn story fixture
+
