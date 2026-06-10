@@ -9,5 +9,19 @@ LABEL org.opencontainers.image.source="https://github.com/go-go-golems/rag-evalu
 WORKDIR /
 COPY web/storybook-static/ /site/
 
-RUN find /site -type f | sort > /site-manifest.txt \
+# Storybook emits relative asset URLs (for example ./sb-manager/runtime.js).
+# The static-sites host intentionally serves index.html as an SPA fallback for
+# unknown paths, so an accidental entry URL such as /%60/ makes those relative
+# imports resolve under /%60/ and the browser receives text/html for JS modules.
+# Root-absolute asset URLs keep the static bundle robust for deep links and
+# malformed-but-recoverable entry paths.
+RUN for file in /site/index.html /site/iframe.html; do \
+      sed -i \
+        -e 's#href="\./#href="/#g' \
+        -e 's#src="\./#src="/#g' \
+        -e "s#import '\./#import '/#g" \
+        -e "s#url('\./#url('/#g" \
+        "$file"; \
+    done \
+  && find /site -type f | sort > /site-manifest.txt \
   && test -f /site/index.html
