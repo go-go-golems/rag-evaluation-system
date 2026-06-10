@@ -42,7 +42,7 @@ RelatedFiles:
       Note: Primary planning deliverable written in this step
 ExternalSources: []
 Summary: Chronological diary for the context-window block visualization planning ticket.
-LastUpdated: 2026-06-10T16:02:00-04:00
+LastUpdated: 2026-06-10T16:08:00-04:00
 WhatFor: Use to resume or review the planning work for uploaded-session context-window block visualization.
 WhenToUse: Read before implementing the normalizer, Widget IR integration, turn pager, or grouped strip design.
 ---
@@ -892,4 +892,109 @@ turn-1-thinking thinking 22 T1 thinking
 turn-1-tool-call-tc-001 tool_call 20 T1 read call
 turn-1-file-1-project-config-yaml file_read 21 T1 file read config.yaml
 turn-1-tool-result-tc-001 tool_result 20 T1 read result
+```
+
+## Step 8: Close Phase 3 and Phase 4 as No-Change Upstream/DSL Decisions
+
+This step reviewed whether the local Phase 2 implementation exposed any reusable design-system or Goja DSL gaps. It did not. The existing `ContextDiagramPanel`, context diagram molecules, `ContextStyleSet` contract, Widget IR props, and `context_window.dsl` helpers can already express the richer uploaded-session block snapshots.
+
+I therefore treated Phase 3 and Phase 4 as validation-and-decision phases rather than implementation phases. This avoids adding upstream API surface just because the ticket listed possible future phases.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue to keep a frequent diary, and commit at appropriat eintervals."
+
+**Assistant interpretation:** Continue the multi-phase implementation, keep diary entries at phase boundaries, and commit focused work instead of batching everything at the end.
+
+**Inferred user intent:** The user wants resumable, reviewable progress with clear commits and explicit reasoning for any no-op phases.
+
+**Commit (code):** N/A — no upstream package or DSL code changes were required in this step.
+
+### What I did
+
+- Re-read `packages/rag-evaluation-site/GUIDELINES.md` before making any upstream design-system decision.
+- Compared the Phase 2 local output against existing upstream contracts:
+  - `ContextWindowPart.styleKey` supports caller-defined block categories.
+  - `ContextStyleSet.legend` supports the new visible vocabulary.
+  - `ContextDiagramPanel` already renders strip/stack/budget/treemap views from token-proportional parts.
+  - `ContextDiagramPanel` detail view already shows note, preview, and metadata for file/tool blocks.
+  - Widget IR already requires `snapshot` + `styleSet` for context diagram widgets.
+  - `context_window.dsl.paletteStyleSet`, `contextPart`, `contextSnapshot`, and `contextDiagramPanel` already cover the emitted structures.
+- Ran upstream package validation:
+
+```bash
+pnpm --dir packages/rag-evaluation-site typecheck
+pnpm --dir packages/rag-evaluation-site build-storybook
+```
+
+- Ran focused DSL/schema validation:
+
+```bash
+go test ./pkg/widgetdsl ./pkg/xgoja/providers/widgetsite ./pkg/widgetschema -count=1
+```
+
+### Why
+
+- The project instruction was local-first: only change `rag-evaluation-site` or Goja DSL if the ClubMed implementation could not express the desired widgets locally.
+- Adding a new reusable component or DSL helper without a real local constraint would violate the design-system guidelines and increase API surface unnecessarily.
+- Existing Storybook coverage already demonstrates custom legends, transcript notes, and context diagram Widget IR rendering.
+
+### What worked
+
+- RAG package typecheck passed.
+- Storybook build passed.
+- Focused Go tests passed:
+
+```text
+ok  github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl
+ok  github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite
+?   github.com/go-go-golems/rag-evaluation-system/pkg/widgetschema [no test files]
+```
+
+### What didn't work
+
+- N/A. No upstream compile failures occurred, so the 200-second retry policy did not need to trigger.
+
+### What I learned
+
+- The hard `styleKey + ContextStyleSet` cutover paid off: minitrace-viz can define a domain-specific legend without changing package components.
+- The remaining potential UX improvements, such as visible grouped turn separators, are enhancements rather than blockers for the requested Phase 2 behavior.
+- DSL/schema helpers are already generic enough for this app-specific mapping; repeated minitrace mapping logic belongs in minitrace-viz, not in the generic DSL.
+
+### What was tricky to build
+
+- The tricky part was deciding not to build. The ticket listed Phase 3 and Phase 4 as possible implementation phases, but after Phase 2 there was no evidence-backed need for new upstream components or DSL helpers.
+- I resolved that by validating the existing upstream package and DSL tests and recording the no-change decision in the diary rather than inventing unnecessary abstractions.
+
+### What warrants a second pair of eyes
+
+- Confirm that visible turn grouping inside diagrams is not required for the immediate handoff. Current labels and metadata identify turns, while the panel itself remains the standard `ContextDiagramPanel`.
+- Confirm that app-local fallback parsing is acceptable until go-minitrace adapters fully normalize the lightweight sample fixture.
+
+### What should be done in the future
+
+- If users ask for grouped turn separators or a multi-snapshot pager inside the reusable design system, open a separate upstream package ticket with Storybook-first component work.
+- If multiple apps need the same minitrace row-to-widget mapping, consider a shared helper package later; do not promote the current app-local fallback prematurely.
+
+### Code review instructions
+
+- There is no new upstream package or DSL code to review in this step.
+- Review the validation outputs and the Phase 2 local implementation instead.
+- Re-run validation with:
+
+```bash
+cd /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system
+pnpm --dir packages/rag-evaluation-site typecheck
+pnpm --dir packages/rag-evaluation-site build-storybook
+go test ./pkg/widgetdsl ./pkg/xgoja/providers/widgetsite ./pkg/widgetschema -count=1
+```
+
+### Technical details
+
+Decision summary:
+
+```text
+Phase 3 upstream design-system changes: not required for current implementation.
+Phase 4 Goja DSL/schema changes: not required for current implementation.
+Reason: existing Widget IR + ContextStyleSet + context_window.dsl APIs express all Phase 2 output.
 ```

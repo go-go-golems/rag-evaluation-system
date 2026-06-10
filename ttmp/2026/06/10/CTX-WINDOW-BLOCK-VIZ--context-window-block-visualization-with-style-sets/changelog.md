@@ -105,3 +105,13 @@ Step 7: implemented local minitrace-viz uploaded-session context block mapping w
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/ClubMedMeetup/minitrace-viz/lib/timeline-data.js — Adds original-upload fallback rows when normalized minitrace rows are empty
 - /home/manuel/workspaces/2026-06-07/club-meetup-site/ClubMedMeetup/minitrace-viz/test-fixtures/smoke-test.sh — Asserts uploaded-session style keys in smoke test
 
+
+## 2026-06-10
+
+Step 8: closed Phase 3 and Phase 4 as no-change decisions after package Storybook/typecheck and focused DSL/schema Go tests
+
+### Related Files
+
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/packages/rag-evaluation-site/GUIDELINES.md — Reviewed before deciding no upstream component changes were needed
+- /home/manuel/workspaces/2026-06-07/club-meetup-site/2026-05-27--rag-evaluation-system/pkg/widgetdsl/module.go — Existing DSL helpers were sufficient; no changes made
+

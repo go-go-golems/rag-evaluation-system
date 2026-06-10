@@ -19,22 +19,22 @@
 ## Phase 2 — ClubMeetup/minitrace-viz local widget improvements
 
 - [x] 2.1 Locate the ClubMeetup/minitrace-viz code path that consumes go-minitrace or minitracejs output.
-- [ ] 2.2 Implement all improvements possible locally: convert minitrace transcript/tool/token rows into uploaded-session context block snapshots and transcript widgets without upstream API changes.
-- [ ] 2.3 Add local fixtures or examples for uploaded session JSON/minitrace-derived rows.
-- [ ] 2.4 Validate local minitrace-viz output and document any limits caused by current upstream widget contracts.
-- [ ] 2.5 Commit local-only widget improvements and diary updates.
+- [x] 2.2 Implement all improvements possible locally: convert minitrace transcript/tool/token rows into uploaded-session context block snapshots and transcript widgets without upstream API changes.
+- [x] 2.3 Add local fixtures or examples for uploaded session JSON/minitrace-derived rows.
+- [x] 2.4 Validate local minitrace-viz output and document any limits caused by current upstream widget contracts.
+- [x] 2.5 Commit local-only widget improvements and diary updates.
 
 ## Phase 3 — Upstream rag-evaluation-site design-system changes
 
-- [ ] 3.1 Re-read `packages/rag-evaluation-site/GUIDELINES.md` before any upstream component changes.
-- [ ] 3.2 Identify upstream gaps that cannot be solved locally, such as grouped turn separators, block aggregation, or richer context-detail affordances.
-- [ ] 3.3 Implement minimal upstream component/type/story changes following the design-system structure and style guidelines.
-- [ ] 3.4 Validate with `pnpm --dir packages/rag-evaluation-site typecheck` and `pnpm --dir packages/rag-evaluation-site build-storybook`.
-- [ ] 3.5 Commit upstream widget package changes and diary updates.
+- [x] 3.1 Re-read `packages/rag-evaluation-site/GUIDELINES.md` before any upstream component changes.
+- [x] 3.2 Identify upstream gaps that cannot be solved locally, such as grouped turn separators, block aggregation, or richer context-detail affordances.
+- [x] 3.3 Implement minimal upstream component/type/story changes following the design-system structure and style guidelines.
+- [x] 3.4 Validate with `pnpm --dir packages/rag-evaluation-site typecheck` and `pnpm --dir packages/rag-evaluation-site build-storybook`.
+- [x] 3.5 Commit upstream widget package changes and diary updates.
 
 ## Phase 4 — Goja DSL/schema support
 
-- [ ] 4.1 Identify whether the current `context_window.dsl` helpers can express all minitrace-derived widget IR without changes.
+- [x] 4.1 Identify whether the current `context_window.dsl` helpers can express all minitrace-derived widget IR without changes.
 - [ ] 4.2 Add only necessary DSL/schema helpers for repeated minitrace mapping patterns; avoid duplicating app-specific logic in the DSL.
 - [ ] 4.3 Update TypeScript descriptors, provider docs, schema tests, and Go tests as needed.
 - [ ] 4.4 Validate Go packages with focused `go test` commands and frontend typecheck/storybook if contracts changed.
