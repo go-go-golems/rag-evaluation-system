@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react';
+import { Button } from '../components/atoms';
 import { Caption, StatusText } from '../components/foundation';
-import type { CellSpec, JsonObject, RenderableValue, WidgetNode } from './ir';
+import type { ActionSpec, CellSpec, JsonObject, RenderableValue, WidgetNode } from './ir';
 import { isWidgetNode } from './ir';
 
 export type RenderWidgetNode = (node: WidgetNode) => ReactNode;
 
-export function renderCell(spec: CellSpec, row: JsonObject, renderWidgetNode: RenderWidgetNode): ReactNode {
+export function renderCell(spec: CellSpec, row: JsonObject, renderWidgetNode: RenderWidgetNode, dispatchAction?: (action: ActionSpec, context: JsonObject) => void): ReactNode {
   switch (spec.kind) {
     case 'field':
       return stringify(getPath(row, spec.field), spec.fallback);
@@ -24,6 +25,38 @@ export function renderCell(spec: CellSpec, row: JsonObject, renderWidgetNode: Re
       const label = stringify(getPath(row, spec.labelField), spec.fallbackLabel ?? href);
       return <a href={href} target={spec.target} rel={spec.target === '_blank' ? 'noreferrer' : undefined}>{label}</a>;
     }
+    case 'linkButton': {
+      const href = stringify(getPath(row, spec.hrefField), '#');
+      const label = stringify(getPath(row, spec.labelField), spec.fallbackLabel ?? href);
+      return (
+        <Button
+          variant={spec.variant}
+          size={spec.size ?? 'compact'}
+          onClick={(event) => {
+            event.stopPropagation();
+            if (!href || href === '#') return;
+            window.history.pushState({}, '', href);
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }}
+        >
+          {label}
+        </Button>
+      );
+    }
+    case 'actionButton':
+      return (
+        <Button
+          variant={spec.variant}
+          size={spec.size ?? 'compact'}
+          disabled={spec.disabled}
+          onClick={(event) => {
+            event.stopPropagation();
+            dispatchAction?.(spec.action, { row, rowKey: rowKey(row, 'file'), componentType: 'DataTableCell' });
+          }}
+        >
+          {renderRenderable(spec.label, renderWidgetNode)}
+        </Button>
+      );
     case 'constant':
       return renderRenderable(spec.value, renderWidgetNode);
     default:

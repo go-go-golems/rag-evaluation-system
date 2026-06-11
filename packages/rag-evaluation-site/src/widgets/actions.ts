@@ -57,11 +57,28 @@ export function dispatchWidgetAction(action: ActionSpec, context: WidgetActionCo
     return;
   }
 
+  if (action.kind === 'download') {
+    const target = interpolate(action.to, context);
+    const anchor = document.createElement('a');
+    anchor.href = target;
+    anchor.download = '';
+    anchor.style.display = 'none';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    return;
+  }
+
   if (action.kind === 'server') {
     void fetch(`/api/widget/actions/${encodeURIComponent(action.name)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ payload: action.payload ?? {}, context }),
+    }).then(async (response) => {
+      const result = await response.json().catch(() => undefined) as ServerActionResult | undefined;
+      if (response.ok && result?.refresh) {
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
     });
   }
 }

@@ -115,6 +115,35 @@
   box-shadow: var(--mac-shadow-floating, 0 18px 44px rgba(0, 0, 0, 0.2));
 }
 
+.course-material-table {
+  table-layout: fixed;
+}
+
+.course-material-table th,
+.course-material-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.course-material-table th:nth-child(1),
+.course-material-table td:nth-child(1) { width: 30%; }
+
+.course-material-table th:nth-child(2),
+.course-material-table td:nth-child(2) { width: 28%; }
+
+.course-material-table th:nth-child(3),
+.course-material-table td:nth-child(3) { width: 8%; }
+
+.course-material-table th:nth-child(4),
+.course-material-table td:nth-child(4) { width: 14%; }
+
+.course-material-table th:nth-child(5),
+.course-material-table td:nth-child(5) { width: 9%; }
+
+.course-material-table th:nth-child(6),
+.course-material-table td:nth-child(6) { width: 11%; }
+
 @keyframes rag-route-pending-slide {
   0% { transform: translateX(-110%); }
   50% { transform: translateX(80%); }

@@ -94,12 +94,19 @@ export type RenderableValue = WidgetNode | string | number | boolean | null;
 
 export type ActionSpec =
   | NavigateActionSpec
+  | DownloadActionSpec
   | ServerActionSpec
   | EventActionSpec
   | CopyActionSpec;
 
 export interface NavigateActionSpec {
   kind: 'navigate';
+  to: string;
+  params?: JsonObject;
+}
+
+export interface DownloadActionSpec {
+  kind: 'download';
   to: string;
   params?: JsonObject;
 }
@@ -395,6 +402,8 @@ export type CellSpec =
   | CaptionCellSpec
   | TemplateCellSpec
   | LinkCellSpec
+  | LinkButtonCellSpec
+  | ActionButtonCellSpec
   | ConstantCellSpec;
 
 export interface FieldCellSpec {
@@ -436,6 +445,24 @@ export interface LinkCellSpec {
   labelField: string;
   target?: '_blank' | '_self' | '_parent' | '_top';
   fallbackLabel?: string;
+}
+
+export interface LinkButtonCellSpec {
+  kind: 'linkButton';
+  hrefField: string;
+  labelField: string;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  fallbackLabel?: string;
+}
+
+export interface ActionButtonCellSpec {
+  kind: 'actionButton';
+  label: RenderableValue;
+  action: ActionSpec;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  disabled?: boolean;
 }
 
 export interface ConstantCellSpec {

@@ -17,7 +17,7 @@ export const dataTableWidget = defineWidget<DataTableWidgetProps>({
           header: ctx.renderValue(column.header),
           align: column.align,
           maxWidth: column.maxWidth,
-          cell: (row) => renderCell(column.cell, row, ctx.renderNode),
+          cell: (row) => renderCell(column.cell, row, ctx.renderNode, (action, context) => ctx.dispatchAction(action, context)),
         }))}
         getRowKey={(row) => rowKey(row, props.getRowKey)}
         selectedKey={props.selectedKey == null ? props.selectedKey : String(props.selectedKey)}

@@ -244,6 +244,16 @@ func (r *runtime) cellObject() *goja.Object {
 		mergeOptions(out, exportOptions(options))
 		return out
 	})
+	setExport(cell, "linkButton", func(hrefField string, labelField string, options ...goja.Value) map[string]any {
+		out := map[string]any{"kind": "linkButton", "hrefField": hrefField, "labelField": labelField}
+		mergeOptions(out, exportOptions(options))
+		return out
+	})
+	setExport(cell, "actionButton", func(label goja.Value, action goja.Value, options ...goja.Value) map[string]any {
+		out := map[string]any{"kind": "actionButton", "label": r.exportRenderable(label), "action": exportObject(action)}
+		mergeOptions(out, exportOptions(options))
+		return out
+	})
 	setExport(cell, "constant", func(value goja.Value) any {
 		return map[string]any{"kind": "constant", "value": r.exportRenderable(value)}
 	})
@@ -259,6 +269,11 @@ func (r *runtime) actionObject() *goja.Object {
 	})
 	setExport(action, "navigate", func(to string, options ...goja.Value) map[string]any {
 		out := map[string]any{"kind": "navigate", "to": to}
+		mergeOptions(out, exportOptions(options))
+		return out
+	})
+	setExport(action, "download", func(to string, options ...goja.Value) map[string]any {
+		out := map[string]any{"kind": "download", "to": to}
 		mergeOptions(out, exportOptions(options))
 		return out
 	})

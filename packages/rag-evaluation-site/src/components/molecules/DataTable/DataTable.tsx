@@ -24,7 +24,7 @@ export function DataTable<T>({ columns, rows, getRowKey, selectedKey, onRowSelec
     <table className={[styles.root, className ?? ''].filter(Boolean).join(' ')} data-rag-component="DataTable">
       <thead>
         <tr>
-          {columns.map((column) => <th key={column.id} className={styles[column.align ?? 'start']}>{column.header}</th>)}
+          {columns.map((column) => <th key={column.id} className={styles[column.align ?? 'start']} style={column.maxWidth ? { maxWidth: column.maxWidth } : undefined}>{column.header}</th>)}
         </tr>
       </thead>
       <tbody>

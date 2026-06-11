@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from 'react';
-import type { ContextSlide, ContextStyleSet, ContextWindowSnapshot } from '../../../context';
+import type { ContextLegendItemSpec, ContextSlide, ContextStyleSet, ContextWindowSnapshot } from '../../../context';
 import { contextDefaultStyleSet } from '../../../context';
 import { Button } from '../../atoms';
 import { Inline, SlideShell } from '../../layout';
@@ -26,10 +26,22 @@ function renderSlideVisual(slide: ContextSlide, snapshot: ContextWindowSnapshot,
   return <ContextTreemap snapshot={snapshot} styleSet={styleSet} />;
 }
 
+function legendItemsForSnapshot(snapshot: ContextWindowSnapshot): ContextLegendItemSpec[] {
+  return snapshot.parts
+    .filter((part) => part.tokens > 0)
+    .map((part, order) => ({
+      id: part.id,
+      label: part.label,
+      styleKey: part.styleKey,
+      order,
+    }));
+}
+
 export function CourseSlidePanel({ slide, snapshot, styleSet = contextDefaultStyleSet, index, total, visualSide = 'left', mode = 'default', onPrevious, onNext, onPresent, onFullscreen, className, ...rest }: CourseSlidePanelProps) {
   const counter = index != null && total != null ? `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}` : undefined;
+  const legend = slide.view === 'budget' ? undefined : <ContextLegend items={legendItemsForSnapshot(snapshot)} styles={styleSet.styles} size="sm" selectedId={snapshot.selectedPartId} />;
   const visual = (
-    <FigureBlock caption={`${snapshot.title} — ${snapshot.limit.toLocaleString()} token window`} legend={<ContextLegend items={styleSet.legend} styles={styleSet.styles} size="sm" />}>
+    <FigureBlock caption={`${snapshot.title} — ${snapshot.limit.toLocaleString()} token window`} legend={legend}>
       {renderSlideVisual(slide, snapshot, styleSet)}
     </FigureBlock>
   );
