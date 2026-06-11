@@ -7,13 +7,15 @@ export const selectInputWidget = defineWidget<SelectInputWidgetProps>({
   module: 'ui.dsl',
   render: (props, children, ctx) => {
     const selectedOption = (props.options ?? []).find((option) => option.selected);
-    const defaultValue = props.defaultValue ?? props.value ?? selectedOption?.value;
+    const valueProps = props.value !== undefined
+      ? { value: props.value }
+      : { defaultValue: props.defaultValue ?? selectedOption?.value };
 
     return (
       <SelectInput
         className={props.className}
         name={props.name}
-        defaultValue={defaultValue}
+        {...valueProps}
         disabled={props.disabled}
         required={props.required}
         aria-invalid={props.ariaInvalid || undefined}
