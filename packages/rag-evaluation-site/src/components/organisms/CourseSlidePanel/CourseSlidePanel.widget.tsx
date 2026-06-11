@@ -10,6 +10,7 @@ export const courseSlidePanelWidget = defineWidget<CourseSlidePanelWidgetProps>(
       className={props.className}
       slide={props.slide}
       snapshot={props.snapshot}
+      styleSet={props.styleSet}
       index={props.index}
       total={props.total}
       visualSide={props.visualSide}
