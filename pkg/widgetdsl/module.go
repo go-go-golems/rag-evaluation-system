@@ -79,6 +79,7 @@ var contextWindowHelpers = map[string]string{
 	"contextStackDiagram":      "ContextStackDiagram",
 	"contextStripDiagram":      "ContextStripDiagram",
 	"contextTreemap":           "ContextTreemap",
+	"contextTurnPagerPanel":    "ContextTurnPagerPanel",
 	"contextUploadDropArea":    "ContextUploadDropArea",
 	"transcriptMessageCard":    "TranscriptMessageCard",
 	"transcriptReaderPanel":    "TranscriptReaderPanel",
