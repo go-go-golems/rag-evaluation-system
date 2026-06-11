@@ -1,5 +1,5 @@
 .root {
-  max-width: 640px;
+  max-width: 720px;
   color: var(--mac-text);
 }
 
@@ -23,15 +23,15 @@
 }
 
 .h2 {
-  margin: 20px 0 8px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--mac-border);
+  margin: 28px 0 12px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid color-mix(in srgb, var(--mac-border) 55%, transparent);
   color: var(--mac-text);
   font: var(--rag-font-role-heading);
 }
 
 .h3 {
-  margin: 16px 0 6px;
+  margin: 22px 0 8px;
   color: var(--mac-text);
   font: var(--rag-font-role-label);
   letter-spacing: 0.5px;
@@ -39,22 +39,24 @@
 }
 
 .p {
-  margin: 8px 0;
+  margin: 10px 0;
   color: var(--mac-text);
   font: var(--rag-font-role-readable-body);
+  line-height: 1.55;
 }
 
 .ul,
 .ol {
-  margin: 8px 0;
-  padding-left: 20px;
+  margin: 10px 0 14px;
+  padding-left: 22px;
   color: var(--mac-text);
   font: var(--rag-font-role-readable-body);
+  line-height: 1.5;
 }
 
 .ul li,
 .ol li {
-  margin: 2px 0;
+  margin: 6px 0;
 }
 
 .checkList {
@@ -82,7 +84,7 @@
 .blockquote {
   margin: 12px 0;
   padding-left: 12px;
-  border-left: 3px solid var(--mac-border);
+  border-left: 3px solid color-mix(in srgb, var(--mac-border) 55%, transparent);
   color: var(--mac-text-dim);
   font: var(--rag-font-role-readable-body);
   font-style: italic;
@@ -92,14 +94,14 @@
   width: 100%;
   margin: 12px 0;
   border-collapse: collapse;
-  border: 1px solid var(--mac-border);
+  border: 1px solid color-mix(in srgb, var(--mac-border) 55%, transparent);
   font: var(--rag-font-role-compact);
 }
 
 .table th,
 .table td {
   padding: 6px 8px;
-  border: 1px solid var(--mac-border);
+  border: 1px solid color-mix(in srgb, var(--mac-border) 50%, transparent);
   vertical-align: top;
   text-align: left;
 }
@@ -114,7 +116,7 @@
 .hr {
   margin: 14px 0;
   border: 0;
-  border-top: 1px solid var(--mac-border);
+  border-top: 1px solid color-mix(in srgb, var(--mac-border) 55%, transparent);
 }
 
 .inlineCode {

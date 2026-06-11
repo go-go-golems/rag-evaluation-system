@@ -1,6 +1,6 @@
 {
   "name": "@go-go-golems/rag-evaluation-site",
-  "version": "0.1.9",
+  "version": "0.1.11",
   "private": false,
   "type": "module",
   "license": "MIT",
