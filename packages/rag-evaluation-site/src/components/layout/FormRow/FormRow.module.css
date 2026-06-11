@@ -1,4 +1,82 @@
-.root { display: grid; grid-template-columns: minmax(72px, max-content) minmax(0, 1fr); gap: 4px 8px; align-items: center; }
-.label { font-family: var(--font-mono); font-size: 10px; color: var(--mac-text-dim); text-transform: uppercase; }
-.control { min-width: 0; }
-.hint { grid-column: 2; font-family: var(--font-mono); font-size: 10px; color: var(--mac-text-dim); }
+.root {
+  display: grid;
+  gap: 4px 8px;
+  align-items: center;
+}
+
+.inline {
+  grid-template-columns: minmax(72px, max-content) minmax(0, 1fr);
+}
+
+.stacked {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--mac-text-dim);
+  text-transform: uppercase;
+}
+
+.required {
+  color: var(--mac-accent-2);
+}
+
+.control {
+  min-width: 0;
+}
+
+.description,
+.hintRow,
+.success,
+.error {
+  grid-column: 2;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.stacked .description,
+.stacked .hintRow,
+.stacked .success,
+.stacked .error {
+  grid-column: 1;
+}
+
+.description {
+  color: var(--mac-text);
+}
+
+.hintRow {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+  color: var(--mac-text-dim);
+}
+
+.hint {
+  min-width: 0;
+}
+
+.counter {
+  color: var(--mac-text-dim);
+  white-space: nowrap;
+}
+
+.success {
+  color: var(--mac-green);
+}
+
+.error {
+  color: var(--mac-accent-2);
+}
+
+.root[data-state="error"] .label {
+  color: var(--mac-accent-2);
+}
+
+.root[data-state="success"] .label {
+  color: var(--mac-green);
+}
