@@ -31,11 +31,6 @@ function snapshotTurnKey(snapshot: ContextWindowSnapshot) {
   return metadataScalar(snapshot.metadata?.turnIndex) || metadataScalar(snapshot.metadata?.turn) || '';
 }
 
-function isHeadroomPart(part: ContextWindowPart) {
-  const blockType = metadataScalar(part.metadata?.blockType).toLowerCase();
-  return part.styleKey === 'empty' || blockType === 'headroom' || blockType === 'free';
-}
-
 function isGlobalPart(part: ContextWindowPart) {
   const turn = partTurnKey(part).toLowerCase();
   const blockType = metadataScalar(part.metadata?.blockType).toLowerCase();
@@ -45,23 +40,16 @@ function isGlobalPart(part: ContextWindowPart) {
 function turnOnlySnapshot(snapshot: ContextWindowSnapshot, includeGlobalParts: boolean): ContextWindowSnapshot {
   const turn = snapshotTurnKey(snapshot);
   if (!turn) return snapshot;
-  const headroom = snapshot.parts.find(isHeadroomPart);
-  const visibleParts = snapshot.parts.filter((part) => partTurnKey(part) === turn || (includeGlobalParts && isGlobalPart(part)));
-  const usedTokens = visibleParts.reduce((sum, part) => sum + part.tokens, 0);
-  const recomputedHeadroom = headroom ? [{
-    ...headroom,
-    label: headroom.label || 'headroom',
-    tokens: Math.max(0, snapshot.limit - usedTokens),
-    metadata: { ...(headroom.metadata ?? {}), turnIndex: 'headroom', blockType: 'headroom' },
-  }] : [];
-  const parts = [...visibleParts, ...recomputedHeadroom];
+  const parts = snapshot.parts.filter((part) => partTurnKey(part) === turn || (includeGlobalParts && isGlobalPart(part)));
+  const tokenTotal = parts.reduce((sum, part) => sum + part.tokens, 0);
   const selectedPartId = parts.some((part) => part.id === snapshot.selectedPartId)
     ? snapshot.selectedPartId
-    : visibleParts.find((part) => partTurnKey(part) === turn)?.id ?? visibleParts[0]?.id ?? recomputedHeadroom[0]?.id;
+    : parts[0]?.id;
   return {
     ...snapshot,
     title: snapshot.title || `Turn ${turn} context window`,
-    subtitle: snapshot.subtitle ? `${snapshot.subtitle} · turn-only view` : 'turn-only view',
+    limit: tokenTotal || snapshot.limit,
+    subtitle: tokenTotal ? `${tokenTotal.toLocaleString()} tokens in this turn` : 'No blocks for this turn',
     selectedPartId,
     parts,
   };
@@ -93,6 +81,11 @@ export function ContextTurnPagerPanel({
   const rawSnapshot = snapshots[boundedIndex];
   const snapshot = rawSnapshot && mode === 'turn-only' ? turnOnlySnapshot(rawSnapshot, includeGlobalParts) : rawSnapshot;
   const selected = selectedPartId ?? snapshot?.selectedPartId;
+  const visibleLegend = useMemo(() => {
+    if (!snapshot) return styleSet.legend;
+    const visibleStyleKeys = new Set(snapshot.parts.map((part) => part.styleKey));
+    return styleSet.legend.filter((item) => visibleStyleKeys.has(item.styleKey ?? item.id));
+  }, [snapshot, styleSet.legend]);
   const actions = useMemo(() => (
     <Inline gap="xs">
       <Button size="compact" disabled={boundedIndex <= 0} onClick={() => setIndex((value) => Math.max(0, value - 1))}>Prev</Button>
@@ -122,7 +115,7 @@ export function ContextTurnPagerPanel({
         {diagram === 'strip'
           ? <ContextStripDiagram snapshot={snapshot} styleSet={styleSet} selectedPartId={selected} />
           : <ContextGroupedStripDiagram snapshot={snapshot} styleSet={styleSet} selectedPartId={selected} groupBy={groupBy} />}
-        {showLegend && <ContextLegend items={styleSet.legend} styles={styleSet.styles} selectedId={selected} />}
+        {showLegend && <ContextLegend items={visibleLegend} styles={styleSet.styles} selectedId={selected} />}
       </Stack>
     </Panel>
   );
