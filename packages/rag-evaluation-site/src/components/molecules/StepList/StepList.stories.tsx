@@ -22,3 +22,15 @@ export const MinimalSteps: Story = {
 		return <StepList items={items} activeItemId={active} onItemSelect={setActive} />;
 	},
 };
+
+export const ReadOnly: Story = {
+	render: () => {
+		return <StepList items={items} selectable={false} />;
+	},
+};
+
+export const ReadOnlyWithActive: Story = {
+	render: () => {
+		return <StepList items={items} selectable={false} activeItemId={items[2]?.id} />;
+	},
+};

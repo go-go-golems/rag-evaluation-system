@@ -10,11 +10,21 @@ export interface StepListItem {
 }
 export interface StepListProps extends HTMLAttributes<HTMLOListElement> {
 	items: StepListItem[];
+	/** Whether items can be selected. Defaults to true when onItemSelect is provided. */
+	selectable?: boolean;
 	activeItemId?: string;
 	onItemSelect?: (id: string) => void;
 }
 
-export function StepList({ items, activeItemId, onItemSelect, className, ...rest }: StepListProps) {
+export function StepList({
+	items,
+	selectable,
+	activeItemId,
+	onItemSelect,
+	className,
+	...rest
+}: StepListProps) {
+	const isSelectable = selectable ?? onItemSelect != null;
 	return (
 		<ol
 			className={[styles.root, className ?? ""].filter(Boolean).join(" ")}
@@ -35,8 +45,12 @@ export function StepList({ items, activeItemId, onItemSelect, className, ...rest
 				);
 				return (
 					<li key={item.id} className={styles.item} data-active={active ? "true" : undefined}>
-						{onItemSelect ? (
-							<button type="button" className={styles.button} onClick={() => onItemSelect(item.id)}>
+						{isSelectable ? (
+							<button
+								type="button"
+								className={styles.button}
+								onClick={() => onItemSelect?.(item.id)}
+							>
 								{content}
 							</button>
 						) : (
