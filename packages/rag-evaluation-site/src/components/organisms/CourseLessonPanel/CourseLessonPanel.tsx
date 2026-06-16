@@ -3,7 +3,7 @@ import type { ContextCourse } from "../../../context";
 import { Button } from "../../atoms";
 import { Caption } from "../../foundation";
 import { SectionBlock, SplitPane, Stack } from "../../layout";
-import { KeyValueStrip, PersonSummary, StepList } from "../../molecules";
+import { CheckList, KeyValueStrip, PersonSummary, StepList } from "../../molecules";
 import styles from "./CourseLessonPanel.module.css";
 
 export interface CourseLessonPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
@@ -34,11 +34,6 @@ export function CourseLessonPanel({
 		secondaryCta: "Preview the deck",
 		...course.labels,
 	};
-	const outcomeItems = course.outcomes.map((text, i) => ({
-		id: `outcome-${i}`,
-		index: "✔",
-		title: text,
-	}));
 	const agendaItems = course.agenda.map((item) => ({
 		id: item.id,
 		index: item.number,
@@ -79,7 +74,7 @@ export function CourseLessonPanel({
 				left={
 					<SectionBlock label={labels.outcomes} density="spacious">
 						<Stack gap="xl">
-							<StepList items={outcomeItems} selectable={false} />
+							<CheckList items={course.outcomes} />
 							{course.instructor && (
 								<div className={styles.instructorBlock}>
 									<div className={styles.sectionLabel}>{labels.instructor}</div>
