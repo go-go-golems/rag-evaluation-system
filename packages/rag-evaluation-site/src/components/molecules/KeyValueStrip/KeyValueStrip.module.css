@@ -8,11 +8,12 @@
 .cell {
 	min-width: 0;
 	/*padding: 10px 14px;*/
-	padding-left: 8px;
+	/*padding:  0px;*/
 }
 
 .cell + .cell {
 	border-left: 1px solid var(--mac-border);
+	padding-left: 8px;
 }
 
 .cell dt {
