@@ -1,9 +1,9 @@
 .list {
-  margin: 0;
-  padding-left: 16px;
-  font: var(--rag-font-role-body);
+	margin: 0;
+	padding-left: 16px;
+	font: var(--rag-font-role-body);
 }
 
 .list li + li {
-  margin-top: 4px;
+	margin-top: 4px;
 }

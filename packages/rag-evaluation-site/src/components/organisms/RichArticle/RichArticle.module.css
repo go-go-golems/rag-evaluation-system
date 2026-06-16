@@ -1,48 +1,48 @@
 .root {
-  max-width: 760px;
-  color: var(--mac-text);
+	max-width: 760px;
+	color: var(--mac-text);
 }
 
 .block + .block {
-  margin-top: 18px;
+	margin-top: 18px;
 }
 
 .diagramBlock {
-  max-width: 640px;
-  break-inside: avoid;
+	max-width: 640px;
+	break-inside: avoid;
 }
 
 .imageFigure {
-  margin: 14px 0;
+	margin: 14px 0;
 }
 
 .image {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 0 auto;
+	display: block;
+	max-width: 100%;
+	height: auto;
+	margin: 0 auto;
 }
 
 .caption {
-  margin-top: 7px;
-  color: var(--mac-text-dim);
-  font: var(--rag-font-role-caption);
-  text-align: center;
+	margin-top: 7px;
+	color: var(--mac-text-dim);
+	font: var(--rag-font-role-caption);
+	text-align: center;
 }
 
 @media print {
-  .root {
-    max-width: none;
-  }
+	.root {
+		max-width: none;
+	}
 
-  .block,
-  .diagramBlock,
-  .imageFigure {
-    break-inside: avoid;
-  }
+	.block,
+	.diagramBlock,
+	.imageFigure {
+		break-inside: avoid;
+	}
 
-  .image {
-    max-height: 45vh;
-    object-fit: contain;
-  }
+	.image {
+		max-height: 45vh;
+		object-fit: contain;
+	}
 }

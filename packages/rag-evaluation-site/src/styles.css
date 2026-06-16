@@ -1,12 +1,12 @@
-@import './theme.css';
+@import "./theme.css";
 
 * {
-  box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  background: var(--rag-color-bg);
-  color: var(--rag-color-text);
-  font-family: var(--rag-font-sans);
+	margin: 0;
+	background: var(--rag-color-bg);
+	color: var(--rag-color-text);
+	font-family: var(--rag-font-sans);
 }

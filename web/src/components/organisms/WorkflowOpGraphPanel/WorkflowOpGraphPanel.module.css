@@ -1,4 +1,24 @@
-.graph { display: grid; gap: 6px; padding: 8px; }
-.fanOut { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
-.node { border: 1px solid var(--mac-border); background: var(--mac-bg); padding: 3px 6px; font-family: var(--font-mono); font-size: 10px; }
-.arrow { text-align: center; font-family: var(--font-mono); font-size: 10px; color: var(--mac-text-dim); }
+.graph {
+	display: grid;
+	gap: 6px;
+	padding: 8px;
+}
+.fanOut {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	justify-content: center;
+}
+.node {
+	border: 1px solid var(--mac-border);
+	background: var(--mac-bg);
+	padding: 3px 6px;
+	font-family: var(--font-mono);
+	font-size: 10px;
+}
+.arrow {
+	text-align: center;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	color: var(--mac-text-dim);
+}

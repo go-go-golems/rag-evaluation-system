@@ -1,1 +1,1 @@
-export * from './CoveragePanel';
+export * from "./CoveragePanel";

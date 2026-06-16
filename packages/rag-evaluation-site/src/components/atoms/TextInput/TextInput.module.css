@@ -1,38 +1,38 @@
 .root {
-  border: 1px solid var(--mac-border);
-  background: var(--mac-surface);
-  color: var(--mac-text);
-  padding: 2px 6px;
-  font-family: var(--font-body);
-  font-size: 12px;
-  outline: none;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+	color: var(--mac-text);
+	padding: 2px 6px;
+	font-family: var(--font-body);
+	font-size: 12px;
+	outline: none;
 }
 
 .root::placeholder {
-  color: var(--mac-text-dim);
-  opacity: 1;
+	color: var(--mac-text-dim);
+	opacity: 1;
 }
 
 .root:focus {
-  outline: 1px solid var(--mac-accent);
-  outline-offset: -1px;
+	outline: 1px solid var(--mac-accent);
+	outline-offset: -1px;
 }
 
 .root:disabled {
-  background: var(--mac-surface-2);
-  color: var(--mac-text-dim);
-  cursor: not-allowed;
+	background: var(--mac-surface-2);
+	color: var(--mac-text-dim);
+	cursor: not-allowed;
 }
 
 .root:read-only:not(:disabled) {
-  background: var(--mac-surface-2);
-  color: var(--mac-text);
+	background: var(--mac-surface-2);
+	color: var(--mac-text);
 }
 
 .root[aria-invalid="true"] {
-  border-color: var(--mac-accent-2);
+	border-color: var(--mac-accent-2);
 }
 
 .root[aria-invalid="true"]:focus {
-  outline-color: var(--mac-accent-2);
+	outline-color: var(--mac-accent-2);
 }

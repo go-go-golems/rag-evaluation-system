@@ -1,9 +1,9 @@
 .centeredEmpty {
-  display: block;
-  padding: 24px;
-  text-align: center;
+	display: block;
+	padding: 24px;
+	text-align: center;
 }
 
 .error {
-  margin: 6px;
+	margin: 6px;
 }

@@ -94,16 +94,17 @@ func TestGeneratedRuntimeCanRequireSplitWidgetDSLModules(t *testing.T) {
 	if err := Register(registry); err != nil {
 		t.Fatalf("register provider: %v", err)
 	}
-	runtimeSpec := &app.RuntimeSpec{
-		Name: "widgetsite-provider-test",
-		Modules: []app.ModuleInstanceSpec{
-			{Package: PackageID, Name: widgetdsl.UIModuleName, As: widgetdsl.UIModuleName},
-			{Package: PackageID, Name: widgetdsl.DataModuleName, As: widgetdsl.DataModuleName},
-			{Package: PackageID, Name: widgetdsl.ContextWindowModuleName, As: widgetdsl.ContextWindowModuleName},
-			{Package: PackageID, Name: widgetdsl.CourseModuleName, As: widgetdsl.CourseModuleName},
-		},
+	runtimePlan := &app.RuntimePlan{
+		Schema: app.RuntimePlanSchema,
+		Name:   "widgetsite-provider-test",
+		Runtime: app.RuntimeSection{Modules: []app.RuntimeModulePlan{
+			{Provider: PackageID, Name: widgetdsl.UIModuleName, As: widgetdsl.UIModuleName},
+			{Provider: PackageID, Name: widgetdsl.DataModuleName, As: widgetdsl.DataModuleName},
+			{Provider: PackageID, Name: widgetdsl.ContextWindowModuleName, As: widgetdsl.ContextWindowModuleName},
+			{Provider: PackageID, Name: widgetdsl.CourseModuleName, As: widgetdsl.CourseModuleName},
+		}},
 	}
-	host := app.NewHost(registry, runtimeSpec)
+	host := app.NewHost(registry, runtimePlan)
 	rt, err := host.Factory.NewRuntime(context.Background())
 	if err != nil {
 		t.Fatalf("new runtime: %v", err)

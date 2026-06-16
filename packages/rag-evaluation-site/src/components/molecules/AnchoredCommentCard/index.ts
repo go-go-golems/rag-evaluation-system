@@ -1,1 +1,1 @@
-export * from './AnchoredCommentCard';
+export * from "./AnchoredCommentCard";

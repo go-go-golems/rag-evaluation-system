@@ -1,1 +1,1 @@
-export * from './ContextUploadDropArea';
+export * from "./ContextUploadDropArea";

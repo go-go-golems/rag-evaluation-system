@@ -1,1 +1,1 @@
-export * from './ContextStudioNavIcon';
+export * from "./ContextStudioNavIcon";

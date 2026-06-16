@@ -1,85 +1,90 @@
 .root {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
 }
 
 .actions {
-  display: flex;
-  gap: 4px;
+	display: flex;
+	gap: 4px;
 }
 
 .body {
-  flex: 1;
-  padding: 8px;
+	flex: 1;
+	padding: 8px;
 }
 
 .section {
-  display: grid;
-  gap: 6px;
-  margin-bottom: 10px;
+	display: grid;
+	gap: 6px;
+	margin-bottom: 10px;
 }
 
 .sectionTitle {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--mac-text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 700;
+	color: var(--mac-text-dim);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
 }
 
 .textBlock {
-  max-height: 200px;
-  overflow: auto;
-  border: 1px solid var(--mac-border);
-  background: var(--mac-bg);
-  padding: 6px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.45;
-  white-space: pre-wrap;
+	max-height: 200px;
+	overflow: auto;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-bg);
+	padding: 6px;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	line-height: 1.45;
+	white-space: pre-wrap;
 }
 
 .neighborBlock {
-  max-height: 80px;
-  overflow: auto;
-  border: 1px solid var(--mac-border);
-  background: var(--mac-bg);
-  padding: 5px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.4;
+	max-height: 80px;
+	overflow: auto;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-bg);
+	padding: 5px;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	line-height: 1.4;
 }
 
 .coverageStrip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  padding: 4px;
-  border: 1px solid var(--mac-border);
-  background: var(--mac-bg);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2px;
+	padding: 4px;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-bg);
 }
 
 .coverageDot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
+	display: inline-block;
+	width: 8px;
+	height: 8px;
 }
 
 .currentChunk {
-  background: var(--mac-accent);
-  border: 1px solid var(--mac-accent);
-  outline: 2px solid var(--mac-accent);
-  outline-offset: 1px;
+	background: var(--mac-accent);
+	border: 1px solid var(--mac-accent);
+	outline: 2px solid var(--mac-accent);
+	outline-offset: 1px;
 }
 
-.embeddedChunk { background: var(--mac-bg-dark); }
-.missingChunk { background: var(--mac-surface); border: 1px solid var(--mac-border); }
+.embeddedChunk {
+	background: var(--mac-bg-dark);
+}
+.missingChunk {
+	background: var(--mac-surface);
+	border: 1px solid var(--mac-border);
+}
 
 .empty {
-  padding: 8px;
-  color: var(--mac-text-dim);
-  font-family: var(--font-mono);
-  font-size: 11px;
+	padding: 8px;
+	color: var(--mac-text-dim);
+	font-family: var(--font-mono);
+	font-size: 11px;
 }

@@ -1,4 +1,19 @@
-.turnRail { flex-wrap: wrap; }
-.counter { color: var(--mac-text-dim); font: var(--rag-font-role-caption, var(--rag-font-role-metadata)); min-width: 48px; text-align: center; }
-.heading { display: flex; flex-direction: column; gap: 2px; color: var(--mac-text); }
-.heading span { color: var(--mac-text-dim); font: var(--rag-font-role-caption, var(--rag-font-role-metadata)); }
+.turnRail {
+	flex-wrap: wrap;
+}
+.counter {
+	color: var(--mac-text-dim);
+	font: var(--rag-font-role-caption, var(--rag-font-role-metadata));
+	min-width: 48px;
+	text-align: center;
+}
+.heading {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	color: var(--mac-text);
+}
+.heading span {
+	color: var(--mac-text-dim);
+	font: var(--rag-font-role-caption, var(--rag-font-role-metadata));
+}

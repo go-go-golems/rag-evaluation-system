@@ -1,6 +1,29 @@
-.root { display: inline-block; border: 1px solid var(--mac-border); padding: 1px 5px; font: var(--rag-font-role-label); text-transform: uppercase; background: var(--mac-surface); color: var(--mac-text); }
-.user { background: var(--mac-bg-dark); color: var(--mac-text-inv); }
-.assistant { background: var(--mac-surface); color: var(--mac-text); }
-.tool { background: var(--mac-surface-2); color: var(--mac-text); }
-.system,.developer { background: repeating-linear-gradient(45deg, var(--mac-border) 0 1px, var(--mac-surface) 1px 4px); color: var(--mac-text); }
-.other { color: var(--mac-text-dim); }
+.root {
+	display: inline-block;
+	border: 1px solid var(--mac-border);
+	padding: 1px 5px;
+	font: var(--rag-font-role-label);
+	text-transform: uppercase;
+	background: var(--mac-surface);
+	color: var(--mac-text);
+}
+.user {
+	background: var(--mac-bg-dark);
+	color: var(--mac-text-inv);
+}
+.assistant {
+	background: var(--mac-surface);
+	color: var(--mac-text);
+}
+.tool {
+	background: var(--mac-surface-2);
+	color: var(--mac-text);
+}
+.system,
+.developer {
+	background: repeating-linear-gradient(45deg, var(--mac-border) 0 1px, var(--mac-surface) 1px 4px);
+	color: var(--mac-text);
+}
+.other {
+	color: var(--mac-text-dim);
+}

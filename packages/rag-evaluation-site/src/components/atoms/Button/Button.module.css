@@ -1,43 +1,43 @@
 .root {
-  appearance: none;
-  border: 1px solid var(--mac-border);
-  background: var(--mac-surface);
-  color: var(--mac-text);
-  cursor: pointer;
-  font: var(--rag-font-role-metadata);
-  padding: 2px 12px;
+	appearance: none;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+	color: var(--mac-text);
+	cursor: pointer;
+	font: var(--rag-font-role-metadata);
+	padding: 2px 12px;
 }
 
 .root:hover:not(:disabled) {
-  background: var(--mac-surface-2);
+	background: var(--mac-surface-2);
 }
 
 .root:active:not(:disabled) {
-  background: var(--mac-bg-dark);
-  color: var(--mac-text-inv);
+	background: var(--mac-bg-dark);
+	color: var(--mac-text-inv);
 }
 
 .primary,
 .selected {
-  background: var(--mac-bg-dark);
-  color: var(--mac-text-inv);
+	background: var(--mac-bg-dark);
+	color: var(--mac-text-inv);
 }
 
 .primary:hover:not(:disabled),
 .selected:hover:not(:disabled) {
-  background: #333333;
+	background: #333333;
 }
 
 .root:disabled {
-  color: var(--mac-text-dim);
-  cursor: not-allowed;
+	color: var(--mac-text-dim);
+	cursor: not-allowed;
 }
 
 .compact {
-  padding: 1px 6px;
-  font: var(--rag-font-role-metadata);
+	padding: 2px 6px 1px;
+	font: var(--rag-font-role-metadata);
 }
 
 .normal {
-  padding: 2px 12px;
+	padding: 3px 12px 1px;
 }

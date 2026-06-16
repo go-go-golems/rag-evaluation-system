@@ -1,115 +1,119 @@
 .root {
-  border: 1px solid var(--ctx-stroke, var(--mac-border));
-  background: var(--mac-surface);
-  color: var(--mac-text);
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+	border: 1px solid var(--ctx-stroke, var(--mac-border));
+	background: var(--mac-surface);
+	color: var(--mac-text);
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
 }
 
 .selected {
-  border-color: var(--ctx-line, var(--mac-accent));
-  box-shadow: 0 0 0 1px var(--ctx-line, var(--mac-accent));
+	border-color: var(--ctx-line, var(--mac-accent));
+	box-shadow: 0 0 0 1px var(--ctx-line, var(--mac-accent));
 }
 
 .titleBar {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 3px 8px;
-  border-bottom: 1px solid var(--ctx-stroke, var(--mac-border));
-  background: var(--ctx-fill, var(--mac-surface-2));
-  color: var(--ctx-label, var(--mac-text));
-  min-width: 0;
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+	padding: 3px 8px;
+	border-bottom: 1px solid var(--ctx-stroke, var(--mac-border));
+	background: var(--ctx-fill, var(--mac-surface-2));
+	color: var(--ctx-label, var(--mac-text));
+	min-width: 0;
 }
 
 .titleBar::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: .5;
-  background: transparent;
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	opacity: 0.5;
+	background: transparent;
 }
 
 .titleBar > * {
-  position: relative;
-  z-index: 1;
+	position: relative;
+	z-index: 1;
 }
 
 .titleCluster,
 .metaCluster {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
 }
 
 .metaCluster {
-  flex: 0 0 auto;
-  color: var(--ctx-label, var(--mac-text));
+	flex: 0 0 auto;
+	color: var(--ctx-label, var(--mac-text));
 }
 
 .roleGlyph {
-  color: var(--ctx-line, currentColor);
-  font: var(--rag-font-role-label);
+	color: var(--ctx-line, currentColor);
+	font: var(--rag-font-role-label);
 }
 
 .roleLabel {
-  color: var(--ctx-label, var(--mac-text));
-  font: var(--rag-font-role-label);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  white-space: nowrap;
+	color: var(--ctx-label, var(--mac-text));
+	font: var(--rag-font-role-label);
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+	white-space: nowrap;
 }
 
 .body {
-  padding: 8px 10px;
-  white-space: pre-wrap;
-  background: var(--mac-surface);
-  color: var(--mac-text);
-  font: var(--rag-font-role-readable-body);
+	padding: 8px 10px;
+	white-space: pre-wrap;
+	background: var(--mac-surface);
+	color: var(--mac-text);
+	font: var(--rag-font-role-readable-body);
 }
 
 .toolBody {
-  background:
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--tx-code-line, var(--mac-border)) 22%, transparent) 0 1px, transparent 1px 10px),
-    color-mix(in srgb, var(--tx-code-fill, var(--mac-surface-2)) 35%, var(--mac-surface) 65%);
-  color: var(--mac-text);
-  font: var(--rag-font-role-code);
+	background:
+		repeating-linear-gradient(
+			135deg,
+			color-mix(in srgb, var(--tx-code-line, var(--mac-border)) 22%, transparent) 0 1px,
+			transparent 1px 10px
+		),
+		color-mix(in srgb, var(--tx-code-fill, var(--mac-surface-2)) 35%, var(--mac-surface) 65%);
+	color: var(--mac-text);
+	font: var(--rag-font-role-code);
 }
 
 .noteChip {
-  appearance: none;
-  border: 1px solid color-mix(in srgb, var(--ctx-line, var(--mac-accent)) 68%, var(--mac-border));
-  border-left-width: 3px;
-  background: var(--mac-surface);
-  color: var(--mac-text);
-  padding: 1px 5px;
-  font: var(--rag-font-role-metadata);
-  cursor: pointer;
+	appearance: none;
+	border: 1px solid color-mix(in srgb, var(--ctx-line, var(--mac-accent)) 68%, var(--mac-border));
+	border-left-width: 3px;
+	background: var(--mac-surface);
+	color: var(--mac-text);
+	padding: 1px 5px;
+	font: var(--rag-font-role-metadata);
+	cursor: pointer;
 }
 
 .noteChip:hover,
-.noteChip[data-selected='true'] {
-  background: var(--ctx-fill, var(--mac-accent));
-  color: var(--ctx-label, var(--mac-text));
+.noteChip[data-selected="true"] {
+	background: var(--ctx-fill, var(--mac-accent));
+	color: var(--ctx-label, var(--mac-text));
 }
 
 .tokenChip {
-  border: 1px solid color-mix(in srgb, var(--ctx-label, var(--mac-text)) 35%, transparent);
-  background: color-mix(in srgb, var(--mac-surface) 82%, var(--ctx-fill, var(--mac-surface-2)) 18%);
-  color: var(--mac-text);
-  padding: 1px 5px;
+	border: 1px solid color-mix(in srgb, var(--ctx-label, var(--mac-text)) 35%, transparent);
+	background: color-mix(in srgb, var(--mac-surface) 82%, var(--ctx-fill, var(--mac-surface-2)) 18%);
+	color: var(--mac-text);
+	padding: 1px 5px;
 }
 
 .user {
-  align-self: flex-end;
-  max-width: 520px;
-  width: min(100%, 520px);
+	align-self: flex-end;
+	max-width: 520px;
+	width: min(100%, 520px);
 }
 
 .assistant,
@@ -117,34 +121,69 @@
 .system,
 .developer,
 .other {
-  align-self: flex-start;
-  max-width: 620px;
-  width: min(100%, 620px);
+	align-self: flex-start;
+	max-width: 620px;
+	width: min(100%, 620px);
 }
 
-.pattern_none .titleBar::before { background: transparent; }
-.pattern_solid .titleBar::before { background: transparent; }
+.pattern_none .titleBar::before {
+	background: transparent;
+}
+.pattern_solid .titleBar::before {
+	background: transparent;
+}
 .pattern_checker .titleBar::before {
-  background-image:
-    linear-gradient(45deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 45%, transparent) 25%, transparent 25%),
-    linear-gradient(-45deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 45%, transparent) 25%, transparent 25%);
-  background-size: 8px 8px;
+	background-image:
+		linear-gradient(
+			45deg,
+			color-mix(in srgb, var(--ctx-line, var(--mac-border)) 45%, transparent) 25%,
+			transparent 25%
+		),
+		linear-gradient(
+			-45deg,
+			color-mix(in srgb, var(--ctx-line, var(--mac-border)) 45%, transparent) 25%,
+			transparent 25%
+		);
+	background-size: 8px 8px;
 }
 .pattern_diagonal .titleBar::before {
-  background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 48%, transparent) 0 1px, transparent 1px 8px);
+	background: repeating-linear-gradient(
+		45deg,
+		color-mix(in srgb, var(--ctx-line, var(--mac-border)) 48%, transparent) 0 1px,
+		transparent 1px 8px
+	);
 }
 .pattern_diagonalDense .titleBar::before {
-  background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 48%, transparent) 0 1px, transparent 1px 4px);
+	background: repeating-linear-gradient(
+		45deg,
+		color-mix(in srgb, var(--ctx-line, var(--mac-border)) 48%, transparent) 0 1px,
+		transparent 1px 4px
+	);
 }
 .pattern_stipple .titleBar::before {
-  background-image: radial-gradient(color-mix(in srgb, var(--ctx-line, var(--mac-border)) 58%, transparent) 1px, transparent 1px);
-  background-size: 6px 6px;
+	background-image: radial-gradient(
+		color-mix(in srgb, var(--ctx-line, var(--mac-border)) 58%, transparent) 1px,
+		transparent 1px
+	);
+	background-size: 6px 6px;
 }
 .pattern_cross .titleBar::before {
-  background:
-    repeating-linear-gradient(0deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 42%, transparent) 0 1px, transparent 1px 8px),
-    repeating-linear-gradient(90deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 42%, transparent) 0 1px, transparent 1px 8px);
+	background:
+		repeating-linear-gradient(
+			0deg,
+			color-mix(in srgb, var(--ctx-line, var(--mac-border)) 42%, transparent) 0 1px,
+			transparent 1px 8px
+		),
+		repeating-linear-gradient(
+			90deg,
+			color-mix(in srgb, var(--ctx-line, var(--mac-border)) 42%, transparent) 0 1px,
+			transparent 1px 8px
+		);
 }
 .pattern_overflow .titleBar::before {
-  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 60%, transparent) 0 2px, transparent 2px 6px);
+	background: repeating-linear-gradient(
+		135deg,
+		color-mix(in srgb, var(--ctx-line, var(--mac-border)) 60%, transparent) 0 2px,
+		transparent 2px 6px
+	);
 }

@@ -1,21 +1,21 @@
 .root {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--mac-text);
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--mac-text);
 }
 
 .root input {
-  accent-color: var(--mac-accent);
+	accent-color: var(--mac-accent);
 }
 
 .disabled {
-  color: var(--mac-text-dim);
-  cursor: not-allowed;
+	color: var(--mac-text-dim);
+	cursor: not-allowed;
 }
 
 .disabled input {
-  cursor: not-allowed;
+	cursor: not-allowed;
 }

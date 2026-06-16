@@ -1,12 +1,60 @@
-.root { border: 1px solid var(--mac-border); background: var(--mac-surface); color: var(--mac-text); box-shadow: 2px 2px 0 0 rgba(0,0,0,.35); }
-.selected { border-color: var(--mac-accent); outline: 1px solid var(--mac-accent); }
-.resolved { opacity: .78; }
-.header { display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--mac-border); background: var(--mac-bg-dark); color: var(--mac-text-inv); padding: 3px 7px; }
-.selected .header { background: var(--mac-accent); }
-.index { width: 16px; height: 16px; display: grid; place-items: center; border: 1px solid var(--mac-text-inv); font: 700 10px/1 var(--font-mono); }
-.author { font: var(--rag-font-role-label); }
-.spacer { flex: 1; }
-.time { opacity: .8; font: var(--rag-font-role-metadata); }
-.dismiss { appearance: none; border: 0; background: transparent; color: inherit; cursor: pointer; padding: 0 0 0 4px; }
-.text { margin: 0; padding: 7px 9px; font: var(--rag-font-role-body); }
-.compact .text { font: var(--rag-font-role-compact); padding: 5px 7px; }
+.root {
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+	color: var(--mac-text);
+	box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.35);
+}
+.selected {
+	border-color: var(--mac-accent);
+	outline: 1px solid var(--mac-accent);
+}
+.resolved {
+	opacity: 0.78;
+}
+.header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	border-bottom: 1px solid var(--mac-border);
+	background: var(--mac-bg-dark);
+	color: var(--mac-text-inv);
+	padding: 3px 7px;
+}
+.selected .header {
+	background: var(--mac-accent);
+}
+.index {
+	width: 16px;
+	height: 16px;
+	display: grid;
+	place-items: center;
+	border: 1px solid var(--mac-text-inv);
+	font: 700 10px / 1 var(--font-mono);
+}
+.author {
+	font: var(--rag-font-role-label);
+}
+.spacer {
+	flex: 1;
+}
+.time {
+	opacity: 0.8;
+	font: var(--rag-font-role-metadata);
+}
+.dismiss {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+	padding: 0 0 0 4px;
+}
+.text {
+	margin: 0;
+	padding: 7px 9px;
+	font: var(--rag-font-role-body);
+}
+.compact .text {
+	font: var(--rag-font-role-compact);
+	padding: 5px 7px;
+}

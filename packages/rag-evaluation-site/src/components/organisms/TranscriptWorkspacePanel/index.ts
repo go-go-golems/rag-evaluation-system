@@ -1,1 +1,1 @@
-export * from './TranscriptWorkspacePanel';
+export * from "./TranscriptWorkspacePanel";

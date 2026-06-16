@@ -9,9 +9,9 @@ require (
 	github.com/dop251/goja_nodejs v0.0.0-20260212111938-1f56ff5bcf14
 	github.com/go-go-golems/geppetto v0.13.3
 	github.com/go-go-golems/glazed v1.3.6
-	github.com/go-go-golems/go-go-goja v0.8.8
-	github.com/go-go-golems/logcopter v0.1.0
-	github.com/go-go-golems/scraper v0.0.3
+	github.com/go-go-golems/go-go-goja v0.9.6
+	github.com/go-go-golems/logcopter v0.1.1
+	github.com/go-go-golems/scraper v0.0.4
 	github.com/mattn/go-sqlite3 v1.14.44
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/cobra v1.10.2
@@ -53,7 +53,7 @@ require (
 	github.com/blevesearch/zapx/v16 v16.3.4 // indirect
 	github.com/blevesearch/zapx/v17 v17.1.2 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.10.0 // indirect
-	github.com/buger/jsonparser v1.1.2 // indirect
+	github.com/buger/jsonparser v1.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/charmbracelet/bubbles v1.0.0 // indirect
 	github.com/charmbracelet/bubbletea v1.3.10 // indirect
@@ -72,6 +72,7 @@ require (
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/dop251/base64dec v0.0.0-20231022112746-c6c9f9a96217 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
+	github.com/evanw/esbuild v0.25.12 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/go-go-golems/bobatea v0.1.6 // indirect
 	github.com/go-go-golems/go-emrichen v0.0.11 // indirect
@@ -141,6 +142,7 @@ require (
 	github.com/tj/go-naturaldate v1.3.0 // indirect
 	github.com/tree-sitter/go-tree-sitter v0.25.0 // indirect
 	github.com/tree-sitter/tree-sitter-javascript v0.25.0 // indirect
+	github.com/tree-sitter/tree-sitter-typescript v0.23.2 // indirect
 	github.com/ugorji/go/codec v1.3.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect

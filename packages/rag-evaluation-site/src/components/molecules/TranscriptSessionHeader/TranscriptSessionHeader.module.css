@@ -1,22 +1,22 @@
 .root {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 18px;
-  border-bottom: 1px solid var(--mac-border);
-  background: var(--mac-surface-2);
-  color: var(--mac-text);
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 10px 18px;
+	border-bottom: 1px solid var(--mac-border);
+	background: var(--mac-surface-2);
+	color: var(--mac-text);
 }
 
 .titleRow,
 .metaRow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  min-width: 0;
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+	min-width: 0;
 }
 
 .rightSlot {
-  flex: 0 0 auto;
+	flex: 0 0 auto;
 }

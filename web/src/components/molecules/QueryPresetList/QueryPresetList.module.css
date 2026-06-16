@@ -1,13 +1,13 @@
 .item {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  padding: 2px 4px;
+	appearance: none;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	text-align: left;
+	cursor: pointer;
+	padding: 2px 4px;
 }
 
 .item:hover {
-  background: var(--mac-surface-2);
+	background: var(--mac-surface-2);
 }

@@ -1,1 +1,1 @@
-export * from './TranscriptRoleBadge';
+export * from "./TranscriptRoleBadge";

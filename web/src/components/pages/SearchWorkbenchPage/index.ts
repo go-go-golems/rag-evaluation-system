@@ -1,1 +1,1 @@
-export * from './SearchWorkbenchPage';
+export * from "./SearchWorkbenchPage";

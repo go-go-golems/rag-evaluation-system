@@ -1,5 +1,19 @@
-.root { height: 100%; }
-.controls { max-width: 220px; }
-.diagramArea { min-width: 0; }
-.selectorButton { width: 100%; text-align: left; }
-.empty { display: flex; justify-content: center; align-items: center; height: 100%; }
+.root {
+	height: 100%;
+}
+.controls {
+	max-width: 220px;
+}
+.diagramArea {
+	min-width: 0;
+}
+.selectorButton {
+	width: 100%;
+	text-align: left;
+}
+.empty {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+}

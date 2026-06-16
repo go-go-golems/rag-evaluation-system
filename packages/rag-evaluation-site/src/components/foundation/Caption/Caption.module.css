@@ -1,14 +1,32 @@
 .root {
-  font-family: var(--font-mono);
-  font-size: var(--text-caption-size, 10px);
-  line-height: 1.35;
-  letter-spacing: 0.01em;
+	font-family: var(--font-mono);
+	font-size: var(--text-caption-size, 10px);
+	line-height: 1.35;
+	letter-spacing: 0.01em;
 }
-.uppercase { text-transform: uppercase; }
-.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.toneMuted { color: var(--mac-text-dim); }
-.toneAccent { color: var(--mac-accent); }
-.toneSuccess { color: var(--mac-green); }
-.toneWarning { color: var(--mac-amber); }
-.toneDanger { color: var(--mac-red); }
-.toneInherit { color: inherit; }
+.uppercase {
+	text-transform: uppercase;
+}
+.truncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.toneMuted {
+	color: var(--mac-text-dim);
+}
+.toneAccent {
+	color: var(--mac-accent);
+}
+.toneSuccess {
+	color: var(--mac-green);
+}
+.toneWarning {
+	color: var(--mac-amber);
+}
+.toneDanger {
+	color: var(--mac-red);
+}
+.toneInherit {
+	color: inherit;
+}

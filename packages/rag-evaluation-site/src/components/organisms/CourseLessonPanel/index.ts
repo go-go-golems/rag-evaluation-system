@@ -1,1 +1,1 @@
-export * from './CourseLessonPanel';
+export * from "./CourseLessonPanel";

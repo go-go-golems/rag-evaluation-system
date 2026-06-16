@@ -1,1 +1,1 @@
-export * from './TranscriptReaderPanel';
+export * from "./TranscriptReaderPanel";

@@ -1,6 +1,27 @@
-.root { border-left: 3px solid var(--mac-accent); }
-.section { display: grid; gap: 6px; margin-top: 6px; }
-.sectionTitle { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--mac-text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
-.actions { display: flex; gap: 4px; align-items: center; }
-.retryButton { margin-top: 4px; }
-.error { margin-top: 6px; }
+.root {
+	border-left: 3px solid var(--mac-accent);
+}
+.section {
+	display: grid;
+	gap: 6px;
+	margin-top: 6px;
+}
+.sectionTitle {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 700;
+	color: var(--mac-text-dim);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+.actions {
+	display: flex;
+	gap: 4px;
+	align-items: center;
+}
+.retryButton {
+	margin-top: 4px;
+}
+.error {
+	margin-top: 6px;
+}

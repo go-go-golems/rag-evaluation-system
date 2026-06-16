@@ -1,331 +1,477 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { Button, ErrorCallout, IconButton, SelectInput, TextInput } from '@go-go-golems/rag-evaluation-site';
-import { Caption } from '@go-go-golems/rag-evaluation-site';
-import { FormRow, Panel, Stack } from '@go-go-golems/rag-evaluation-site';
-import { QueueHealthPanel, WorkflowListPanel, WorkflowOpGraphPanel, WorkflowOpGroupsPanel, WorkflowOpInspectorPanel, WorkflowOpResultPanel, WorkflowSummaryPanel, workflowGroupKey } from '../organisms';
-import styles from './WorkflowsView.module.css';
+import React, { useState, useMemo, useCallback } from "react";
 import {
-  useListWorkflowsQuery,
-  useGetWorkflowQuery,
-  useGetWorkflowOpsQuery,
-  useGetOpResultQuery,
-  useSubmitIntakeWorkflowMutation,
-  useRetryOpMutation,
-  useCancelWorkflowMutation,
-  useListQueuesQuery,
-  useListSourcesQuery,
-  SubmitIntakeRequest,
-} from '../../services/api';
+	Button,
+	ErrorCallout,
+	IconButton,
+	SelectInput,
+	TextInput,
+} from "@go-go-golems/rag-evaluation-site";
+import { Caption } from "@go-go-golems/rag-evaluation-site";
+import { FormRow, Panel, Stack } from "@go-go-golems/rag-evaluation-site";
+import {
+	QueueHealthPanel,
+	WorkflowListPanel,
+	WorkflowOpGraphPanel,
+	WorkflowOpGroupsPanel,
+	WorkflowOpInspectorPanel,
+	WorkflowOpResultPanel,
+	WorkflowSummaryPanel,
+	workflowGroupKey,
+} from "../organisms";
+import styles from "./WorkflowsView.module.css";
+import {
+	useListWorkflowsQuery,
+	useGetWorkflowQuery,
+	useGetWorkflowOpsQuery,
+	useGetOpResultQuery,
+	useSubmitIntakeWorkflowMutation,
+	useRetryOpMutation,
+	useCancelWorkflowMutation,
+	useListQueuesQuery,
+	useListSourcesQuery,
+	SubmitIntakeRequest,
+} from "../../services/api";
 
 // ─── Queue Health Widget ─────────────────────────────────────────────────────
 
 const QueueHealthWidget: React.FC = () => {
-  const { data: queues = [], isLoading } = useListQueuesQuery(undefined, {
-    pollingInterval: 5000,
-  });
+	const { data: queues = [], isLoading } = useListQueuesQuery(undefined, {
+		pollingInterval: 5000,
+	});
 
-  return <QueueHealthPanel queues={queues} isLoading={isLoading} />;
+	return <QueueHealthPanel queues={queues} isLoading={isLoading} />;
 };
 
 // ─── Submit Intake Modal ──────────────────────────────────────────────────────
 
 interface SubmitIntakeModalProps {
-  onClose: () => void;
-  onSubmitted: (workflowId: string) => void;
+	onClose: () => void;
+	onSubmitted: (workflowId: string) => void;
 }
 
 const SubmitIntakeModal: React.FC<SubmitIntakeModalProps> = ({ onClose, onSubmitted }) => {
-  const { data: sourcesData } = useListSourcesQuery();
-  const [submitIntake, { isLoading: submitting }] = useSubmitIntakeWorkflowMutation();
-  const [error, setError] = useState<string | null>(null);
+	const { data: sourcesData } = useListSourcesQuery();
+	const [submitIntake, { isLoading: submitting }] = useSubmitIntakeWorkflowMutation();
+	const [error, setError] = useState<string | null>(null);
 
-  const sourceNames = (sourcesData as unknown as { sources?: Array<{ source_id: string }> })?.sources
-    ?.map(s => s.source_id) ?? [];
+	const sourceNames =
+		(sourcesData as unknown as { sources?: Array<{ source_id: string }> })?.sources?.map(
+			(s) => s.source_id,
+		) ?? [];
 
-  const [form, setForm] = useState<SubmitIntakeRequest>({
-    strategy: 'fixed',
-    chunk_size: 1200,
-    overlap: 150,
-    embeddings_type: 'ollama',
-    embeddings_engine: 'nomic-embed-text',
-    embeddings_dimensions: 768,
-    batch_size: 16,
-    skip_embeddings: false,
-    skip_bm25: false,
-  });
+	const [form, setForm] = useState<SubmitIntakeRequest>({
+		strategy: "fixed",
+		chunk_size: 1200,
+		overlap: 150,
+		embeddings_type: "ollama",
+		embeddings_engine: "nomic-embed-text",
+		embeddings_dimensions: 768,
+		batch_size: 16,
+		skip_embeddings: false,
+		skip_bm25: false,
+	});
 
-  const [sourceInput, setSourceInput] = useState('');
+	const [sourceInput, setSourceInput] = useState("");
 
-  const strategyId = useMemo(() =>
-    `${form.strategy}-${form.chunk_size}-${form.overlap}`, [form.strategy, form.chunk_size, form.overlap]);
+	const strategyId = useMemo(
+		() => `${form.strategy}-${form.chunk_size}-${form.overlap}`,
+		[form.strategy, form.chunk_size, form.overlap],
+	);
 
-  const handleSubmit = useCallback(async () => {
-    setError(null);
-    try {
-      const sourceIds = sourceInput.split(',').map(s => s.trim()).filter(Boolean);
-      if (sourceIds.length === 0) {
-        setError('At least one source ID is required');
-        return;
-      }
-      const result = await submitIntake({ ...form, source_ids: sourceIds }).unwrap();
-      onSubmitted(result.workflow_id);
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg || 'Submission failed');
-    }
-  }, [form, sourceInput, submitIntake, onSubmitted]);
+	const handleSubmit = useCallback(async () => {
+		setError(null);
+		try {
+			const sourceIds = sourceInput
+				.split(",")
+				.map((s) => s.trim())
+				.filter(Boolean);
+			if (sourceIds.length === 0) {
+				setError("At least one source ID is required");
+				return;
+			}
+			const result = await submitIntake({ ...form, source_ids: sourceIds }).unwrap();
+			onSubmitted(result.workflow_id);
+		} catch (e: unknown) {
+			const msg = e instanceof Error ? e.message : String(e);
+			setError(msg || "Submission failed");
+		}
+	}, [form, sourceInput, submitIntake, onSubmitted]);
 
-  const set = (key: keyof SubmitIntakeRequest, val: unknown) =>
-    setForm(f => ({ ...f, [key]: val }));
+	const set = (key: keyof SubmitIntakeRequest, val: unknown) =>
+		setForm((f) => ({ ...f, [key]: val }));
 
-  return (
-    <div className={styles.modalOverlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <Panel
-        className={styles.modalPanel}
-        title="Submit Intake Workflow"
-        actions={<IconButton label="Close intake workflow modal" onClick={onClose}>✕</IconButton>}
-        density="condensed"
-      >
-        <Stack gap="sm" style={{ padding: 10 }}>
-          <fieldset className={styles.formSection}>
-            <legend>Document Selection</legend>
-            <Stack gap="xs">
-              <FormRow
-                label="Source IDs"
-                control={<TextInput className={styles.fullInput} value={sourceInput} onChange={e => setSourceInput(e.target.value)} placeholder="ttc-guides, ttc-articles" />}
-              />
-              {sourceNames.length > 0 && <Caption>Available: {sourceNames.join(', ')}</Caption>}
-              <FormRow label="Strategy" control={<Caption tone="accent">{strategyId}</Caption>} />
-            </Stack>
-          </fieldset>
+	return (
+		<div
+			className={styles.modalOverlay}
+			onClick={(e) => {
+				if (e.target === e.currentTarget) onClose();
+			}}
+		>
+			<Panel
+				className={styles.modalPanel}
+				title="Submit Intake Workflow"
+				actions={
+					<IconButton label="Close intake workflow modal" onClick={onClose}>
+						✕
+					</IconButton>
+				}
+				density="condensed"
+			>
+				<Stack gap="sm" style={{ padding: 10 }}>
+					<fieldset className={styles.formSection}>
+						<legend>Document Selection</legend>
+						<Stack gap="xs">
+							<FormRow
+								label="Source IDs"
+								control={
+									<TextInput
+										className={styles.fullInput}
+										value={sourceInput}
+										onChange={(e) => setSourceInput(e.target.value)}
+										placeholder="ttc-guides, ttc-articles"
+									/>
+								}
+							/>
+							{sourceNames.length > 0 && <Caption>Available: {sourceNames.join(", ")}</Caption>}
+							<FormRow label="Strategy" control={<Caption tone="accent">{strategyId}</Caption>} />
+						</Stack>
+					</fieldset>
 
-          <fieldset className={styles.formSection}>
-            <legend>Chunking</legend>
-            <Stack gap="xs">
-              <FormRow
-                label="Strategy"
-                control={(
-                  <SelectInput value={form.strategy} onChange={e => set('strategy', e.target.value)}>
-                    <option value="fixed">fixed</option>
-                    <option value="recursive">recursive</option>
-                  </SelectInput>
-                )}
-              />
-              <FormRow label="Chunk Size" control={<TextInput className={styles.shortInput} type="number" value={form.chunk_size} onChange={e => set('chunk_size', +e.target.value)} />} />
-              <FormRow label="Overlap" control={<TextInput className={styles.shortInput} type="number" value={form.overlap} onChange={e => set('overlap', +e.target.value)} />} />
-            </Stack>
-          </fieldset>
+					<fieldset className={styles.formSection}>
+						<legend>Chunking</legend>
+						<Stack gap="xs">
+							<FormRow
+								label="Strategy"
+								control={
+									<SelectInput
+										value={form.strategy}
+										onChange={(e) => set("strategy", e.target.value)}
+									>
+										<option value="fixed">fixed</option>
+										<option value="recursive">recursive</option>
+									</SelectInput>
+								}
+							/>
+							<FormRow
+								label="Chunk Size"
+								control={
+									<TextInput
+										className={styles.shortInput}
+										type="number"
+										value={form.chunk_size}
+										onChange={(e) => set("chunk_size", +e.target.value)}
+									/>
+								}
+							/>
+							<FormRow
+								label="Overlap"
+								control={
+									<TextInput
+										className={styles.shortInput}
+										type="number"
+										value={form.overlap}
+										onChange={(e) => set("overlap", +e.target.value)}
+									/>
+								}
+							/>
+						</Stack>
+					</fieldset>
 
-          <fieldset className={styles.formSection}>
-            <legend>Embedding</legend>
-            <Stack gap="xs">
-              <FormRow label="Compute" control={<input type="checkbox" checked={!form.skip_embeddings} onChange={e => set('skip_embeddings', !e.target.checked)} />} />
-              {!form.skip_embeddings && (
-                <>
-                  <FormRow
-                    label="Provider"
-                    control={(
-                      <SelectInput value={form.embeddings_type} onChange={e => set('embeddings_type', e.target.value)}>
-                        <option value="ollama">ollama</option>
-                        <option value="openai">openai</option>
-                      </SelectInput>
-                    )}
-                  />
-                  <FormRow label="Engine" control={<TextInput value={form.embeddings_engine} onChange={e => set('embeddings_engine', e.target.value)} />} />
-                  <FormRow label="Dimensions" control={<TextInput className={styles.shortInput} type="number" value={form.embeddings_dimensions} onChange={e => set('embeddings_dimensions', +e.target.value)} />} />
-                  <FormRow label="Batch Size" control={<TextInput className={styles.shortInput} type="number" value={form.batch_size} onChange={e => set('batch_size', +e.target.value)} />} />
-                </>
-              )}
-            </Stack>
-          </fieldset>
+					<fieldset className={styles.formSection}>
+						<legend>Embedding</legend>
+						<Stack gap="xs">
+							<FormRow
+								label="Compute"
+								control={
+									<input
+										type="checkbox"
+										checked={!form.skip_embeddings}
+										onChange={(e) => set("skip_embeddings", !e.target.checked)}
+									/>
+								}
+							/>
+							{!form.skip_embeddings && (
+								<>
+									<FormRow
+										label="Provider"
+										control={
+											<SelectInput
+												value={form.embeddings_type}
+												onChange={(e) => set("embeddings_type", e.target.value)}
+											>
+												<option value="ollama">ollama</option>
+												<option value="openai">openai</option>
+											</SelectInput>
+										}
+									/>
+									<FormRow
+										label="Engine"
+										control={
+											<TextInput
+												value={form.embeddings_engine}
+												onChange={(e) => set("embeddings_engine", e.target.value)}
+											/>
+										}
+									/>
+									<FormRow
+										label="Dimensions"
+										control={
+											<TextInput
+												className={styles.shortInput}
+												type="number"
+												value={form.embeddings_dimensions}
+												onChange={(e) => set("embeddings_dimensions", +e.target.value)}
+											/>
+										}
+									/>
+									<FormRow
+										label="Batch Size"
+										control={
+											<TextInput
+												className={styles.shortInput}
+												type="number"
+												value={form.batch_size}
+												onChange={(e) => set("batch_size", +e.target.value)}
+											/>
+										}
+									/>
+								</>
+							)}
+						</Stack>
+					</fieldset>
 
-          <fieldset className={styles.formSection}>
-            <legend>BM25 Index</legend>
-            <FormRow label="Build" control={<input type="checkbox" checked={!form.skip_bm25} onChange={e => set('skip_bm25', !e.target.checked)} />} />
-          </fieldset>
+					<fieldset className={styles.formSection}>
+						<legend>BM25 Index</legend>
+						<FormRow
+							label="Build"
+							control={
+								<input
+									type="checkbox"
+									checked={!form.skip_bm25}
+									onChange={(e) => set("skip_bm25", !e.target.checked)}
+								/>
+							}
+						/>
+					</fieldset>
 
-          {error && <ErrorCallout>{error}</ErrorCallout>}
+					{error && <ErrorCallout>{error}</ErrorCallout>}
 
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
-            <Button onClick={onClose}>Cancel</Button>
-            <Button variant="primary" onClick={handleSubmit} disabled={submitting || !sourceInput}>
-              {submitting ? 'Submitting…' : 'Submit Workflow'}
-            </Button>
-          </div>
-        </Stack>
-      </Panel>
-    </div>
-  );
+					<div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
+						<Button onClick={onClose}>Cancel</Button>
+						<Button variant="primary" onClick={handleSubmit} disabled={submitting || !sourceInput}>
+							{submitting ? "Submitting…" : "Submit Workflow"}
+						</Button>
+					</div>
+				</Stack>
+			</Panel>
+		</div>
+	);
 };
 
 // ─── Op Result Section ────────────────────────────────────────────────────────
 
 const OpResultSection: React.FC<{ workflowId: string; opId: string; opStatus: string }> = ({
-  workflowId, opId, opStatus,
+	workflowId,
+	opId,
+	opStatus,
 }) => {
-  // Only fetch result for completed (succeeded/failed) ops
-  const { data: result, isLoading, error } = useGetOpResultQuery(
-    { workflowId, opId },
-    { skip: opStatus !== 'succeeded' && opStatus !== 'failed' },
-  );
+	// Only fetch result for completed (succeeded/failed) ops
+	const {
+		data: result,
+		isLoading,
+		error,
+	} = useGetOpResultQuery(
+		{ workflowId, opId },
+		{ skip: opStatus !== "succeeded" && opStatus !== "failed" },
+	);
 
-  if (opStatus !== 'succeeded' && opStatus !== 'failed') return null;
+	if (opStatus !== "succeeded" && opStatus !== "failed") return null;
 
-  return <WorkflowOpResultPanel result={result} isLoading={isLoading} error={error} />;
+	return <WorkflowOpResultPanel result={result} isLoading={isLoading} error={error} />;
 };
 
 // ─── Workflow Detail ──────────────────────────────────────────────────────────
 
 interface WorkflowDetailProps {
-  workflowId: string;
-  onBack: () => void;
-  onNavigateToCorpus: (sourceId: string, strategyId: string) => void;
+	workflowId: string;
+	onBack: () => void;
+	onNavigateToCorpus: (sourceId: string, strategyId: string) => void;
 }
 
-const WorkflowDetail: React.FC<WorkflowDetailProps> = ({ workflowId, onBack, onNavigateToCorpus }) => {
-  const { data: summary, isLoading: summaryLoading } = useGetWorkflowQuery(workflowId, {
-    pollingInterval: 2000,
-  });
-  const { data: opsData, isLoading: opsLoading } = useGetWorkflowOpsQuery(workflowId, {
-    pollingInterval: 2000,
-  });
-  const [retryOp, { isLoading: retrying }] = useRetryOpMutation();
-  const [cancelWorkflow] = useCancelWorkflowMutation();
-  const [inspectedGroup, setInspectedGroup] = useState<string | null>(null);
+const WorkflowDetail: React.FC<WorkflowDetailProps> = ({
+	workflowId,
+	onBack,
+	onNavigateToCorpus,
+}) => {
+	const { data: summary, isLoading: summaryLoading } = useGetWorkflowQuery(workflowId, {
+		pollingInterval: 2000,
+	});
+	const { data: opsData, isLoading: opsLoading } = useGetWorkflowOpsQuery(workflowId, {
+		pollingInterval: 2000,
+	});
+	const [retryOp, { isLoading: retrying }] = useRetryOpMutation();
+	const [cancelWorkflow] = useCancelWorkflowMutation();
+	const [inspectedGroup, setInspectedGroup] = useState<string | null>(null);
 
-  if (summaryLoading || opsLoading) return <Caption className={styles.workflowMessage}>Loading workflow…</Caption>;
+	if (summaryLoading || opsLoading)
+		return <Caption className={styles.workflowMessage}>Loading workflow…</Caption>;
 
-  const wf = summary?.workflow;
-  const groups = opsData?.groups ?? [];
-  const totalOps = opsData?.total ?? 0;
+	const wf = summary?.workflow;
+	const groups = opsData?.groups ?? [];
+	const totalOps = opsData?.total ?? 0;
 
-  if (!wf) return <Caption className={styles.workflowMessage}>Workflow not found.</Caption>;
+	if (!wf) return <Caption className={styles.workflowMessage}>Workflow not found.</Caption>;
 
-  const isRunning = wf.Status === 'running' || wf.Status === 'pending';
-  const input = wf.Input as Record<string, unknown>;
-  const strategyId = (input?.strategy_id as string) ?? wf.Metadata?.strategy ?? '?';
-  const sourceIds = (input?.source_ids as string[]) ?? [];
-  const docIds = (input?.document_ids as string[]) ?? [];
+	const isRunning = wf.Status === "running" || wf.Status === "pending";
+	const input = wf.Input as Record<string, unknown>;
+	const strategyId = (input?.strategy_id as string) ?? wf.Metadata?.strategy ?? "?";
+	const sourceIds = (input?.source_ids as string[]) ?? [];
+	const docIds = (input?.document_ids as string[]) ?? [];
 
-  // Compute counts per status from groups
-  const succeededCount = groups.filter(g => g.status === 'succeeded').reduce((s, g) => s + g.count, 0);
-  const failedCount = groups.filter(g => g.status === 'failed').reduce((s, g) => s + g.count, 0);
-  const runningCount = groups.filter(g => g.status === 'running').reduce((s, g) => s + g.count, 0);
-  const pendingCount = groups.filter(g => g.status === 'pending' || g.status === 'ready').reduce((s, g) => s + g.count, 0);
+	// Compute counts per status from groups
+	const succeededCount = groups
+		.filter((g) => g.status === "succeeded")
+		.reduce((s, g) => s + g.count, 0);
+	const failedCount = groups.filter((g) => g.status === "failed").reduce((s, g) => s + g.count, 0);
+	const runningCount = groups
+		.filter((g) => g.status === "running")
+		.reduce((s, g) => s + g.count, 0);
+	const pendingCount = groups
+		.filter((g) => g.status === "pending" || g.status === "ready")
+		.reduce((s, g) => s + g.count, 0);
 
-  // Find selected group sample
-  const selectedGroup = inspectedGroup ? groups.find(g => g.operation + '|' + g.status === inspectedGroup) : null;
-  const inspectedSample = selectedGroup?.sample ?? null;
+	// Find selected group sample
+	const selectedGroup = inspectedGroup
+		? groups.find((g) => g.operation + "|" + g.status === inspectedGroup)
+		: null;
+	const inspectedSample = selectedGroup?.sample ?? null;
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <WorkflowSummaryPanel
-        workflow={wf}
-        strategyId={strategyId}
-        docCount={docIds.length}
-        sourceId={sourceIds[0]}
-        totalOps={totalOps}
-        succeededCount={succeededCount}
-        runningCount={runningCount}
-        pendingCount={pendingCount}
-        failedCount={failedCount}
-        isRunning={isRunning}
-        onBack={onBack}
-        onCancel={() => cancelWorkflow(workflowId)}
-        onNavigateToCorpus={onNavigateToCorpus}
-      />
+	return (
+		<div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+			<WorkflowSummaryPanel
+				workflow={wf}
+				strategyId={strategyId}
+				docCount={docIds.length}
+				sourceId={sourceIds[0]}
+				totalOps={totalOps}
+				succeededCount={succeededCount}
+				runningCount={runningCount}
+				pendingCount={pendingCount}
+				failedCount={failedCount}
+				isRunning={isRunning}
+				onBack={onBack}
+				onCancel={() => cancelWorkflow(workflowId)}
+				onNavigateToCorpus={onNavigateToCorpus}
+			/>
 
-      <WorkflowOpGraphPanel groups={groups} total={totalOps} done={succeededCount} />
+			<WorkflowOpGraphPanel groups={groups} total={totalOps} done={succeededCount} />
 
-      <WorkflowOpGroupsPanel
-        groups={groups}
-        totalOps={totalOps}
-        selectedKey={inspectedGroup}
-        onInspect={(group) => setInspectedGroup(group.sample ? workflowGroupKey(group) : null)}
-      />
+			<WorkflowOpGroupsPanel
+				groups={groups}
+				totalOps={totalOps}
+				selectedKey={inspectedGroup}
+				onInspect={(group) => setInspectedGroup(group.sample ? workflowGroupKey(group) : null)}
+			/>
 
-      {/* Inspector for a sample op */}
-      {inspectedSample && (
-        <WorkflowOpInspectorPanel
-          sample={inspectedSample}
-          onClose={() => setInspectedGroup(null)}
-          retrying={retrying}
-          onRetry={inspectedSample.status === 'failed' ? async () => {
-            const group = groups.find(candidate => workflowGroupKey(candidate) === inspectedGroup);
-            if (!group?.sample) return;
-            try { await retryOp({ workflowId, opId: group.sample.op.ID }).unwrap(); } catch (error) { console.error('retry failed', error); }
-          } : undefined}
-        >
-          {(inspectedSample.status === 'succeeded' || inspectedSample.status === 'failed') && (
-            <OpResultSection workflowId={workflowId} opId={inspectedSample.op.ID} opStatus={inspectedSample.status} />
-          )}
-        </WorkflowOpInspectorPanel>
-      )}
-    </div>
-  );
+			{/* Inspector for a sample op */}
+			{inspectedSample && (
+				<WorkflowOpInspectorPanel
+					sample={inspectedSample}
+					onClose={() => setInspectedGroup(null)}
+					retrying={retrying}
+					onRetry={
+						inspectedSample.status === "failed"
+							? async () => {
+									const group = groups.find(
+										(candidate) => workflowGroupKey(candidate) === inspectedGroup,
+									);
+									if (!group?.sample) return;
+									try {
+										await retryOp({ workflowId, opId: group.sample.op.ID }).unwrap();
+									} catch (error) {
+										console.error("retry failed", error);
+									}
+								}
+							: undefined
+					}
+				>
+					{(inspectedSample.status === "succeeded" || inspectedSample.status === "failed") && (
+						<OpResultSection
+							workflowId={workflowId}
+							opId={inspectedSample.op.ID}
+							opStatus={inspectedSample.status}
+						/>
+					)}
+				</WorkflowOpInspectorPanel>
+			)}
+		</div>
+	);
 };
 
 // ─── Workflows List ──────────────────────────────────────────────────────────
 
 const WorkflowsList: React.FC<{ onSelect: (id: string) => void }> = ({ onSelect }) => {
-  const [statusFilter, setStatusFilter] = useState('');
-  const { data: result, isLoading } = useListWorkflowsQuery(
-    { status: statusFilter || undefined },
-    { pollingInterval: 2000 },
-  );
+	const [statusFilter, setStatusFilter] = useState("");
+	const { data: result, isLoading } = useListWorkflowsQuery(
+		{ status: statusFilter || undefined },
+		{ pollingInterval: 2000 },
+	);
 
-  return (
-    <WorkflowListPanel
-      workflows={result?.workflows ?? []}
-      total={result?.total ?? 0}
-      isLoading={isLoading}
-      statusFilter={statusFilter}
-      onStatusFilterChange={setStatusFilter}
-      onSelect={onSelect}
-    />
-  );
+	return (
+		<WorkflowListPanel
+			workflows={result?.workflows ?? []}
+			total={result?.total ?? 0}
+			isLoading={isLoading}
+			statusFilter={statusFilter}
+			onStatusFilterChange={setStatusFilter}
+			onSelect={onSelect}
+		/>
+	);
 };
 
 // ─── Main View ───────────────────────────────────────────────────────────────
 
 export const WorkflowsView: React.FC = () => {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showSubmit, setShowSubmit] = useState(false);
+	const [selectedId, setSelectedId] = useState<string | null>(null);
+	const [showSubmit, setShowSubmit] = useState(false);
 
-  const handleNavigateToCorpus = useCallback((sourceId: string, strategyId: string) => {
-    const event = new CustomEvent('rag:navigate-to-chunk', {
-      detail: { sourceId, strategyId },
-    });
-    window.dispatchEvent(event);
-  }, []);
+	const handleNavigateToCorpus = useCallback((sourceId: string, strategyId: string) => {
+		const event = new CustomEvent("rag:navigate-to-chunk", {
+			detail: { sourceId, strategyId },
+		});
+		window.dispatchEvent(event);
+	}, []);
 
-  if (selectedId) {
-    return (
-      <WorkflowDetail
-        workflowId={selectedId}
-        onBack={() => setSelectedId(null)}
-        onNavigateToCorpus={handleNavigateToCorpus}
-      />
-    );
-  }
+	if (selectedId) {
+		return (
+			<WorkflowDetail
+				workflowId={selectedId}
+				onBack={() => setSelectedId(null)}
+				onNavigateToCorpus={handleNavigateToCorpus}
+			/>
+		);
+	}
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <WorkflowsList onSelect={setSelectedId} />
-        <QueueHealthWidget />
-      </div>
-      <div>
-        <Button variant="primary" onClick={() => setShowSubmit(true)}>
-          + New Intake Workflow
-        </Button>
-      </div>
-      {showSubmit && (
-        <SubmitIntakeModal
-          onClose={() => setShowSubmit(false)}
-          onSubmitted={(id) => { setShowSubmit(false); setSelectedId(id); }}
-        />
-      )}
-    </div>
-  );
+	return (
+		<div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+			<div style={{ display: "flex", gap: 8 }}>
+				<WorkflowsList onSelect={setSelectedId} />
+				<QueueHealthWidget />
+			</div>
+			<div>
+				<Button variant="primary" onClick={() => setShowSubmit(true)}>
+					+ New Intake Workflow
+				</Button>
+			</div>
+			{showSubmit && (
+				<SubmitIntakeModal
+					onClose={() => setShowSubmit(false)}
+					onSubmitted={(id) => {
+						setShowSubmit(false);
+						setSelectedId(id);
+					}}
+				/>
+			)}
+		</div>
+	);
 };

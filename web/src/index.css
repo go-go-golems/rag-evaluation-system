@@ -3,33 +3,33 @@
 @import "./styles/tokens.css";
 
 /* ===== Global ===== */
-* { box-sizing: border-box; }
+* {
+	box-sizing: border-box;
+}
 
 body {
-  font-family: var(--font-body);
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--mac-text);
-  background: var(--mac-bg);
-  margin: 0;
-  padding: 0;
-  -webkit-font-smoothing: none;
+	font-family: var(--font-body);
+	font-size: 12px;
+	line-height: 1.45;
+	color: var(--mac-text);
+	background: var(--mac-bg);
+	margin: 0;
+	padding: 0;
+	-webkit-font-smoothing: none;
 }
 
 /* ===== Scrollbars (retro thick style) ===== */
 ::-webkit-scrollbar {
-  width: 16px;
-  height: 16px;
+	width: 16px;
+	height: 16px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--mac-surface);
-  border: 1px solid #CCCCCC;
+	background: var(--mac-surface);
+	border: 1px solid #cccccc;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--mac-surface-2);
-  border: 1px solid var(--mac-border);
+	background: var(--mac-surface-2);
+	border: 1px solid var(--mac-border);
 }
-
-

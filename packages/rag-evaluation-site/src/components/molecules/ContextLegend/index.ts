@@ -1,1 +1,1 @@
-export * from './ContextLegend';
+export * from "./ContextLegend";

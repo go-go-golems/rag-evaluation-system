@@ -1,2 +1,2 @@
-export * from './CoveragePanel';
-export * from './QueryPresetList';
+export * from "./CoveragePanel";
+export * from "./QueryPresetList";

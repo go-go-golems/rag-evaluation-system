@@ -1,1 +1,1 @@
-export * from './KeyValueStrip';
+export * from "./KeyValueStrip";

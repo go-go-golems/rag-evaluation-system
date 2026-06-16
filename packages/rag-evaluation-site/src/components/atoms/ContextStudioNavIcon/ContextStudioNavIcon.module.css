@@ -1,15 +1,15 @@
 .root {
-  width: 15px;
-  height: 15px;
-  color: currentColor;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.2px;
-  stroke-linecap: square;
-  stroke-linejoin: miter;
-  flex: none;
+	width: 15px;
+	height: 15px;
+	color: currentColor;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.2px;
+	stroke-linecap: square;
+	stroke-linejoin: miter;
+	flex: none;
 }
 
 .filled {
-  fill: currentColor;
+	fill: currentColor;
 }

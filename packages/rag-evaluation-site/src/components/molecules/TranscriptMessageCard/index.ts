@@ -1,1 +1,1 @@
-export * from './TranscriptMessageCard';
+export * from "./TranscriptMessageCard";

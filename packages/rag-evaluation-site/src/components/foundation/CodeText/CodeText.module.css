@@ -1,21 +1,29 @@
 .root {
-  margin: 0;
-  font: var(--rag-font-role-code, 400 11px/1.45 var(--font-mono));
-  color: var(--mac-text);
-  word-break: break-all;
+	margin: 0;
+	font: var(--rag-font-role-code, 400 11px / 1.45 var(--font-mono));
+	color: var(--mac-text);
+	word-break: break-all;
 }
 
-.inline { display: inline; }
-.block { display: block; }
-.muted { color: var(--mac-text-dim); }
-.accent { color: var(--mac-accent); }
+.inline {
+	display: inline;
+}
+.block {
+	display: block;
+}
+.muted {
+	color: var(--mac-text-dim);
+}
+.accent {
+	color: var(--mac-accent);
+}
 
 .copyable {
-  cursor: copy;
-  text-decoration: underline dotted transparent;
+	cursor: copy;
+	text-decoration: underline dotted transparent;
 }
 
 .copyable:hover {
-  color: var(--mac-accent);
-  text-decoration-color: currentColor;
+	color: var(--mac-accent);
+	text-decoration-color: currentColor;
 }
