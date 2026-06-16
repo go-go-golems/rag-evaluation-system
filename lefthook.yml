@@ -15,6 +15,9 @@ pre-commit:
       # Lint errors are informational only for now; do not block commits
       # until the existing backlog is addressed incrementally.
       run: npx biome lint {staged_files} || true
+    rag-evaluation-site-typecheck:
+      glob: 'packages/rag-evaluation-site/**/*.{ts,tsx}'
+      run: pnpm --dir packages/rag-evaluation-site typecheck
   parallel: true
 
 pre-push:
@@ -25,4 +28,6 @@ pre-push:
       run: make lint
     test:
       run: make test
+    rag-evaluation-site-typecheck:
+      run: pnpm --dir packages/rag-evaluation-site typecheck
   parallel: true
