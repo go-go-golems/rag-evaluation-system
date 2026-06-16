@@ -32,7 +32,7 @@ export function CourseStudioShell({
 	const header = (
 		<div className={styles.header}>
 			<div className={styles.title}>{title}</div>
-			{subtitle && <Caption>{subtitle}</Caption>}
+			{/*{subtitle && <Caption>{subtitle}</Caption>}*/}
 		</div>
 	);
 
