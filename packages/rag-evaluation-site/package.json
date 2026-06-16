@@ -1,76 +1,76 @@
 {
-  "name": "@go-go-golems/rag-evaluation-site",
-  "version": "0.1.15",
-  "private": false,
-  "type": "module",
-  "license": "MIT",
-  "description": "React Widget IR renderer and default RAG evaluation site shell.",
-  "keywords": [
-    "rag",
-    "widget-ir",
-    "react",
-    "renderer",
-    "go-go-golems"
-  ],
-  "homepage": "https://github.com/go-go-golems/rag-evaluation-system#readme",
-  "bugs": {
-    "url": "https://github.com/go-go-golems/rag-evaluation-system/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/go-go-golems/rag-evaluation-system.git",
-    "directory": "packages/rag-evaluation-site"
-  },
-  "sideEffects": [
-    "**/*.css"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "**/*.js",
-    "**/*.d.ts",
-    "**/*.css",
-    "**/*.json",
-    "README.md"
-  ],
-  "exports": {
-    ".": {
-      "types": "./index.d.ts",
-      "import": "./index.js"
-    },
-    "./ir": {
-      "types": "./ir.d.ts",
-      "import": "./ir.js"
-    },
-    "./app": {
-      "types": "./app/index.d.ts",
-      "import": "./app/index.js"
-    },
-    "./styles.css": "./styles.css",
-    "./theme.css": "./theme.css"
-  },
-  "scripts": {
-    "typecheck": "tsc --noEmit",
-    "build": "rm -rf dist && tsc -p tsconfig.build.json && vite build && node scripts/copy-css.mjs && node scripts/prepare-dist.mjs",
-    "build:app": "vite build --config vite.app.config.ts",
-    "sync:defaultspa": "node scripts/sync-defaultspa.mjs",
-    "pack:smoke": "npm pack --dry-run ./dist",
-    "consumer:smoke": "node scripts/consumer-smoke.mjs",
-    "storybook": "storybook dev -p 6007",
-    "build-storybook": "storybook build"
-  },
-  "peerDependencies": {
-    "react": "^18 || ^19",
-    "react-dom": "^18 || ^19"
-  },
-  "devDependencies": {
-    "@storybook/react-vite": "^10.4.1",
-    "@types/react": "^19.2.15",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.2",
-    "storybook": "^10.4.1",
-    "typescript": "~6.0.2",
-    "vite": "^8.0.12"
-  }
+	"name": "@go-go-golems/rag-evaluation-site",
+	"version": "0.1.15",
+	"private": false,
+	"type": "module",
+	"license": "MIT",
+	"description": "React Widget IR renderer and default RAG evaluation site shell.",
+	"keywords": [
+		"rag",
+		"widget-ir",
+		"react",
+		"renderer",
+		"go-go-golems"
+	],
+	"homepage": "https://github.com/go-go-golems/rag-evaluation-system#readme",
+	"bugs": {
+		"url": "https://github.com/go-go-golems/rag-evaluation-system/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/go-go-golems/rag-evaluation-system.git",
+		"directory": "packages/rag-evaluation-site"
+	},
+	"sideEffects": [
+		"**/*.css"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"files": [
+		"**/*.js",
+		"**/*.d.ts",
+		"**/*.css",
+		"**/*.json",
+		"README.md"
+	],
+	"exports": {
+		".": {
+			"types": "./index.d.ts",
+			"import": "./index.js"
+		},
+		"./ir": {
+			"types": "./ir.d.ts",
+			"import": "./ir.js"
+		},
+		"./app": {
+			"types": "./app/index.d.ts",
+			"import": "./app/index.js"
+		},
+		"./styles.css": "./styles.css",
+		"./theme.css": "./theme.css"
+	},
+	"scripts": {
+		"typecheck": "tsc --noEmit",
+		"build": "rm -rf dist && tsc -p tsconfig.build.json && vite build && node scripts/copy-css.mjs && node scripts/prepare-dist.mjs",
+		"build:app": "vite build --config vite.app.config.ts",
+		"sync:defaultspa": "node scripts/sync-defaultspa.mjs",
+		"pack:smoke": "npm pack --dry-run ./dist",
+		"consumer:smoke": "node scripts/consumer-smoke.mjs",
+		"storybook": "storybook dev -p 6007",
+		"build-storybook": "storybook build"
+	},
+	"peerDependencies": {
+		"react": "^18 || ^19",
+		"react-dom": "^18 || ^19"
+	},
+	"devDependencies": {
+		"@storybook/react-vite": "^10.4.1",
+		"@types/react": "^19.2.15",
+		"@types/react-dom": "^19.2.3",
+		"@vitejs/plugin-react": "^6.0.2",
+		"storybook": "^10.4.1",
+		"typescript": "~6.0.2",
+		"vite": "^8.0.12"
+	}
 }

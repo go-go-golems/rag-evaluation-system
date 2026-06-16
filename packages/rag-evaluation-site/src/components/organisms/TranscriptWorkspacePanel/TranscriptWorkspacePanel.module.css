@@ -1,29 +1,29 @@
 .root {
-  min-height: 640px;
-  height: 100%;
-  background: var(--mac-surface);
-  color: var(--mac-text);
+	min-height: 640px;
+	height: 100%;
+	background: var(--mac-surface);
+	color: var(--mac-text);
 }
 
 .withNotes {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 280px;
 }
 
 .noNotes {
-  display: block;
+	display: block;
 }
 
-.noNotes > [data-rag-organism='TranscriptReaderPanel'] {
-  max-width: 860px;
-  height: 100%;
-  margin: 0 auto;
-  border-left: 1px solid var(--mac-border-subtle);
-  border-right: 1px solid var(--mac-border-subtle);
+.noNotes > [data-rag-organism="TranscriptReaderPanel"] {
+	max-width: 860px;
+	height: 100%;
+	margin: 0 auto;
+	border-left: 1px solid var(--mac-border-subtle);
+	border-right: 1px solid var(--mac-border-subtle);
 }
 
 @media (max-width: 960px) {
-  .withNotes {
-    grid-template-columns: 1fr;
-  }
+	.withNotes {
+		grid-template-columns: 1fr;
+	}
 }

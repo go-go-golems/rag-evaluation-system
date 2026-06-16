@@ -1,1 +1,1 @@
-export * from './ContextStyleSwatch';
+export * from "./ContextStyleSwatch";

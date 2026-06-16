@@ -1,1 +1,1 @@
-export * from './AnnotationNoteCard';
+export * from "./AnnotationNoteCard";

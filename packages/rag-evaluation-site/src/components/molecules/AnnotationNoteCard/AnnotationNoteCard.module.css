@@ -1,100 +1,136 @@
 .root {
-  border: 1px solid var(--ctx-stroke, var(--mac-border));
-  background: var(--mac-surface);
-  color: var(--mac-text);
-  display: flex;
-  flex-direction: column;
+	border: 1px solid var(--ctx-stroke, var(--mac-border));
+	background: var(--mac-surface);
+	color: var(--mac-text);
+	display: flex;
+	flex-direction: column;
 }
 
 .selected {
-  border-color: var(--ctx-line, var(--mac-accent));
-  box-shadow: 2px 2px 0 0 color-mix(in srgb, var(--ctx-line, var(--mac-accent)) 45%, rgba(0, 0, 0, .35));
+	border-color: var(--ctx-line, var(--mac-accent));
+	box-shadow: 2px 2px 0 0
+		color-mix(in srgb, var(--ctx-line, var(--mac-accent)) 45%, rgba(0, 0, 0, 0.35));
 }
 
 .titleBar {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 4px 8px;
-  border-bottom: 1px solid var(--ctx-stroke, var(--mac-border));
-  background: var(--ctx-fill, var(--mac-surface-2));
-  color: var(--ctx-label, var(--mac-text));
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 4px 8px;
+	border-bottom: 1px solid var(--ctx-stroke, var(--mac-border));
+	background: var(--ctx-fill, var(--mac-surface-2));
+	color: var(--ctx-label, var(--mac-text));
 }
 
 .titleBar::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: .5;
-  background: transparent;
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	opacity: 0.5;
+	background: transparent;
 }
 
 .titleBar > * {
-  position: relative;
-  z-index: 1;
+	position: relative;
+	z-index: 1;
 }
 
 .noteLabel {
-  color: var(--ctx-label, var(--mac-text));
-  font: var(--rag-font-role-label);
-  letter-spacing: 0.5px;
+	color: var(--ctx-label, var(--mac-text));
+	font: var(--rag-font-role-label);
+	letter-spacing: 0.5px;
 }
 
 .body {
-  padding: 7px 9px;
-  background: var(--mac-surface);
-  color: var(--mac-text);
+	padding: 7px 9px;
+	background: var(--mac-surface);
+	color: var(--mac-text);
 }
 
 .title {
-  margin-bottom: 3px;
-  color: var(--mac-text);
-  font: var(--rag-font-role-compact);
-  font-weight: 700;
+	margin-bottom: 3px;
+	color: var(--mac-text);
+	font: var(--rag-font-role-compact);
+	font-weight: 700;
 }
 
 .text {
-  margin: 0;
-  color: var(--mac-text);
-  font: var(--rag-font-role-body);
+	margin: 0;
+	color: var(--mac-text);
+	font: var(--rag-font-role-body);
 }
 
 .confidenceChip {
-  display: inline-block;
-  margin-top: 6px;
-  border: 1px solid color-mix(in srgb, var(--ctx-line, var(--mac-border)) 35%, transparent);
-  background: color-mix(in srgb, var(--mac-surface) 84%, var(--ctx-fill, var(--mac-surface-2)) 16%);
-  color: var(--mac-text);
-  padding: 1px 5px;
+	display: inline-block;
+	margin-top: 6px;
+	border: 1px solid color-mix(in srgb, var(--ctx-line, var(--mac-border)) 35%, transparent);
+	background: color-mix(in srgb, var(--mac-surface) 84%, var(--ctx-fill, var(--mac-surface-2)) 16%);
+	color: var(--mac-text);
+	padding: 1px 5px;
 }
 
-.pattern_none .titleBar::before { background: transparent; }
-.pattern_solid .titleBar::before { background: transparent; }
+.pattern_none .titleBar::before {
+	background: transparent;
+}
+.pattern_solid .titleBar::before {
+	background: transparent;
+}
 .pattern_checker .titleBar::before {
-  background-image:
-    linear-gradient(45deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 45%, transparent) 25%, transparent 25%),
-    linear-gradient(-45deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 45%, transparent) 25%, transparent 25%);
-  background-size: 8px 8px;
+	background-image:
+		linear-gradient(
+			45deg,
+			color-mix(in srgb, var(--ctx-line, var(--mac-border)) 45%, transparent) 25%,
+			transparent 25%
+		),
+		linear-gradient(
+			-45deg,
+			color-mix(in srgb, var(--ctx-line, var(--mac-border)) 45%, transparent) 25%,
+			transparent 25%
+		);
+	background-size: 8px 8px;
 }
 .pattern_diagonal .titleBar::before {
-  background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 48%, transparent) 0 1px, transparent 1px 8px);
+	background: repeating-linear-gradient(
+		45deg,
+		color-mix(in srgb, var(--ctx-line, var(--mac-border)) 48%, transparent) 0 1px,
+		transparent 1px 8px
+	);
 }
 .pattern_diagonalDense .titleBar::before {
-  background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 48%, transparent) 0 1px, transparent 1px 4px);
+	background: repeating-linear-gradient(
+		45deg,
+		color-mix(in srgb, var(--ctx-line, var(--mac-border)) 48%, transparent) 0 1px,
+		transparent 1px 4px
+	);
 }
 .pattern_stipple .titleBar::before {
-  background-image: radial-gradient(color-mix(in srgb, var(--ctx-line, var(--mac-border)) 58%, transparent) 1px, transparent 1px);
-  background-size: 6px 6px;
+	background-image: radial-gradient(
+		color-mix(in srgb, var(--ctx-line, var(--mac-border)) 58%, transparent) 1px,
+		transparent 1px
+	);
+	background-size: 6px 6px;
 }
 .pattern_cross .titleBar::before {
-  background:
-    repeating-linear-gradient(0deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 42%, transparent) 0 1px, transparent 1px 8px),
-    repeating-linear-gradient(90deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 42%, transparent) 0 1px, transparent 1px 8px);
+	background:
+		repeating-linear-gradient(
+			0deg,
+			color-mix(in srgb, var(--ctx-line, var(--mac-border)) 42%, transparent) 0 1px,
+			transparent 1px 8px
+		),
+		repeating-linear-gradient(
+			90deg,
+			color-mix(in srgb, var(--ctx-line, var(--mac-border)) 42%, transparent) 0 1px,
+			transparent 1px 8px
+		);
 }
 .pattern_overflow .titleBar::before {
-  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--ctx-line, var(--mac-border)) 60%, transparent) 0 2px, transparent 2px 6px);
+	background: repeating-linear-gradient(
+		135deg,
+		color-mix(in srgb, var(--ctx-line, var(--mac-border)) 60%, transparent) 0 2px,
+		transparent 2px 6px
+	);
 }

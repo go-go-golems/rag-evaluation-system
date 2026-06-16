@@ -1,9 +1,16 @@
-import { AnnotationBadge } from './AnnotationBadge';
-import { defineWidget } from '../../../widgets/registry';
-import type { AnnotationBadgeWidgetProps } from '../../../widgets/ir';
+import { AnnotationBadge } from "./AnnotationBadge";
+import { defineWidget } from "../../../widgets/registry";
+import type { AnnotationBadgeWidgetProps } from "../../../widgets/ir";
 
 export const annotationBadgeWidget = defineWidget<AnnotationBadgeWidgetProps>({
-  type: 'AnnotationBadge',
-  module: 'context_window.dsl',
-  render: (props) => <AnnotationBadge className={props.className} visualStyle={props.visualStyle} label={props.label} selected={props.selected} />,
+	type: "AnnotationBadge",
+	module: "context_window.dsl",
+	render: (props) => (
+		<AnnotationBadge
+			className={props.className}
+			visualStyle={props.visualStyle}
+			label={props.label}
+			selected={props.selected}
+		/>
+	),
 });

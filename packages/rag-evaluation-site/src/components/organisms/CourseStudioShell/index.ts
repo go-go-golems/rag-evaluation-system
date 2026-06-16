@@ -1,2 +1,2 @@
-export * from './CourseStudioShell';
-export * from './courseStudioNav';
+export * from "./CourseStudioShell";
+export * from "./courseStudioNav";

@@ -1,36 +1,36 @@
 .root {
-  position: relative;
-  height: 28px;
-  background: var(--mac-surface);
-  border: 1px solid var(--mac-border);
-  overflow: hidden;
+	position: relative;
+	height: 28px;
+	background: var(--mac-surface);
+	border: 1px solid var(--mac-border);
+	overflow: hidden;
 }
 
 .chunk {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  border: 0;
-  border-right: 1px solid #cccccc;
-  cursor: pointer;
-  padding: 0;
+	position: absolute;
+	top: 0;
+	height: 100%;
+	border: 0;
+	border-right: 1px solid #cccccc;
+	cursor: pointer;
+	padding: 0;
 }
 
 .chunk:focus-visible {
-  outline: 2px solid var(--mac-accent);
-  outline-offset: -2px;
+	outline: 2px solid var(--mac-accent);
+	outline-offset: -2px;
 }
 
 .embedded {
-  background: var(--mac-bg-dark);
+	background: var(--mac-bg-dark);
 }
 
 .notEmbedded {
-  background: var(--mac-surface-2);
+	background: var(--mac-surface-2);
 }
 
 .selected {
-  outline: 2px solid var(--mac-accent);
-  outline-offset: -2px;
-  z-index: 1;
+	outline: 2px solid var(--mac-accent);
+	outline-offset: -2px;
+	z-index: 1;
 }

@@ -1,1 +1,1 @@
-export * from './ContextStripDiagram';
+export * from "./ContextStripDiagram";

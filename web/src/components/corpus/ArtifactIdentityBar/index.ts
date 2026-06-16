@@ -1,1 +1,1 @@
-export * from './ArtifactIdentityBar';
+export * from "./ArtifactIdentityBar";

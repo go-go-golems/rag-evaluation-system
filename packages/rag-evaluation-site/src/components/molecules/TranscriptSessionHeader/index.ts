@@ -1,1 +1,1 @@
-export * from './TranscriptSessionHeader';
+export * from "./TranscriptSessionHeader";

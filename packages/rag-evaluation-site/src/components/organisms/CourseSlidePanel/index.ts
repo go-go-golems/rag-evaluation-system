@@ -1,1 +1,1 @@
-export * from './CourseSlidePanel';
+export * from "./CourseSlidePanel";

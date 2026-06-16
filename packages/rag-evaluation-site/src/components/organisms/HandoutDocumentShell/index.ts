@@ -1,1 +1,1 @@
-export * from './HandoutDocumentShell';
+export * from "./HandoutDocumentShell";

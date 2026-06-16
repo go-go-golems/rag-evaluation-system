@@ -1,29 +1,29 @@
 /* ===== Classic Mac OS 1 — Monochrome tokens ===== */
 :root {
-  /* Palette: pure monochrome + accent */
-  --mac-bg:        #FFFFFF;
-  --mac-bg-dark:   #000000;
-  --mac-stripe:    #000000;
-  --mac-text:      #000000;
-  --mac-text-dim:  #666666;
-  --mac-text-inv:  #FFFFFF;
-  --mac-border:    #000000;
-  --mac-surface:   #FFFFFF;
-  --mac-surface-2: #EEEEEE;
-  --mac-accent:    #0000CC;
-  --mac-accent-2:  #CC0000;
-  --mac-green:     #007722;
-  --mac-amber:     #AA7700;
-  --mac-mono:      'Chicago', 'Geneva', 'Monaco', 'Courier', monospace;
-  --font-body:     'Geneva', 'Helvetica Neue', 'Arial', sans-serif;
-  --font-mono:     'Monaco', 'Courier New', monospace;
+	/* Palette: pure monochrome + accent */
+	--mac-bg: #ffffff;
+	--mac-bg-dark: #000000;
+	--mac-stripe: #000000;
+	--mac-text: #000000;
+	--mac-text-dim: #666666;
+	--mac-text-inv: #ffffff;
+	--mac-border: #000000;
+	--mac-surface: #ffffff;
+	--mac-surface-2: #eeeeee;
+	--mac-accent: #0000cc;
+	--mac-accent-2: #cc0000;
+	--mac-green: #007722;
+	--mac-amber: #aa7700;
+	--mac-mono: "Chicago", "Geneva", "Monaco", "Courier", monospace;
+	--font-body: "Geneva", "Helvetica Neue", "Arial", sans-serif;
+	--font-mono: "Monaco", "Courier New", monospace;
 
-  /* RAG design-system role aliases. These preserve the existing retro look while
+	/* RAG design-system role aliases. These preserve the existing retro look while
      giving React foundation primitives stable token names to consume. */
-  --rag-font-role-body: 400 12px/1.45 var(--font-body);
-  --rag-font-role-compact: 400 11px/1.4 var(--font-body);
-  --rag-font-role-metadata: 400 11px/1.35 var(--font-mono);
-  --rag-font-role-label: 700 11px/1.2 var(--font-mono);
-  --rag-font-role-metric: 700 12px/1.25 var(--font-mono);
-  --rag-font-role-code: 400 11px/1.45 var(--font-mono);
+	--rag-font-role-body: 400 12px / 1.45 var(--font-body);
+	--rag-font-role-compact: 400 11px / 1.4 var(--font-body);
+	--rag-font-role-metadata: 400 11px / 1.35 var(--font-mono);
+	--rag-font-role-label: 700 11px / 1.2 var(--font-mono);
+	--rag-font-role-metric: 700 12px / 1.25 var(--font-mono);
+	--rag-font-role-code: 400 11px / 1.45 var(--font-mono);
 }

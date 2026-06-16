@@ -1,2 +1,7 @@
-.root { height: 100%; }
-.rail { max-width: 240px; min-width: 200px; }
+.root {
+	height: 100%;
+}
+.rail {
+	max-width: 240px;
+	min-width: 200px;
+}

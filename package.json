@@ -1,0 +1,16 @@
+{
+	"name": "rag-evaluation-system",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"format": "biome format --write .",
+		"format:check": "biome format .",
+		"lint": "biome lint .",
+		"lint:fix": "biome lint --write .",
+		"check": "biome check .",
+		"check:fix": "biome check --write ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.0"
+	}
+}

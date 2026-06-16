@@ -6,6 +6,15 @@ pre-commit:
     test:
       glob: '*.go'
       run: make test
+    biome-format:
+      glob: '*.{ts,tsx,js,jsx,css,json}'
+      run: npx biome format --write {staged_files}
+      stage_fixed: true
+    biome-lint:
+      glob: '*.{ts,tsx,js,jsx,css,json}'
+      # Lint errors are informational only for now; do not block commits
+      # until the existing backlog is addressed incrementally.
+      run: npx biome lint {staged_files} || true
   parallel: true
 
 pre-push:

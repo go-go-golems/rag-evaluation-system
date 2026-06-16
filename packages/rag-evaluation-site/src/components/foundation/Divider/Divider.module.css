@@ -1,13 +1,13 @@
 .root {
-  border: 0;
-  margin: 4px 0;
-  border-top: 1px solid var(--mac-border);
+	border: 0;
+	margin: 4px 0;
+	border-top: 1px solid var(--mac-border);
 }
 
 .vertical {
-  align-self: stretch;
-  width: 0;
-  border-top: 0;
-  border-left: 1px solid var(--mac-border);
-  margin: 0 4px;
+	align-self: stretch;
+	width: 0;
+	border-top: 0;
+	border-left: 1px solid var(--mac-border);
+	margin: 0 4px;
 }

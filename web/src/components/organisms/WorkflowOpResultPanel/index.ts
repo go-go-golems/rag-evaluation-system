@@ -1,1 +1,1 @@
-export * from './WorkflowOpResultPanel';
+export * from "./WorkflowOpResultPanel";

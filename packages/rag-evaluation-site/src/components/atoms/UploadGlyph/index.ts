@@ -1,1 +1,1 @@
-export * from './UploadGlyph';
+export * from "./UploadGlyph";

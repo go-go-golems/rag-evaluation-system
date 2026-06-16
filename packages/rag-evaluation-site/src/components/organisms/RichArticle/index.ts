@@ -1,1 +1,1 @@
-export * from './RichArticle';
+export * from "./RichArticle";

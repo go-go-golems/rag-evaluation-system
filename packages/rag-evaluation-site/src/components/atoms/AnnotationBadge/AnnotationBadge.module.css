@@ -1,2 +1,14 @@
-.root { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--mac-border); background: var(--mac-surface); padding: 1px 5px 1px 3px; color: var(--mac-text); font: var(--rag-font-role-metadata); }
-.selected { color: var(--mac-accent); font-weight: 700; }
+.root {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+	padding: 1px 5px 1px 3px;
+	color: var(--mac-text);
+	font: var(--rag-font-role-metadata);
+}
+.selected {
+	color: var(--mac-accent);
+	font-weight: 700;
+}

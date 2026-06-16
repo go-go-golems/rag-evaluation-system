@@ -1,1 +1,1 @@
-export * from './IdentityBar';
+export * from "./IdentityBar";

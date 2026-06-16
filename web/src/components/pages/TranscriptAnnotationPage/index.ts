@@ -1,1 +1,1 @@
-export * from './TranscriptAnnotationPage';
+export * from "./TranscriptAnnotationPage";

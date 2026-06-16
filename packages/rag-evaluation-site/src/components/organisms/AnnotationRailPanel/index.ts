@@ -1,1 +1,1 @@
-export * from './AnnotationRailPanel';
+export * from "./AnnotationRailPanel";

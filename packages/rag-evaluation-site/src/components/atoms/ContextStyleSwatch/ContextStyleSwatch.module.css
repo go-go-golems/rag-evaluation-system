@@ -1,77 +1,118 @@
 .root {
-  display: inline-block;
-  flex: none;
-  box-sizing: border-box;
-  border: var(--ctx-stroke-width, 1px) solid var(--ctx-stroke, var(--mac-border));
-  background-color: var(--ctx-fill, var(--mac-surface));
-  color: var(--ctx-label, var(--mac-text));
-  vertical-align: middle;
-  image-rendering: pixelated;
+	display: inline-block;
+	flex: none;
+	box-sizing: border-box;
+	border: var(--ctx-stroke-width, 1px) solid var(--ctx-stroke, var(--mac-border));
+	background-color: var(--ctx-fill, var(--mac-surface));
+	color: var(--ctx-label, var(--mac-text));
+	vertical-align: middle;
+	image-rendering: pixelated;
 }
 
-.xs { width: 11px; height: 9px; }
-.sm { width: 15px; height: 11px; }
-.md { width: 19px; height: 14px; }
-.lg { width: 28px; height: 20px; }
+.xs {
+	width: 11px;
+	height: 9px;
+}
+.sm {
+	width: 15px;
+	height: 11px;
+}
+.md {
+	width: 19px;
+	height: 14px;
+}
+.lg {
+	width: 28px;
+	height: 20px;
+}
 
-.selected { outline: 2px solid var(--mac-accent); outline-offset: 1px; }
-.dashed { border-style: dashed; }
-.dotted { border-style: dotted; }
+.selected {
+	outline: 2px solid var(--mac-accent);
+	outline-offset: 1px;
+}
+.dashed {
+	border-style: dashed;
+}
+.dotted {
+	border-style: dotted;
+}
 
 .pattern_none,
-.pattern_solid { background: var(--ctx-fill, var(--mac-surface)); }
+.pattern_solid {
+	background: var(--ctx-fill, var(--mac-surface));
+}
 
 .pattern_checker {
-  background-color: var(--ctx-fill, var(--mac-surface));
-  background-image:
-    linear-gradient(45deg, var(--ctx-line, var(--mac-border)) 25%, transparent 25%),
-    linear-gradient(-45deg, var(--ctx-line, var(--mac-border)) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, var(--ctx-line, var(--mac-border)) 75%),
-    linear-gradient(-45deg, transparent 75%, var(--ctx-line, var(--mac-border)) 75%);
-  background-position: 0 0, 0 2px, 2px -2px, -2px 0;
-  background-size: 4px 4px;
+	background-color: var(--ctx-fill, var(--mac-surface));
+	background-image:
+		linear-gradient(45deg, var(--ctx-line, var(--mac-border)) 25%, transparent 25%),
+		linear-gradient(-45deg, var(--ctx-line, var(--mac-border)) 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, var(--ctx-line, var(--mac-border)) 75%),
+		linear-gradient(-45deg, transparent 75%, var(--ctx-line, var(--mac-border)) 75%);
+	background-position:
+		0 0,
+		0 2px,
+		2px -2px,
+		-2px 0;
+	background-size: 4px 4px;
 }
 
 .pattern_diagonal {
-  background-color: var(--ctx-fill, var(--mac-surface));
-  background-image: repeating-linear-gradient(45deg, var(--ctx-line, var(--mac-border)) 0 1px, transparent 1px 6px);
+	background-color: var(--ctx-fill, var(--mac-surface));
+	background-image: repeating-linear-gradient(
+		45deg,
+		var(--ctx-line, var(--mac-border)) 0 1px,
+		transparent 1px 6px
+	);
 }
 
 .pattern_diagonalWide {
-  background-color: var(--ctx-fill, var(--mac-surface));
-  background-image: repeating-linear-gradient(45deg, var(--ctx-line, var(--mac-border)) 0 1px, transparent 1px 14px);
+	background-color: var(--ctx-fill, var(--mac-surface));
+	background-image: repeating-linear-gradient(
+		45deg,
+		var(--ctx-line, var(--mac-border)) 0 1px,
+		transparent 1px 14px
+	);
 }
 
 .pattern_diagonalDense {
-  background-color: var(--ctx-fill, var(--mac-surface));
-  background-image: repeating-linear-gradient(45deg, var(--ctx-line, var(--mac-border)) 0 1px, transparent 1px 3px);
+	background-color: var(--ctx-fill, var(--mac-surface));
+	background-image: repeating-linear-gradient(
+		45deg,
+		var(--ctx-line, var(--mac-border)) 0 1px,
+		transparent 1px 3px
+	);
 }
 
 .pattern_stipple {
-  background-color: var(--ctx-fill, var(--mac-surface));
-  background-image: radial-gradient(var(--ctx-line, var(--mac-border)) 1px, transparent 1px);
-  background-size: 4px 4px;
+	background-color: var(--ctx-fill, var(--mac-surface));
+	background-image: radial-gradient(var(--ctx-line, var(--mac-border)) 1px, transparent 1px);
+	background-size: 4px 4px;
 }
 
 .pattern_cross {
-  background-color: var(--ctx-fill, var(--mac-surface));
-  background-image:
-    repeating-linear-gradient(45deg, transparent 0 3px, var(--ctx-line, var(--mac-border)) 3px 4px),
-    repeating-linear-gradient(-45deg, transparent 0 3px, var(--ctx-line, var(--mac-border)) 3px 4px);
+	background-color: var(--ctx-fill, var(--mac-surface));
+	background-image:
+		repeating-linear-gradient(45deg, transparent 0 3px, var(--ctx-line, var(--mac-border)) 3px 4px),
+		repeating-linear-gradient(-45deg, transparent 0 3px, var(--ctx-line, var(--mac-border)) 3px 4px);
 }
 
 .pattern_overflow {
-  background-color: var(--ctx-fill, var(--mac-surface));
-  background-image: repeating-linear-gradient(45deg, var(--ctx-line, var(--mac-accent-2)) 0 2px, transparent 2px 5px);
+	background-color: var(--ctx-fill, var(--mac-surface));
+	background-image: repeating-linear-gradient(
+		45deg,
+		var(--ctx-line, var(--mac-accent-2)) 0 2px,
+		transparent 2px 5px
+	);
 }
 
 @media print {
-  .root {
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
-  }
+	.root {
+		print-color-adjust: exact;
+		-webkit-print-color-adjust: exact;
+	}
 
-  .selected {
-    outline: 0;
-  }
+	.selected {
+		outline: 0;
+	}
 }

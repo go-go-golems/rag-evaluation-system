@@ -1,177 +1,205 @@
 .rag-evaluation-site-root {
-  min-height: 100vh;
-  background: var(--mac-bg);
-  color: var(--mac-text);
-  font: var(--rag-font-role-body);
-  box-sizing: border-box;
+	min-height: 100vh;
+	background: var(--mac-bg);
+	color: var(--mac-text);
+	font: var(--rag-font-role-body);
+	box-sizing: border-box;
 }
 
 .rag-evaluation-site-root *,
 .rag-evaluation-site-root *::before,
 .rag-evaluation-site-root *::after {
-  box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 .rag-evaluation-site-root--shell {
-  padding: 8px;
+	padding: 8px;
 }
 
 .rag-evaluation-site-root--raw {
-  padding: 0;
+	padding: 0;
 }
 
 .rag-evaluation-site-shell {
-  min-height: calc(100vh - 16px);
-  border: 1px solid var(--mac-border);
-  background: var(--mac-surface);
+	min-height: calc(100vh - 16px);
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
 }
 
 .rag-evaluation-site-brand {
-  display: inline-block;
-  max-width: 42ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  vertical-align: bottom;
-  white-space: nowrap;
+	display: inline-block;
+	max-width: 42ch;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	vertical-align: bottom;
+	white-space: nowrap;
 }
 
 .rag-evaluation-site-content {
-  min-width: 0;
-  width: 100%;
+	min-width: 0;
+	width: 100%;
 }
 
 .rag-evaluation-site-content--none {
-  max-width: none;
+	max-width: none;
 }
 
 .rag-evaluation-site-content--content {
-  max-width: 1040px;
-  margin: 0 auto;
+	max-width: 1040px;
+	margin: 0 auto;
 }
 
 .rag-evaluation-site-content--wide {
-  max-width: 1440px;
-  margin: 0 auto;
+	max-width: 1440px;
+	margin: 0 auto;
 }
 
 .rag-evaluation-site-state {
-  margin: 16px;
+	margin: 16px;
 }
 
 .course-page-hero {
-  padding: 0 0 2px;
+	padding: 0 0 2px;
 }
 
 .course-page-hero-title {
-  margin: 0 0 10px;
-  max-width: 760px;
-  color: var(--mac-text);
-  font: 700 46px/1.02 var(--font-body);
-  letter-spacing: -.02em;
+	margin: 0 0 10px;
+	max-width: 760px;
+	color: var(--mac-text);
+	font: 700 46px / 1.02 var(--font-body);
+	letter-spacing: -0.02em;
 }
 
 .course-page-hero-lead {
-  margin: 0;
-  max-width: 620px;
-  color: #333;
-  font: 400 16px/1.5 var(--font-body);
+	margin: 0;
+	max-width: 620px;
+	color: #333;
+	font: 400 16px / 1.5 var(--font-body);
 }
 
 .rag-evaluation-site-route-pending {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  height: 3px;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--mac-accent, #007aff) 18%, transparent);
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 1000;
+	height: 3px;
+	overflow: hidden;
+	background: color-mix(in srgb, var(--mac-accent, #007aff) 18%, transparent);
 }
 
 .rag-evaluation-site-route-pending__bar {
-  display: block;
-  width: 42%;
-  height: 100%;
-  background: var(--mac-accent, #007aff);
-  animation: rag-route-pending-slide 1s ease-in-out infinite;
+	display: block;
+	width: 42%;
+	height: 100%;
+	background: var(--mac-accent, #007aff);
+	animation: rag-route-pending-slide 1s ease-in-out infinite;
 }
 
 .rag-evaluation-site-route-pending__label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  overflow: hidden;
-  white-space: nowrap;
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	overflow: hidden;
+	white-space: nowrap;
 }
 
 .rag-evaluation-site-inline-error {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 1001;
-  max-width: min(420px, calc(100vw - 32px));
-  box-shadow: var(--mac-shadow-floating, 0 18px 44px rgba(0, 0, 0, 0.2));
+	position: fixed;
+	right: 16px;
+	bottom: 16px;
+	z-index: 1001;
+	max-width: min(420px, calc(100vw - 32px));
+	box-shadow: var(--mac-shadow-floating, 0 18px 44px rgba(0, 0, 0, 0.2));
 }
 
 .course-material-table {
-  table-layout: fixed;
+	table-layout: fixed;
 }
 
 .course-material-table th,
 .course-material-table td {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .course-material-table th:nth-child(1),
-.course-material-table td:nth-child(1) { width: 30%; }
+.course-material-table td:nth-child(1) {
+	width: 30%;
+}
 
 .course-material-table th:nth-child(2),
-.course-material-table td:nth-child(2) { width: 28%; }
+.course-material-table td:nth-child(2) {
+	width: 28%;
+}
 
 .course-material-table th:nth-child(3),
-.course-material-table td:nth-child(3) { width: 8%; }
+.course-material-table td:nth-child(3) {
+	width: 8%;
+}
 
 .course-material-table th:nth-child(4),
-.course-material-table td:nth-child(4) { width: 14%; }
+.course-material-table td:nth-child(4) {
+	width: 14%;
+}
 
 .course-material-table th:nth-child(5),
-.course-material-table td:nth-child(5) { width: 9%; }
+.course-material-table td:nth-child(5) {
+	width: 9%;
+}
 
 .course-material-table th:nth-child(6),
-.course-material-table td:nth-child(6) { width: 11%; }
+.course-material-table td:nth-child(6) {
+	width: 11%;
+}
 
 .uploaded-sessions-table {
-  table-layout: fixed;
+	table-layout: fixed;
 }
 
 .uploaded-sessions-table th,
 .uploaded-sessions-table td {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .uploaded-sessions-table th:nth-child(1),
-.uploaded-sessions-table td:nth-child(1) { width: 38%; }
+.uploaded-sessions-table td:nth-child(1) {
+	width: 38%;
+}
 
 .uploaded-sessions-table th:nth-child(2),
-.uploaded-sessions-table td:nth-child(2) { width: 17%; }
+.uploaded-sessions-table td:nth-child(2) {
+	width: 17%;
+}
 
 .uploaded-sessions-table th:nth-child(3),
-.uploaded-sessions-table td:nth-child(3) { width: 20%; }
+.uploaded-sessions-table td:nth-child(3) {
+	width: 20%;
+}
 
 .uploaded-sessions-table th:nth-child(4),
-.uploaded-sessions-table td:nth-child(4) { width: 10%; }
+.uploaded-sessions-table td:nth-child(4) {
+	width: 10%;
+}
 
 .uploaded-sessions-table th:nth-child(5),
-.uploaded-sessions-table td:nth-child(5) { width: 15%; }
+.uploaded-sessions-table td:nth-child(5) {
+	width: 15%;
+}
 
 @keyframes rag-route-pending-slide {
-  0% { transform: translateX(-110%); }
-  50% { transform: translateX(80%); }
-  100% { transform: translateX(250%); }
+	0% {
+		transform: translateX(-110%);
+	}
+	50% {
+		transform: translateX(80%);
+	}
+	100% {
+		transform: translateX(250%);
+	}
 }

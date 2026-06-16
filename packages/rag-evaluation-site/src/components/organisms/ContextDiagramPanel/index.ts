@@ -1,1 +1,1 @@
-export * from './ContextDiagramPanel';
+export * from "./ContextDiagramPanel";

@@ -1,1 +1,1 @@
-export { AppNav, type AppNavItem, type AppNavProps } from './AppNav';
+export { AppNav, type AppNavItem, type AppNavProps } from "./AppNav";

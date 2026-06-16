@@ -1,1 +1,1 @@
-export * from './QueueHealthPanel';
+export * from "./QueueHealthPanel";

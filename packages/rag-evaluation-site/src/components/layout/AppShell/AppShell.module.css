@@ -1,5 +1,28 @@
-.root { min-height: 100vh; display: flex; flex-direction: column; background: var(--mac-bg); color: var(--mac-text); }
-.header { flex: 0 0 auto; border-bottom: 1px solid var(--mac-border); }
-.body { flex: 1 1 auto; min-height: 0; display: flex; }
-.sidebar { flex: 0 0 220px; border-right: 1px solid var(--mac-border); min-height: 0; overflow: auto; }
-.main { flex: 1 1 auto; min-width: 0; min-height: 0; padding: 8px; }
+.root {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	background: var(--mac-bg);
+	color: var(--mac-text);
+}
+.header {
+	flex: 0 0 auto;
+	border-bottom: 1px solid var(--mac-border);
+}
+.body {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+}
+.sidebar {
+	flex: 0 0 220px;
+	border-right: 1px solid var(--mac-border);
+	min-height: 0;
+	overflow: auto;
+}
+.main {
+	flex: 1 1 auto;
+	min-width: 0;
+	min-height: 0;
+	padding: 8px;
+}

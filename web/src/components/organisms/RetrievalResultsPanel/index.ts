@@ -1,1 +1,1 @@
-export * from './RetrievalResultsPanel';
+export * from "./RetrievalResultsPanel";
