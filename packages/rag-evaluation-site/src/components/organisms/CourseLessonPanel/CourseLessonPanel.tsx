@@ -90,7 +90,7 @@ export function CourseLessonPanel({
 				}
 				right={
 					<SectionBlock label={labels.agenda} density="spacious">
-						<StepList items={agendaItems} />
+						<StepList items={agendaItems} selectable={false} />
 					</SectionBlock>
 				}
 			/>
