@@ -47,6 +47,9 @@ The user was working on Button.tsx CSS and noticed that the generated HTML in St
 
 **Inferred user intent:** Better developer experience when inspecting DOM in browser dev tools / Storybook; maintain production safety with hashed names.
 
+**Commit (code):** bb2fdc0 — "feat(rag-evaluation-site): readable CSS Module class names in dev/Storybook"
+**Commit (docs):** 902f9ad — "docs(ttmp): add RAGEVAL-006 ticket"
+
 ### What I did
 
 - Added `css.modules.generateScopedName` to `vite.config.ts` with env-conditional logic: `[name]_[local]` in dev, `[hash:base64:5]` in production
