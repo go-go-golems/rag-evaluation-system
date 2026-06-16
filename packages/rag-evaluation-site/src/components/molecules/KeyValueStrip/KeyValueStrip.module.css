@@ -1,6 +1,36 @@
-.root { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin: 0; border: 1px solid var(--mac-border); }
-.cell { min-width: 0; padding: 10px 14px; }
-.cell + .cell { border-left: 1px solid var(--mac-border); }
-.cell dt { margin: 0 0 5px; color: var(--mac-text-dim); font: var(--rag-font-role-metadata); letter-spacing: .08em; text-transform: uppercase; }
-.cell dd { margin: 0; color: var(--mac-text); font: var(--rag-font-role-body); }
-@media (max-width: 640px) { .cell + .cell { border-left: 0; border-top: 1px solid var(--mac-border); } }
+.root {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin: 0;
+    border: 1px solid var(--mac-border);
+}
+
+.cell {
+    min-width: 0;
+    padding: 10px 14px;
+}
+
+.cell + .cell {
+    border-left: 1px solid var(--mac-border);
+}
+
+.cell dt {
+    margin: 0 0 5px;
+    color: var(--mac-text-dim);
+    font: var(--rag-font-role-metadata);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.cell dd {
+    margin: 0;
+    color: var(--mac-text);
+    font: var(--rag-font-role-body);
+}
+
+@media (max-width: 640px) {
+    .cell + .cell {
+        border-left: 0;
+        border-top: 1px solid var(--mac-border);
+    }
+}

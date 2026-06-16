@@ -3,6 +3,16 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  css: {
+    modules: {
+      // Readable class names in dev (Button_root, Button_normal)
+      // Short hashes in production
+      generateScopedName:
+        process.env.NODE_ENV === 'production'
+          ? '[hash:base64:5]'
+          : '[name]_[local]',
+    },
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: false,

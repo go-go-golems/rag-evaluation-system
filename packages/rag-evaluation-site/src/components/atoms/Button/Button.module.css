@@ -34,10 +34,10 @@
 }
 
 .compact {
-  padding: 1px 6px;
+  padding: 2px 6px 0px;
   font: var(--rag-font-role-metadata);
 }
 
 .normal {
-  padding: 2px 12px;
+  padding: 3px 12px 1px;
 }
