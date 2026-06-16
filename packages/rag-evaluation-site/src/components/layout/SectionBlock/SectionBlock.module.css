@@ -20,7 +20,7 @@
 .label {
 	margin-bottom: 14px;
 	color: var(--mac-text);
-	font: var(--rag-font-role-label);
+	font: var(--rag-font-role-heading);
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 }

@@ -49,7 +49,7 @@ export function CourseLessonPanel({
 			{...rest}
 		>
 			<SectionBlock density="spacious" className={styles.hero}>
-				{course.kicker && <div className={styles.eyebrow}>{course.kicker}</div>}
+				{/*{course.kicker && <div className={styles.eyebrow}>{course.kicker}</div>}*/}
 				<h1 className={styles.title}>{course.title}</h1>
 				<p className={styles.lead}>{course.tagline}</p>
 				<div className={styles.ctaRow}>
@@ -94,12 +94,6 @@ export function CourseLessonPanel({
 					</SectionBlock>
 				}
 			/>
-
-			{course.blurb && (
-				<SectionBlock density="spacious">
-					<p className={styles.blurb}>{course.blurb}</p>
-				</SectionBlock>
-			)}
 		</article>
 	);
 }

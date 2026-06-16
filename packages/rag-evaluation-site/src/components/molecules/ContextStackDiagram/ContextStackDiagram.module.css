@@ -48,7 +48,7 @@
 }
 .selected {
 	outline: 3px solid var(--mac-accent);
-	outline-offset: -4px;
+	outline-offset: -2px;
 	z-index: 1;
 }
 .caption {

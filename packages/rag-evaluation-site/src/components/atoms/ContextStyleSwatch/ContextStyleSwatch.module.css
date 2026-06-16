@@ -27,8 +27,8 @@
 }
 
 .selected {
-	outline: 2px solid var(--mac-accent);
-	outline-offset: 1px;
+	outline: 1px solid var(--mac-accent);
+	/*outline-offset: 1px;*/
 }
 .dashed {
 	border-style: dashed;

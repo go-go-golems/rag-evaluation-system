@@ -37,7 +37,7 @@
 }
 .selected {
 	outline: 2px solid var(--mac-accent);
-	outline-offset: -3px;
+	outline-offset: -2px;
 	z-index: 1;
 }
 .limitMarker {
