@@ -1,0 +1,10 @@
+type: TextareaInput
+module: ui.dsl
+helper: textareaInput
+props: TextareaInputWidgetProps
+entry:
+  path: ./TextareaInput.widget.tsx
+  export: textareaInputWidget
+reactComponent: TextareaInput
+status: active
+docs: Multiline text-entry atom for form copy, descriptions, blurbs, and notes.

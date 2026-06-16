@@ -4,6 +4,7 @@ export * from "./ErrorCallout";
 export * from "./IconButton";
 export * from "./SelectInput";
 export * from "./TextInput";
+export * from "./TextareaInput";
 export * from "./ContextStyleSwatch";
 export * from "./TranscriptRoleBadge";
 export * from "./AnnotationBadge";

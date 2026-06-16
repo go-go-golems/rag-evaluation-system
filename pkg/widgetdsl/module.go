@@ -60,6 +60,7 @@ var uiHelpers = map[string]string{
 	"tabList":       "TabList",
 	"textBlock":     "Text",
 	"textInput":     "TextInput",
+	"textareaInput": "TextareaInput",
 }
 
 var dataHelpers = map[string]string{

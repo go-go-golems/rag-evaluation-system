@@ -86,6 +86,7 @@ export type RagWidgetType =
 	| "TabList"
 	| "Text"
 	| "TextInput"
+	| "TextareaInput"
 	| "TranscriptRoleBadge"
 	| "TranscriptSessionHeader"
 	| "TranscriptMessageCard"
@@ -780,6 +781,21 @@ export interface TextInputWidgetProps extends BaseWidgetProps {
 	ariaInvalid?: boolean;
 }
 
+export interface TextareaInputWidgetProps extends BaseWidgetProps {
+	name?: string;
+	value?: string | number;
+	defaultValue?: string | number;
+	placeholder?: string;
+	disabled?: boolean;
+	readOnly?: boolean;
+	required?: boolean;
+	minLength?: number;
+	maxLength?: number;
+	rows?: number;
+	resize?: "vertical" | "none";
+	ariaInvalid?: boolean;
+}
+
 export type WidgetProps =
 	| AppShellWidgetProps
 	| AppNavWidgetProps
@@ -842,6 +858,7 @@ export type WidgetProps =
 	| StatusTextWidgetProps
 	| TabListWidgetProps
 	| TextInputWidgetProps
+	| TextareaInputWidgetProps
 	| BaseWidgetProps;
 
 export function text(value: string | number | boolean): TextNode {

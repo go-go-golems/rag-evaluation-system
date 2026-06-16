@@ -65,7 +65,7 @@ ui.action.copy("copy this")
 - `appShell`, `appNav`
 - `button`, `caption`, `codeText`, `divider`, `statusText`, `textBlock`
 - `inline`, `stack`, `dashboardGrid`, `panel`, `scrollRegion`, `sectionBlock`, `sidebarShell`, `splitPane`
-- `formRow`, `selectInput`, `textInput`, `tabList`
+- `formRow`, `selectInput`, `textInput`, `textareaInput`, `tabList`
 - `metadataGrid`, `keyValueStrip`, `checkList`, `stepList`, `personSummary`, `figureBlock`, `keyPointList`, `sidebarNav`
 
 Example:

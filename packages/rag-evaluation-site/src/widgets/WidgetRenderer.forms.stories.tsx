@@ -15,6 +15,10 @@ function textInput(props: Record<string, unknown>): WidgetNode {
 	return component("TextInput", props as never);
 }
 
+function textareaInput(props: Record<string, unknown>): WidgetNode {
+	return component("TextareaInput", props as never);
+}
+
 function selectInput(props: Record<string, unknown>): WidgetNode {
 	return component("SelectInput", props as never);
 }
@@ -118,6 +122,20 @@ export const MixedFields: Story = {
 							{ value: "public", label: "Public" },
 							{ value: "private", label: "Private" },
 						],
+					}),
+				}),
+				formRow({
+					orientation: "stacked",
+					label: "Course blurb",
+					hint: "TextareaInput is for paragraph-length form content.",
+					counter: "166 / 1200",
+					control: textareaInput({
+						name: "blurb",
+						defaultValue:
+							"Un LLM ne répond pas seulement à votre dernier message : il génère à partir d'une fenêtre remplie de tokens.",
+						readOnly: false,
+						rows: 4,
+						maxLength: 1200,
 					}),
 				}),
 				formRow({

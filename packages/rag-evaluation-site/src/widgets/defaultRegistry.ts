@@ -4,6 +4,7 @@ import { contextStyleSwatchWidget } from "../components/atoms/ContextStyleSwatch
 import { contextStudioNavIconWidget } from "../components/atoms/ContextStudioNavIcon/ContextStudioNavIcon.widget";
 import { selectInputWidget } from "../components/atoms/SelectInput/SelectInput.widget";
 import { textInputWidget } from "../components/atoms/TextInput/TextInput.widget";
+import { textareaInputWidget } from "../components/atoms/TextareaInput/TextareaInput.widget";
 import { transcriptRoleBadgeWidget } from "../components/atoms/TranscriptRoleBadge/TranscriptRoleBadge.widget";
 import { captionWidget } from "../components/foundation/Caption/Caption.widget";
 import { codeTextWidget } from "../components/foundation/CodeText/CodeText.widget";
@@ -90,6 +91,7 @@ export const uiWidgetRegistry = createWidgetRegistry([
 	stepListWidget,
 	tabListWidget,
 	textInputWidget,
+	textareaInputWidget,
 	textWidget,
 ]);
 

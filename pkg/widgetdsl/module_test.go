@@ -26,6 +26,7 @@ func TestSplitModulesExportExpectedHelpersAndOmitCrossDomainHelpers(t *testing.T
 			uiPage: typeof ui.page,
 			uiPanel: typeof ui.panel,
 			uiFormPanel: typeof ui.formPanel,
+			uiTextareaInput: typeof ui.textareaInput,
 			uiDataTable: typeof ui.dataTable,
 			dataTable: typeof data.dataTable,
 			dataCellField: typeof data.cell.field,
@@ -44,7 +45,7 @@ func TestSplitModulesExportExpectedHelpersAndOmitCrossDomainHelpers(t *testing.T
 		t.Fatalf("require split modules: %v", err)
 	}
 	got := value.Export().(map[string]any)
-	wantFunctions := []string{"uiPage", "uiPanel", "uiFormPanel", "dataTable", "dataCellField", "contextDiagramPanel", "contextStyleSwatch", "contextVisualStyle", "contextStyleSet", "contextPart", "courseStudioNavIcon", "courseStudioShell"}
+	wantFunctions := []string{"uiPage", "uiPanel", "uiFormPanel", "uiTextareaInput", "dataTable", "dataCellField", "contextDiagramPanel", "contextStyleSwatch", "contextVisualStyle", "contextStyleSet", "contextPart", "courseStudioNavIcon", "courseStudioShell"}
 	for _, name := range wantFunctions {
 		if got[name] != "function" {
 			t.Fatalf("%s export = %#v, want function (all: %#v)", name, got[name], got)
