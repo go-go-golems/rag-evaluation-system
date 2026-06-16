@@ -120,6 +120,8 @@ The user wanted consistent and legible formatting across TSX files and asked whe
 
 **Inferred user intent:** One consistent formatter for all TSX/TS/CSS/JSON files, wired into git hooks, with standard defaults.
 
+**Commit (code+format):** 4fb5fed — "feat: set up Biome v2 formatter, add AGENTS.md"
+
 ### What I did
 
 - Created root `package.json` with `@biomejs/biome` v2.5.0 as devDependency and format/lint/check scripts
