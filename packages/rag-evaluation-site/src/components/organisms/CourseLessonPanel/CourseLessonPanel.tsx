@@ -2,7 +2,7 @@ import type { HTMLAttributes } from "react";
 import type { ContextCourse } from "../../../context";
 import { Button } from "../../atoms";
 import { Caption } from "../../foundation";
-import { SectionBlock, SplitPane } from "../../layout";
+import { SectionBlock, SplitPane, Stack } from "../../layout";
 import { CheckList, KeyValueStrip, PersonSummary, StepList } from "../../molecules";
 import styles from "./CourseLessonPanel.module.css";
 
@@ -48,7 +48,7 @@ export function CourseLessonPanel({
 			data-rag-organism="CourseLessonPanel"
 			{...rest}
 		>
-			<SectionBlock density="spacious" divider="bottom" className={styles.hero}>
+			<SectionBlock density="spacious" className={styles.hero}>
 				{course.kicker && <div className={styles.eyebrow}>{course.kicker}</div>}
 				<h1 className={styles.title}>{course.title}</h1>
 				<p className={styles.lead}>{course.tagline}</p>
@@ -71,35 +71,32 @@ export function CourseLessonPanel({
 
 			<SplitPane
 				ratio="course"
-				divider
 				left={
 					<SectionBlock label={labels.outcomes} density="spacious">
-						<CheckList items={course.outcomes} />
-						{course.instructor && (
-							<div className={styles.instructorBlock}>
-								<div className={styles.sectionLabel}>{labels.instructor}</div>
-								<PersonSummary
-									name={course.instructor.name}
-									subtitle={course.instructor.role}
-									bio={course.instructor.bio}
-								/>
-							</div>
-						)}
+						<Stack gap="lg">
+							<CheckList items={course.outcomes} />
+							{course.instructor && (
+								<div className={styles.instructorBlock}>
+									<div className={styles.sectionLabel}>{labels.instructor}</div>
+									<PersonSummary
+										name={course.instructor.name}
+										subtitle={course.instructor.role}
+										bio={course.instructor.bio}
+									/>
+								</div>
+							)}
+						</Stack>
 					</SectionBlock>
 				}
 				right={
 					<SectionBlock label={labels.agenda} density="spacious">
-						<StepList
-							items={agendaItems}
-							activeItemId={activeAgendaItemId}
-							onItemSelect={onAgendaItemSelect}
-						/>
+						<StepList items={agendaItems} />
 					</SectionBlock>
 				}
 			/>
 
 			{course.blurb && (
-				<SectionBlock density="spacious" divider="top">
+				<SectionBlock density="spacious">
 					<p className={styles.blurb}>{course.blurb}</p>
 				</SectionBlock>
 			)}
