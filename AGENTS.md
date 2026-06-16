@@ -5,6 +5,7 @@ Guidance for LLM agents working in this repository. Read this before making chan
 ## Quick links
 
 - **Design-system guidelines (MUST READ):** [`packages/rag-evaluation-site/GUIDELINES.md`](packages/rag-evaluation-site/GUIDELINES.md)
+- **npm release playbook:** [`docs/guides/npm-release-playbook.md`](docs/guides/npm-release-playbook.md) — use this for `@go-go-golems/rag-evaluation-site` releases; publishing is through GitHub Actions Trusted Publishing, not local `npm publish`.
 - **Biome config:** [`biome.json`](biome.json)
 - **Git hooks:** [`lefthook.yml`](lefthook.yml)
 
@@ -64,6 +65,10 @@ pkg/                            # Go shared libraries
 schema/                         # Protobuf / JSON schemas
 ttmp/                           # docmgr ticket workspaces (not code)
 ```
+
+## Release reminders
+
+For `@go-go-golems/rag-evaluation-site` npm releases, follow [`docs/guides/npm-release-playbook.md`](docs/guides/npm-release-playbook.md). Do not publish from a local shell unless the playbook is explicitly changed; bump the package version, validate locally, push to `main`, and trigger `publish-npm.yml` with Trusted Publishing.
 
 ## Before committing
 
