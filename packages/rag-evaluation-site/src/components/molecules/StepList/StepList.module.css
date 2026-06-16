@@ -30,6 +30,14 @@ button.button:hover {
 .item[data-active="true"] .button {
 	box-shadow: inset 0 0 0 2px var(--mac-accent);
 }
+
+/* Read-only: no left padding, first item has no top padding */
+.root[data-selectable="false"] .button {
+	padding-left: 0;
+}
+.root[data-selectable="false"] .item:first-child .button {
+	padding-top: 0;
+}
 .index {
 	min-width: 42px;
 	color: var(--mac-text-dim);

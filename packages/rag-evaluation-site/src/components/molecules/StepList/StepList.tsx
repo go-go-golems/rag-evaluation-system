@@ -29,6 +29,7 @@ export function StepList({
 		<ol
 			className={[styles.root, className ?? ""].filter(Boolean).join(" ")}
 			data-rag-molecule="StepList"
+			data-selectable={isSelectable ? "true" : "false"}
 			{...rest}
 		>
 			{items.map((item) => {
