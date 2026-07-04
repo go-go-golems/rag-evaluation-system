@@ -1,6 +1,6 @@
-import { DashboardGrid } from "./DashboardGrid";
-import { defineWidget } from "../../../widgets/registry";
 import type { DashboardGridWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { DashboardGrid } from "./DashboardGrid";
 
 export const dashboardGridWidget = defineWidget<DashboardGridWidgetProps>({
 	type: "DashboardGrid",

@@ -1,6 +1,6 @@
-import { Text } from "./Text";
-import { defineWidget } from "../../../widgets/registry";
 import type { TextWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { Text } from "./Text";
 
 export const textWidget = defineWidget<TextWidgetProps>({
 	type: "Text",

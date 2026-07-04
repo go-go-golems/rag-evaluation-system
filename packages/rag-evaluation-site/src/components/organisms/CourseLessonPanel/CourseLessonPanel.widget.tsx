@@ -1,6 +1,6 @@
-import { CourseLessonPanel } from "./CourseLessonPanel";
-import { defineWidget } from "../../../widgets/registry";
 import type { CourseLessonPanelWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { CourseLessonPanel } from "./CourseLessonPanel";
 
 export const courseLessonPanelWidget = defineWidget<CourseLessonPanelWidgetProps>({
 	type: "CourseLessonPanel",

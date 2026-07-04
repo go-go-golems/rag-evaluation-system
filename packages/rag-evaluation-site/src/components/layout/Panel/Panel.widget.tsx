@@ -1,6 +1,6 @@
-import { Panel } from "./Panel";
-import { defineWidget } from "../../../widgets/registry";
 import type { PanelWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { Panel } from "./Panel";
 
 export const panelWidget = defineWidget<PanelWidgetProps>({
 	type: "Panel",

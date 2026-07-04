@@ -1,6 +1,6 @@
-import { ContextStyleSwatch } from "./ContextStyleSwatch";
-import { defineWidget } from "../../../widgets/registry";
 import type { ContextStyleSwatchWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { ContextStyleSwatch } from "./ContextStyleSwatch";
 
 export const contextStyleSwatchWidget = defineWidget<ContextStyleSwatchWidgetProps>({
 	type: "ContextStyleSwatch",

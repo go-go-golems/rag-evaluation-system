@@ -1,6 +1,6 @@
-import { MarkdownArticle } from "./MarkdownArticle";
-import { defineWidget } from "../../../widgets/registry";
 import type { MarkdownArticleWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { MarkdownArticle } from "./MarkdownArticle";
 
 export const markdownArticleWidget = defineWidget<MarkdownArticleWidgetProps>({
 	type: "MarkdownArticle",

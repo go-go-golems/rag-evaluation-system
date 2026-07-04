@@ -1,6 +1,6 @@
-import { Stack } from "./Stack";
-import { defineWidget } from "../../../widgets/registry";
 import type { StackWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { Stack } from "./Stack";
 
 export const stackWidget = defineWidget<StackWidgetProps>({
 	type: "Stack",

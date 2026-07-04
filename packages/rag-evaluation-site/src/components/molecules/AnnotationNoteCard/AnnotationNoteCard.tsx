@@ -1,11 +1,11 @@
 import type { CSSProperties, HTMLAttributes } from "react";
 import {
-	contextVisualStyleToCssVars,
-	resolveContextVisualStyle,
-	transcriptDefaultStyleSet,
 	type ContextStyleSet,
 	type ContextVisualStyle,
+	contextVisualStyleToCssVars,
+	resolveContextVisualStyle,
 	type TranscriptAnnotation,
+	transcriptDefaultStyleSet,
 } from "../../../context";
 import { ContextStyleSwatch } from "../../atoms";
 import { Caption } from "../../foundation";

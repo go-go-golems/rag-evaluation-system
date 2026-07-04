@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
+	type ContextPaletteName,
+	type ContextStyleSet,
 	contextCourseFixture,
 	contextDefaultStyleSet,
 	contextHandoutFixture,
@@ -7,12 +9,10 @@ import {
 	contextSlides,
 	contextStyleSetForPalette,
 	contextWindowSnapshots,
-	type ContextPaletteName,
-	type ContextStyleSet,
 } from "../context";
-import { WidgetRenderer, type WidgetRendererProps } from "./WidgetRenderer";
 import { defaultWidgetRegistry } from "./defaultRegistry";
 import { component, text, type WidgetNode } from "./ir";
+import { WidgetRenderer, type WidgetRendererProps } from "./WidgetRenderer";
 
 const meta = {
 	title: "Widget IR/Renderer/Course Studio",

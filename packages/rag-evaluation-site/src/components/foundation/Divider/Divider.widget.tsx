@@ -1,6 +1,6 @@
-import { Divider } from "./Divider";
-import { defineWidget } from "../../../widgets/registry";
 import type { DividerWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { Divider } from "./Divider";
 
 export const dividerWidget = defineWidget<DividerWidgetProps>({
 	type: "Divider",

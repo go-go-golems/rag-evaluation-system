@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { TranscriptRole } from "../../../context";
 import { Inline } from "../../layout";
 import { TranscriptRoleBadge } from "./TranscriptRoleBadge";
+
 const meta = {
 	title: "Design System/Atoms/TranscriptRoleBadge",
 	component: TranscriptRoleBadge,

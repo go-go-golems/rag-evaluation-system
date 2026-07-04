@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
+	type ContextPaletteName,
 	contextDefaultStyleSet,
 	contextPaletteOptions,
 	contextStyleSetForPalette,
 	contextWindowSnapshots,
-	type ContextPaletteName,
 } from "../../../context";
 import { ContextLegend, ContextStripDiagram } from "../index";
 import { FigureBlock, type FigureBlockProps } from "./FigureBlock";

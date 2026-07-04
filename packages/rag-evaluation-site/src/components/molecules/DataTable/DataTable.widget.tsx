@@ -1,7 +1,7 @@
-import { DataTable } from "./DataTable";
-import { defineWidget } from "../../../widgets/registry";
 import { renderCell, rowKey } from "../../../widgets/cellRenderers";
 import type { DataTableWidgetProps, JsonObject } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { DataTable } from "./DataTable";
 
 export const dataTableWidget = defineWidget<DataTableWidgetProps>({
 	type: "DataTable",

@@ -1,7 +1,6 @@
-import type { RenderableValue } from "../../../widgets/ir";
-import { KeyPointList } from "./KeyPointList";
+import type { KeyPointListWidgetProps, RenderableValue } from "../../../widgets/ir";
 import { defineWidget } from "../../../widgets/registry";
-import type { KeyPointListWidgetProps } from "../../../widgets/ir";
+import { KeyPointList } from "./KeyPointList";
 
 interface KeyPointObjectItem {
 	id?: string;

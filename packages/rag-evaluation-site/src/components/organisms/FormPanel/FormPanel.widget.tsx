@@ -1,6 +1,6 @@
-import { FormPanel } from "./FormPanel";
-import { defineWidget } from "../../../widgets/registry";
 import type { FormPanelWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { FormPanel } from "./FormPanel";
 
 export const formPanelWidget = defineWidget<FormPanelWidgetProps>({
 	type: "FormPanel",

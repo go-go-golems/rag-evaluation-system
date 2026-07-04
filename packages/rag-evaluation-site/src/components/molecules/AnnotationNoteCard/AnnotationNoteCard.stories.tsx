@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { transcriptFixture } from "../../../context";
 import { Stack } from "../../layout";
 import { AnnotationNoteCard } from "./AnnotationNoteCard";
+
 const meta = {
 	title: "Component Library/Molecules/AnnotationNoteCard",
 	component: AnnotationNoteCard,

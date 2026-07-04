@@ -1,6 +1,6 @@
-import { AnchoredCommentRail } from "./AnchoredCommentRail";
-import { defineWidget } from "../../../widgets/registry";
 import type { AnchoredCommentRailWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { AnchoredCommentRail } from "./AnchoredCommentRail";
 
 export const anchoredCommentRailWidget = defineWidget<AnchoredCommentRailWidgetProps>({
 	type: "AnchoredCommentRail",

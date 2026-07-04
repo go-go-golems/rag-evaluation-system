@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
-import { ScrollRegion } from "./ScrollRegion";
-import { defineWidget } from "../../../widgets/registry";
 import type { ScrollRegionWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { ScrollRegion } from "./ScrollRegion";
 
 export const scrollRegionWidget = defineWidget<ScrollRegionWidgetProps>({
 	type: "ScrollRegion",

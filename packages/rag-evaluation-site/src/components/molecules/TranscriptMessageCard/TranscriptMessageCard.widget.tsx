@@ -1,6 +1,6 @@
-import { TranscriptMessageCard } from "./TranscriptMessageCard";
-import { defineWidget } from "../../../widgets/registry";
 import type { TranscriptMessageCardWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { TranscriptMessageCard } from "./TranscriptMessageCard";
 
 export const transcriptMessageCardWidget = defineWidget<TranscriptMessageCardWidgetProps>({
 	type: "TranscriptMessageCard",

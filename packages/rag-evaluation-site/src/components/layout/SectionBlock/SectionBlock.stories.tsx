@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Text } from "../../foundation";
 import { SectionBlock } from "./SectionBlock";
+
 const meta = {
 	title: "Design System/Layout/SectionBlock",
 	component: SectionBlock,

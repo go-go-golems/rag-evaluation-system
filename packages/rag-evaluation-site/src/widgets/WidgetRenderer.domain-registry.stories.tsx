@@ -7,9 +7,9 @@ import {
 	contextWindowSnapshots,
 	transcriptFixture,
 } from "../context";
-import { WidgetRenderer } from "./WidgetRenderer";
 import { defaultWidgetRegistry } from "./defaultRegistry";
 import { component, text } from "./ir";
+import { WidgetRenderer } from "./WidgetRenderer";
 
 const meta = {
 	title: "Widget IR/Renderer/Domain Registry Coverage",

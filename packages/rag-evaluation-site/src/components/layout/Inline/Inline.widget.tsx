@@ -1,6 +1,6 @@
-import { Inline } from "./Inline";
-import { defineWidget } from "../../../widgets/registry";
 import type { InlineWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { Inline } from "./Inline";
 
 export const inlineWidget = defineWidget<InlineWidgetProps>({
 	type: "Inline",

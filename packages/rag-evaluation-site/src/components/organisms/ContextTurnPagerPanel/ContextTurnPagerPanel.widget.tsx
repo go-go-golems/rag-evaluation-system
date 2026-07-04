@@ -1,6 +1,6 @@
-import { ContextTurnPagerPanel } from "./ContextTurnPagerPanel";
-import { defineWidget } from "../../../widgets/registry";
 import type { ContextTurnPagerPanelWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { ContextTurnPagerPanel } from "./ContextTurnPagerPanel";
 
 export const contextTurnPagerPanelWidget = defineWidget<ContextTurnPagerPanelWidgetProps>({
 	type: "ContextTurnPagerPanel",

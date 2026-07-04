@@ -1,6 +1,6 @@
-import { MetadataGrid } from "./MetadataGrid";
-import { defineWidget } from "../../../widgets/registry";
 import type { MetadataGridWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { MetadataGrid } from "./MetadataGrid";
 
 export const metadataGridWidget = defineWidget<MetadataGridWidgetProps>({
 	type: "MetadataGrid",

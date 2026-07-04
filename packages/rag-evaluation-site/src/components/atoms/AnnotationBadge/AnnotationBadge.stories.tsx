@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
+	type ContextPaletteName,
 	contextDefaultStyleSet,
 	contextPaletteOptions,
 	contextStyleSetForPalette,
-	type ContextPaletteName,
 } from "../../../context";
 import { Inline } from "../../layout";
 import { AnnotationBadge, type AnnotationBadgeProps } from "./AnnotationBadge";

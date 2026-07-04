@@ -1,6 +1,6 @@
-import { AnchoredCommentCard } from "./AnchoredCommentCard";
-import { defineWidget } from "../../../widgets/registry";
 import type { AnchoredCommentCardWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { AnchoredCommentCard } from "./AnchoredCommentCard";
 
 export const anchoredCommentCardWidget = defineWidget<AnchoredCommentCardWidgetProps>({
 	type: "AnchoredCommentCard",

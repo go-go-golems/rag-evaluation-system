@@ -4,10 +4,10 @@ import { TextInput } from "../atoms";
 import { Caption } from "./Caption";
 import { CodeText } from "./CodeText";
 import { Divider } from "./Divider";
+import styles from "./Foundation.stories.module.css";
 import { StatusText } from "./StatusText";
 import { Text } from "./Text";
 import { VisuallyHidden } from "./VisuallyHidden";
-import styles from "./Foundation.stories.module.css";
 
 const meta = {
 	title: "Design System/Foundation/Overview",

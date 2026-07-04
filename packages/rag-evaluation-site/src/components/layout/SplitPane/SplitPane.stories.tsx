@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Text } from "../../foundation";
 import { SectionBlock } from "../SectionBlock";
 import { SplitPane } from "./SplitPane";
+
 const meta = {
 	title: "Design System/Layout/SplitPane",
 	component: SplitPane,

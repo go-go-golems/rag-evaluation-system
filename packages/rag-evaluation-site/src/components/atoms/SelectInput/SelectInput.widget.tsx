@@ -1,6 +1,6 @@
-import { SelectInput } from "./SelectInput";
-import { defineWidget } from "../../../widgets/registry";
 import type { SelectInputWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { SelectInput } from "./SelectInput";
 
 export const selectInputWidget = defineWidget<SelectInputWidgetProps>({
 	type: "SelectInput",

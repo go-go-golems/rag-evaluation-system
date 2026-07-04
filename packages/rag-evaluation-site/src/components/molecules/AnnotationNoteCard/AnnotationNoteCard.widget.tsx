@@ -1,6 +1,6 @@
-import { AnnotationNoteCard } from "./AnnotationNoteCard";
-import { defineWidget } from "../../../widgets/registry";
 import type { AnnotationNoteCardWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { AnnotationNoteCard } from "./AnnotationNoteCard";
 
 export const annotationNoteCardWidget = defineWidget<AnnotationNoteCardWidgetProps>({
 	type: "AnnotationNoteCard",

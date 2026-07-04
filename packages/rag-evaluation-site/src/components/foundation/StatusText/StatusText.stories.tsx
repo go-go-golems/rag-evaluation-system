@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { StatusText, type RagStatus } from "./StatusText";
+import { type RagStatus, StatusText } from "./StatusText";
 
 const meta = {
 	title: "Design System/Foundation/StatusText",

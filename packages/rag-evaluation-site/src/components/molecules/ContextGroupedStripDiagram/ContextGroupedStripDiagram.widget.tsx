@@ -1,6 +1,6 @@
-import { ContextGroupedStripDiagram } from "./ContextGroupedStripDiagram";
-import { defineWidget } from "../../../widgets/registry";
 import type { ContextGroupedStripDiagramWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { ContextGroupedStripDiagram } from "./ContextGroupedStripDiagram";
 
 export const contextGroupedStripDiagramWidget = defineWidget<ContextGroupedStripDiagramWidgetProps>(
 	{

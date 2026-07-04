@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
+	type ContextPaletteName,
 	contextPaletteOptions,
 	contextSlides,
 	contextStyleSetForPalette,
 	contextWindowSnapshots,
-	type ContextPaletteName,
 } from "../../../context";
 import { Stack } from "../../layout";
 import { CourseSlidePanel, type CourseSlidePanelProps } from "./CourseSlidePanel";

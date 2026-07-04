@@ -1,7 +1,6 @@
-import type { RenderableValue } from "../../../widgets/ir";
-import { CheckList } from "./CheckList";
+import type { CheckListWidgetProps, RenderableValue } from "../../../widgets/ir";
 import { defineWidget } from "../../../widgets/registry";
-import type { CheckListWidgetProps } from "../../../widgets/ir";
+import { CheckList } from "./CheckList";
 
 interface CheckListObjectItem {
 	id?: string;

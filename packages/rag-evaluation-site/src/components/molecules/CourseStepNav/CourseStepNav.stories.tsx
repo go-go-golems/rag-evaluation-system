@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { contextCourseFixture } from "../../../context";
 import { CourseStepNav } from "./CourseStepNav";
+
 const meta = {
 	title: "Component Library/Molecules/CourseStepNav",
 	component: CourseStepNav,

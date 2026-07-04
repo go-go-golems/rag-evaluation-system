@@ -1,6 +1,6 @@
-import { CodeText } from "./CodeText";
-import { defineWidget } from "../../../widgets/registry";
 import type { CodeTextWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { CodeText } from "./CodeText";
 
 export const codeTextWidget = defineWidget<CodeTextWidgetProps>({
 	type: "CodeText",

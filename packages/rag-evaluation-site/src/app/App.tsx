@@ -1,10 +1,11 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { ErrorCallout } from "../components/atoms";
 import { Caption } from "../components/foundation";
 import { AppShell, Panel } from "../components/layout";
 import { AppNav } from "../components/molecules";
 import { CourseStudioShell } from "../components/organisms";
-import { WidgetRenderer } from "../widgets/WidgetRenderer";
+import { useWidgetPage, type WidgetPageResponse } from "../hooks/useWidgetPage";
+import { dispatchWidgetAction, type WidgetActionContext } from "../widgets/actions";
 import { defaultWidgetRegistry } from "../widgets/defaultRegistry";
 import type {
 	ActionSpec,
@@ -14,8 +15,7 @@ import type {
 	RenderableValue,
 	WidgetNode,
 } from "../widgets/ir";
-import { dispatchWidgetAction, type WidgetActionContext } from "../widgets/actions";
-import { useWidgetPage, type WidgetPageResponse } from "../hooks/useWidgetPage";
+import { WidgetRenderer } from "../widgets/WidgetRenderer";
 import "./app.css";
 
 export interface RagEvaluationSiteAppProps {

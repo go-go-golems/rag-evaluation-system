@@ -1,13 +1,13 @@
 import type { CSSProperties, HTMLAttributes } from "react";
 import {
-	contextVisualStyleToCssVars,
-	resolveContextVisualStyle,
-	transcriptDefaultStyleSet,
 	type ContextStyleSet,
 	type ContextVisualStyle,
+	contextVisualStyleToCssVars,
+	resolveContextVisualStyle,
 	type TranscriptAnnotation,
 	type TranscriptMessage,
 	type TranscriptRole,
+	transcriptDefaultStyleSet,
 } from "../../../context";
 import { Caption } from "../../foundation";
 import styles from "./TranscriptMessageCard.module.css";

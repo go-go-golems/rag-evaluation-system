@@ -1,6 +1,6 @@
-import { SectionBlock } from "./SectionBlock";
-import { defineWidget } from "../../../widgets/registry";
 import type { SectionBlockWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { SectionBlock } from "./SectionBlock";
 
 export const sectionBlockWidget = defineWidget<SectionBlockWidgetProps>({
 	type: "SectionBlock",

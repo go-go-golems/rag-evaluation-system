@@ -1,6 +1,6 @@
-import { TabList } from "./TabList";
-import { defineWidget } from "../../../widgets/registry";
 import type { TabListWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { TabList } from "./TabList";
 
 export const tabListWidget = defineWidget<TabListWidgetProps>({
 	type: "TabList",

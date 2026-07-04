@@ -1,17 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
-	contextPaletteOptions,
-	contextStyleSetForPalette,
-	contextThreeLabelStyleSets,
-	contextWindowSnapshots,
 	type ContextPaletteName,
 	type ContextStyleSet,
 	type ContextVisualStyle,
 	type ContextWindowSnapshot,
+	contextPaletteOptions,
+	contextStyleSetForPalette,
+	contextThreeLabelStyleSets,
+	contextWindowSnapshots,
 } from "../context";
-import { WidgetRenderer, type WidgetRendererProps } from "./WidgetRenderer";
 import { defaultWidgetRegistry } from "./defaultRegistry";
 import { component, text, type WidgetNode } from "./ir";
+import { WidgetRenderer, type WidgetRendererProps } from "./WidgetRenderer";
 
 type StoryArgs = WidgetRendererProps & { palette: ContextPaletteName };
 

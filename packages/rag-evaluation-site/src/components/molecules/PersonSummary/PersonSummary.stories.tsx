@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PersonSummary } from "./PersonSummary";
+
 const meta = {
 	title: "Component Library/Molecules/PersonSummary",
 	component: PersonSummary,

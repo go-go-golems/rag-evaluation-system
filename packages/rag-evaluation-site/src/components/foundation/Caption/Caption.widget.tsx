@@ -1,6 +1,6 @@
-import { Caption } from "./Caption";
-import { defineWidget } from "../../../widgets/registry";
 import type { CaptionWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { Caption } from "./Caption";
 
 export const captionWidget = defineWidget<CaptionWidgetProps>({
 	type: "Caption",

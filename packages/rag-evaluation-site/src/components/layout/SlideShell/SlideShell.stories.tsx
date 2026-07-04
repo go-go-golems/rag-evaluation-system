@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
+	type ContextPaletteName,
 	contextDefaultStyleSet,
 	contextPaletteOptions,
 	contextSlides,
 	contextStyleSetForPalette,
 	contextWindowSnapshots,
-	type ContextPaletteName,
 } from "../../../context";
 import { ContextStackDiagram, FigureBlock, KeyPointList } from "../../molecules";
 import { SlideShell, type SlideShellProps } from "./SlideShell";

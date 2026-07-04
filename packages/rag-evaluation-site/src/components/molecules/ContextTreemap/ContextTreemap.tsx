@@ -1,12 +1,12 @@
 import type { HTMLAttributes } from "react";
 import {
+	type ContextStyleSet,
+	type ContextWindowSnapshot,
 	contextVisualStyleToCssVars,
 	contextWindowHeadroomStyleKeys,
 	contextWindowIsHeadroomPart,
 	contextWindowTokenTotal,
 	resolveContextVisualStyle,
-	type ContextStyleSet,
-	type ContextWindowSnapshot,
 } from "../../../context";
 import { handleContextPartKeyDown } from "../contextKeyboardNavigation";
 import styles from "./ContextTreemap.module.css";

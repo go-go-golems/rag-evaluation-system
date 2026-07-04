@@ -1,6 +1,6 @@
-import { FigureBlock } from "./FigureBlock";
-import { defineWidget } from "../../../widgets/registry";
 import type { FigureBlockWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { FigureBlock } from "./FigureBlock";
 
 export const figureBlockWidget = defineWidget<FigureBlockWidgetProps>({
 	type: "FigureBlock",

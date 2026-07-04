@@ -1,7 +1,7 @@
-import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FormRow, Panel, Stack } from "../../layout";
+import { useState } from "react";
 import { Caption } from "../../foundation";
+import { FormRow, Panel, Stack } from "../../layout";
 import { CheckboxRow } from "./CheckboxRow";
 
 const meta = { title: "Design System/Atoms/CheckboxRow", component: CheckboxRow } satisfies Meta<

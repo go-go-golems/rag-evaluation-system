@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
+	type ContextPaletteName,
+	type ContextStyleSet,
 	contextDefaultStyleSet,
 	contextPaletteOptions,
 	contextStyleSetForPalette,
-	type ContextPaletteName,
-	type ContextStyleSet,
 } from "../context";
-import { WidgetRenderer, type WidgetRendererProps } from "./WidgetRenderer";
 import { defaultWidgetRegistry } from "./defaultRegistry";
 import { component, text, type WidgetNode } from "./ir";
+import { WidgetRenderer, type WidgetRendererProps } from "./WidgetRenderer";
 
 const meta = {
 	title: "Widget IR/Renderer/Layout Recipes",

@@ -1,8 +1,8 @@
 import type { HTMLAttributes } from "react";
 import {
-	contextVisualStyleToCssVars,
-	type ContextVisualStyle,
 	type ContextStyleSize,
+	type ContextVisualStyle,
+	contextVisualStyleToCssVars,
 } from "../../../context";
 import styles from "./ContextStyleSwatch.module.css";
 
