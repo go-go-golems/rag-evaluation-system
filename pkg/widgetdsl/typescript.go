@@ -70,6 +70,36 @@ func TypeScriptModule(moduleName string) *spec.Module {
 			"};",
 		)
 	}
+	if moduleSpec.name == UIModuleName {
+		lines = append(lines,
+			"export function section(title: WidgetChild, options?: Props, ...children: WidgetChild[]): WidgetNode;",
+		)
+	}
+	if moduleSpec.name == DataModuleName {
+		lines = append(lines,
+			"export interface FieldSpec { role: string; [key: string]: any; }",
+			"export interface Schema { fields: FieldSpec[]; [key: string]: any; }",
+			"export const f: {",
+			"key(options?: Props): FieldSpec;",
+			"primary(options?: Props): FieldSpec;",
+			"short(options?: Props): FieldSpec;",
+			"prose(options?: Props): FieldSpec;",
+			"count(options?: Props): FieldSpec;",
+			"size(options?: Props): FieldSpec;",
+			"measure(options?: Props): FieldSpec;",
+			"date(options?: Props): FieldSpec;",
+			"status(options?: Props): FieldSpec;",
+			"tags(options?: Props): FieldSpec;",
+			"media(options?: Props): FieldSpec;",
+			"href(options?: Props): FieldSpec;",
+			"};",
+			"export function schema(fields: Record<string, FieldSpec>): Schema;",
+			"export function record(values: Props, options: Props): WidgetNode;",
+			"export function collection(rows: Props[], options: Props): WidgetNode;",
+			"export function urlParam(param: string, value?: any): Props;",
+			"export function formPost(formAction: string, options?: Props): Props;",
+		)
+	}
 	if moduleSpec.name == ContextWindowModuleName {
 		lines = append(lines,
 			"export function contextStyleSwatch(options?: Props): WidgetNode;",

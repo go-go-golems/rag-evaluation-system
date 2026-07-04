@@ -32,36 +32,50 @@ type moduleSpec struct {
 var templatePattern = regexp.MustCompile(`\$\{([^}]+)\}|\$([A-Za-z0-9_.-]+)`)
 
 var uiHelpers = map[string]string{
-	"appShell":      "AppShell",
-	"appNav":        "AppNav",
-	"button":        "Button",
-	"caption":       "Caption",
-	"checkList":     "CheckList",
-	"codeText":      "CodeText",
-	"dashboardGrid": "DashboardGrid",
-	"divider":       "Divider",
-	"figureBlock":   "FigureBlock",
-	"formPanel":     "FormPanel",
-	"formRow":       "FormRow",
-	"inline":        "Inline",
-	"keyPointList":  "KeyPointList",
-	"keyValueStrip": "KeyValueStrip",
-	"metadataGrid":  "MetadataGrid",
-	"panel":         "Panel",
-	"personSummary": "PersonSummary",
-	"scrollRegion":  "ScrollRegion",
-	"sectionBlock":  "SectionBlock",
-	"selectInput":   "SelectInput",
-	"sidebarNav":    "SidebarNav",
-	"sidebarShell":  "SidebarShell",
-	"splitPane":     "SplitPane",
-	"stack":         "Stack",
-	"statusText":    "StatusText",
-	"stepList":      "StepList",
-	"tabList":       "TabList",
-	"textBlock":     "Text",
-	"textInput":     "TextInput",
-	"textareaInput": "TextareaInput",
+	"appShell": "AppShell",
+	"appNav":   "AppNav",
+	"button":   "Button",
+	// Generic primitives promoted from domain modules (RAGEVAL-UI-GRAMMAR
+	// design-doc 02 §3); the domain modules keep their original names as
+	// deprecated aliases.
+	"breadcrumbs":     "Breadcrumbs",
+	"emptyState":      "EmptyState",
+	"fieldGrid":       "FieldGrid",
+	"markdownArticle": "MarkdownArticle",
+	"meterBar":        "MeterBar",
+	"pagination":      "Pagination",
+	"richArticle":     "RichArticle",
+	"searchField":     "SearchField",
+	"tag":             "Tag",
+	"tileGrid":        "TileGrid",
+	"uploadDropArea":  "ContextUploadDropArea",
+	"caption":         "Caption",
+	"checkList":       "CheckList",
+	"codeText":        "CodeText",
+	"dashboardGrid":   "DashboardGrid",
+	"divider":         "Divider",
+	"figureBlock":     "FigureBlock",
+	"formPanel":       "FormPanel",
+	"formRow":         "FormRow",
+	"inline":          "Inline",
+	"keyPointList":    "KeyPointList",
+	"keyValueStrip":   "KeyValueStrip",
+	"metadataGrid":    "MetadataGrid",
+	"panel":           "Panel",
+	"personSummary":   "PersonSummary",
+	"scrollRegion":    "ScrollRegion",
+	"sectionBlock":    "SectionBlock",
+	"selectInput":     "SelectInput",
+	"sidebarNav":      "SidebarNav",
+	"sidebarShell":    "SidebarShell",
+	"splitPane":       "SplitPane",
+	"stack":           "Stack",
+	"statusText":      "StatusText",
+	"stepList":        "StepList",
+	"tabList":         "TabList",
+	"textBlock":       "Text",
+	"textInput":       "TextInput",
+	"textareaInput":   "TextareaInput",
 }
 
 var dataHelpers = map[string]string{
@@ -235,6 +249,12 @@ func (r *runtime) install(exports *goja.Object, spec moduleSpec) {
 	}
 	if spec.name == ContextWindowModuleName {
 		r.installContextWindowStyleHelpers(exports)
+	}
+	if spec.name == DataModuleName {
+		r.installDataGrammar(exports)
+	}
+	if spec.name == UIModuleName {
+		setExport(exports, "section", r.sectionVerb)
 	}
 	if len(spec.recipes) > 0 {
 		setExport(exports, "recipes", r.recipesObject(spec.recipes))

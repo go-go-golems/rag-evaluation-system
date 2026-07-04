@@ -72,10 +72,28 @@ ui.action.server("admin-delete-course-material", { confirm: "Delete ${file}?" })
 `ui.dsl` exports generic visual helpers:
 
 - `appShell`, `appNav`
-- `button`, `caption`, `codeText`, `divider`, `statusText`, `textBlock`
-- `inline`, `stack`, `dashboardGrid`, `panel`, `scrollRegion`, `sectionBlock`, `sidebarShell`, `splitPane`
-- `formRow`, `selectInput`, `textInput`, `textareaInput`, `tabList`
+- `button`, `caption`, `codeText`, `divider`, `statusText`, `textBlock`, `tag`, `meterBar`
+- `inline`, `stack`, `dashboardGrid`, `panel`, `scrollRegion`, `sectionBlock`, `fieldGrid`, `tileGrid`, `sidebarShell`, `splitPane`
+- `formRow`, `selectInput`, `textInput`, `textareaInput`, `tabList`, `searchField`, `uploadDropArea`
 - `metadataGrid`, `keyValueStrip`, `checkList`, `stepList`, `personSummary`, `figureBlock`, `keyPointList`, `sidebarNav`
+- `breadcrumbs`, `pagination`, `emptyState`, `markdownArticle`, `richArticle`
+
+Generic primitives that used to live only in `cms.dsl` (`tag`, `meterBar`, `tileGrid`, `searchField`, `breadcrumbs`, `pagination`, `emptyState`), `context_window.dsl` (`uploadDropArea`, formerly `contextUploadDropArea`), and `course.dsl` (`markdownArticle`, `richArticle`) are now first-class `ui.dsl` exports. The old module-local names still work but are deprecated aliases — import from `ui.dsl` in new code.
+
+### `ui.section(title, options?, ...children)` — flat sectioning
+
+Document structure without boxes: an uppercase label, an optional 1px rule, and content. Use `section` for page structure; reserve `panel` for interactive tools and selected-item cards.
+
+- `options.level` — `1 | 2 | 3` heading scale (default 1)
+- `options.anchor` — DOM id for in-page links
+- `options.caption` — muted description line under the label
+- `options.actions` — widget node(s) shown at the right of the label row
+- `options.rule` — default `true`; `options.density` — default `"flush"`
+
+```js
+ui.section("Media library", { level: 1, anchor: "media", caption: "Files under course/media." },
+  cms.recipes.mediaLibrary({ assets, onFilesSelected: "admin-upload-course-material" }))
+```
 
 Example:
 
@@ -133,6 +151,56 @@ ui.panel({ title: "Rows" },
   })
 )
 ```
+
+### The data grammar: `schema`, `f`, `record`, `collection`
+
+Intent-level authoring: declare what the records look like and how they should be shown or edited; the grammar compiles to `DataTable`/`FormPanel`/`FieldGrid`/`SectionBlock` IR. See ticket RAGEVAL-UI-GRAMMAR design-doc 02.
+
+**Field roles** (`data.f.*`): `key`, `primary`, `short`, `prose`, `count`, `size`, `measure`, `date`, `status`, `tags`, `media`, `href`. A role decides the summary cell (prose/media are elided from tables; status renders as StatusText; count/size/measure as numbers), the editor control (prose → stacked textarea; key → read-only text input), and grid batching. Options per field: `label`, `width`, `placeholder`, `required`, `maxLength`, `rows`, `hint`, `readOnly`, `editable`.
+
+**`data.schema(fields)`** — ordered field specs:
+
+```js
+const agendaSchema = data.schema({
+  id:          data.f.key({ hint: "Stable anchor. Leave blank for a generated ID." }),
+  number:      data.f.short({ label: "Time", width: "6ch", placeholder: "14h30" }),
+  duration:    data.f.short({ width: "8ch" }),
+  title:       data.f.primary({ required: true, maxLength: 160 }),
+  description: data.f.prose({ rows: 4, maxLength: 800 }),
+})
+```
+
+**`data.record(values, options)`** — one record. `verb: "edit"` (default) compiles to a `FormPanel` whose rows derive from the schema — consecutive short fields batch into a `FieldGrid`, prose fields become stacked textareas; `verb: "show"` compiles to a `MetadataGrid`. `submit: data.formPost("/settings/…")` wires the native form post; `title`, `status`, `statusMessage`, `submitLabel`, `footer` pass through.
+
+**`data.collection(rows, options)`** — records through an arrangement:
+
+- `verb`: `"show" | "edit" | "pick" | "manage"`
+- `arrange`: `"table" | "master-detail"`
+- `select: data.urlParam("agenda", query.agenda)` — selection state lives in the URL; row clicks navigate `?agenda=<key>`; the value `"__new"` opens an empty editor
+- `submit: data.formPost(...)` — per-record save for the detail editor
+- `open` — action for an Open column / row activation when there is no `select`
+- `reorder` — action dispatched with `payload.direction: "up" | "down"` and the row in context
+- `remove` — action (with `confirm: "Delete ${row.title}?"`) for a Delete column
+- `create: true` — a "New item" button navigating `?<param>=__new`
+- `title`/`caption` — wraps everything in a flat `SectionBlock` (level 2, ruled); `empty`, `getRowKey` as in `dataTable`
+
+```js
+ui.section("Agenda", { level: 1 },
+  data.collection(agenda, {
+    schema: agendaSchema,
+    title: "Workshop agenda",
+    verb: "edit",
+    arrange: "master-detail",
+    select: data.urlParam("agenda", query.agenda),
+    submit: data.formPost("/settings/agenda-item"),
+    reorder: "admin-reorder-course-agenda",
+    remove: { kind: "server", name: "admin-delete-agenda-item", confirm: "Delete ${row.title}?" },
+    create: true,
+    empty: "No agenda items yet.",
+  }))
+```
+
+The summary table elides prose, keys render muted, and the detail editor for the selected row derives from the same schema — roughly 250 px of table plus one editor, replacing an unrolled stack of per-item panels.
 
 ### Data recipes
 
