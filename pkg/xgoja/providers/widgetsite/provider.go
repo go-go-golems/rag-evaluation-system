@@ -47,6 +47,13 @@ func Register(registry *providerapi.ProviderRegistry) error {
 			TypeScript:       widgetdsl.TypeScriptModule(widgetdsl.CourseModuleName),
 			NewModuleFactory: loader(widgetdsl.CourseModuleName),
 		},
+		providerapi.Module{
+			Name:             widgetdsl.CmsModuleName,
+			DefaultAs:        widgetdsl.CmsModuleName,
+			Description:      "Media, asset, and article-management Widget IR helpers.",
+			TypeScript:       widgetdsl.TypeScriptModule(widgetdsl.CmsModuleName),
+			NewModuleFactory: loader(widgetdsl.CmsModuleName),
+		},
 		providerapi.HelpSource{
 			Name:        "widget-dsl",
 			Description: "Getting started and JavaScript API reference for split Widget IR DSL modules.",

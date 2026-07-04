@@ -24,6 +24,7 @@ This reference documents the JavaScript API exposed by the `rag-widget-site` pro
 | `data.dsl` | Data-display widgets, `cell.*` helpers, and data recipes. |
 | `context_window.dsl` | Context-window diagrams, transcript, annotation, anchored-comment, and upload helpers. |
 | `course.dsl` | Course, lesson, slide, handout, and course-studio helpers. |
+| `cms.dsl` | Media, asset, and article-management helpers. |
 
 There is no compatibility bucket module. Import the domain modules explicitly:
 
@@ -32,6 +33,7 @@ const ui = require("ui.dsl")
 const data = require("data.dsl")
 const contextWindow = require("context_window.dsl")
 const course = require("course.dsl")
+const cms = require("cms.dsl")
 ```
 
 ## Shared constructors
@@ -54,8 +56,15 @@ All four domain modules export `action` because actions can be attached to widge
 ```js
 ui.action.server("refresh", { payload: { force: true } })
 ui.action.navigate("/pages/$value")
+ui.action.download("/api/handouts/$value/download.md")
 ui.action.event("widget:selected", { detail: { source: "story" } })
 ui.action.copy("copy this")
+```
+
+Every action accepts an optional `confirm` string (via the options object). When present the renderer shows a confirmation prompt — with `${path}` / `$name` interpolation against the action context — before dispatching. Use it for destructive actions:
+
+```js
+ui.action.server("admin-delete-course-material", { confirm: "Delete ${file}?" })
 ```
 
 ## `ui.dsl` helpers
@@ -103,6 +112,8 @@ ui.page({
 - `cell.caption(field, options?)`
 - `cell.template(template)`
 - `cell.link(hrefField, labelField, options?)`
+- `cell.linkButton(hrefField, labelField, options?)`
+- `cell.actionButton(label, action, options?)`
 - `cell.constant(value)`
 
 Example:
@@ -144,7 +155,7 @@ data.recipes.masterDetailTable({
 Component helpers:
 
 - `contextStyleSwatch`, `annotationBadge`, `transcriptRoleBadge`
-- `contextLegend`, `contextBudgetBar`, `contextStripDiagram`, `contextStackDiagram`, `contextTreemap`, `contextDiagramPanel`
+- `contextLegend`, `contextBudgetBar`, `contextStripDiagram`, `contextGroupedStripDiagram`, `contextStackDiagram`, `contextTreemap`, `contextDiagramPanel`
 - `transcriptSessionHeader`, `transcriptMessageCard`, `annotationNoteCard`, `annotationRailPanel`, `transcriptReaderPanel`, `transcriptWorkspacePanel`
 - `anchoredCommentCard`, `anchoredCommentRail`
 - `contextUploadDropArea`
@@ -258,6 +269,38 @@ course.courseStudioShell({
 - `course.recipes.courseStudio({ sections, activeItemId?, title?, subtitle?, main?, onNavigate? })`
 - `course.recipes.courseSlide({ slide, snapshot, index?, total?, visualSide?, onPrevious?, onNext? })`
 - `course.recipes.handout({ bundle?, intro?, documents?, selectedDocumentId?, title?, onSelect?, onDownload?, onDownloadAll? })`
+
+## `cms.dsl` helpers
+
+`cms.dsl` exports content-management widgets built for admin/CMS pages:
+
+- `mediaThumb`, `tag`, `contentStatusBadge`, `meterBar`
+- `tileGrid`, `assetTile`, `breadcrumbs`, `pagination`, `searchField`, `emptyState`
+- `markdownEditor` — browser-local editing state with a live Markdown preview; give it `name` + `defaultValue` so the value participates in `formPanel({ method: "post", formAction })` form posts
+- `mediaLibraryPanel`, `articleListPanel`, `cmsShell`
+
+Assets are `CmsAsset`-shaped objects (`{ id, kind: "image"|"file", title, filename, mime, size, src, tags, status, createdAt, updatedAt }`); articles are `CmsArticleSummary`-shaped (`{ id, slug, title, status, tags, updatedAt, author?, excerpt? }`). Content status is `draft | published | scheduled | archived`.
+
+`mediaLibraryPanel`'s `onFilesSelectedAction` receives serialized files in the action context (`{ files, fileNames, fileCount }` with utf8 text or base64 payloads) — the same contract as `contextUploadDropArea`. Selection, paging, and filtering pair naturally with query-parameter navigation:
+
+```js
+const cms = require("cms.dsl")
+
+cms.recipes.mediaLibrary({
+  assets,
+  selectedAssetIds: query.asset ? [query.asset] : [],
+  onAssetSelect: ui.action.navigate("?asset=$assetId"),
+  onPageChange: ui.action.navigate("?page=$page"),
+  onFilesSelected: "admin-upload-course-material",
+})
+```
+
+### CMS recipes
+
+- `cms.recipes.mediaLibrary({ assets, selectedAssetIds?, selectionMode?, query?, kindFilter?, page?, pageCount?, uploads?, showStatusBadges?, emptyMessage?, title?, minTileWidth?, onAssetSelect?, onAssetOpen?, onQuerySubmit?, onKindFilterChange?, onPageChange?, onFilesSelected? })`
+- `cms.recipes.articleList({ articles, selectedArticleId?, statusFilter?, query?, page?, pageCount?, emptyMessage?, title?, maxVisibleTags?, onArticleSelect?, onCreate?, onRowAction?, onStatusFilterChange?, onQuerySubmit?, onPageChange? })`
+
+`onRowAction` dispatches with `{ articleId, rowAction }` where `rowAction` is `edit | publish | archive | delete`; archive/delete confirm inside the panel before dispatching.
 
 ## JSON compatibility rules
 

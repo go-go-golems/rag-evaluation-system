@@ -16,6 +16,7 @@ const (
 	DataModuleName          = "data.dsl"
 	ContextWindowModuleName = "context_window.dsl"
 	CourseModuleName        = "course.dsl"
+	CmsModuleName           = "cms.dsl"
 )
 
 type moduleSpec struct {
@@ -68,25 +69,43 @@ var dataHelpers = map[string]string{
 }
 
 var contextWindowHelpers = map[string]string{
-	"anchoredCommentCard":      "AnchoredCommentCard",
-	"anchoredCommentRail":      "AnchoredCommentRail",
-	"annotationBadge":          "AnnotationBadge",
-	"annotationNoteCard":       "AnnotationNoteCard",
-	"annotationRailPanel":      "AnnotationRailPanel",
-	"contextBudgetBar":         "ContextBudgetBar",
-	"contextDiagramPanel":      "ContextDiagramPanel",
-	"contextStyleSwatch":       "ContextStyleSwatch",
-	"contextLegend":            "ContextLegend",
-	"contextStackDiagram":      "ContextStackDiagram",
-	"contextStripDiagram":      "ContextStripDiagram",
-	"contextTreemap":           "ContextTreemap",
-	"contextTurnPagerPanel":    "ContextTurnPagerPanel",
-	"contextUploadDropArea":    "ContextUploadDropArea",
-	"transcriptMessageCard":    "TranscriptMessageCard",
-	"transcriptReaderPanel":    "TranscriptReaderPanel",
-	"transcriptRoleBadge":      "TranscriptRoleBadge",
-	"transcriptSessionHeader":  "TranscriptSessionHeader",
-	"transcriptWorkspacePanel": "TranscriptWorkspacePanel",
+	"anchoredCommentCard":        "AnchoredCommentCard",
+	"anchoredCommentRail":        "AnchoredCommentRail",
+	"annotationBadge":            "AnnotationBadge",
+	"annotationNoteCard":         "AnnotationNoteCard",
+	"annotationRailPanel":        "AnnotationRailPanel",
+	"contextBudgetBar":           "ContextBudgetBar",
+	"contextDiagramPanel":        "ContextDiagramPanel",
+	"contextGroupedStripDiagram": "ContextGroupedStripDiagram",
+	"contextStyleSwatch":         "ContextStyleSwatch",
+	"contextLegend":              "ContextLegend",
+	"contextStackDiagram":        "ContextStackDiagram",
+	"contextStripDiagram":        "ContextStripDiagram",
+	"contextTreemap":             "ContextTreemap",
+	"contextTurnPagerPanel":      "ContextTurnPagerPanel",
+	"contextUploadDropArea":      "ContextUploadDropArea",
+	"transcriptMessageCard":      "TranscriptMessageCard",
+	"transcriptReaderPanel":      "TranscriptReaderPanel",
+	"transcriptRoleBadge":        "TranscriptRoleBadge",
+	"transcriptSessionHeader":    "TranscriptSessionHeader",
+	"transcriptWorkspacePanel":   "TranscriptWorkspacePanel",
+}
+
+var cmsHelpers = map[string]string{
+	"articleListPanel":   "ArticleListPanel",
+	"assetTile":          "AssetTile",
+	"breadcrumbs":        "Breadcrumbs",
+	"cmsShell":           "CmsShell",
+	"contentStatusBadge": "ContentStatusBadge",
+	"emptyState":         "EmptyState",
+	"markdownEditor":     "MarkdownEditor",
+	"mediaLibraryPanel":  "MediaLibraryPanel",
+	"mediaThumb":         "MediaThumb",
+	"meterBar":           "MeterBar",
+	"pagination":         "Pagination",
+	"searchField":        "SearchField",
+	"tag":                "Tag",
+	"tileGrid":           "TileGrid",
 }
 
 var courseHelpers = map[string]string{
@@ -133,6 +152,13 @@ var moduleSpecs = []moduleSpec{
 		action:  true,
 		recipes: []string{"courseStudio", "courseSlide", "handout"},
 		doc:     "course.dsl provides course, lesson, slide, handout, and course-studio helpers.",
+	},
+	{
+		name:    CmsModuleName,
+		helpers: cmsHelpers,
+		action:  true,
+		recipes: []string{"mediaLibrary", "articleList"},
+		doc:     "cms.dsl provides media, asset, and article-management helpers.",
 	},
 }
 
@@ -458,6 +484,10 @@ func (r *runtime) recipesObject(names []string) *goja.Object {
 			setExport(recipes, name, r.courseSlideRecipe)
 		case "handout":
 			setExport(recipes, name, r.handoutRecipe)
+		case "mediaLibrary":
+			setExport(recipes, name, r.mediaLibraryRecipe)
+		case "articleList":
+			setExport(recipes, name, r.articleListRecipe)
 		}
 	}
 	return recipes
@@ -729,6 +759,67 @@ func (r *runtime) handoutRecipe(call goja.FunctionCall) goja.Value {
 		props["onDownloadAllAction"] = act
 	}
 	return r.vm.ToValue(componentNode("HandoutDocumentShell", props))
+}
+
+func (r *runtime) mediaLibraryRecipe(call goja.FunctionCall) goja.Value {
+	options := firstObject(call.Arguments)
+	props := map[string]any{
+		"assets": anySlice(options["assets"]),
+	}
+	copyIfPresent(props, options, "selectedAssetIds")
+	copyIfPresent(props, options, "selectionMode")
+	copyIfPresent(props, options, "query")
+	copyIfPresent(props, options, "kindFilter")
+	copyIfPresent(props, options, "page")
+	copyIfPresent(props, options, "pageCount")
+	copyIfPresent(props, options, "uploads")
+	copyIfPresent(props, options, "showStatusBadges")
+	copyIfPresent(props, options, "emptyMessage")
+	copyIfPresent(props, options, "title")
+	copyIfPresent(props, options, "minTileWidth")
+	actionProps := map[string]string{
+		"onAssetSelect":      "onAssetSelectAction",
+		"onAssetOpen":        "onAssetOpenAction",
+		"onQuerySubmit":      "onQuerySubmitAction",
+		"onKindFilterChange": "onKindFilterChangeAction",
+		"onPageChange":       "onPageChangeAction",
+		"onFilesSelected":    "onFilesSelectedAction",
+	}
+	for option, prop := range actionProps {
+		if act, ok := normalizeActionSpec(options[option], nil, nil); ok {
+			props[prop] = act
+		}
+	}
+	return r.vm.ToValue(componentNode("MediaLibraryPanel", props))
+}
+
+func (r *runtime) articleListRecipe(call goja.FunctionCall) goja.Value {
+	options := firstObject(call.Arguments)
+	props := map[string]any{
+		"articles": anySlice(options["articles"]),
+	}
+	copyIfPresent(props, options, "selectedArticleId")
+	copyIfPresent(props, options, "statusFilter")
+	copyIfPresent(props, options, "query")
+	copyIfPresent(props, options, "page")
+	copyIfPresent(props, options, "pageCount")
+	copyIfPresent(props, options, "emptyMessage")
+	copyIfPresent(props, options, "title")
+	copyIfPresent(props, options, "maxVisibleTags")
+	actionProps := map[string]string{
+		"onArticleSelect":      "onArticleSelectAction",
+		"onCreate":             "onCreateAction",
+		"onRowAction":          "onRowActionAction",
+		"onStatusFilterChange": "onStatusFilterChangeAction",
+		"onQuerySubmit":        "onQuerySubmitAction",
+		"onPageChange":         "onPageChangeAction",
+	}
+	for option, prop := range actionProps {
+		if act, ok := normalizeActionSpec(options[option], nil, nil); ok {
+			props[prop] = act
+		}
+	}
+	return r.vm.ToValue(componentNode("ArticleListPanel", props))
 }
 
 func (r *runtime) masterDetailTableRecipe(call goja.FunctionCall) goja.Value {

@@ -53,6 +53,8 @@ func TypeScriptModule(moduleName string) *spec.Module {
 			"caption(field: string, options?: Props): CellSpec;",
 			"template(template: string): CellSpec;",
 			"link(hrefField: string, labelField: string, options?: Props): CellSpec;",
+			"linkButton(hrefField: string, labelField: string, options?: Props): CellSpec;",
+			"actionButton(label: any, action: WidgetAction, options?: Props): CellSpec;",
 			"constant(value: any): CellSpec;",
 			"};",
 		)
@@ -62,6 +64,7 @@ func TypeScriptModule(moduleName string) *spec.Module {
 			"export const action: {",
 			"server(name: string, options?: Props): WidgetAction;",
 			"navigate(to: string, options?: Props): WidgetAction;",
+			"download(to: string, options?: Props): WidgetAction;",
 			"event(name: string, options?: Props): WidgetAction;",
 			"copy(value: string, options?: Props): WidgetAction;",
 			"};",
