@@ -19,3 +19,8 @@ Step 2: cross-page audit (sessions/course/handouts read well = recipe/shell/docu
 
 Doc 02 §4.4 added: context-window rendering pipeline analyzed (snapshot → paletteStyleSet scale → budget-bar/stack/strip/treemap marks) — context_window.dsl is the existence proof for schemas+marks; consequences: promote styleSet to data.scale.*, add f.measure role, multi-view arrangements, declarative group-by shaping.
 
+
+## 2026-07-04
+
+Step 3: grammar implemented — SectionBlock levels/rule/actions + FieldGrid (51aca3c), pkg/widgetdsl/grammar.go with schema/f/record/collection/section + module promotion + tests + TS decls + API-reference chapter (4a70c56), confirm-interpolation encoding fix (9c91539), admin Course CMS rebuilt on the grammar in go-go-course (319c545): 5611px/21 panels/depth 2 → 3496px/5 panels/depth 0; agenda = master-detail collection with URL selection, per-record saves, id-based reorder, confirm deletes. Tasks 4 and 6 checked; five follow-up tasks added.
+
