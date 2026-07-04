@@ -1,10 +1,11 @@
-import type { TextareaHTMLAttributes } from "react";
+import type { Ref, TextareaHTMLAttributes } from "react";
 import styles from "./TextareaInput.module.css";
 
 export type TextareaInputResize = "vertical" | "none";
 
 export interface TextareaInputProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 	resize?: TextareaInputResize;
+	ref?: Ref<HTMLTextAreaElement>;
 }
 
 export function TextareaInput({ className, resize = "vertical", ...rest }: TextareaInputProps) {

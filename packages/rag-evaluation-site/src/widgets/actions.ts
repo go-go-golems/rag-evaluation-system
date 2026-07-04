@@ -26,6 +26,14 @@ export function dispatchWidgetAction(
 	context: WidgetActionContext = {},
 	onAction?: WidgetActionHandler,
 ): void {
+	// Central destructive-action gate: `confirm` is part of the action contract,
+	// so it applies before both custom handlers and the built-in dispatch.
+	if (action.confirm && typeof window !== "undefined" && typeof window.confirm === "function") {
+		if (!window.confirm(interpolate(action.confirm, context))) {
+			return;
+		}
+	}
+
 	if (onAction) {
 		onAction(action, context);
 		return;

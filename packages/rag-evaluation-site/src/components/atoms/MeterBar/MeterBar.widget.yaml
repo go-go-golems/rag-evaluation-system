@@ -1,0 +1,15 @@
+schemaVersion: widget-manifest/v1
+type: MeterBar
+module: cms.dsl
+helper: meterBar
+props: MeterBarWidgetProps
+adapter:
+  path: ./MeterBar.widget.tsx
+  export: meterBarWidget
+reactComponent: MeterBar
+children: false
+slots:
+  - label
+actions: []
+status: experimental
+docs: Determinate progress bar (0..1) with accent | success | danger tones and an optional metric label.

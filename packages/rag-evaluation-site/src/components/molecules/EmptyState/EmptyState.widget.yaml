@@ -1,0 +1,18 @@
+schemaVersion: widget-manifest/v1
+type: EmptyState
+module: cms.dsl
+helper: emptyState
+props: EmptyStateWidgetProps
+adapter:
+  path: ./EmptyState.widget.tsx
+  export: emptyStateWidget
+reactComponent: EmptyState
+children: false
+slots:
+  - glyph
+  - title
+  - hint
+  - actionSlot
+actions: []
+status: experimental
+docs: Standardized empty placeholder (glyph + title + hint + optional action node, dashed framed variant).

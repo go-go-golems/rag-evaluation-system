@@ -7,6 +7,22 @@ export interface MarkdownArticleProps extends HTMLAttributes<HTMLElement> {
 
 type InlineToken = string | ReactNode;
 
+const HAS_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
+const SAFE_SCHEME = /^(https?:|mailto:)/i;
+const EXTERNAL_SCHEME = /^https?:/i;
+
+// Markdown text is escaped by React, so URLs are the only injection surface.
+// Allow http(s)/mailto and relative paths; reject javascript:, data:, and
+// protocol-relative URLs so CMS-authored content stays inert.
+function sanitizeUrl(value: string): string | null {
+	const url = value.trim();
+	if (!url || url.startsWith("//")) return null;
+	if (HAS_SCHEME.test(url)) {
+		return SAFE_SCHEME.test(url) ? url : null;
+	}
+	return url;
+}
+
 function renderInline(value: string, keyPrefix: string): InlineToken[] {
 	const parts: InlineToken[] = [];
 	let rest = value;
@@ -25,11 +41,21 @@ function renderInline(value: string, keyPrefix: string): InlineToken[] {
 				</code>,
 			);
 		} else if (match[4] != null && match[5] != null) {
-			parts.push(
-				<a key={`${keyPrefix}-link-${index}`} href={match[5]} className={styles.link}>
-					{match[4]}
-				</a>,
-			);
+			const href = sanitizeUrl(match[5]);
+			if (href) {
+				parts.push(
+					<a
+						key={`${keyPrefix}-link-${index}`}
+						href={href}
+						rel={EXTERNAL_SCHEME.test(href) ? "noopener noreferrer" : undefined}
+						className={styles.link}
+					>
+						{match[4]}
+					</a>,
+				);
+			} else {
+				parts.push(match[4]);
+			}
 		}
 		rest = rest.slice((match.index ?? 0) + match[0].length);
 		index += 1;
@@ -95,15 +121,18 @@ export function MarkdownArticle({ source, className, ...rest }: MarkdownArticleP
 
 		const image = parseImageMarkdown(trimmed);
 		if (image) {
+			const src = sanitizeUrl(image.src);
 			nodes.push(
 				<figure key={key++} className={styles.figure} data-rag-article-block="image">
-					<img
-						className={styles.image}
-						src={image.src}
-						alt={image.alt}
-						title={image.title}
-						loading="lazy"
-					/>
+					{src && (
+						<img
+							className={styles.image}
+							src={src}
+							alt={image.alt}
+							title={image.title}
+							loading="lazy"
+						/>
+					)}
 					{(image.title || image.alt) && (
 						<figcaption className={styles.figcaption}>{image.title || image.alt}</figcaption>
 					)}

@@ -1,0 +1,19 @@
+schemaVersion: widget-manifest/v1
+type: CmsShell
+module: cms.dsl
+helper: cmsShell
+props: CmsShellWidgetProps
+adapter:
+  path: ./CmsShell.widget.tsx
+  export: cmsShellWidget
+reactComponent: CmsShell
+children: true
+slots:
+  - title
+  - subtitle
+  - headerSlot
+  - sidebarFooter
+actions:
+  - onNavigateAction
+status: experimental
+docs: CMS navigation chrome (SidebarShell + SidebarNav); sections default to cmsNavSections when omitted; navigate action dispatches {itemId, value}.

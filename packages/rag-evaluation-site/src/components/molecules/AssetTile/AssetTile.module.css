@@ -1,0 +1,77 @@
+.root {
+	appearance: none;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 0;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+	color: var(--mac-text);
+	padding: 0;
+	cursor: pointer;
+	text-align: start;
+	min-width: 0;
+}
+
+.thumb,
+.fileThumb {
+	width: 100%;
+	border-bottom: 1px solid var(--mac-border);
+}
+
+.fileThumb {
+	aspect-ratio: 1 / 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--mac-surface-2);
+}
+
+.fileGlyph {
+	color: var(--mac-text-dim);
+	font: var(--rag-font-role-display);
+}
+
+.titleRow {
+	display: block;
+	padding: 3px 6px 1px;
+}
+
+.title {
+	display: block;
+	font: var(--rag-font-role-compact);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.metaRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 4px;
+	padding: 0 6px 3px;
+}
+
+.meta {
+	color: var(--mac-text-dim);
+	font: var(--rag-font-role-metadata);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.root:hover .titleRow {
+	background: var(--mac-surface-2);
+}
+
+.selected {
+	outline: 1px solid var(--mac-accent);
+	outline-offset: -2px;
+}
+
+.selected .titleRow,
+.selected:hover .titleRow {
+	background: var(--mac-bg-dark);
+	color: var(--mac-text-inv);
+}

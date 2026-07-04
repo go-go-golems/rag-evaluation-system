@@ -1,0 +1,17 @@
+schemaVersion: widget-manifest/v1
+type: AssetTile
+module: cms.dsl
+helper: assetTile
+props: AssetTileWidgetProps
+adapter:
+  path: ./AssetTile.widget.tsx
+  export: assetTileWidget
+reactComponent: AssetTile
+children: false
+slots:
+  - footer
+actions:
+  - onSelectAction
+  - onOpenAction
+status: experimental
+docs: One CmsAsset in a tile grid; select/open actions dispatch with {assetId, value} context.

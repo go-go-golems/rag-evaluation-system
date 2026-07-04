@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { CSSProperties, HTMLAttributes } from "react";
 import type { ArticleBlock, ContextStyleSet } from "../../../context";
 import { contextDefaultStyleSet } from "../../../context";
 import { MarkdownArticle } from "../../molecules";
@@ -50,6 +50,32 @@ export function RichArticle({
 								showPartDetails={false}
 							/>
 						</div>
+					);
+				}
+				if (block.kind === "gallery") {
+					return (
+						<figure
+							key={block.id}
+							className={[styles.block, styles.galleryFigure].join(" ")}
+							data-rag-article-block="gallery"
+						>
+							<div
+								className={styles.galleryGrid}
+								style={{ "--rag-gallery-columns": block.columns ?? 3 } as CSSProperties}
+							>
+								{block.images.map((image, index) => (
+									<figure key={`${block.id}-${index}`} className={styles.galleryItem}>
+										<img className={styles.image} src={image.src} alt={image.alt} loading="lazy" />
+										{(image.caption || image.alt) && (
+											<figcaption className={styles.caption}>
+												{image.caption || image.alt}
+											</figcaption>
+										)}
+									</figure>
+								))}
+							</div>
+							{block.caption && <figcaption className={styles.caption}>{block.caption}</figcaption>}
+						</figure>
 					);
 				}
 				return (

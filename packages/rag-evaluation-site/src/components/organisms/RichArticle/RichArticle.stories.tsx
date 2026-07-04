@@ -105,6 +105,42 @@ const imageBlockArticle: ArticleBlock[] = [
 	},
 ];
 
+const galleryBlockArticle: ArticleBlock[] = [
+	{
+		kind: "markdown",
+		id: "gallery-intro",
+		source: "# Gallery block\n\nA gallery lays out several bounded figures in a grid.",
+	},
+	{
+		kind: "gallery",
+		id: "sketch-gallery",
+		columns: 3,
+		caption: "Three views of the same context window.",
+		images: [
+			{ src: "/course-assets/context-window-token-budget.svg", alt: "Budget view" },
+			{ src: "/course-assets/context-window-token-budget.svg", alt: "Strip view" },
+			{ src: "/course-assets/context-window-token-budget.svg", alt: "Stack view" },
+		],
+	},
+	{
+		kind: "gallery",
+		id: "two-up-gallery",
+		columns: 2,
+		images: [
+			{
+				src: "/course-assets/context-window-token-budget.svg",
+				alt: "Before compaction",
+				caption: "Turn 3 — warming up.",
+			},
+			{
+				src: "/course-assets/context-window-token-budget.svg",
+				alt: "After compaction",
+				caption: "Turn 14 — deep in the bug.",
+			},
+		],
+	},
+];
+
 const meta = {
 	title: "Component Library/Organisms/RichArticle",
 	component: RichArticle,
@@ -126,6 +162,10 @@ export const MultipleContextDiagrams: Story = {
 
 export const ExplicitImageBlock: Story = {
 	args: { blocks: imageBlockArticle, styleSet: contextDefaultStyleSet },
+};
+
+export const GalleryBlock: Story = {
+	args: { blocks: galleryBlockArticle, styleSet: contextDefaultStyleSet },
 };
 
 export const SideBySideDensitySamples: Story = {

@@ -1,0 +1,15 @@
+schemaVersion: widget-manifest/v1
+type: SearchField
+module: cms.dsl
+helper: searchField
+props: SearchFieldWidgetProps
+adapter:
+  path: ./SearchField.widget.tsx
+  export: searchFieldWidget
+reactComponent: SearchField
+children: false
+slots: []
+actions:
+  - onSubmitAction
+status: experimental
+docs: Filter box; adapter owns the value locally, dispatches onSubmitAction (Enter) with {query, value} — pair with action.navigate("?query=$query").

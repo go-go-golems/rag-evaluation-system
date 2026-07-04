@@ -1,0 +1,33 @@
+.root {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	padding: 24px 16px;
+	text-align: center;
+}
+
+.framed {
+	border: 1px dashed var(--mac-border);
+	background: var(--mac-surface);
+}
+
+.glyph {
+	color: var(--mac-text-dim);
+	font: var(--rag-font-role-display);
+}
+
+.title {
+	color: var(--mac-text);
+	font: var(--rag-font-role-compact);
+	font-weight: 700;
+}
+
+.hint {
+	max-width: 320px;
+}
+
+.action {
+	margin-top: 6px;
+}

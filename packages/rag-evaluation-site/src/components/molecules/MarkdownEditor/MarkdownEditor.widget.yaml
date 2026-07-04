@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: MarkdownEditor
+module: cms.dsl
+helper: markdownEditor
+props: MarkdownEditorWidgetProps
+adapter:
+  path: ./MarkdownEditor.widget.tsx
+  export: markdownEditorWidget
+reactComponent: MarkdownEditor
+children: false
+slots: []
+actions: []
+status: experimental
+docs: Markdown editing surface with adapter-local state and a live MarkdownArticle preview; `name` + `defaultValue` make it a form-post field inside formPanel(method/formAction) pages.

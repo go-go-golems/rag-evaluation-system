@@ -30,6 +30,28 @@
 	text-align: center;
 }
 
+.galleryFigure {
+	margin: 14px 0;
+}
+
+.galleryGrid {
+	display: grid;
+	grid-template-columns: repeat(var(--rag-gallery-columns, 3), minmax(0, 1fr));
+	gap: 10px;
+	align-items: start;
+}
+
+.galleryItem {
+	margin: 0;
+	min-width: 0;
+}
+
+@media (max-width: 640px) {
+	.galleryGrid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
 @media print {
 	.root {
 		max-width: none;
@@ -37,7 +59,8 @@
 
 	.block,
 	.diagramBlock,
-	.imageFigure {
+	.imageFigure,
+	.galleryFigure {
 		break-inside: avoid;
 	}
 

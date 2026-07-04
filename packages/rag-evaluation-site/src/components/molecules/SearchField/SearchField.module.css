@@ -1,0 +1,29 @@
+.root {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	min-width: 0;
+}
+
+.glyph {
+	position: absolute;
+	left: 6px;
+	color: var(--mac-text-dim);
+	font: var(--rag-font-role-body);
+	pointer-events: none;
+}
+
+.input {
+	width: 100%;
+	padding-left: 20px;
+	padding-right: 20px;
+}
+
+.input::-webkit-search-cancel-button {
+	display: none;
+}
+
+.clear {
+	position: absolute;
+	right: 4px;
+}
