@@ -68,7 +68,7 @@ pnpm --dir packages/rag-evaluation-site typecheck && pnpm biome check packages/r
 go test ./pkg/widgetdsl ./pkg/xgoja/providers/widgetsite
 ```
 
-For go-go-course (Phase 6): `go-go-course/AGENT.md` has build/test commands; the server runs via the built binary (`./dist/go-go-course run server.js --http-listen 127.0.0.1:8787 --keep-alive`, use tmux). Admin pages require setting your display name to `admin_<yourname>` in Settings.
+For go-go-course: use devctl from the go-go-course repo root — `devctl up` (dev: hotreload backend :8787 + vite :5173 on local rag-site source) or `devctl up --profile prod` (built binary with embedded SPA), then `devctl status` / `devctl logs --service course --follow` / `devctl down`. Manual equivalents: `make serve-hot` / `make serve` in `cmd/go-go-course` (NOT `run server.js --http-listen …` — that starts the runtime but never binds the port; only `serve site start` does). JS sources are embedded at build time, so under `make serve`/prod every server.js/lib edit needs a rebuild — that's what the dev profile's hotreload host avoids. Admin pages require setting your display name to `admin_<yourname>` in Settings.
 
 ## 5. How to start Phase 6 (in order)
 

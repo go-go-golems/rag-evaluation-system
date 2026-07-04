@@ -58,3 +58,8 @@ Implemented Phase 5 (IR enablement): ActionSpec.confirm with interpolated window
 
 Added intern onboarding playbook (playbook/01): status snapshot, docs map, run commands, ordered P6 start guide, gotchas.
 
+
+## 2026-07-04
+
+Step 9+10: Phase 6 landed in go-go-course — cms.dsl wired into runtime, CmsAsset mapping, admin media library (recipe) + asset detail with confirm-delete, handout editor page with live preview + /settings/handout-body, multi-file uploads, SVG upload hardening; full Playwright smoke green; devctl dev/prod plugin added; Phases 0-5 committed in rag-evaluation-system (0005eb5, a167773, e8d6b3b, b734919). Tasks P6.1-P6.6 checked, P6.1b/P6.7 added.
+

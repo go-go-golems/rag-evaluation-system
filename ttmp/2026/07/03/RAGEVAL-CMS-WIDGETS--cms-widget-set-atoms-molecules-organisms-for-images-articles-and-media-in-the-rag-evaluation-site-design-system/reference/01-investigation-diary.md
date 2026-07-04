@@ -11,6 +11,16 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/lib/course-material-service.js
+      Note: CmsAsset mapping
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/lib/pages/admin-course-cms.js
+      Note: mediaLibrarySection + assetDetailPanel over cms.recipes.mediaLibrary (Step 9)
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/lib/pages/admin-handout-editor.js
+      Note: New handout editor page over cms.markdownEditor (Step 9)
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/scripts/devctl-plugin.py
+      Note: devctl dev/prod launch plugin (Step 10)
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/server.js
+      Note: cms.dsl wiring
     - Path: packages/rag-evaluation-site/.storybook/main.ts
       Note: |-
         Package Storybook config used for the 6007 run
@@ -37,6 +47,7 @@ LastUpdated: 2026-07-03T17:30:00-04:00
 WhatFor: Understand how the RAGEVAL-CMS-WIDGETS analysis was produced, what commands were run, what failed, and how to continue the work.
 WhenToUse: Read before extending the CMS widget design doc or reproducing the Storybook evidence capture.
 ---
+
 
 
 
@@ -340,3 +351,103 @@ Implemented the whole IR-enablement phase in one pass: the cross-cutting action-
 ### Code review instructions
 - Start: `src/widgets/ir.ts` (ActionSpecBase + cms props), `src/widgets/uploadSerialization.ts`, `MediaLibraryPanel.widget.tsx`, `pkg/widgetdsl/module.go` (cmsHelpers + recipes).
 - Validate: `pnpm --dir packages/rag-evaluation-site typecheck && pnpm biome check packages/rag-evaluation-site/src`; `go test ./pkg/widgetdsl ./pkg/xgoja/providers/widgetsite`; Storybook → "Widget IR/Renderer/CMS"; screenshots in `sources/screenshots/cms/widget-ir-*`.
+
+## Step 9: Phase 6 implemented — go-go-course consumes cms.dsl (media library, handout editor, confirm, SVG hardening)
+
+Executed the whole go-go-course integration in one session: wired the sibling checkout into both build systems (P6.1 dev half), mapped media files to `CmsAsset` (P6.2), replaced the admin media DataTable with `cms.recipes.mediaLibrary` plus a URL-selected asset detail panel (P6.3), built the handout editor page over `cms.markdownEditor` with a native form-post save route (P6.4), smoked every flow in the running binary with Playwright (P6.5), and hardened SVG uploads (P6.6). Before starting, committed all of Phases 0–5 in rag-evaluation-system as four commits (mechanical import-sort `0005eb5`, TS feature work `a167773`, Go DSL `e8d6b3b`, ticket docs `b734919`).
+
+### Prompt Context
+
+**User prompt (verbatim):** "read @ttmp/.../playbook/01-intern-onboarding-status-docs-map-and-how-to-start-phase-6.md and work on it. Keep a diary as you work, commit at appropriate intervals (look at askills for diary format)."
+
+**Assistant interpretation:** Execute Phase 6 (P6.1–P6.6) as laid out in the onboarding playbook, with diary steps and commits at logical checkpoints.
+
+**Inferred user intent:** Land the go-go-course integration end to end so the CMS widget work is actually consumed, with a reviewable commit trail and diary.
+
+**Commit (code):** rag-evaluation-system `0005eb5`/`a167773`/`e8d6b3b`/`b734919` (Phases 0–5); go-go-course `24a2d98` (P6.1 wiring) + Phase 6 commit (see below)
+
+### What I did
+- **P6.1 (dev half):** added `cms.dsl` runtime-module entries to `xgoja.yaml` + `xgoja.package.yaml` (they gate which registered provider modules scripts can `require()`); added `replace github.com/go-go-golems/rag-evaluation-system => ../rag-evaluation-system` to go.mod (build runs `GOWORK=off`); fixed stale `dev:rag-local`/`build:rag-local` paths (`2026-05-27--rag-evaluation-system` → `../../../../rag-evaluation-system`); rebuilt SPA with `RAG_SITE_SRC=<abs> bash scripts/sync-widget-spa.sh` and `make build`. Verified `require("cms.dsl")` exposes all 14 helpers + 2 recipes via `eval`.
+- **P6.2:** `lib/course-material-service.js` — `MEDIA_MIME_BY_EXTENSION`, `cmsAssetFromMediaEntry()`, `listMediaAssets()`, and `mediaAssets` on `listCourseMaterial()`; exported `humanBytes`.
+- **P6.3:** `lib/pages/admin-course-cms.js` — new `mediaLibrarySection()` (recipe call with `onAssetSelect: navigate("?asset=${assetId}")`, `onAssetOpen: navigate("/course-assets/${assetId}")`, `onFilesSelected: server upload`) + `assetDetailPanel()` (mediaThumb + metadataGrid + Open/Download/Delete-with-confirm/Close) shown when `?asset=` matches; media upload drop-area and media table removed (media table now optional in `adminMaterialListPanel`); `lib/pages/admin-common.js` delete actionButton gained `confirm: "Delete ${row.file}? …"`.
+- **P6.4:** new `lib/pages/admin-handout-editor.js` (`/pages/admin-handout-editor?file=…`): formPanel posting to new `/settings/handout-body` route in server.js, readOnly `file` text input + `cms.markdownEditor({name:"body", defaultValue: source, preview:"live"})`; save reuses `storeCourseMaterialUpload({kind:"handout", overwrite:true})` so frontmatter/article-block validation and atomic write apply; added `readCourseMaterialSource()` to the service; handout rows in the CMS table now carry an Edit link column (rendered only when rows have `editHref`).
+- **Multi-file uploads:** `courseMaterialPayloadsFromWidgetAction()` (one payload per `context.files` entry) + loop in the `admin-upload-course-material` handler with aggregate toast.
+- **P6.6:** `validateSvgUpload` now rejects `<script>`, `<foreignObject>`, `on*=` handlers, `javascript:`/`data:text/html` URLs, `<iframe|embed|object>`, and non-fragment/non-image href targets.
+- **P6.5 smoke (Playwright against the built binary):** set display name `admin_manuel` → admin CMS renders media library tiles with checkerboard thumbs and status badges → tile click navigates `?asset=…` and shows detail panel → PNG upload through the library file input lands in `course/media` and appears as a tile → detail Delete raises native confirm "Delete smoke-upload.png? This permanently removes the file from course/media." and deletes on accept → handout Edit opens the editor with the 3.7 KB source, typing updates the MarkdownArticle live preview, Save redirects `?status=saved` and hits disk (restored via git afterwards) → `<script>`/`onload` SVGs rejected with clear errors, clean SVG accepted, multi-file upload stores both files ("Uploaded 2 media files"). Screenshots: `sources/screenshots/cms/gg-course-admin-cms-full.png`, `gg-course-handout-editor.png`.
+
+### Why
+- The playbook's P6 sequence; recipes + `ActionSpec.confirm` + upload contract were designed exactly for this page, so the admin page shrank while gaining thumbnails, selection, confirm, and an editor.
+
+### What worked
+- The whole IR contract survived first contact: recipe → JSON → adapters rendered with zero TS-side changes needed; `confirm` interpolation (`${row.file}`) produced the right dialog text; the upload `{files, fileNames, fileCount}` contract matched what the server already decoded.
+
+### What didn't work
+- `./dist/go-go-course run server.js --http-listen …` (the header comment in server.js and the playbook both say this) starts the runtime but never binds the port — the express command-set only listens under `serve site start`. The playbook command is wrong; use `make serve` / `serve site start`, or the new devctl profiles (Step 10).
+- The goja-text `sanitize` module only exports `yaml`/`json` — there is no HTML/SVG sanitizer available to JS (bluemonday is in the Go dependency tree but not exposed). P6.6 therefore validates-and-rejects instead of rewriting; exposing a bluemonday policy through goja-text is the real fix.
+- First Playwright `evaluate` probed `data-rag-molecule="markdown-editor"`-style kebab values; the components actually stamp PascalCase (`MarkdownEditor`, `MediaLibraryPanel`).
+
+### What I learned
+- `serve site start` executes the **embedded** jsverbs copy (synced into `.xgoja/jsverbs` during `make generate-package`), so every server.js/lib edit needs `make build` before it is visible — that is what makes hot-reload (Step 10 dev profile) worth having.
+- `ui.action.server(name, options)` merges options into the spec top-level, so `confirm` composes with `payload` without any DSL change.
+- devctl health checks treat 2xx–4xx as healthy, so `/api/widget/pages/course` is a fine readiness URL even while pages 404 for non-admins.
+
+### What was tricky to build
+- **Working tree triage before committing:** 151 modified files, most of them biome import-reordering noise from earlier `--write` runs mixed with real feature edits. Symptoms: `git status` unusable for review. Approach: classified every diff by comparing the sorted token multiset of added vs removed lines (pure reorders have identical multisets); 122 files were mechanical and went into a dedicated `style:` commit, the remaining 29 matched exactly the known feature-edit list. The "pre-existing ContextDiagramPanel edits" turned out to be import reordering too.
+- **Multi-file upload atomicity:** `storeCourseMaterialUpload` validates+writes per file, so a bad third file leaves the first two written while the response is a 500 without `refresh`. Documented rather than fixed — acceptable for an admin tool, but a validate-all-then-write-all pass would be better.
+
+### What warrants a second pair of eyes
+- The SVG reject-list in `validateSvgUpload` (course-material-service.js): blocklists are weaker than a real sanitizer; check the href pattern (`#`/`data:image/`/`http(s)` allowed, everything else rejected) and whether `<image href="https://…">` remote fetches are acceptable.
+- `mediaLibrarySection` keeps selection in `?asset=` and the delete response relies on `refresh: true` re-fetching the page with the stale `?asset=` param (detail panel silently disappears because the asset no longer resolves) — verify that is the UX we want.
+- The go.mod `replace` + xgoja pin `v0.1.2` disagree until P6.1b publishes; `make build` works because replace wins, but a fresh clone without the sibling checkout will not build.
+
+### What should be done in the future
+- P6.1b: publish npm + tag Go module, bump pins, drop the replace and dev aliases.
+- Expose a bluemonday/SVG policy through goja-text and replace the reject-list.
+- Validate-all-then-write-all for multi-file uploads.
+
+### Code review instructions
+- go-go-course diff (single commit on `task/improve-rag-evaluation-system`): `cmd/go-go-course/lib/course-material-service.js` (CmsAsset mapping, readCourseMaterialSource, payloads, SVG rules), `lib/pages/admin-course-cms.js` (mediaLibrarySection/assetDetailPanel), `lib/pages/admin-handout-editor.js` (new), `lib/pages/admin-common.js` (confirm + optional columns), `server.js` (cms.dsl wiring, multi-upload, /settings/handout-body), `xgoja.yaml`/`xgoja.package.yaml` (cms.dsl module), `go.mod` (replace).
+- Validate: `cd go-go-course/cmd/go-go-course && make build && ./dist/go-go-course eval 'Object.keys(require("cms.dsl"))'`; then `devctl up --profile prod` from the go-go-course repo root and walk `/pages/admin-course-cms` as `admin_<you>`.
+
+### Technical details
+- Delete/upload/action contract exercised: `POST /api/widget/actions/admin-upload-course-material` with `context.files[] = {name, text|base64, encoding}` → per-file `storeCourseMaterialUpload`; `admin-delete-course-material` with `payload {kind, file}` (detail panel) or `context.row` (tables).
+- CmsAsset mapping: `{id: file, kind: "image", title, filename, mime (by extension), size (bytes), src: /course-assets/<file>, tags: [], status: "published", createdAt/updatedAt: mtime}`.
+
+## Step 10: devctl plugin — dev (hotreload+vite) and prod (built binary) profiles for go-go-course
+
+Wrote a devctl plugin so starting go-go-course stops being tribal knowledge: `devctl up` (dev profile) runs the hot-reload host plus a Vite dev server aliased to the sibling rag-evaluation-site source, and `devctl up --profile prod` builds and supervises the dist binary. Used the prod profile to host the Step 9 smoke test.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Look at skills and `devctl help --all` and write a devctl plugin to launch dev / prod versions of go-go-course, if that makes things easier. or look in makefile i think there is a hot-reload as well?"
+
+**Assistant interpretation:** Author a devctl plugin (per the devctl-plugin-authoring skill) exposing dev and prod launch modes for go-go-course, folding in the Makefile's hotreload-host target.
+
+**Inferred user intent:** One-command, supervised dev/prod environments with logs and health checks instead of ad-hoc terminal commands.
+
+### What I did
+- `cmd/go-go-course/scripts/devctl-plugin.py` — NDJSON stdio protocol v2; ops `config.mutate` (ports/URLs/mode facts + discovered `RAG_SITE_SRC`), `validate.run` (go/pnpm/make on PATH, app dir, node_modules + sibling-checkout warnings), `launch.plan`, `command.run` (`course-build`, `course-smoke`).
+- `.devctl.yaml` at the go-go-course repo root — profiles `dev` (default; `GO_GO_COURSE_MODE=dev`) and `prod`, both selecting the single `go-go-course` plugin.
+- dev plan: `make generate-package && exec go run ./hotreload-host -listen :8787` (reloads server.js/lib from disk) + `pnpm install && exec pnpm dev` in webapp with `RAG_SITE_SRC` env (vite :5173 proxying /api etc. to :8787). prod plan: `bash scripts/sync-widget-spa.sh && make build && exec ./dist/go-go-course serve site start --http-listen :8787`.
+- Verified: `devctl plugins list`, `devctl plan` (both profiles), `devctl up --profile prod --force` → healthy in ~7 s (warm build), `devctl status`, page responds 200.
+
+### Why
+- The Step 9 lesson: embedded jsverbs make the edit→see loop expensive without the hotreload host, and the serve command is easy to get wrong (the playbook itself had it wrong).
+
+### What worked
+- Health URL `/api/widget/pages/course` (2xx–4xx counts healthy); build-inside-service-command with generous `timeout_ms` (300 s prod) avoided guessing devctl's `build.run` step schema entirely.
+
+### What didn't work
+- N/A — plan/up/status/down behaved on first try after the skill's stdout-discipline rules were followed.
+
+### What was tricky to build
+- Mode/profile plumbing: devctl profiles select plugins and inject env, they are not separate pipelines — so a single plugin reads `GO_GO_COURSE_MODE` set by the profile. Vite's port is pinned (`strictPort` + hardcoded `--port 5173`), so the plugin exposes only the backend port as a knob.
+
+### What warrants a second pair of eyes
+- The prod service rebuilds on every `devctl up` (sync SPA + make build inside the command); if that is too slow for daily use, split into devctl `build.run` steps or add a skip-build env knob.
+
+### What should be done in the future
+- Consider a `course-logs`/`course-smoke` habit in CI; possibly a third profile pinned to published packages (no RAG_SITE_SRC, no replace) to rehearse releases.
+
+### Code review instructions
+- `go-go-course/.devctl.yaml`, `cmd/go-go-course/scripts/devctl-plugin.py`. Validate: `cd go-go-course && devctl plan && devctl plan --profile prod && devctl up --profile prod --force && devctl status && devctl down`.

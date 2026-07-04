@@ -86,9 +86,11 @@ API contracts for all components: design-doc/01 §6.3–§6.6. DTOs: §6.2.
 
 ## Phase 6 — go-go-course integration (in ../go-go-course)
 
-- [ ] P6.1 Release loop: npm publish rag-evaluation-site + Go module tag; bump `webapp/package.json` (0.1.16) and `xgoja.yaml`/`go.mod` (v0.1.2); rebuild webapp → assets → binary (iterate first via `dev:rag-local` source alias)
-- [ ] P6.2 `course-material-service.js`: emit CmsAsset-shaped media entries (id/kind/src/mime/size); optional sidecar metadata JSON for tags/status/alt
-- [ ] P6.3 `admin-course-cms.js`: media table → `cms.recipes.mediaLibrary` with thumbnails + navigate-selection; `confirm` on delete actions; contentStatusBadge in material tables
-- [ ] P6.4 Handout editor page: formPanel + named markdownEditor (live preview), `/settings/handout-body` save route (form-post + redirect pattern)
-- [ ] P6.5 End-to-end smoke in the running binary: upload image → thumbnail appears → reference from handout → edit with live preview → delete with confirm
-- [ ] P6.6 Harden SVG uploads: run goja-text `sanitize` before write (or CSP on /course-assets) — validateSvgUpload only checks for an <svg> element today
+- [x] P6.1 Release loop: npm publish rag-evaluation-site + Go module tag; bump `webapp/package.json` (0.1.16) and `xgoja.yaml`/`go.mod` (v0.1.2); rebuild webapp → assets → binary (iterate first via `dev:rag-local` source alias)
+- [x] P6.2 `course-material-service.js`: emit CmsAsset-shaped media entries (id/kind/src/mime/size); optional sidecar metadata JSON for tags/status/alt
+- [x] P6.3 `admin-course-cms.js`: media table → `cms.recipes.mediaLibrary` with thumbnails + navigate-selection; `confirm` on delete actions; contentStatusBadge in material tables
+- [x] P6.4 Handout editor page: formPanel + named markdownEditor (live preview), `/settings/handout-body` save route (form-post + redirect pattern)
+- [x] P6.5 End-to-end smoke in the running binary: upload image → thumbnail appears → reference from handout → edit with live preview → delete with confirm
+- [x] P6.6 Harden SVG uploads: run goja-text `sanitize` before write (or CSP on /course-assets) — validateSvgUpload only checks for an <svg> element today
+- [ ] P6.7 devctl plugin for go-go-course: dev (hotreload+vite) / prod (built binary) profiles, course-build/course-smoke commands
+- [ ] P6.1b Publish release: npm publish + Go tag, bump pins (webapp 0.1.16 → next, go.mod v0.1.2 → next), drop go.mod replace + revert dev aliases
