@@ -151,6 +151,27 @@ data.collection(mediaAssets, {
 
 A mark declares which schema roles it consumes (`assetTiles` needs `media` + `primary` + `size` + `status`). `context_window.dsl` exposes `marks.strip/stack/treemap` for snapshot data the same way. This is the grammar-of-graphics split landing in module structure: **data.dsl owns the sentence, domain modules own vocabulary.**
 
+### 4.4 The context-window precedent: the grammar already half-exists
+
+`context_window.dsl` is the existence proof for the schemas+marks model — it already factors exactly like a grammar, it just keeps the vocabulary private. Today's pipeline (go-go-course `/pages/visualize`):
+
+```
+buildContextWindowModel()          # DATA + TRANSFORM (hand-written JS, ~550 lines):
+  → snapshot {limit, parts[{id,label,styleKey,tokens,contentPreview}]}
+  → aggregateSnapshot              # group-by styleKey — an imperative shaping step
+paletteStyleSet({palette,entries}) # SCALE: 17 styleKeys → {accent a|b, pattern}
+contextBudgetBar / contextDiagramPanel({views:[stack,strip]}) / treemap…
+                                   # MARKS: same {snapshot, styleSet} into any of them
+recipes.contextDiagram             # sugar: one mark + panel composition
+```
+
+Consequences for this sketch:
+
+- **Promote scales into the data grammar.** `styleSet`/`paletteStyleSet`/`visualStyle` exist only in context_window.dsl; data.dsl has no scale concept (status colors are hard-coded per component). Move the mechanism to `data.scale.*` so a `f.status` column in a table and a part in a context strip share one encoding system; context_window.dsl keeps its palettes as presets.
+- **Snapshot parts are a schema'd collection.** `label = f.primary`, `tokens = f.measure` (a new role: numeric with an optional `limit` — what budget bars, meter bars, and treemaps consume), `styleKey = scale key`. `contextSnapshot` becomes a domain schema (`context_window.schemas.snapshot`) rather than a bespoke helper.
+- **Multi-view marks are an arrangement feature, not a panel feature.** `contextDiagramPanel({views})` shows "same sentence, user toggles the mark" — the grammar should allow `arrange: [mark1, mark2]` generally (client-side toggle, sanctioned transient state like SearchField).
+- **Shaping deserves a slot.** The hand-written group-by in `aggregateContextSnapshot` is doc 01's `shaping` layer; even just `group: "styleKey"` on a collection would replace it declaratively.
+
 ## 5. The structure grammar: `ui.dsl` additions
 
 ### 5.1 `ui.section(title, opts, ...children)` — flat sectioning

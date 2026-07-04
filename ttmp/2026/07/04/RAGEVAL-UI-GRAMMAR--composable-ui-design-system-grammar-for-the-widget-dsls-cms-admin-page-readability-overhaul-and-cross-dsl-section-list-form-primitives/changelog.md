@@ -14,3 +14,8 @@ Ticket created from user brainstorm request; audited /pages/admin-course-cms sec
 
 Step 2: cross-page audit (sessions/course/handouts read well = recipe/shell/document pages; admin pages degrade with collections) + design-doc 02 API sketch: no grammar.dsl — data.dsl grows schema/record/collection (data grammar), ui.dsl grows section/subpages (structure grammar), domain modules become schemas+marks with generic primitives migrating to ui.dsl; three worked page rewrites; hybrid two-phase compilation. Tasks 2, 5 checked.
 
+
+## 2026-07-04
+
+Doc 02 §4.4 added: context-window rendering pipeline analyzed (snapshot → paletteStyleSet scale → budget-bar/stack/strip/treemap marks) — context_window.dsl is the existence proof for schemas+marks; consequences: promote styleSet to data.scale.*, add f.measure role, multi-view arrangements, declarative group-by shaping.
+
