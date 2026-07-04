@@ -1,6 +1,7 @@
 export * from "./AppShell";
 export * from "./DashboardGrid";
 export * from "./DialogShell";
+export * from "./FieldGrid";
 export * from "./FormRow";
 export * from "./Inline";
 export * from "./Panel";

@@ -9,8 +9,12 @@ export const sectionBlockWidget = defineWidget<SectionBlockWidgetProps>({
 		<SectionBlock
 			className={props.className}
 			as={props.as}
+			id={props.anchorId}
 			label={ctx.renderValue(props.label)}
 			caption={ctx.renderValue(props.caption)}
+			actions={ctx.renderValue(props.actions)}
+			level={props.level}
+			rule={props.rule}
 			density={props.density}
 			divider={props.divider}
 		>

@@ -86,6 +86,7 @@ export type RagWidgetType =
 	| "Panel"
 	| "ScrollRegion"
 	| "SectionBlock"
+	| "FieldGrid"
 	| "SelectInput"
 	| "SidebarShell"
 	| "SlideShell"
@@ -723,8 +724,17 @@ export interface SectionBlockWidgetProps extends BaseWidgetProps {
 	as?: "section" | "article" | "div";
 	label?: RenderableValue;
 	caption?: RenderableValue;
-	density?: "normal" | "spacious";
+	actions?: RenderableValue;
+	level?: 1 | 2 | 3;
+	rule?: boolean;
+	anchorId?: string;
+	density?: "normal" | "spacious" | "flush";
 	divider?: "none" | "top" | "bottom" | "both";
+}
+
+export interface FieldGridWidgetProps extends BaseWidgetProps {
+	columns?: number;
+	gap?: "sm" | "md";
 }
 
 export interface SplitPaneWidgetProps extends BaseWidgetProps {
@@ -882,6 +892,7 @@ export type WidgetProps =
 	| PanelWidgetProps
 	| ScrollRegionWidgetProps
 	| SectionBlockWidgetProps
+	| FieldGridWidgetProps
 	| SplitPaneWidgetProps
 	| SidebarShellWidgetProps
 	| SlideShellWidgetProps

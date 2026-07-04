@@ -17,6 +17,7 @@ import { statusTextWidget } from "../components/foundation/StatusText/StatusText
 import { textWidget } from "../components/foundation/Text/Text.widget";
 import { appShellWidget } from "../components/layout/AppShell/AppShell.widget";
 import { dashboardGridWidget } from "../components/layout/DashboardGrid/DashboardGrid.widget";
+import { fieldGridWidget } from "../components/layout/FieldGrid/FieldGrid.widget";
 import { formRowWidget } from "../components/layout/FormRow/FormRow.widget";
 import { inlineWidget } from "../components/layout/Inline/Inline.widget";
 import { panelWidget } from "../components/layout/Panel/Panel.widget";
@@ -95,6 +96,7 @@ export const uiWidgetRegistry = createWidgetRegistry([
 	panelWidget,
 	personSummaryWidget,
 	scrollRegionWidget,
+	fieldGridWidget,
 	sectionBlockWidget,
 	selectInputWidget,
 	sidebarNavWidget,
