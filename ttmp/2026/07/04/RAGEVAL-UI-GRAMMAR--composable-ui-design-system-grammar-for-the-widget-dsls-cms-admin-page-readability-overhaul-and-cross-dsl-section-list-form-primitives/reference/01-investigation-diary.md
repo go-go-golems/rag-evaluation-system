@@ -70,3 +70,51 @@ Created this ticket while RAGEVAL-CMS-WIDGETS Phase 6 was landing: with the medi
 
 ### Technical details
 - Metrics collection: `[...document.querySelectorAll('main [data-rag-layout="Panel"]')].filter(p => !p.parentElement.closest('[data-rag-layout="Panel"]'))` → per-panel `getBoundingClientRect().height`, descendant counts for FormRow/textarea/input/table/button, nesting depth via `closest` walking.
+
+## Step 2: Cross-page audit + DSL API sketch (design-doc 02) — no grammar.dsl, grow data.dsl/ui.dsl
+
+Answered the user's follow-up: audited the remaining DSL pages to confirm the diagnosis generalizes (task 2), then wrote design-doc 02 — the concrete API sketch (task 5). The central call: `grammar.dsl` should not exist. The data grammar (`schema`/`f.*`/`record`/`collection`) belongs in `data.dsl`, the structure grammar (`section`/`subpages`/`disclosure`) in `ui.dsl`, and the three domain modules shrink to schemas + marks, with stranded generic primitives (tag, pagination, searchField, tileGrid, uploadDropArea, markdownArticle…) migrating to ui.dsl under deprecation aliases.
+
+### Prompt Context
+
+**User prompt (verbatim):** "also do 1b once you are well informe enough to do a sketch of the nupdate DSL apis (what's grammar.dsl? can't we put this into ui.dsl or somehow reorganize the other existing DSLs, so we have something coherent?)"
+
+**Assistant interpretation:** First get informed (audit the other pages — form answer 1a), then sketch the updated DSL APIs (1b), treating "grammar.dsl" as an open question — prefer folding the grammar into the existing modules / reorganizing them coherently over adding a sixth module.
+
+**Inferred user intent:** A reviewable API surface proposal that makes the whole DSL family coherent, not a bolt-on module.
+
+### What I did
+- Audited `/pages/{course,sessions,admin-course-material,handouts?doc,upload}` with the doc-01 DOM-metrics method (server still up via devctl prod). Result table in doc 02 §1.
+- Read `pkg/widgetdsl/module.go` end to end for the module anatomy: `moduleSpec` {helpers, page, cell, action, recipes}, five helper maps, shared exports duplicated across modules.
+- Wrote design-doc 02: audit evidence → current-anatomy table with incoherences → target layout (data.dsl = data grammar, ui.dsl = structure grammar, domain modules = schemas + marks) → moves/deprecations table → API sketch (`data.schema`/`f.*` roles, `data.collection` with verb/arrange/select/submit/reorder/remove, `data.record`, marks contract, `ui.section`, `ui.subpages`) → three worked page rewrites (agenda, sessions, media library) → hybrid compilation phases α/β → open questions.
+- Cross-linked doc 01 §4E to doc 02; checked tasks 2 and 5.
+
+### Why
+- The audit had to precede the sketch: it produced the key law — every page that reads well is one recipe/shell or a flat document; every degraded page is hand-assembled panels around collections. Length is innocent (handout doc: 5,043 px, 0 panels, reads fine); boxed repetition is guilty. That law justifies "intent in, layout owned by the system" as the API principle.
+
+### What worked
+- Sketching against three real pages immediately killed the separate-module idea: the media library sentence needed cms marks + data verbs + ui structure in one expression, which reads naturally as `data.collection(…, {arrange: cms.marks.assetTiles})` and would read terribly split across a sixth module.
+
+### What didn't work
+- N/A (analysis/writing step; no code changed).
+
+### What I learned
+- `data.dsl` is nearly empty today (`dataTable` + `cell`) — it is the natural landing zone for the data grammar precisely because `cell.*` is already a proto-role system trapped inside tables.
+- The helper-map architecture makes the reorganization mechanically trivial (move a line between maps, keep an alias); the cost is entirely in docs/declarations/deprecation discipline.
+
+### What was tricky to build
+- Keeping the sketch honest about working assumptions: sub-pages, master-detail, hybrid compilation and button-reorder were the user's quick-form defaults, not decisions — each is labeled with its assumption in doc 02 so a changed answer invalidates a paragraph, not the document.
+
+### What warrants a second pair of eyes
+- The field-role set (`key/primary/short/prose/…`) and the verb set (`show/edit/pick/manage`) — these are the grammar's axes; wrong axes here are expensive later (doc 02 §7 naming/nesting questions too).
+- Whether recipes-as-wrappers really covers all ten existing recipes (checked mentally for masterDetailTable/mediaLibrary/articleList only).
+
+### What should be done in the future
+- Remaining tasks 3, 4, 6, 7 — wayfinding decision is assumed (sub-pages) but not ratified; Storybook prototype of Section/FieldGrid; agenda pattern decision; then the implementation-plan ticket.
+
+### Code review instructions
+- Read doc 02 §0 and §5.3 first (the thesis and its acceptance test), then §3–§4 for the surface.
+- Verify the anatomy claims against `pkg/widgetdsl/module.go` L22–163 and `install()` L217–241.
+
+### Technical details
+- Audit metrics snippet documented in Step 1; pages measured this step: course 1048px/0 panels, sessions 800px/2, admin-course-material 1567px/8 (depth 1), handouts?doc 5043px/0, upload 800px/1.

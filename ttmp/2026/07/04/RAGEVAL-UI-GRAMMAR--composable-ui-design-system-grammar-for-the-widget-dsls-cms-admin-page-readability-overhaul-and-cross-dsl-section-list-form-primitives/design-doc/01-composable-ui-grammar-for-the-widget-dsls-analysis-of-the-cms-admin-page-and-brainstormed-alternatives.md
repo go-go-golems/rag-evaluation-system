@@ -169,6 +169,8 @@ Recommendation to evaluate first: **2 (master-detail)** for agenda, **1 (editabl
 
 ### E. The core concept: a composable UI design-system grammar
 
+> **Update (2026-07-04):** design-doc 02 develops this section into a concrete API sketch and answers the module question — there is no `grammar.dsl`; the verbs land in `data.dsl` (data grammar) and `ui.dsl` (structure grammar), with the domain modules reduced to schemas + marks.
+
 **Grammar of graphics analogy.** GoG decomposes a chart into orthogonal layers — data → transforms → scales → marks → facets → theme — so a bar chart is not a `BarChart` widget but a *sentence*: `data + x:category + y:sum + mark:bar`. The proposal is the same decomposition for UI pages, across all five DSLs:
 
 | GoG layer | UI grammar layer | Examples |
