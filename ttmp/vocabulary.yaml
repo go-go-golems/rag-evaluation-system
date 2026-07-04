@@ -115,6 +115,8 @@ topics:
       description: Kubernetes workloads, manifests, and cluster operations
     - slug: static-sites
       description: Static site packaging, hosting, and GitOps publishing
+    - slug: cms
+      description: 'Content-management surfaces: articles, media libraries, asset management, editorial UI'
 docTypes:
     - slug: design-doc
       description: Structured rationale and architecture notes
