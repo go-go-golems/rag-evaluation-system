@@ -29,7 +29,7 @@ export function dispatchWidgetAction(
 	// Central destructive-action gate: `confirm` is part of the action contract,
 	// so it applies before both custom handlers and the built-in dispatch.
 	if (action.confirm && typeof window !== "undefined" && typeof window.confirm === "function") {
-		if (!window.confirm(interpolate(action.confirm, context))) {
+		if (!window.confirm(interpolate(action.confirm, context, { encode: false }))) {
 			return;
 		}
 	}
@@ -112,13 +112,21 @@ export function bindAction(
 	return () => dispatchWidgetAction(action, context, onAction);
 }
 
-function interpolate(template: string, context: WidgetActionContext): string {
+// URL targets need encoded values; human-facing text (confirm prompts) must
+// stay raw — pass { encode: false } there.
+function interpolate(
+	template: string,
+	context: WidgetActionContext,
+	options: { encode?: boolean } = {},
+): string {
+	const encode = options.encode ?? true;
 	return template.replace(
 		/\$\{([^}]+)\}|\$([A-Za-z0-9_.-]+)/g,
 		(_match, braced: string | undefined, bare: string | undefined) => {
 			const path = braced ?? bare ?? "";
 			const value = lookupContext(path, context);
-			return encodeURIComponent(String(value ?? ""));
+			const text = String(value ?? "");
+			return encode ? encodeURIComponent(text) : text;
 		},
 	);
 }
