@@ -930,3 +930,66 @@ The master-detail demo uses a safe demo form route, `/settings/dsl-demo-agenda-i
 
 ### Technical details
 - Successful command: `cd go-go-course && go test ./...`.
+
+## Step 17: Start P3 Action IR foundations in the frontend
+
+I started P3 by adding the frontend pieces needed by typed Action IR v2. The TypeScript IR now has data shapes for template prompts and payload templates; the browser action dispatcher can hydrate payload templates from action context; and app-level direct navigation paths now route through `dispatchWidgetAction` so confirmation handling is not bypassed when actions originate outside a normal `WidgetRenderer` adapter.
+
+I also fixed the DataTable action-cell context issue found during the timeline write-up. Action button cells now receive the table's configured row-key spec instead of hard-coding `file`, so generic collection actions can send the correct `rowKey` for agenda/session rows.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead."
+
+**Assistant interpretation:** Proceed with the next implementation phase, starting P3 Action IR v2 and context fixes.
+
+**Inferred user intent:** Continue the planned cutover implementation without waiting for further confirmation.
+
+**Commit (code):** pending — "Add frontend Action IR v2 foundations"
+
+### What I did
+- Added `TemplateSpec`, `TemplatePartSpec`, and `PayloadTemplateSpec` types to `packages/rag-evaluation-site/src/widgets/ir.ts`.
+- Allowed server-action payloads to be either `JsonObject` or `PayloadTemplateSpec`.
+- Added payload-template hydration in `packages/rag-evaluation-site/src/widgets/actions.ts`.
+- Added typed template rendering for confirm prompts.
+- Updated `App.tsx` server-action POSTs to send hydrated payloads.
+- Updated direct AppNav/CourseStudioShell action dispatch to route through `dispatchWidgetAction` for centralized confirmation behavior.
+- Updated `cellRenderers.tsx` so action-button cells compute `rowKey` from the table row-key spec.
+- Updated `DataTable.widget.tsx` to pass `props.getRowKey` into `renderCell`.
+- Ran `pnpm --dir packages/rag-evaluation-site typecheck`.
+- Ran `go test ./pkg/widgetdsl/... -count=1`.
+- Checked off tasks 25, 26, and 27.
+
+### Why
+- The v2 DSL must serialize browser-visible behavior as data, and row/server actions need reliable context. These changes make typed payload templates and correct row identity available before adding richer server-action demos.
+
+### What worked
+- TypeScript typecheck passed.
+- Existing Go tests passed.
+
+### What didn't work
+- N/A. No compile errors in this step.
+
+### What I learned
+- Confirmation was already handled for normal WidgetRenderer-originated actions, but app-level direct action calls in navigation shells could bypass that central dispatcher. Routing those direct paths through `dispatchWidgetAction` closes the gap.
+
+### What was tricky to build
+- Payload templates need to support both the future explicit `kind: "payloadTemplate"` form and the current lowered object form where individual fields may be `{ kind: "path", path: "row.id" }`. I made `resolveActionPayload` hydrate template parts in either shape.
+
+### What warrants a second pair of eyes
+- Review whether confirm templates should be allowed as both strings and typed templates long-term, or whether strings should move to `widget.unsafe` after hard cutover.
+- Review whether `resolveActionPayload` should reject non-JSON context values instead of stringifying them.
+
+### What should be done in the future
+- Add P3.4 tests for navigate, server payload hydration, confirm cancel, and refresh. The package currently has no Vitest/Jest setup, so this may require adding a small test harness or testing via Storybook/browser automation.
+- Add the row/server-action demo page now that row key context and payload hydration are in place.
+
+### Code review instructions
+- Start with `packages/rag-evaluation-site/src/widgets/actions.ts` and `packages/rag-evaluation-site/src/widgets/ir.ts`.
+- Then review `cellRenderers.tsx` and `DataTable.widget.tsx` for row context changes.
+- Validate with `pnpm --dir packages/rag-evaluation-site typecheck` and `go test ./pkg/widgetdsl/... -count=1`.
+
+### Technical details
+- Successful commands:
+  - `cd rag-evaluation-system && pnpm --dir packages/rag-evaluation-site typecheck`
+  - `cd rag-evaluation-system && go test ./pkg/widgetdsl/... -count=1`

@@ -170,3 +170,14 @@ Added live go-go-course demo pages for P4.1-P4.3: simplest table, selectable tab
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js — Live v2 DSL demo pages
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/server.js — Requires data.v2.dsl and adds safe demo form redirect route
 
+
+## 2026-07-05
+
+Implemented P3.1-P3.3 frontend Action IR foundations: added v2 template/payload types, payload template hydration, confirmation-safe direct app navigation dispatch, and DataTable action-cell rowKey context based on the table row key.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/actions.ts — Payload hydration and confirm rendering
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/cellRenderers.tsx — Row key context fix
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/ir.ts — Action IR v2 types
+

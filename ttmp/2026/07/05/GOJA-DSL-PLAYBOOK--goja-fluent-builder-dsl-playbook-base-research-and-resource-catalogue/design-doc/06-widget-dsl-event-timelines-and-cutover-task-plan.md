@@ -21,13 +21,23 @@ RelatedFiles:
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/server.js
       Note: Backend Widget page
     - Path: packages/rag-evaluation-site/src/app/App.tsx
-      Note: Frontend page loading and action dispatch timeline
+      Note: |-
+        Frontend page loading and action dispatch timeline
+        Server action payload hydration and direct navigation confirmation paths
     - Path: packages/rag-evaluation-site/src/components/molecules/DataTable/DataTable.widget.tsx
-      Note: DataTable Widget IR adapter and row action context
+      Note: |-
+        DataTable Widget IR adapter and row action context
+        Passes getRowKey into action-cell rendering
     - Path: packages/rag-evaluation-site/src/components/organisms/FormPanel/FormPanel.tsx
       Note: Native form submit behavior for detail editors
     - Path: packages/rag-evaluation-site/src/widgets/actions.ts
-      Note: Browser action dispatcher for navigate/server/confirm behavior
+      Note: |-
+        Browser action dispatcher for navigate/server/confirm behavior
+        Central dispatch confirmation and payload-template hydration
+    - Path: packages/rag-evaluation-site/src/widgets/cellRenderers.tsx
+      Note: DataTable action-cell context now uses table row key spec
+    - Path: packages/rag-evaluation-site/src/widgets/ir.ts
+      Note: Action IR v2 TypeScript payload/template types
     - Path: pkg/widgetdsl/grammar.go
       Note: Current data.collection
     - Path: pkg/widgetdsl/module.go
@@ -52,6 +62,7 @@ LastUpdated: 2026-07-05T18:50:00-04:00
 WhatFor: Use when implementing or reviewing Widget DSL v2 behavior. It explains what authors write, what Widget IR is produced, what HTTP requests happen, what React code runs, and what backend code handles each interaction.
 WhenToUse: Read beside design-doc 05 before implementing table, selection, master-detail editor, form submit, row action, or richer collection examples.
 ---
+
 
 
 

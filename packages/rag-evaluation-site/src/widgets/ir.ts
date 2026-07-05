@@ -157,10 +157,38 @@ export type ActionSpec =
 export interface ActionSpecBase {
 	/**
 	 * Optional confirmation prompt shown before the action dispatches.
-	 * Supports `${path}` / `$name` interpolation against the action context.
+	 * String prompts support `${path}` / `$name` interpolation against the action context.
+	 * Template prompts are the v2 data form produced by typed builders.
 	 * Applies to every action kind; handled centrally in dispatchWidgetAction.
 	 */
-	confirm?: string;
+	confirm?: string | TemplateSpec;
+}
+
+export interface TemplateSpec {
+	kind?: "template";
+	parts: TemplatePartSpec[];
+}
+
+export type TemplatePartSpec = TemplateTextPart | TemplatePathPart | TemplateLiteralPart;
+
+export interface TemplateTextPart {
+	kind: "text";
+	text: string;
+}
+
+export interface TemplatePathPart {
+	kind: "path";
+	path: string;
+}
+
+export interface TemplateLiteralPart {
+	kind: "literal";
+	value: JsonValue;
+}
+
+export interface PayloadTemplateSpec {
+	kind: "payloadTemplate";
+	fields: Record<string, TemplatePartSpec | JsonValue>;
 }
 
 export interface NavigateActionSpec extends ActionSpecBase {
@@ -178,7 +206,7 @@ export interface DownloadActionSpec extends ActionSpecBase {
 export interface ServerActionSpec extends ActionSpecBase {
 	kind: "server";
 	name: string;
-	payload?: JsonObject;
+	payload?: JsonObject | PayloadTemplateSpec;
 }
 
 export interface EventActionSpec extends ActionSpecBase {
