@@ -576,3 +576,59 @@ The new types cover the major concepts from the event timelines: pages, nodes, s
 
 ### Technical details
 - Test command result: `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`; `pkg/widgetdsl/v2/spec` has no tests yet.
+
+## Step 11: Add initial validation rules for typed v2 specs
+
+I implemented the first validation layer for the v2 spec package. The validators check the invariants that the old map-IR DSL could miss or fail late: required page IDs, node kinds, section levels, schema fields, duplicate field names, multiple key fields, collection modes, arrangement kinds, selection params, action targets, server action names, payload field names, and template paths.
+
+This is still a foundation step: the validators exist, but focused unit tests and lowering are separate tasks. The goal here was to make the diagnostic type concrete and establish where author-facing errors will come from.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 7)
+
+**Assistant interpretation:** Continue P1 by implementing validation rules for the new typed spec substrate.
+
+**Inferred user intent:** Replace v1's typo-prone option maps with explicit validation that catches DSL misuse early and precisely.
+
+**Commit (code):** pending — "Add widget DSL v2 spec validation"
+
+### What I did
+- Added `pkg/widgetdsl/v2/spec/validate.go`.
+- Implemented `Validate()` methods for page, node, section, schema, field, collection, selection, action, payload template, template spec, and template value.
+- Added `HasErrors` helper.
+- Added diagnostic helpers for error/warning issues.
+- Ran `gofmt -w pkg/widgetdsl/v2/spec/*.go`.
+- Ran `go test ./pkg/widgetdsl/... -count=1`.
+- Checked off task 17.
+- Updated doc relations and changelog.
+
+### Why
+- Validation is where v2 earns its keep over v1. The known v1 failure modes are mostly missing/weak validation boundaries.
+
+### What worked
+- Existing package tests still pass, and the new validation package compiles cleanly.
+
+### What didn't work
+- No validation unit tests exist yet. That is intentional for this small commit, but P1.4 should add positive/negative fixtures before more layers depend on these rules.
+
+### What I learned
+- The validation rules expose a design detail: zero-value enums currently validate as errors. Builders should set explicit defaults before validation rather than relying on implicit zero values.
+
+### What was tricky to build
+- Keeping validation strict without making it too renderer-specific. For example, `ActionKindCopy` is currently permissive because its exact value/context semantics need to be finalized in Action IR v2.
+
+### What warrants a second pair of eyes
+- Review whether `SchemaSpec` should require exactly one key field, or allow zero and let lowering fall back to `id`.
+- Review whether section levels should remain restricted to 1-3 as current `ui.section` documentation implies.
+
+### What should be done in the future
+- Add validation tests for typo'd arrangements, duplicate fields, invalid section levels, invalid server actions, and bad template paths.
+- Implement lowering after the validation behavior is tested.
+
+### Code review instructions
+- Start with `pkg/widgetdsl/v2/spec/validate.go`.
+- Validate with `go test ./pkg/widgetdsl/... -count=1`.
+
+### Technical details
+- Test command passed: `go test ./pkg/widgetdsl/... -count=1`.

@@ -112,3 +112,12 @@ Started P1 typed v2 spec implementation by adding pkg/widgetdsl/v2/spec with Pag
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/types.go — Typed v2 spec model
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — Task tracker updated for P1.1
 
+
+## 2026-07-05
+
+Implemented initial P1.2 validation rules for the v2 Widget DSL spec model, including schema/field uniqueness, collection mode/arrangement, URL selection, action shape, payload fields, template parts, and diagnostic helpers.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/validate.go — Validation implementation
+
