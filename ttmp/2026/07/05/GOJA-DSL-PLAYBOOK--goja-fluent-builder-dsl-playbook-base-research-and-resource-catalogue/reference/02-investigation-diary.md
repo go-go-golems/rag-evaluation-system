@@ -181,3 +181,58 @@ Relate the key source files to the ticket, update the changelog and tasks, run `
 - Bundle: design-doc (44 KB) + logbook (37 KB) + diary, `--toc-depth 2`, name "Goja DSL Playbook — base research".
 - Remote path: `/ai/2026/07/05/GOJA-DSL-PLAYBOOK`.
 - Vocabulary added: `fluent-builder`, `typescript`.
+
+## Step 4: Extend the catalogue with geppetto, discord-bot, researchctl, codesign
+
+The user asked to also check `geppetto` and `discord-bot` ("those are interesting too"), and then to look at the `researchctl` and `codesign` DSLs in `/home/manuel/workspaces/2026-06-30/benchmark-cpu-inference`. This pass surfaced **four additional DSLs**, two of which (researchctl, codesign) are the strongest realisations of the ticket's full goal and materially change the gap analysis.
+
+### Prompt Context
+**User prompt (verbatim):** "check geppetto and discord-bot as well, those are interesting too" followed by "Look also at the researchctl and codesign DSLs in /home/manuel/workspaces/2026-06-30/benchmark-cpu-inference"
+
+### What I did
+- Surveyed `geppetto/pkg/js/modules/geppetto/` (30+ `api_*.go` files): found the same hidden-key typed-ref substrate as goja-bleve (`__geppetto_ref`), but with **clone-on-each-step** immutable builders, and a **DTS parity test** enforcing the generated `geppetto.d.ts` against the runtime export surface.
+- Surveyed `discord-bot`: found the `defineBot` registration DSL and the `require("ui")` Go-side typed-builder DSL surfaced via **Goja Proxy traps** (returns typed builders, wrong-parent calls fail loudly, raw JS objects rejected).
+- Surveyed `researchctl/pkg/gojamodules/researchctl/`: found the **lambda-configurator** pattern (`project(name).goal(title, g => g.id(...).status(...))`) with `.toSpec()`/`.validate()` terminals and a precise `ProjectBuilder` TS interface.
+- Surveyed `researchctl/pkg/gojamodules/codesign/`: found the **strongest model** — `runSpec(name)` fluent builder + `.topology(fn)`/`.workload(fn)`/`.metrics(fn)` lambda configurators + `.use(fragment)` `FragmentFn<T>` composition + JS-lambda runtime callbacks (`jsDevice`/`policyCallback`) validated with `goja.AssertFunction` + `modules.TypeScriptDeclarer` emitting precise `RunSpecBuilder`/`TopologyBuilder`/`MetricsBuilder`/`RunSpecLike` interfaces.
+- Updated the design-doc: exec summary (12→16 DSLs, five→six+ patterns), pattern taxonomy (added Pattern A′ clone-on-each-step, Pattern F lambda-configurator+`.use()`, Pattern G Proxy traps), four new inventory entries (§4.13–4.16), gap analysis (composable-grammar and lambdas are no longer the main gap — they are realised), a new decision record (hidden-key vs Proxy traps), and three new open questions.
+- Updated the logbook: four new resource sections (O/P/Q/R) with the eight-field assessment, plus four new summary-table rows.
+
+### Why
+- The user explicitly widened the scope; these DSLs were missing from the first pass and two of them are the best existing models for the playbook.
+
+### What worked
+- codesign turned out to realise **all seven** of the ticket's requirements (fluent, Go, typecheck, validation, compile-time types, composable grammar, lambdas) — the gap analysis flipped from "composable grammar is missing" to "composable grammar is realised; the remaining gap is extraction + standardisation."
+- geppetto's DTS parity test is the missing compile-time-type enforcement piece — a test that guarantees declarations match runtime.
+
+### What didn't work
+- Could not find the discord-bot `ui` Proxy-trap Go implementation in `pkg/` via grep (the `ui` module is registered via the xgoja provider and may live under `internal/jsdiscord/` or be generated); documented it from the API-reference doc and the design rules there rather than the Go source. Flagged for the senior researcher to locate the Proxy-trap implementation.
+
+### What I learned
+- The lambda-configurator pattern (`g => g.id(...).status(...)` applied via `applyBuilderCallback`) is the answer to the ticket's "extended with lambdas" requirement — it already exists in production code.
+- `.use(fragment)` with `FragmentFn<T>` is the composable-grammar mechanism — reusable builder lambdas applied to any builder of type `T`.
+- There are now **two typed-builder mechanisms** (hidden-key refs vs Proxy traps) and **two mutation models** (same-object vs clone-on-each-step); the playbook must pick defaults.
+- `modules.NativeModule` + `modules.TypeScriptDeclarer` is the canonical go-go-goja module registration interface for emitting typed declarations.
+
+### What was tricky to build
+- Integrating four new DSLs without rewriting the design doc. Resolved by appending §4.13–4.16 and editing the exec summary / pattern taxonomy / gap analysis / decision records / references in place. Had to re-balance the exec summary's "strongest model" claims: goja-bleve is still the typecheck substrate, but researchctl/codesign are now the composable-grammar + lambda models, and geppetto is the type-parity-test model.
+- The codesign entry needed a 7-point evidence checklist to substantiate the claim that it realises the full goal — without that, the claim would be unanchored.
+
+### What warrants a second pair of eyes
+- The claim that codesign realises all seven requirements — a reviewer should verify each ✅ against `typescript.go` and `builders.go`.
+- The Pattern A′ vs Pattern A distinction (clone-on-each-step vs same-object mutation) — a reviewer should confirm geppetto always clones and goja-bleve always mutates.
+- The Proxy-trap characterisation of discord-bot `ui` is from the API-reference doc, not the Go source — needs source confirmation.
+
+### What should be done in the future
+- Locate and read the discord-bot `ui` Proxy-trap Go implementation.
+- Confirm whether `cozodb-goja`, `dmeta`, `discord-bot`'s `database`/`timer` modules contain further DSLs.
+- The senior researcher can now point at codesign as the reference implementation when writing the playbook.
+
+### Code review instructions
+- Read design-doc §4.15 (researchctl) and §4.16 (codesign) for the new models.
+- Cross-check the gap analysis table (§6) — the "composable grammar" and "lambdas" rows now say "Realised."
+- Read the new decision record (hidden-key vs Proxy traps) and open questions 11–13.
+
+### Technical details
+- Design doc grew from ~44 KB to ~62 KB; logbook from ~37 KB to ~52 KB.
+- New patterns: A′ (clone-on-each-step), F (lambda-configurator + `.use()`), G (Proxy traps).
+- New decision record: typed-builder mechanism (hidden-key vs Proxy traps).

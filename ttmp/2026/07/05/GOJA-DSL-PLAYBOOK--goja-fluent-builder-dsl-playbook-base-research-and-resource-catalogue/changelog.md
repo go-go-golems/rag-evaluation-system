@@ -24,3 +24,35 @@ Validated (docmgr doctor passes cleanly after adding fluent-builder + typescript
 
 Design-doc 02 added: insider self-assessment of the widgetdsl grammar. Five silent-failure modes empirically verified against the built binary (typo'd arrange/options/verbs, wrong markers, out-of-range enums all absorbed without error); root cause named as IR-as-API vs IR-as-output; v2 sketch keeps the grammar language on typed Go specs with configurator builders, strict option decoding, and error-panel rendering; eleven proposed catalogue additions including a silent-ignore failure taxonomy, a tree-shaped-data axis, dormant type sources (ir.ts + 80 widget manifests, zero consumers), and agent-authorship as a design constraint.
 
+
+## 2026-07-05
+
+Extended catalogue with 4 new DSLs: geppetto (typed-ref + clone-on-each-step + DTS parity test), discord-bot (defineBot + Proxy-trap ui builders), researchctl (lambda-configurator project builder), codesign (strongest model: runSpec + .use() fragment composition + lambda configurators + precise TS interfaces via TypeScriptDeclarer). Added Patterns A-prime, F, G. Gap analysis updated: composable-grammar and lambdas are now realised; remaining gap is extraction + standardisation. Related 6 new key files.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-06-30/benchmark-cpu-inference/researchctl/pkg/gojamodules/codesign/builders.go — Strongest composable-grammar model - use fragment composition
+
+
+## 2026-07-05
+
+Added widgetdsl grammar self-assessment report: the RAGEVAL-UI-GRAMMAR work is valuable as UI/vocabulary evidence but remains Pattern C; recommends typed builders, validation terminals, precise TypeScript, and lambda-configurable marks/arrangements.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/02-self-assessment-of-the-widgetdsl-grammar-what-pattern-c-actually-costs-and-what-the-playbook-should-add.md — New assessment report
+
+
+## 2026-07-05
+
+Added intern-facing deep dive on optional researchctl lambdas, typed Go-side IR/specs, geppetto DTS parity testing, and go-emrichen tag-operator composition; uploaded as a separate reMarkable document.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/04-goja-dsl-deep-dive-optional-lambdas-typed-ir-dts-parity-and-tag-operators.md — New deep-dive document
+
+
+## 2026-07-05
+
+Design-doc 05 written (into the placeholder): the v2 overhaul design for all five DSLs, synthesizing docs 01-04 — typed intent specs + two-tier builders (defaulted chains, optional lambda configurators, .use fragments), strict decoding, accumulated validation rendered as ValidationIssues nodes, marks contract shrinking domain modules to schemas+marks, callback action kind making JS lambdas safe across the renderer/runtime boundary (deterministic ids, fail-closed declaration-site hashes, 409/rebuild/retry staleness protocol), manifest-driven codegen with DTS parity, and a 5-phase file-level implementation plan.
+

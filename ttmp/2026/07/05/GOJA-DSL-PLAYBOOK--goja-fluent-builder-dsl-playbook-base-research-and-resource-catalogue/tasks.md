@@ -12,3 +12,4 @@
 - [x] Relate key source files and update changelog/tasks
 - [x] Run docmgr doctor and resolve vocabulary warnings
 - [x] Upload bundle to reMarkable under /ai/2026/07/05/GOJA-DSL-PLAYBOOK and verify listing
+- [x] Extend catalogue with geppetto, discord-bot, researchctl, codesign (4 new DSLs, 3 new patterns)

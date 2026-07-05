@@ -12,12 +12,24 @@ DocType: design-doc
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: ../../../../../../../../../../code/wesen/go-go-golems/discord-bot/pkg/doc/topics/discord-js-bot-api-reference.md
+      Note: defineBot + Proxy-trap ui typed builders (Pattern G)
+    - Path: ../../../../../../../../../../code/wesen/go-go-golems/geppetto/pkg/js/modules/geppetto/api_engine_builder.go
+      Note: Clone-on-each-step immutable fluent builder (Pattern A prime)
+    - Path: ../../../../../../../../../../code/wesen/go-go-golems/geppetto/pkg/js/modules/geppetto/dts_parity_test.go
+      Note: Canonical DTS parity test enforcing generated .d.ts against runtime exports
     - Path: ../../../../../../../../../../code/wesen/go-go-golems/goja-bleve/pkg/api_mapping.go
       Note: fieldBuilder fluent chain + .build() terminal — the reference fluent builder
     - Path: ../../../../../../../../../../code/wesen/go-go-golems/goja-bleve/pkg/api_types.go
       Note: Typed-ref substrate (refBase
     - Path: ../../../../../../../../../../code/wesen/go-go-golems/goja-dbus/pkg/dbusgoja/builders.go
       Note: Cleanest composable grammar (bus/destination/object/interface/method/out/call)
+    - Path: ../../../../../../../../../2026-06-30/benchmark-cpu-inference/researchctl/pkg/gojamodules/codesign/builders.go
+      Note: Strongest model - runSpec fluent builder + use fragment composition + lambda configurators
+    - Path: ../../../../../../../../../2026-06-30/benchmark-cpu-inference/researchctl/pkg/gojamodules/codesign/typescript.go
+      Note: Precise RunSpecBuilder/TopologyBuilder/MetricsBuilder TS interfaces via TypeScriptDeclarer
+    - Path: ../../../../../../../../../2026-06-30/benchmark-cpu-inference/researchctl/pkg/gojamodules/researchctl/module.go
+      Note: Lambda-configurator project builder (Pattern F)
     - Path: ../../../../../../../go-go-goja/pkg/tsgen/spec/types.go
       Note: TypeScript declaration spec model — compile-time type substrate
     - Path: ../../../../../../../go-minitrace/pkg/minitracejs/builders.go
@@ -32,6 +44,7 @@ LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: Catalogue every Goja DSL we have built, map the implementation patterns, and identify which ones are worth promoting into the opinionated fluent-builder playbook.
 WhenToUse: Read this before writing or reviewing the playbook; it is the single inventory of what exists today.
 ---
+
 
 
 # Goja DSL catalogue and base research
