@@ -130,3 +130,12 @@ Implemented initial P1.3 lowering from typed v2 specs to current Widget IR shape
 
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/lower.go — Typed spec to Widget IR lowering
 
+
+## 2026-07-05
+
+Added P1.4 v2 spec tests for simplest table, selectable table, master-detail editor lowering, and invalid arrangement validation.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/lower_test.go — Spec validation/lowering tests
+

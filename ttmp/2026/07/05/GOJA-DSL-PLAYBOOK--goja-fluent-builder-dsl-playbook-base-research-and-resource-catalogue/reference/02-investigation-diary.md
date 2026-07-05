@@ -692,3 +692,58 @@ The lowering code intentionally targets the existing React renderer and current 
 
 ### Technical details
 - Successful command: `cd rag-evaluation-system && go test ./pkg/widgetdsl/... -count=1`.
+
+## Step 13: Add v2 spec tests for the foundational examples
+
+I added tests for the exact foundational examples from the companion document: simplest table, selectable table, and master-detail editor. These tests validate the typed specs and inspect the lowered Widget IR shape so later builder work has a concrete target.
+
+The tests also include a negative invalid-arrangement case to lock in the hard-cutover validation behavior: typo'd arrangement names should fail as diagnostics, not silently degrade or emit malformed maps.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 7)
+
+**Assistant interpretation:** Complete P1.4 by adding tests for the v2 spec examples before moving on to Goja builders.
+
+**Inferred user intent:** Keep the implementation measurable against the examples and prevent regressions as the v2 API is built.
+
+**Commit (code):** pending — "Test widget DSL v2 spec examples"
+
+### What I did
+- Added `pkg/widgetdsl/v2/spec/lower_test.go`.
+- Tested simplest table lowering.
+- Tested selectable table lowering and URL navigate action generation.
+- Tested master-detail editor lowering with create/table/detail form children.
+- Tested validation rejection for an invalid arrangement value.
+- Ran `gofmt -w pkg/widgetdsl/v2/spec/*.go`.
+- Ran `go test ./pkg/widgetdsl/... -count=1`.
+- Checked off task 19.
+- Updated doc relations and changelog.
+
+### Why
+- These tests turn the chat/document examples into executable fixtures.
+
+### What worked
+- Both `pkg/widgetdsl` and `pkg/widgetdsl/v2/spec` tests pass.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- The typed spec can already express the first three example timelines without needing v2 Goja builders yet.
+
+### What was tricky to build
+- The test helpers need to inspect `JSONObject` / `[]JSONValue` assertions. This is acceptable for low-level lowering tests, but higher-level builder tests should compare more semantic outputs or snapshots to avoid brittle map assertions.
+
+### What warrants a second pair of eyes
+- Review whether the master-detail test should assert more of the generated form rows and delete action confirm template, or whether that belongs in Action IR v2 tests.
+
+### What should be done in the future
+- Start P2 builder substrate so JavaScript authors can produce these tested typed specs.
+
+### Code review instructions
+- Start with `pkg/widgetdsl/v2/spec/lower_test.go`.
+- Validate with `go test ./pkg/widgetdsl/... -count=1`.
+
+### Technical details
+- Successful command: `cd rag-evaluation-system && go test ./pkg/widgetdsl/... -count=1`.

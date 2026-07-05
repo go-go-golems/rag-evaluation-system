@@ -21,7 +21,7 @@
 - [x] P1.1 Add typed v2 spec package for pages, schemas, fields, collections, actions, templates, and validation issues
 - [x] P1.2 Implement typed spec validation for schema keys, fields, arrangements, section levels, and action paths
 - [x] P1.3 Convert typed v2 specs to existing Widget IR nodes
-- [ ] P1.4 Add v2 spec tests for simple table, selectable table, and master-detail editor
+- [x] P1.4 Add v2 spec tests for simple table, selectable table, and master-detail editor
 - [ ] P2.1 Add Goja hidden typed refs and strict callback handling for v2 builders
 - [ ] P2.2 Implement v2 schema and field builders
 - [ ] P2.3 Implement v2 simple and selectable collection table builders
