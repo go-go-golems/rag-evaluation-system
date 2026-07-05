@@ -22,9 +22,9 @@
 - [x] P1.2 Implement typed spec validation for schema keys, fields, arrangements, section levels, and action paths
 - [x] P1.3 Convert typed v2 specs to existing Widget IR nodes
 - [x] P1.4 Add v2 spec tests for simple table, selectable table, and master-detail editor
-- [ ] P2.1 Add Goja hidden typed refs and strict callback handling for v2 builders
-- [ ] P2.2 Implement v2 schema and field builders
-- [ ] P2.3 Implement v2 simple and selectable collection table builders
+- [x] P2.1 Add Goja hidden typed refs and strict callback handling for v2 builders
+- [x] P2.2 Implement v2 schema and field builders
+- [x] P2.3 Implement v2 simple and selectable collection table builders
 - [ ] P2.4 Implement v2 master-detail editor builder with native form submit
 - [ ] P2.5 Add Goja runtime tests for v2 authoring examples
 - [ ] P3.1 Define Action IR v2 payload/template model and TypeScript types

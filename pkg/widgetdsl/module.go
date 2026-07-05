@@ -14,6 +14,7 @@ import (
 const (
 	UIModuleName            = "ui.dsl"
 	DataModuleName          = "data.dsl"
+	DataV2ModuleName        = "data.v2.dsl"
 	ContextWindowModuleName = "context_window.dsl"
 	CourseModuleName        = "course.dsl"
 	CmsModuleName           = "cms.dsl"
@@ -154,6 +155,10 @@ var moduleSpecs = []moduleSpec{
 		doc:     "data.dsl provides data-display helpers, table cell helpers, and data recipes.",
 	},
 	{
+		name: DataV2ModuleName,
+		doc:  "data.v2.dsl provides the hard-cutover typed/fluent collection builder experiment.",
+	},
+	{
 		name:    ContextWindowModuleName,
 		helpers: contextWindowHelpers,
 		action:  true,
@@ -252,6 +257,9 @@ func (r *runtime) install(exports *goja.Object, spec moduleSpec) {
 	}
 	if spec.name == DataModuleName {
 		r.installDataGrammar(exports)
+	}
+	if spec.name == DataV2ModuleName {
+		r.installDataV2(exports)
 	}
 	if spec.name == UIModuleName {
 		setExport(exports, "section", r.sectionVerb)

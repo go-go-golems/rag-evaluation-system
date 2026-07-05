@@ -139,3 +139,13 @@ Added P1.4 v2 spec tests for simplest table, selectable table, master-detail edi
 
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/lower_test.go — Spec validation/lowering tests
 
+
+## 2026-07-05
+
+Implemented P2.1-P2.3 initial data.v2.dsl Goja builder substrate: hidden typed refs, strict callback errors, field/schema builders, simple/selectable table collection builders, and runtime tests.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders.go — V2 Goja builder implementation
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders_test.go — V2 builder tests
+

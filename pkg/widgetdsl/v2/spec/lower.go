@@ -97,7 +97,11 @@ func (s CollectionSpec) tableNode(keyField string) NodeSpec {
 		if s.Selection.Value != "" && s.Selection.Value != "__new" {
 			props["selectedKey"] = s.Selection.Value
 		}
-		props["onRowSelect"] = ActionSpec{Kind: ActionKindNavigate, To: fmt.Sprintf("?%s=${row.%s}", s.Selection.Param, keyField)}.ToWidgetAction()
+		if s.Actions.Open != nil {
+			props["onRowSelect"] = s.Actions.Open.ToWidgetAction()
+		} else {
+			props["onRowSelect"] = ActionSpec{Kind: ActionKindNavigate, To: fmt.Sprintf("?%s=${row.%s}", s.Selection.Param, keyField)}.ToWidgetAction()
+		}
 	} else if s.Actions.Open != nil {
 		props["onRowSelect"] = s.Actions.Open.ToWidgetAction()
 	}

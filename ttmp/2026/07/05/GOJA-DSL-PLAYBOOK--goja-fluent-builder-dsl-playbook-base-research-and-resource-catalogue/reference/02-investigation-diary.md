@@ -747,3 +747,68 @@ The tests also include a negative invalid-arrangement case to lock in the hard-c
 
 ### Technical details
 - Successful command: `cd rag-evaluation-system && go test ./pkg/widgetdsl/... -count=1`.
+
+## Step 14: Implement initial Goja v2 builders for simple and selectable tables
+
+I implemented the first JavaScript-facing builder layer as an experimental `data.v2.dsl` module. It exposes the typed v2 substrate through fluent field/schema/collection APIs, uses non-enumerable Goja object properties as hidden typed refs, and rejects present non-function callbacks instead of silently ignoring them.
+
+This step covers the first two runtime examples from the companion document: simplest table and selectable table. The builders produce the typed `spec.CollectionSpec` model and then lower it to the existing Widget IR, so the current React renderer can still render the output.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue."
+
+**Assistant interpretation:** Continue the task-by-task implementation plan from P1 into P2, starting with Goja builders.
+
+**Inferred user intent:** Keep making concrete implementation progress while preserving the diary/task/commit workflow.
+
+**Commit (code):** pending — "Add widget DSL v2 Goja table builders"
+
+### What I did
+- Added `pkg/widgetdsl/v2_builders.go`.
+- Registered an experimental `data.v2.dsl` native module in `pkg/widgetdsl/module.go`.
+- Implemented hidden typed refs for field, schema, selection, action, and collection builder handles.
+- Implemented `data.f.key/primary/short/prose/count/status` field builders.
+- Implemented `data.schema(name).field(...).build()`.
+- Implemented `data.collection(name, rows).schema(...).table().toIR()`.
+- Implemented `select(s => s.urlParam(...))` and `table(t => t.rowSelect(...))` callback paths.
+- Implemented strict callback handling for `table(callback)`.
+- Added `pkg/widgetdsl/v2_builders_test.go` runtime tests.
+- Updated lowering so explicit row-select actions override the default URL-selection navigate action.
+- Ran `go test ./pkg/widgetdsl/... -count=1`.
+- Checked off tasks 20, 21, and 22.
+
+### Why
+- P1 proved typed specs can model the examples. P2 begins making those specs usable from JavaScript without reintroducing v1 option bags.
+
+### What worked
+- The runtime tests verify simple table output, selectable table output, and strict rejection of a non-function callback.
+- Existing widgetdsl and v2 spec tests still pass.
+
+### What didn't work
+- The first selectable table test failed because collection lowering always preferred the default selection navigate action over the explicit `.rowSelect(...)` action:
+  - Command: `go test ./pkg/widgetdsl/... -count=1`
+  - Failure: `onRowSelect.to = "?selected=${row.sessionId}"`
+- I fixed `CollectionSpec.tableNode` so an explicit `Actions.Open`/row-select action wins when present, while selection still contributes `selectedKey`.
+
+### What I learned
+- Selection state and row-click behavior should be separate in the typed model. Selection tells the renderer which row is selected; row-select action tells it what to do on click. The default action can be derived only when no explicit action is supplied.
+
+### What was tricky to build
+- Hidden refs need to be attached to Goja objects without becoming public authoring API. I used a non-enumerable, non-writable, non-configurable internal property. That is sufficient for tests, though it is not a security boundary.
+
+### What warrants a second pair of eyes
+- Review whether the module should be named `data.v2.dsl` during implementation or whether it should replace `data.dsl` behind a branch before demos are public.
+- Review whether hidden ref extraction should include stronger type assertions or source diagnostics.
+
+### What should be done in the future
+- Implement P2.4 master-detail editor builder with `edit(...).masterDetail()` and native form submit.
+- Add demos once builder coverage reaches the examples we want to expose.
+
+### Code review instructions
+- Start with `pkg/widgetdsl/v2_builders.go`, then `pkg/widgetdsl/v2_builders_test.go`.
+- Check `pkg/widgetdsl/v2/spec/lower.go` for row-select precedence.
+- Validate with `go test ./pkg/widgetdsl/... -count=1`.
+
+### Technical details
+- Successful command: `cd rag-evaluation-system && go test ./pkg/widgetdsl/... -count=1`.

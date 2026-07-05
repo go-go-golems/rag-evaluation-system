@@ -28,6 +28,8 @@ RelatedFiles:
       Note: Browser action dispatcher for navigate/server/confirm behavior
     - Path: pkg/widgetdsl/grammar.go
       Note: Current data.collection
+    - Path: pkg/widgetdsl/module.go
+      Note: Registers experimental data.v2.dsl native module
     - Path: pkg/widgetdsl/v2/spec/doc.go
       Note: Package documentation for the v2 spec layer
     - Path: pkg/widgetdsl/v2/spec/lower.go
@@ -38,12 +40,17 @@ RelatedFiles:
       Note: Initial typed v2 Widget DSL intent model for pages
     - Path: pkg/widgetdsl/v2/spec/validate.go
       Note: Initial typed v2 validation rules for specs
+    - Path: pkg/widgetdsl/v2_builders.go
+      Note: Initial data.v2.dsl Goja fluent builders with hidden typed refs
+    - Path: pkg/widgetdsl/v2_builders_test.go
+      Note: Goja runtime tests for v2 builder simple/selectable tables and strict callback errors
 ExternalSources: []
 Summary: 'Operational companion to the rag-evaluation-system DSL overhaul guide: simple-to-rich event timelines, HTTP/frontend/backend execution traces, and a phase/task tracker for the hard-cutover v2 implementation.'
 LastUpdated: 2026-07-05T18:50:00-04:00
 WhatFor: Use when implementing or reviewing Widget DSL v2 behavior. It explains what authors write, what Widget IR is produced, what HTTP requests happen, what React code runs, and what backend code handles each interaction.
 WhenToUse: Read beside design-doc 05 before implementing table, selection, master-detail editor, form submit, row action, or richer collection examples.
 ---
+
 
 
 
