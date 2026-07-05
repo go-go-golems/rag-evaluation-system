@@ -521,3 +521,58 @@ The baseline passed for `pkg/widgetdsl` Go tests, the React package TypeScript t
 
 ### Technical details
 - Commands passed exactly as recorded in design-doc 06.
+
+## Step 10: Start P1 with the typed v2 spec package
+
+I began implementation with the smallest code-bearing P1 task: create the typed v2 spec package. This package does not expose Goja builders yet; it defines the intermediate intent model that future builders will produce and future lowering code will convert into current Widget IR nodes.
+
+The new types cover the major concepts from the event timelines: pages, nodes, sections, schemas, fields, collections, URL selection, arrangements, native submit specs, server/browser actions, payload templates, text/path templates, server result policy, and validation issues.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 7)
+
+**Assistant interpretation:** Move from planning into task-by-task implementation, starting with P1.1 typed v2 spec package.
+
+**Inferred user intent:** Establish a typed substrate before implementing fluent Goja APIs so v2 does not repeat the v1 map-IR authoring problem.
+
+**Commit (code):** pending — "Add widget DSL v2 spec skeleton"
+
+### What I did
+- Added `pkg/widgetdsl/v2/spec/doc.go`.
+- Added `pkg/widgetdsl/v2/spec/types.go`.
+- Defined initial typed structs/enums for page/node/schema/field/collection/action/template/validation concepts.
+- Ran `gofmt -w pkg/widgetdsl/v2/spec/*.go`.
+- Ran `go test ./pkg/widgetdsl/... -count=1`.
+- Checked off task 16.
+- Related the new files to design-doc 06 and updated changelog.
+
+### Why
+- The hard-cutover design requires typed intent specs underneath the public DSL. Starting here makes later builder work concrete and reviewable.
+
+### What worked
+- The new package compiles, and existing widgetdsl tests still pass.
+
+### What didn't work
+- N/A. This task intentionally added type skeletons only; validation/lowering are later tasks.
+
+### What I learned
+- The event timelines map cleanly to a compact set of typed concepts. The master-detail editor needs `SelectionSpec`, `SubmitSpec`, collection-level actions, and `TemplateSpec` from the beginning.
+
+### What was tricky to build
+- Avoiding premature implementation: the package needs enough structure to guide v2 but should not hard-code every renderer detail before validation/lowering tasks. I kept lowering out of this step.
+
+### What warrants a second pair of eyes
+- Review whether `JSONValue any` should be tightened immediately or kept permissive until lowering/validation code defines the exact JSON boundary.
+- Review whether `FieldKind` and `FieldSemantic` names are the right split of former v1 field roles.
+
+### What should be done in the future
+- Implement P1.2 validation rules against these structs.
+- Implement P1.3 lowering into current Widget IR maps.
+
+### Code review instructions
+- Start with `pkg/widgetdsl/v2/spec/types.go`.
+- Validate with `go test ./pkg/widgetdsl/... -count=1`.
+
+### Technical details
+- Test command result: `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`; `pkg/widgetdsl/v2/spec` has no tests yet.

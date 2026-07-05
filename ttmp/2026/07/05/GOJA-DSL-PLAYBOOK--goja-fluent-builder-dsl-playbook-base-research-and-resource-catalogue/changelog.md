@@ -102,3 +102,13 @@ Recorded baseline validation commands for the Widget DSL cutover: widgetdsl Go t
 
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — Baseline validation section
 
+
+## 2026-07-05
+
+Started P1 typed v2 spec implementation by adding pkg/widgetdsl/v2/spec with PageSpec, NodeSpec, SchemaSpec, FieldSpec, CollectionSpec, ActionSpec, TemplateSpec, and ValidationIssue skeletons.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/types.go — Typed v2 spec model
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — Task tracker updated for P1.1
+
