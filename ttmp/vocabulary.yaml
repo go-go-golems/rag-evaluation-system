@@ -117,6 +117,10 @@ topics:
       description: Static site packaging, hosting, and GitOps publishing
     - slug: cms
       description: 'Content-management surfaces: articles, media libraries, asset management, editorial UI'
+    - slug: fluent-builder
+      description: Fluent builder pattern DSLs (method chaining, typed terminals, .build())
+    - slug: typescript
+      description: TypeScript declaration generation and compile-time types (tsgen/spec)
 docTypes:
     - slug: design-doc
       description: Structured rationale and architecture notes
