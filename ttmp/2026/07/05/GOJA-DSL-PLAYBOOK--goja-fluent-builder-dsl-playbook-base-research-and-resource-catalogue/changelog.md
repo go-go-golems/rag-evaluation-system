@@ -159,3 +159,14 @@ Completed P2.4-P2.5 by adding data.v2.dsl master-detail editor builders with edi
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders.go — Master-detail editor builder implementation
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders_test.go — Master-detail Goja runtime test
 
+
+## 2026-07-05
+
+Added live go-go-course demo pages for P4.1-P4.3: simplest table, selectable table, and master-detail editor using data.v2.dsl (go-go-course commit f82f20a99780902cb776e022ad6d1a3b3c2ee9a7).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/course-pages.js — Routes demo page IDs to demo builder
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js — Live v2 DSL demo pages
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/server.js — Requires data.v2.dsl and adds safe demo form redirect route
+

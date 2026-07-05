@@ -31,9 +31,9 @@
 - [ ] P3.2 Centralize confirmation handling for server actions
 - [ ] P3.3 Fix DataTable action-cell row context to use table row key
 - [ ] P3.4 Add action tests for navigate, reorder, delete, confirm cancel, and refresh
-- [ ] P4.1 Add DSL demo page for simplest table
-- [ ] P4.2 Add DSL demo page for selectable table
-- [ ] P4.3 Add DSL demo page for master-detail editor
+- [x] P4.1 Add DSL demo page for simplest table
+- [x] P4.2 Add DSL demo page for selectable table
+- [x] P4.3 Add DSL demo page for master-detail editor
 - [ ] P4.4 Add DSL demo page for row/server actions
 - [ ] P4.5 Add demo README and remove or quarantine deprecated examples
 - [ ] P5.1 Generate precise v2 TypeScript declarations

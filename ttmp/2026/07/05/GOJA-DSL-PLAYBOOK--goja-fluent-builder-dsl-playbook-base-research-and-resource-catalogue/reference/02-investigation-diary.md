@@ -870,3 +870,63 @@ The master-detail API is still intentionally small, but it covers the essential 
 
 ### Technical details
 - Successful command: `cd rag-evaluation-system && go test ./pkg/widgetdsl/... -count=1`.
+
+## Step 16: Add live go-go-course demo pages for the foundational v2 examples
+
+With the foundational `data.v2.dsl` builders in place, I added live demo pages to `go-go-course`. These pages are deliberately small and map directly to the companion document timelines: simplest table, selectable table, and master-detail editor. They are routed as normal Widget pages and use the current React renderer through Widget IR produced by the new v2 builders.
+
+The master-detail demo uses a safe demo form route, `/settings/dsl-demo-agenda-item`, which redirects back with status but does not mutate course metadata. That keeps the example usable for repeated local testing.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 14)
+
+**Assistant interpretation:** Continue implementation by adding demo sites/examples now that the basic v2 builders are usable.
+
+**Inferred user intent:** Ensure examples evolve alongside the implementation and provide concrete pages for manual/browser validation.
+
+**Commit (code):** f82f20a99780902cb776e022ad6d1a3b3c2ee9a7 — "Add Widget DSL v2 demo pages"
+
+### What I did
+- Added `go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js`.
+- Added `/pages/dsl-examples-table` for the simplest table example.
+- Added `/pages/dsl-examples-selectable-table` for URL-backed selection.
+- Added `/pages/dsl-examples-master-detail` for URL-backed master-detail plus native form submit.
+- Wired page dispatch in `go-go-course/cmd/go-go-course/lib/course-pages.js`.
+- Required and passed `data.v2.dsl` from `go-go-course/cmd/go-go-course/server.js`.
+- Added a safe `POST /settings/dsl-demo-agenda-item` redirect route.
+- Added a navigation entry labelled `DSL examples`.
+- Ran `cd go-go-course && go test ./...`.
+- Checked off tasks 29, 30, and 31.
+
+### Why
+- The user explicitly requested demo sites as we go and stale/deprecated examples to be managed. These live pages make the first v2 examples manually testable before deeper Action IR work.
+
+### What worked
+- The go-go-course Go test suite passes.
+- The demo pages were committed in the go-go-course repo.
+
+### What didn't work
+- I initially added one doc relation with a malformed duplicated path while updating docmgr relations. I removed that bad frontmatter entry manually from design-doc 06.
+
+### What I learned
+- The v2 builders can be used directly from existing xgoja page files once `data.v2.dsl` is required and passed through the environment.
+
+### What was tricky to build
+- The master-detail demo needed to exercise native form submit without modifying real course data. The safe redirect-only route solves that for now, though a richer demo action page will still be needed for server action behavior.
+
+### What warrants a second pair of eyes
+- Review whether adding `DSL examples` to the main course material navigation is the right discoverability choice, or whether it should live in an internal/dev section.
+- Manually run the server and click through the three demo pages in a browser.
+
+### What should be done in the future
+- Add the row/server-action demo page for P4.4 after P3 Action IR fixes land.
+- Add a demo README for P4.5.
+
+### Code review instructions
+- Start with `go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js`.
+- Review `go-go-course/cmd/go-go-course/server.js` for the `data.v2.dsl` require and safe demo form route.
+- Validate with `cd go-go-course && go test ./...`; then manually browse `/pages/dsl-examples-table`, `/pages/dsl-examples-selectable-table`, and `/pages/dsl-examples-master-detail`.
+
+### Technical details
+- Successful command: `cd go-go-course && go test ./...`.
