@@ -17,7 +17,7 @@
 - [x] P0.2 Add phase/task tracker for hard-cutover DSL v2
 - [x] P0.3 Inventory demo pages, Storybook stories, and deprecated examples
 - [x] P0.4 Add or identify demo pages for simplest table, selectable table, and master-detail editor
-- [ ] P0.5 Record baseline commands and failures before implementation
+- [x] P0.5 Record baseline commands and failures before implementation
 - [ ] P1.1 Add typed v2 spec package for pages, schemas, fields, collections, actions, templates, and validation issues
 - [ ] P1.2 Implement typed spec validation for schema keys, fields, arrangements, section levels, and action paths
 - [ ] P1.3 Convert typed v2 specs to existing Widget IR nodes

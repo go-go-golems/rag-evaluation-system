@@ -30,7 +30,7 @@ RelatedFiles:
       Note: Current data.collection
 ExternalSources: []
 Summary: 'Operational companion to the rag-evaluation-system DSL overhaul guide: simple-to-rich event timelines, HTTP/frontend/backend execution traces, and a phase/task tracker for the hard-cutover v2 implementation.'
-LastUpdated: 2026-07-05T18:40:00-04:00
+LastUpdated: 2026-07-05T18:50:00-04:00
 WhatFor: Use when implementing or reviewing Widget DSL v2 behavior. It explains what authors write, what Widget IR is produced, what HTTP requests happen, what React code runs, and what backend code handles each interaction.
 WhenToUse: Read beside design-doc 05 before implementing table, selection, master-detail editor, form submit, row action, or richer collection examples.
 ---
@@ -793,6 +793,25 @@ This inventory captures the current baseline before v2 demo pages are added. Tre
 ### Deprecated-example policy
 
 When a v2 demo exists, any v1 option-bag example that teaches the same concept must be either removed from public docs or moved under a clearly named historical/legacy section. Small models should not see both forms as equally valid.
+
+### Baseline validation commands
+
+Recorded before implementing v2 code changes:
+
+```bash
+cd rag-evaluation-system
+go test ./pkg/widgetdsl -count=1
+pnpm --dir packages/rag-evaluation-site typecheck
+pnpm --dir packages/rag-evaluation-site build
+docmgr doctor --ticket GOJA-DSL-PLAYBOOK --stale-after 30
+```
+
+Observed result on 2026-07-05:
+
+- `go test ./pkg/widgetdsl -count=1` passed.
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `pnpm --dir packages/rag-evaluation-site build` passed; build artifacts were generated under `dist` but did not leave tracked git changes.
+- `docmgr doctor --ticket GOJA-DSL-PLAYBOOK --stale-after 30` passed.
 
 ## Design Decisions
 

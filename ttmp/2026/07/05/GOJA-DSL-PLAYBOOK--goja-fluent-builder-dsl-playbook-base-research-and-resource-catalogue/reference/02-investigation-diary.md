@@ -470,3 +470,54 @@ I updated the companion document with this inventory and a deprecated-example po
 
 ### Technical details
 - Commands used included `rg --files ../go-go-course/cmd/go-go-course/lib/pages`, `rg --files packages/rag-evaluation-site/src/widgets | rg 'stories\\.tsx$'`, and `rg -n "dataDsl\\.collection|data\\.collection\\(" ...`.
+
+## Step 9: Record baseline validation before code implementation
+
+Before changing implementation code, I ran the core validation commands for the current Widget DSL and React package. This gives the v2 cutover a known-good baseline: if later changes fail, we can distinguish new regressions from pre-existing failures.
+
+The baseline passed for `pkg/widgetdsl` Go tests, the React package TypeScript typecheck, the React package production build, and docmgr doctor. The production build generated `dist` output internally but did not leave tracked git changes.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 7)
+
+**Assistant interpretation:** Continue the task-by-task implementation workflow by completing P0.5: record baseline commands and failures before implementation.
+
+**Inferred user intent:** Make the cutover safe to review and bisect by validating before code changes begin.
+
+### What I did
+- Ran `go test ./pkg/widgetdsl -count=1`.
+- Ran `pnpm --dir packages/rag-evaluation-site typecheck`.
+- Ran `pnpm --dir packages/rag-evaluation-site build`.
+- Ran `docmgr doctor --ticket GOJA-DSL-PLAYBOOK --stale-after 30`.
+- Added the baseline command/results section to design-doc 06.
+- Checked off task 15.
+- Updated the changelog.
+
+### Why
+- A hard cutover should proceed with frequent validation and small commits. Establishing a clean baseline prevents chasing unrelated issues later.
+
+### What worked
+- All baseline commands passed.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- The current frontend package builds cleanly after the documentation-only changes, so implementation can start from a stable state.
+
+### What was tricky to build
+- No implementation was changed in this step. The only operational detail is to avoid committing generated build artifacts; `git status` stayed clean before the doc updates.
+
+### What warrants a second pair of eyes
+- Confirm whether additional baseline checks should include Storybook build, full repo `go test ./...`, or an end-to-end browser smoke test before P1 begins.
+
+### What should be done in the future
+- Begin P1 typed v2 spec package or add first dedicated demo page, depending on whether we want model-facing examples before or after the v2 substrate exists.
+
+### Code review instructions
+- Review the `Baseline validation commands` section in design-doc 06.
+- Re-run the commands listed there if validating the baseline.
+
+### Technical details
+- Commands passed exactly as recorded in design-doc 06.

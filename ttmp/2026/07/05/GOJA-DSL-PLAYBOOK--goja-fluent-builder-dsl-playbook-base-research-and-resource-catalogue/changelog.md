@@ -93,3 +93,12 @@ Inventoried current live pages, Storybook examples, missing v2 demos, and deprec
 
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — Demo and example inventory
 
+
+## 2026-07-05
+
+Recorded baseline validation commands for the Widget DSL cutover: widgetdsl Go tests, rag-evaluation-site typecheck/build, and docmgr doctor all pass before v2 implementation.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — Baseline validation section
+
