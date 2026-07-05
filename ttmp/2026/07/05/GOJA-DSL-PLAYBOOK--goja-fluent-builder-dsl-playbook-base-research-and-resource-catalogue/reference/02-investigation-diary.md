@@ -419,3 +419,54 @@ Then, create detailed phases and for each phase detailed tasks (so we can precis
 ### Technical details
 - New document: `/home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md`.
 - Doctor command: `cd rag-evaluation-system && docmgr doctor --ticket GOJA-DSL-PLAYBOOK --stale-after 30`.
+
+## Step 8: Inventory current demos and mark the first baseline tasks complete
+
+After creating the operational companion document, I started Phase 0 by inventorying existing live pages and Storybook examples. The key finding is that the repository already has strong behavioral evidence but not clean v2 demos: `/pages/sessions` demonstrates selectable table behavior through direct `dataDsl.dataTable`, while `/pages/admin-course-cms` demonstrates master-detail behavior through the current `dataDsl.collection` option-bag grammar.
+
+I updated the companion document with this inventory and a deprecated-example policy: once a v2 demo exists, equivalent v1 option-bag examples must be removed from public docs or moved to a clearly historical section so agents do not imitate deprecated APIs.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 7)
+
+**Assistant interpretation:** Continue executing the newly created P0 tasks by identifying existing examples and demo gaps.
+
+**Inferred user intent:** Ensure implementation starts with a clear baseline and that examples will stay synchronized with the API cutover.
+
+### What I did
+- Searched current `go-go-course` page files and WidgetRenderer stories.
+- Identified `/pages/sessions` as current selectable-table evidence.
+- Identified `/pages/admin-course-cms` as current master-detail evidence.
+- Identified Storybook examples that cover `DataTable` and `FormPanel` behavior.
+- Added a `Demo and Example Inventory` section to design-doc 06.
+- Checked off tasks 13 and 14.
+- Updated the changelog and ran `docmgr doctor` successfully.
+
+### Why
+- The next implementation tasks need to know which examples already exist, which are only indirect evidence, and which demos must be built from scratch.
+
+### What worked
+- `rg` quickly showed that `dataDsl.collection` has only one real consumer: the admin CMS agenda editor. This makes the hard-cutover real-page rewrite tractable.
+
+### What didn't work
+- There is no dedicated simplest-table live demo yet. The current examples demonstrate table behavior, but not the exact future v2 authoring path.
+
+### What I learned
+- `/pages/sessions` is a useful selectable-table runtime fixture even though it bypasses the grammar collection API. It should become a v2 demo or be paired with one.
+
+### What was tricky to build
+- Distinguishing behavioral fixtures from public examples: current pages are valuable for runtime semantics, but their authoring forms should not all remain public teaching material after v2 lands.
+
+### What warrants a second pair of eyes
+- Confirm whether the first dedicated DSL demos should be added to `go-go-course` live pages, Storybook, or both.
+
+### What should be done in the future
+- Record baseline validation commands and then add the first dedicated demo page/safe example route.
+
+### Code review instructions
+- Review the `Demo and Example Inventory` section in design-doc 06.
+- Check the related files `/pages/sessions`, `/pages/admin-course-cms`, and existing WidgetRenderer stories.
+
+### Technical details
+- Commands used included `rg --files ../go-go-course/cmd/go-go-course/lib/pages`, `rg --files packages/rag-evaluation-site/src/widgets | rg 'stories\\.tsx$'`, and `rg -n "dataDsl\\.collection|data\\.collection\\(" ...`.

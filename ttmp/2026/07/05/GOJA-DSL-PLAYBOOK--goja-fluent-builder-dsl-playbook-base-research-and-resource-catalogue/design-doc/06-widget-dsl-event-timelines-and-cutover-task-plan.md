@@ -30,7 +30,7 @@ RelatedFiles:
       Note: Current data.collection
 ExternalSources: []
 Summary: 'Operational companion to the rag-evaluation-system DSL overhaul guide: simple-to-rich event timelines, HTTP/frontend/backend execution traces, and a phase/task tracker for the hard-cutover v2 implementation.'
-LastUpdated: 2026-07-05T18:25:00-04:00
+LastUpdated: 2026-07-05T18:40:00-04:00
 WhatFor: Use when implementing or reviewing Widget DSL v2 behavior. It explains what authors write, what Widget IR is produced, what HTTP requests happen, what React code runs, and what backend code handles each interaction.
 WhenToUse: Read beside design-doc 05 before implementing table, selection, master-detail editor, form submit, row action, or richer collection examples.
 ---
@@ -765,6 +765,34 @@ Delete:
 POST /api/widget/actions/admin-delete-agenda-item
 GET /api/widget/pages/admin-course-cms?agenda=<possibly-deleted-current>
 ```
+
+## Demo and Example Inventory
+
+This inventory captures the current baseline before v2 demo pages are added. Treat these as evidence and regression references, not as final v2 examples.
+
+### Existing live pages
+
+- `/pages/sessions` — selectable `DataTable` built directly with `dataDsl.dataTable` in `go-go-course/cmd/go-go-course/lib/pages/sessions.js`. This is the closest current live page for the selectable-table timeline, but it is not authored through `data.collection`.
+- `/pages/admin-course-cms` — agenda master-detail editor built through `dataDsl.collection(..., { verb: "edit", arrange: "master-detail" })` in `go-go-course/cmd/go-go-course/lib/pages/admin-course-cms.js`. This is the canonical current runtime fixture for the master-detail timeline.
+- `adminMaterialTable(...)` in `go-go-course/cmd/go-go-course/lib/pages/admin-common.js` — direct `dataDsl.dataTable` helper used for slide/handout file tables with action/link cells.
+
+### Existing Storybook / component examples
+
+- `packages/rag-evaluation-site/src/widgets/WidgetRenderer.domain-registry.stories.tsx` — contains a WidgetRenderer-level `DataTable` example and validates registry wiring.
+- `packages/rag-evaluation-site/src/widgets/WidgetRenderer.forms.stories.tsx` — contains `FormPanel` examples and form layout evidence.
+- `packages/rag-evaluation-site/src/components/molecules/DataTable/*` stories/components — component-level table rendering behavior.
+- `packages/rag-evaluation-site/src/components/organisms/FormPanel/*` stories/components — component-level form behavior.
+
+### Missing demos to build
+
+- A dedicated simplest-table live page authored through the new v2 `data.collection(...).table().toIR()` API.
+- A dedicated selectable-table live page authored through the new v2 selection API, not direct `dataDsl.dataTable`.
+- A dedicated master-detail demo page that is safe for repeated local testing and does not mutate course metadata unless explicitly intended.
+- A row/server-action demo that covers confirm, cancel, POST, refresh, and toast behavior.
+
+### Deprecated-example policy
+
+When a v2 demo exists, any v1 option-bag example that teaches the same concept must be either removed from public docs or moved under a clearly named historical/legacy section. Small models should not see both forms as equally valid.
 
 ## Design Decisions
 

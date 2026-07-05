@@ -84,3 +84,12 @@ Added the Widget DSL event-timeline companion document and hard-cutover phase/ta
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md — Parent design guide being operationalized
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — New companion operational spec and task tracker
 
+
+## 2026-07-05
+
+Inventoried current live pages, Storybook examples, missing v2 demos, and deprecated-example policy for the Widget DSL cutover companion document.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — Demo and example inventory
+

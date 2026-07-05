@@ -15,8 +15,8 @@
 - [x] Extend catalogue with geppetto, discord-bot, researchctl, codesign (4 new DSLs, 3 new patterns)
 - [x] P0.1 Create event-timeline companion document for simple table, selectable table, and master-detail editor
 - [x] P0.2 Add phase/task tracker for hard-cutover DSL v2
-- [ ] P0.3 Inventory demo pages, Storybook stories, and deprecated examples
-- [ ] P0.4 Add or identify demo pages for simplest table, selectable table, and master-detail editor
+- [x] P0.3 Inventory demo pages, Storybook stories, and deprecated examples
+- [x] P0.4 Add or identify demo pages for simplest table, selectable table, and master-detail editor
 - [ ] P0.5 Record baseline commands and failures before implementation
 - [ ] P1.1 Add typed v2 spec package for pages, schemas, fields, collections, actions, templates, and validation issues
 - [ ] P1.2 Implement typed spec validation for schema keys, fields, arrangements, section levels, and action paths
