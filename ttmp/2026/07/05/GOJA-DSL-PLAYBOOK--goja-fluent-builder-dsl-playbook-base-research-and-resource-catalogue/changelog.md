@@ -149,3 +149,13 @@ Implemented P2.1-P2.3 initial data.v2.dsl Goja builder substrate: hidden typed r
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders.go — V2 Goja builder implementation
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders_test.go — V2 builder tests
 
+
+## 2026-07-05
+
+Completed P2.4-P2.5 by adding data.v2.dsl master-detail editor builders with edit/selectUrl/submitPost/create/actions/masterDetail and runtime tests for the full simple/selectable/master-detail authoring examples.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders.go — Master-detail editor builder implementation
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders_test.go — Master-detail Goja runtime test
+

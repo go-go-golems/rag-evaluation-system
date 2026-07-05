@@ -87,6 +87,60 @@ func TestDataV2BuilderBuildsSelectableTable(t *testing.T) {
 	}
 }
 
+func TestDataV2BuilderBuildsMasterDetailEditor(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const data = require("data.v2.dsl");
+		const schema = data.schema("AgendaItem")
+			.field("id", data.f.key().label("ID"))
+			.field("number", data.f.short().label("Time"))
+			.field("title", data.f.primary().required())
+			.field("description", data.f.prose().rows(4))
+			.build();
+		const ir = data.collection("agenda", [{ id: "agenda-intro", number: "14h30", title: "Intro", description: "Welcome" }])
+			.schema(schema)
+			.edit(e => e
+				.selectUrl("agenda", "agenda-intro")
+				.submitPost("/settings/agenda-item")
+				.create({ label: "New agenda item" })
+				.actions(a => a
+					.reorder(data.action.server("admin-reorder-course-agenda"))
+					.remove(data.action.server("admin-delete-agenda-item"))))
+			.masterDetail()
+			.toIR();
+		JSON.stringify(ir);
+	`)
+	if err != nil {
+		t.Fatalf("build master-detail editor: %v", err)
+	}
+	var root map[string]any
+	if err := json.Unmarshal([]byte(value.String()), &root); err != nil {
+		t.Fatalf("decode root: %v", err)
+	}
+	children := root["children"].([]any)
+	if len(children) != 3 {
+		t.Fatalf("children len = %d, want create/table/detail", len(children))
+	}
+	table := children[1].(map[string]any)
+	tableProps := table["props"].(map[string]any)
+	if tableProps["selectedKey"] != "agenda-intro" {
+		t.Fatalf("selectedKey = %#v", tableProps["selectedKey"])
+	}
+	detail := children[2].(map[string]any)
+	form := detail["children"].([]any)[0].(map[string]any)
+	formProps := form["props"].(map[string]any)
+	if formProps["formAction"] != "/settings/agenda-item" {
+		t.Fatalf("formAction = %#v", formProps["formAction"])
+	}
+	if formProps["title"] != "Edit: Intro" {
+		t.Fatalf("title = %#v", formProps["title"])
+	}
+}
+
 func TestDataV2BuilderRejectsPresentNonFunctionCallback(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()

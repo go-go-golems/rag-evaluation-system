@@ -812,3 +812,61 @@ This step covers the first two runtime examples from the companion document: sim
 
 ### Technical details
 - Successful command: `cd rag-evaluation-system && go test ./pkg/widgetdsl/... -count=1`.
+
+## Step 15: Add v2 master-detail editor builder and runtime test
+
+I finished the first pass of P2 by adding master-detail editor authoring to `data.v2.dsl`. The v2 collection builder can now express all three foundational examples from the companion document: simple table, selectable table, and master-detail editor with URL selection and native form submit.
+
+The master-detail API is still intentionally small, but it covers the essential shape: `.edit(e => e.selectUrl(...).submitPost(...).create(...).actions(...)).masterDetail().toIR()`. The implementation lowers to the same current Widget IR component tree used by the existing renderer: create button, `DataTable`, detail `FormPanel`, and close button.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 14)
+
+**Assistant interpretation:** Continue P2 implementation by adding the master-detail editor builder and corresponding runtime tests.
+
+**Inferred user intent:** Get the v2 DSL to cover the concrete examples before moving on to demos or Action IR v2.
+
+**Commit (code):** pending — "Add widget DSL v2 master-detail builder"
+
+### What I did
+- Added `collection.edit(callback)`.
+- Added `collection.masterDetail()`.
+- Added editor-builder methods: `selectUrl`, `submitPost`, `create`, `reorder`, `remove`, and `actions`.
+- Added collection action-builder methods: `reorder` and `remove`.
+- Added a Goja runtime test for the master-detail authoring example.
+- Ran `go test ./pkg/widgetdsl/... -count=1`.
+- Checked off tasks 23 and 24.
+- Updated changelog and docmgr doctor.
+
+### Why
+- The master-detail editor is the most important current real-world grammar behavior. It needs to be expressible in v2 before demo pages or real page rewrites start.
+
+### What worked
+- The new runtime test verifies selected row state, form action, and detail form title in the lowered IR.
+- All widgetdsl tests pass.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- The current renderer contract is enough for the first v2 authoring layer. We can defer renderer changes until Action IR v2/context hydration work.
+
+### What was tricky to build
+- The editor builder has two ways to set actions: direct `.reorder/.remove` and nested `.actions(a => ...)`. The nested form matches the design-guide examples, while direct methods keep tests and simple scripts compact. This may need pruning after small-model trials.
+
+### What warrants a second pair of eyes
+- Decide whether both direct editor action methods and nested `.actions(...)` should remain in the final public API.
+- Review whether `.create({ label })` should accept only an object, only a string, or both.
+
+### What should be done in the future
+- Start P3 Action IR v2 work, especially confirm centralization and DataTable action-cell row-key context.
+- Start P4 demos now that the foundational v2 authoring examples run in Goja tests.
+
+### Code review instructions
+- Review `pkg/widgetdsl/v2_builders.go` editor builder methods.
+- Review `TestDataV2BuilderBuildsMasterDetailEditor` in `pkg/widgetdsl/v2_builders_test.go`.
+- Validate with `go test ./pkg/widgetdsl/... -count=1`.
+
+### Technical details
+- Successful command: `cd rag-evaluation-system && go test ./pkg/widgetdsl/... -count=1`.

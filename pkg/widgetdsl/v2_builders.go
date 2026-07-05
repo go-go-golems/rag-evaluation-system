@@ -159,6 +159,19 @@ func (r *runtime) v2CollectionCtor(call goja.FunctionCall) goja.Value {
 		collection.Selection = r.mustV2Ref(arg, "selection").selection
 		return obj
 	})
+	setExport(obj, "edit", func(args ...goja.Value) *goja.Object {
+		collection.Mode = v2spec.CollectionModeEdit
+		if len(args) > 0 && !goja.IsUndefined(args[0]) && !goja.IsNull(args[0]) {
+			fn, ok := goja.AssertFunction(args[0])
+			if !ok {
+				panic(r.vm.NewGoError(fmt.Errorf("data.v2.dsl collection.edit(callback) requires a function when an argument is present")))
+			}
+			if _, err := fn(goja.Undefined(), r.v2EditorBuilder(collection)); err != nil {
+				panic(err)
+			}
+		}
+		return obj
+	})
 	setExport(obj, "table", func(args ...goja.Value) *goja.Object {
 		collection.Arrangement = v2spec.ArrangementSpec{Kind: v2spec.ArrangementKindTable}
 		if len(args) > 0 && !goja.IsUndefined(args[0]) && !goja.IsNull(args[0]) {
@@ -170,6 +183,10 @@ func (r *runtime) v2CollectionCtor(call goja.FunctionCall) goja.Value {
 				panic(err)
 			}
 		}
+		return obj
+	})
+	setExport(obj, "masterDetail", func() *goja.Object {
+		collection.Arrangement = v2spec.ArrangementSpec{Kind: v2spec.ArrangementKindMasterDetail}
 		return obj
 	})
 	setExport(obj, "validate", func() []map[string]any {
@@ -209,6 +226,64 @@ func (r *runtime) v2SelectionBuilder() *goja.Object {
 func (r *runtime) v2SelectionValue(selection *v2spec.SelectionSpec) *goja.Object {
 	obj := r.vm.NewObject()
 	r.attachV2Ref(obj, &v2Ref{kind: "selection", selection: selection})
+	return obj
+}
+
+func (r *runtime) v2EditorBuilder(collection *v2spec.CollectionSpec) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "selectUrl", func(param string, value goja.Value) *goja.Object {
+		collection.Selection = &v2spec.SelectionSpec{Kind: v2spec.SelectionKindURLParam, Param: param, Value: stringifyValue(value)}
+		return obj
+	})
+	setExport(obj, "submitPost", func(formAction string) *goja.Object {
+		collection.Actions.Submit = &v2spec.SubmitSpec{FormAction: formAction, Method: "post"}
+		return obj
+	})
+	setExport(obj, "create", func(value goja.Value) *goja.Object {
+		label := "New item"
+		if value != nil && !goja.IsUndefined(value) && !goja.IsNull(value) {
+			if obj := value.ToObject(r.vm); obj != nil {
+				if labelValue := obj.Get("label"); labelValue != nil && !goja.IsUndefined(labelValue) && !goja.IsNull(labelValue) {
+					label = labelValue.String()
+				} else if exported, ok := value.Export().(string); ok && exported != "" {
+					label = exported
+				}
+			}
+		}
+		collection.Actions.Create = &v2spec.CreateActionSpec{Label: label}
+		return obj
+	})
+	setExport(obj, "reorder", func(actionValue goja.Value) *goja.Object {
+		collection.Actions.Reorder = r.mustV2Ref(actionValue, "action").action
+		return obj
+	})
+	setExport(obj, "remove", func(actionValue goja.Value) *goja.Object {
+		collection.Actions.Remove = r.mustV2Ref(actionValue, "action").action
+		return obj
+	})
+	setExport(obj, "actions", func(callback goja.Value) *goja.Object {
+		fn, ok := goja.AssertFunction(callback)
+		if !ok {
+			panic(r.vm.NewGoError(fmt.Errorf("data.v2.dsl edit.actions(callback) requires a function")))
+		}
+		if _, err := fn(goja.Undefined(), r.v2CollectionActionsBuilder(collection)); err != nil {
+			panic(err)
+		}
+		return obj
+	})
+	return obj
+}
+
+func (r *runtime) v2CollectionActionsBuilder(collection *v2spec.CollectionSpec) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "reorder", func(actionValue goja.Value) *goja.Object {
+		collection.Actions.Reorder = r.mustV2Ref(actionValue, "action").action
+		return obj
+	})
+	setExport(obj, "remove", func(actionValue goja.Value) *goja.Object {
+		collection.Actions.Remove = r.mustV2Ref(actionValue, "action").action
+		return obj
+	})
 	return obj
 }
 

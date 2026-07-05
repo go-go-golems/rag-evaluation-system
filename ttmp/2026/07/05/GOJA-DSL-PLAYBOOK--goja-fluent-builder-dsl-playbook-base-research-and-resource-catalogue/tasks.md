@@ -25,8 +25,8 @@
 - [x] P2.1 Add Goja hidden typed refs and strict callback handling for v2 builders
 - [x] P2.2 Implement v2 schema and field builders
 - [x] P2.3 Implement v2 simple and selectable collection table builders
-- [ ] P2.4 Implement v2 master-detail editor builder with native form submit
-- [ ] P2.5 Add Goja runtime tests for v2 authoring examples
+- [x] P2.4 Implement v2 master-detail editor builder with native form submit
+- [x] P2.5 Add Goja runtime tests for v2 authoring examples
 - [ ] P3.1 Define Action IR v2 payload/template model and TypeScript types
 - [ ] P3.2 Centralize confirmation handling for server actions
 - [ ] P3.3 Fix DataTable action-cell row context to use table row key
