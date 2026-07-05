@@ -56,3 +56,31 @@ Added intern-facing deep dive on optional researchctl lambdas, typed Go-side IR/
 
 Design-doc 05 written (into the placeholder): the v2 overhaul design for all five DSLs, synthesizing docs 01-04 — typed intent specs + two-tier builders (defaulted chains, optional lambda configurators, .use fragments), strict decoding, accumulated validation rendered as ValidationIssues nodes, marks contract shrinking domain modules to schemas+marks, callback action kind making JS lambdas safe across the renderer/runtime boundary (deterministic ids, fail-closed declaration-site hashes, 409/rebuild/retry staleness protocol), manifest-driven codegen with DTS parity, and a 5-phase file-level implementation plan.
 
+
+## 2026-07-05
+
+Added full rag-evaluation-system DSL overhaul guide covering all Widget DSL modules, typed intent IR, renderer/runtime action serialization, API alternatives, examples, migration phases, and testing strategy.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md — New design and implementation guide
+
+
+## 2026-07-05
+
+Revised the rag-evaluation-system DSL overhaul guide for a no-backwards-compatibility hard cutover: v1 APIs are now vocabulary evidence, compatibility facades are rejected, and the implementation plan targets clean v2 specs/builders, Action IR v2, widget.unsafe, page rewrites, and removal of old public exports.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md — Hard-cutover revision
+
+
+## 2026-07-05
+
+Added the Widget DSL event-timeline companion document and hard-cutover phase/task tracker, covering simple table, selectable table, master-detail editor, HTTP requests, frontend execution, backend handlers, and precise implementation phases.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md — Parent design guide being operationalized
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — New companion operational spec and task tracker
+

@@ -11,10 +11,16 @@ Topics:
 DocType: reference
 Intent: long-term
 Owners: []
-Summary: "Chronological investigation diary for the Goja DSL catalogue and base research. Records what was tried, what worked, what failed, and what to do next."
-WhatFor: "Record the research journey so a senior researcher can resume without re-reading every source."
-WhenToUse: "Read before resuming work on this ticket."
+RelatedFiles:
+    - Path: ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md
+      Note: Step 5 records the DSL overhaul design guide
+ExternalSources: []
+Summary: Chronological investigation diary for the Goja DSL catalogue and base research. Records what was tried, what worked, what failed, and what to do next.
+LastUpdated: 0001-01-01T00:00:00Z
+WhatFor: Record the research journey so a senior researcher can resume without re-reading every source.
+WhenToUse: Read before resuming work on this ticket.
 ---
+
 
 # Investigation diary
 
@@ -236,3 +242,180 @@ The user asked to also check `geppetto` and `discord-bot` ("those are interestin
 - Design doc grew from ~44 KB to ~62 KB; logbook from ~37 KB to ~52 KB.
 - New patterns: A′ (clone-on-each-step), F (lambda-configurator + `.use()`), G (Proxy traps).
 - New decision record: typed-builder mechanism (hidden-key vs Proxy traps).
+
+## Step 5: Write the rag-evaluation-system DSL overhaul guide
+
+The user asked for a full-system overhaul guide after the catalogue, self-assessment, independent assessment, and deep-dive had established that the current Widget DSL vocabulary is useful but the map-IR implementation substrate is not. I reread all four design documents and then investigated the current `rag-evaluation-system` renderer, Widget IR, action dispatcher, widget manifests, module exports, recipes, and the real `go-go-course` action/page host before writing the new intern-facing guide.
+
+The resulting document reframes the target architecture around typed Go-side intent specs, hybrid hyperscript-plus-builder authoring, optional lambda configurators, stable server-action registration, serializable action templates, strict option decoding, declaration parity, and incremental migration of all five DSL modules.
+
+### Prompt Context
+
+**User prompt (verbatim):** "so read all 4 documents again, and do any other research needed. 
+
+We want to overhaul the rag-evaluation-system DSLs (all of them).
+
+What we want is a powerful yet opinionatedly simple set of APIs to build user interfaces for the rag-evaluation-system UI toolkit.
+
+We can revisit the IR format, including the react widget renderer, and would like to benefit from the best design possible given all we have.
+
+Furthermore, if we for example allow lambdas to be used as ways to say, handle callbacks or other compositional needs (as mentioned, codesign is pretty interesting), we need to make sure that the renderer <> jsruntime setup works properly, since actions will have to be serialized and then deserialized and dispatched properly.
+
+Create  a detailed analysis / design / implementation guide that is for a new intern, explaining all the parts of the system needed to understand what it is, with prose paragraphs and bullet point sand pseudocode and diagrams and api references and file references. It should be very clear and technical. Store in the ticket and the nupload to remarkable.
+
+
+Brainstorm different ideas / choices, make a lot of small to complex examples of the different APIs so I can jduge which forms I like the most, doing both opinionated and programs leveraging the more flexible side of things of the API. I want to be able to build rich and consistent UIs for a course / cms / general webpage system."
+
+**Assistant interpretation:** Produce the concrete widgetdsl v2 overhaul guide for every module, including renderer/IR/action runtime considerations, many API alternatives/examples, implementation phases, and reMarkable upload.
+
+**Inferred user intent:** Decide the next durable API architecture before implementing it, with enough examples to judge taste and enough technical guidance for an intern to execute safely.
+
+### What I did
+- Reread design-docs 01–04 in the GOJA-DSL-PLAYBOOK ticket.
+- Inspected current module exports in `pkg/widgetdsl/module.go`, grammar in `pkg/widgetdsl/grammar.go`, declarations in `pkg/widgetdsl/typescript.go`, tests, manifests, React `ir.ts`, `WidgetRenderer.tsx`, `actions.ts`, registry/adapters, and `RagEvaluationSiteApp` action handling.
+- Inspected real consumer/server behavior in `go-go-course/cmd/go-go-course/server.js`, `lib/course-pages.js`, and `lib/pages/admin-course-cms.js`.
+- Created `design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md`.
+
+### Why
+- The earlier documents were research and assessment. This step turns them into a concrete architecture and implementation guide for overhauling the DSLs, including the action serialization problem that determines whether lambdas can be used safely.
+
+### What worked
+- The current renderer/action architecture is already close to the right shape: Widget IR is JSON, adapters dispatch typed-ish contexts, `RagEvaluationSiteApp` posts server actions to `/api/widget/actions/:name`, and `go-go-course` already dispatches those names.
+- The best target is a hybrid: hyperscript/tree helpers for structure, typed fluent builders for schemas/collections/actions/marks, and stable server action names for runtime callbacks.
+
+### What didn't work
+- A first manifest-summary script failed because two widget YAML manifests had missing `module` values, causing Python to compare `None` and `str` while sorting. I reran the script after stringifying missing values.
+
+### What I learned
+- The Widget IR/React side is much more typed than the Goja declarations suggest; the missing layer is typed Go-side authoring specs.
+- The action boundary must remain data-only. Lambdas are safe as builder configurators; runtime callbacks need a server-side registry and stable serialized action names/templates.
+
+### What was tricky to build
+- The hardest design constraint was reconciling codesign-style lambdas with a browser renderer that only receives JSON. The solution is to split lambdas into builder-time configurators versus registered runtime handlers. Payload mapping and confirm text should compile to serializable template descriptors, not closures.
+
+### What warrants a second pair of eyes
+- The proposed `ActionSpec` v2 / payload-template design needs review by whoever owns `RagEvaluationSiteApp` and the xgoja/express server-action host.
+- The module migration order (`data.collection` agenda first, then CMS media library, then context/course marks) should be checked against product priorities.
+
+### What should be done in the future
+- Create a follow-up implementation ticket (`RAGEVAL-DSL-V2` or similar) and implement the phases in the guide.
+- Decide which API examples Manuel prefers before freezing method names.
+
+### Code review instructions
+- Start with design-doc 05 sections 4–8: target architecture, public API model, action/runtime design, and implementation plan.
+- Validate the evidence anchors by checking `pkg/widgetdsl/module.go`, `pkg/widgetdsl/grammar.go`, `packages/rag-evaluation-site/src/widgets/actions.ts`, and `go-go-course/cmd/go-go-course/server.js`.
+
+### Technical details
+- New doc path: `ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md`.
+- The doc includes ASCII architecture diagrams, pseudocode, TypeScript/Go API sketches, API alternatives, simple/rich examples for course/CMS/general pages, phased implementation tasks, tests, and decision records.
+
+## Step 6: Revise the DSL overhaul guide for hard cutover instead of compatibility
+
+The user clarified that the new `rag-evaluation-system` DSL design does not need backwards compatibility. That changes the optimization target: the document should not recommend v1 compatibility facades, strict-decoding old option bags, or introducing builders alongside current APIs. Instead, the v2 design should cut over cleanly, delete old public APIs, and use the current DSL only as vocabulary evidence.
+
+I updated the guide to make hard cutover explicit in the frontmatter, reading guide, executive summary, architecture rules, Action IR section, schema recommendation, brainstormed API choices, implementation plan, decision records, risks, and next-ticket proposal.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Update."
+
+**Assistant interpretation:** Apply the prior hard-cutover recommendations to the existing `design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md` document.
+
+**Inferred user intent:** Remove compatibility-oriented ambiguity from the guide so the future implementation maximizes v2 simplicity and type safety.
+
+### What I did
+- Changed the document framing from compatibility migration to hard-cutover replacement.
+- Added a new `No backwards compatibility requirement` section.
+- Rewrote the implementation plan as hard-cutover phases.
+- Replaced the compatibility-facades decision record with a `no compatibility shims` decision.
+- Reframed old option-bag APIs as rejected baselines or unsafe escape hatches.
+- Updated risks and the next implementation ticket proposal.
+
+### Why
+- Backwards compatibility would preserve exactly the v1 complexity the redesign is meant to remove: raw maps, option bags, marker maps, string switches, weak declarations, and recipes that bypass typed specs.
+
+### What worked
+- The document now states that old DSL APIs are research data / vocabulary evidence, not public contracts.
+- The new implementation plan prioritizes typed v2 specs/builders, Action IR v2, `widget.unsafe`, a real page rewrite, and removal of v1 public exports.
+
+### What didn't work
+- N/A. This was a documentation update only.
+
+### What I learned
+- Hard cutover simplifies both the implementation plan and the API story: fewer transitional states, fewer aliases, and stronger tests that assert old APIs are absent.
+
+### What was tricky to build
+- Keeping the brainstorming section without making rejected v1-shaped APIs look equally viable. I left the strict-props/options-bag approach as an explicit rejected baseline rather than deleting it, because it is still useful for comparison and model trials.
+
+### What warrants a second pair of eyes
+- Review whether the proposed `widget.unsafe` namespace should exist at all, or whether the hard cutover should forbid raw Widget IR in authored pages entirely.
+- Review whether the chosen schema API should be the hybrid `.field(name, data.f.primary()...)` shape or an even smaller fluent-only shape.
+
+### What should be done in the future
+- If the hard-cutover direction is accepted, rename the follow-up ticket proposal to `RAGEVAL-DSL-V2-CUTOVER` and implement the new phases.
+
+### Code review instructions
+- Start with design-doc 05 sections 3.4, 8, 10 Decision 6, and 12.
+- Search the guide for compatibility language and confirm it only appears as rejected context.
+
+### Technical details
+- Updated document: `ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md`.
+
+## Step 7: Add event timelines and a precise cutover task tracker
+
+The user asked to store the chat-level walkthroughs as a separate ticket document and to turn the hard-cutover direction into phases and detailed tasks that can be tracked during implementation. I created a companion design document that explains the simple table, selectable table, and master-detail editor from authoring API down to Widget IR, React execution, browser history, HTTP requests, and backend handlers.
+
+This step also turns the broad implementation plan into docmgr tasks. The companion document now doubles as a behavioral specification: when we implement each phase, the demos and code should either preserve these event timelines or explicitly update the document in the same commit.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Ok, store all of these in a separate document in the ticket, as a companion to the design document. 
+
+Then, create detailed phases and for each phase detailed tasks (so we can precisely keep track of our progress), and then implement task by task, keeping a detailed diary as you work, and committing at regular intervals. Also build demo sites as you go as examples (make sure the examples are properly updated / removed if deprecated)."
+
+**Assistant interpretation:** Create a new GOJA-DSL-PLAYBOOK companion document for the event timelines and establish a precise implementation tracker, then proceed with incremental tracked work and commits.
+
+**Inferred user intent:** Make the DSL cutover execution observable and reviewable, with no vague implementation phases and no stale examples left behind.
+
+### What I did
+- Added `design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md`.
+- Documented simple table, selectable table, and master-detail editor timelines.
+- Included HTTP requests, frontend code paths, backend code paths, Widget IR shapes, and current behavior caveats.
+- Added P0-P7 implementation phases with detailed tasks.
+- Added docmgr tasks 11-40 corresponding to the phase tracker.
+- Checked off tasks 11 and 12.
+- Related the new document to the key runtime/frontend/backend files.
+- Updated the changelog and ran `docmgr doctor` successfully.
+
+### Why
+- The DSL API shape is not enough; implementation needs event-level semantics so we do not accidentally break URL selection, native form behavior, server action refresh, or demos.
+
+### What worked
+- The new companion document provides a concrete operational contract for the first three examples and a precise tracker for the hard-cutover work.
+- `docmgr doctor --ticket GOJA-DSL-PLAYBOOK --stale-after 30` passed after adding the document and relations.
+
+### What didn't work
+- N/A. This was a documentation and planning step.
+
+### What I learned
+- The current master-detail path is already a useful behavioral fixture: URL selection, native form submit, server-action row buttons, and refresh all exist today. The v2 work can focus on typed authoring and stronger contracts rather than inventing entirely new runtime semantics.
+
+### What was tricky to build
+- The master-detail delete path revealed a subtle action-dispatch caveat: generic `dispatchWidgetAction` handles `confirm`, but `App.tsx` handles server actions directly. V2 should centralize confirmation so server actions cannot bypass it. The action-cell row key also currently uses `rowKey(row, "file")`, which is wrong for generic tables and should be fixed in the Action IR/context phase.
+
+### What warrants a second pair of eyes
+- Confirm whether native form submit should remain a blessed v2 save path, or whether a fetch-based form action should also be introduced.
+- Review whether delete should clear URL selection after removing the selected row.
+- Review where demo pages should live: `go-go-course`, Storybook, or both.
+
+### What should be done in the future
+- Start P0.3/P0.4 by inventorying existing examples and adding/identifying live demo pages for the three foundational flows.
+
+### Code review instructions
+- Start with `design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md`.
+- Verify that the timelines match the referenced files: `grammar.go`, `App.tsx`, `actions.ts`, `DataTable.widget.tsx`, `FormPanel.tsx`, and `go-go-course/server.js`.
+- Validate with `docmgr doctor --ticket GOJA-DSL-PLAYBOOK --stale-after 30`.
+
+### Technical details
+- New document: `/home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md`.
+- Doctor command: `cd rag-evaluation-system && docmgr doctor --ticket GOJA-DSL-PLAYBOOK --stale-after 30`.
