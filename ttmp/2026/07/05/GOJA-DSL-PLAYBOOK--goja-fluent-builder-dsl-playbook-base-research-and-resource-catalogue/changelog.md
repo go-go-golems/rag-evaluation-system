@@ -121,3 +121,12 @@ Implemented initial P1.2 validation rules for the v2 Widget DSL spec model, incl
 
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/validate.go — Validation implementation
 
+
+## 2026-07-05
+
+Implemented initial P1.3 lowering from typed v2 specs to current Widget IR shapes, covering pages, nodes, sections, simple/selectable tables, master-detail form trees, and serializable actions.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/lower.go — Typed spec to Widget IR lowering
+

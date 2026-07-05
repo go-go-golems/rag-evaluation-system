@@ -632,3 +632,63 @@ This is still a foundation step: the validators exist, but focused unit tests an
 
 ### Technical details
 - Test command passed: `go test ./pkg/widgetdsl/... -count=1`.
+
+## Step 12: Lower typed v2 specs to current Widget IR
+
+I implemented the first lowering pass from typed v2 specs into the current JSON-like Widget IR maps. This makes the typed model executable in principle: pages lower to Widget page objects, nodes lower to text/element/component nodes, sections lower to `SectionBlock`, collections lower to composed `Stack` + `DataTable` + optional detail form trees, and actions lower to serializable action objects.
+
+The lowering code intentionally targets the existing React renderer and current component names. This keeps the hard-cutover focused on replacing the authoring substrate first, not rewriting the renderer at the same time.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 7)
+
+**Assistant interpretation:** Continue P1 by implementing conversion from typed v2 specs to existing Widget IR nodes.
+
+**Inferred user intent:** Make the v2 typed substrate practical by connecting it to the current renderer instead of designing types in isolation.
+
+**Commit (code):** pending — "Lower widget DSL v2 specs to IR"
+
+### What I did
+- Added `pkg/widgetdsl/v2/spec/lower.go`.
+- Implemented `PageSpec.ToWidgetPage()`.
+- Implemented `NodeSpec.ToWidgetNode()`.
+- Implemented `SectionSpec.ToNode()`.
+- Implemented `CollectionSpec.ToNode()` for table and master-detail arrangements.
+- Implemented table column derivation, create button lowering, selected detail form lowering, action column lowering, and action/template lowering.
+- Ran `gofmt -w pkg/widgetdsl/v2/spec/*.go`.
+- Ran `go test ./pkg/widgetdsl/... -count=1`.
+- Checked off task 18.
+- Updated doc relations and changelog.
+
+### Why
+- Lowering lets v2 builders target typed specs while still using the existing WidgetRenderer and components.
+
+### What worked
+- The package compiles and existing widgetdsl tests still pass.
+
+### What didn't work
+- First compile attempt failed because I accidentally referenced a non-existent `FieldSemanticDate` and then briefly duplicated `FieldSemanticShort` while fixing it:
+  - Command: `go test ./pkg/widgetdsl/... -count=1`
+  - Error: `pkg/widgetdsl/v2/spec/lower.go:386:106: duplicate case FieldSemanticShort ...`
+- I fixed the switch to use the existing semantic constants and reran tests successfully.
+
+### What I learned
+- Date is currently modeled as a `FieldKind`, not a `FieldSemantic`. That split should stay clear in later builder APIs.
+
+### What was tricky to build
+- Action lowering has to bridge v2's typed template idea with the current frontend's string interpolation. I lowered confirm templates to the legacy string form for now and left path payloads as typed descriptors for future Action IR v2 consumers.
+
+### What warrants a second pair of eyes
+- Review whether collection lowering should generate full-page URLs or relative query-string URLs for row selection. Current v1 uses `?param=value`; the target v2 examples sometimes show full `/pages/...` URLs.
+- Review whether path payload descriptors should be disallowed until Action IR v2 hydration exists.
+
+### What should be done in the future
+- Add focused P1.4 tests for simple table, selectable table, and master-detail lowering outputs.
+
+### Code review instructions
+- Start with `pkg/widgetdsl/v2/spec/lower.go`.
+- Validate with `go test ./pkg/widgetdsl/... -count=1`.
+
+### Technical details
+- Successful command: `cd rag-evaluation-system && go test ./pkg/widgetdsl/... -count=1`.
