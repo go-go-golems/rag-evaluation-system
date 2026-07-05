@@ -993,3 +993,69 @@ I also fixed the DataTable action-cell context issue found during the timeline w
 - Successful commands:
   - `cd rag-evaluation-system && pnpm --dir packages/rag-evaluation-site typecheck`
   - `cd rag-evaluation-system && go test ./pkg/widgetdsl/... -count=1`
+
+## Step 18: Add row/server-action demo and v2 action helper methods
+
+I added the fourth live demo page: a row/server-action master-detail example. It uses the v2 collection builder with reorder and delete action columns, and the backend demo handlers return `refresh` and `toast` without changing persistent course data.
+
+To make the demo expressive, I also added small v2 action-builder helpers for confirmation and payload fields. The delete action can now be authored as `dataV2.action.server("...").confirm("Delete demo agenda item “${row.title}”?")`, which lowers to the current confirm string behavior while keeping the authoring API fluent.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 17)
+
+**Assistant interpretation:** Continue P3/P4 implementation by adding a row/server-action demo once payload hydration and row context fixes are available.
+
+**Inferred user intent:** Keep adding runnable examples as implementation proceeds so behavior can be validated manually and stale examples do not accumulate.
+
+**Commit (code):** f7bac955bcbbbc1221636462deea65efbeec4fba — "Add Widget DSL v2 row action demo"
+
+### What I did
+- Added `confirm`, `payloadPath`, and `payload` methods to v2 action builder handles.
+- Extended the v2 master-detail runtime test to assert the lowered delete confirm prompt.
+- Added `/pages/dsl-examples-actions` in `go-go-course`.
+- Added demo server action handlers for `dsl-demo-reorder-agenda` and `dsl-demo-delete-agenda`.
+- Added the demo page route to `course-pages.js`.
+- Updated the DSL examples navigation.
+- Ran combined validation commands.
+- Checked off task 32.
+
+### Why
+- Row actions are where Widget DSL behavior crosses from rendering into backend effects. The demo makes the row context, payload, refresh, and toast flow visible.
+
+### What worked
+- `go test ./pkg/widgetdsl/... -count=1` passed.
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `cd go-go-course && go test ./...` passed.
+- The `go-go-course` row-action demo was committed separately.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- The demo can exercise server-action dispatch safely without persistent mutation by returning synthetic refresh/toast results.
+
+### What was tricky to build
+- The confirm helper currently lowers to the existing string interpolation model. That is pragmatic for the current renderer, but the long-term v2 API should decide whether confirm strings are final or just a bridge until fully typed templates are exposed.
+
+### What warrants a second pair of eyes
+- Review whether `payload(name, value)` should exist as a chain method or whether payload configuration should only happen through a dedicated payload builder callback.
+- Manually verify confirm dialog behavior and row context by clicking Delete/arrow buttons in `/pages/dsl-examples-actions`.
+
+### What should be done in the future
+- Add formal tests for action dispatch/hydration/confirm behavior. The frontend package currently lacks a JS test harness, so this likely needs a small test setup or Playwright-based smoke test.
+- Add the demo README for P4.5.
+
+### Code review instructions
+- Review `pkg/widgetdsl/v2_builders.go` action helper methods.
+- Review `go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js` and `server.js` demo action handlers.
+- Validate with:
+  - `cd rag-evaluation-system && go test ./pkg/widgetdsl/... -count=1`
+  - `cd rag-evaluation-system && pnpm --dir packages/rag-evaluation-site typecheck`
+  - `cd go-go-course && go test ./...`
+
+### Technical details
+- Successful commands:
+  - `go test ./pkg/widgetdsl/... -count=1`
+  - `pnpm --dir packages/rag-evaluation-site typecheck`
+  - `go test ./...` in `go-go-course`

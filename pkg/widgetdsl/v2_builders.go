@@ -311,6 +311,18 @@ func (r *runtime) v2ActionObject() *goja.Object {
 func (r *runtime) v2ActionValue(action *v2spec.ActionSpec) *goja.Object {
 	obj := r.vm.NewObject()
 	r.attachV2Ref(obj, &v2Ref{kind: "action", action: action})
+	setExport(obj, "confirm", func(text string) *goja.Object {
+		action.Confirm = &v2spec.TemplateSpec{Parts: []v2spec.TemplateValue{{Kind: v2spec.TemplateValueText, Text: text}}}
+		return obj
+	})
+	setExport(obj, "payloadPath", func(name string, path string) *goja.Object {
+		action.Payload.Fields = append(action.Payload.Fields, v2spec.PayloadFieldSpec{Name: name, Value: v2spec.TemplateValue{Kind: v2spec.TemplateValuePath, Path: path}})
+		return obj
+	})
+	setExport(obj, "payload", func(name string, value goja.Value) *goja.Object {
+		action.Payload.Fields = append(action.Payload.Fields, v2spec.PayloadFieldSpec{Name: name, Value: v2spec.TemplateValue{Kind: v2spec.TemplateValueLiteral, Value: value.Export()}})
+		return obj
+	})
 	return obj
 }
 

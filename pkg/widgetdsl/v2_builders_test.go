@@ -109,7 +109,7 @@ func TestDataV2BuilderBuildsMasterDetailEditor(t *testing.T) {
 				.create({ label: "New agenda item" })
 				.actions(a => a
 					.reorder(data.action.server("admin-reorder-course-agenda"))
-					.remove(data.action.server("admin-delete-agenda-item"))))
+					.remove(data.action.server("admin-delete-agenda-item").confirm("Delete ${row.title}?"))))
 			.masterDetail()
 			.toIR();
 		JSON.stringify(ir);
@@ -138,6 +138,13 @@ func TestDataV2BuilderBuildsMasterDetailEditor(t *testing.T) {
 	}
 	if formProps["title"] != "Edit: Intro" {
 		t.Fatalf("title = %#v", formProps["title"])
+	}
+	columns := tableProps["columns"].([]any)
+	deleteColumn := columns[len(columns)-1].(map[string]any)
+	deleteCell := deleteColumn["cell"].(map[string]any)
+	deleteAction := deleteCell["action"].(map[string]any)
+	if deleteAction["confirm"] != "Delete ${row.title}?" {
+		t.Fatalf("delete confirm = %#v", deleteAction["confirm"])
 	}
 }
 

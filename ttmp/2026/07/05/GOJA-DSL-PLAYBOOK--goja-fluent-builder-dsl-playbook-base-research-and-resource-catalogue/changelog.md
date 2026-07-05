@@ -181,3 +181,15 @@ Implemented P3.1-P3.3 frontend Action IR foundations: added v2 template/payload 
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/cellRenderers.tsx — Row key context fix
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/ir.ts — Action IR v2 types
 
+
+## 2026-07-05
+
+Added P4.4 row/server-action demo page and small v2 action-builder methods for confirm/payload helpers (go-go-course commit f7bac955bcbbbc1221636462deea65efbeec4fba).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js — Row/server-action demo page
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/server.js — Safe demo server actions
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders.go — V2 action builder confirm and payload helper methods
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders_test.go — Runtime assertion for lowered confirm prompt
+
