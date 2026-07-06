@@ -35,7 +35,7 @@
 - [x] P4.2 Add DSL demo page for selectable table
 - [x] P4.3 Add DSL demo page for master-detail editor
 - [x] P4.4 Add DSL demo page for row/server actions
-- [ ] P4.5 Add demo README and remove or quarantine deprecated examples
+- [x] P4.5 Add demo README and remove or quarantine deprecated examples
 - [ ] P5.1 Generate precise v2 TypeScript declarations
 - [ ] P5.2 Add runtime export parity and TypeScript positive/negative fixtures
 - [ ] P6.1 Rewrite admin agenda editor to v2 master-detail API

@@ -21,7 +21,8 @@ This reference documents the JavaScript API exposed by the `rag-widget-site` pro
 | Module | Purpose |
 | --- | --- |
 | `ui.dsl` | Generic page, layout, primitive, foundation, and UI recipe helpers. |
-| `data.dsl` | Data-display widgets, `cell.*` helpers, and data recipes. |
+| `data.dsl` | Legacy/current data-display widgets, `cell.*` helpers, and v1 data recipes. |
+| `data.v2.dsl` | Experimental hard-cutover typed/fluent builders for schemas, tables, selectable tables, master-detail editors, and row actions. |
 | `context_window.dsl` | Context-window diagrams, transcript, annotation, anchored-comment, and upload helpers. |
 | `course.dsl` | Course, lesson, slide, handout, and course-studio helpers. |
 | `cms.dsl` | Media, asset, and article-management helpers. |
@@ -31,6 +32,7 @@ There is no compatibility bucket module. Import the domain modules explicitly:
 ```js
 const ui = require("ui.dsl")
 const data = require("data.dsl")
+const dataV2 = require("data.v2.dsl")
 const contextWindow = require("context_window.dsl")
 const course = require("course.dsl")
 const cms = require("cms.dsl")
@@ -152,7 +154,73 @@ ui.panel({ title: "Rows" },
 )
 ```
 
-### The data grammar: `schema`, `f`, `record`, `collection`
+### The v2 data grammar: `data.v2.dsl`
+
+Use this form for new examples and new page code. It is the hard-cutover typed/fluent direction; it replaces v1 option bags with builder handles and validation terminals.
+
+```js
+const data = require("data.v2.dsl")
+
+const sessionSchema = data.schema("Session")
+  .field("sessionId", data.f.key().label("ID").width("14ch"))
+  .field("title", data.f.primary().label("Title").required().maxLength(120))
+  .field("turnCount", data.f.count().label("Turns"))
+  .field("status", data.f.status().label("Status"))
+  .field("body", data.f.prose().label("Body").rows(3))
+  .build()
+
+data.collection("sessions", sessions)
+  .schema(sessionSchema)
+  .table()
+  .toIR()
+```
+
+Selectable URL-backed table:
+
+```js
+data.collection("sessions", sessions)
+  .schema(sessionSchema)
+  .select(s => s.urlParam("selected", query.selected))
+  .table(t => t.rowSelect(data.action.navigate("/pages/sessions?selected=${row.sessionId}")))
+  .toIR()
+```
+
+Master-detail editor with native form submit:
+
+```js
+data.collection("agenda", agenda)
+  .schema(agendaSchema)
+  .edit(e => e
+    .selectUrl("agenda", query.agenda)
+    .submitPost("/settings/agenda-item")
+    .create({ label: "New agenda item" }))
+  .masterDetail()
+  .toIR()
+```
+
+Row/server actions:
+
+```js
+data.collection("agenda", agenda)
+  .schema(agendaSchema)
+  .edit(e => e.actions(a => a
+    .reorder(data.action.server("admin-reorder-course-agenda"))
+    .remove(data.action.server("admin-delete-agenda-item")
+      .confirm("Delete ${row.title}?"))))
+  .masterDetail()
+  .toIR()
+```
+
+Live demo pages in `go-go-course`:
+
+- `/pages/dsl-examples-table`
+- `/pages/dsl-examples-selectable-table`
+- `/pages/dsl-examples-master-detail`
+- `/pages/dsl-examples-actions`
+
+### Legacy data grammar: `data.dsl` `schema`, `f`, `record`, `collection`
+
+The following v1 option-bag grammar remains documented as legacy/current runtime behavior for existing pages such as the admin Course CMS. Do **not** use these examples for new v2 demos or new hard-cutover page code; prefer `data.v2.dsl` above.
 
 Intent-level authoring: declare what the records look like and how they should be shown or edited; the grammar compiles to `DataTable`/`FormPanel`/`FieldGrid`/`SectionBlock` IR. See ticket RAGEVAL-UI-GRAMMAR design-doc 02.
 

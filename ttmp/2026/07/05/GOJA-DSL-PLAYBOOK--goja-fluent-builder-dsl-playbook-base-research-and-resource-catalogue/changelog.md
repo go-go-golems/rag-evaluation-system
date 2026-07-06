@@ -193,3 +193,13 @@ Added P4.4 row/server-action demo page and small v2 action-builder methods for c
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders.go — V2 action builder confirm and payload helper methods
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders_test.go — Runtime assertion for lowered confirm prompt
 
+
+## 2026-07-05
+
+Cleaned up public Widget DSL docs so v2 examples are primary and v1 option-bag data.dsl examples are labelled legacy; exposed data.v2.dsl in the widgetsite provider; built and browser-tested the demo pages with screenshots and API checks.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md — Deprecated-example cleanup
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — Real browser/demo validation evidence
+

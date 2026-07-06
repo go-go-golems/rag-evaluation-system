@@ -56,12 +56,27 @@ RelatedFiles:
       Note: Initial data.v2.dsl Goja fluent builders with hidden typed refs
     - Path: pkg/widgetdsl/v2_builders_test.go
       Note: Goja runtime tests for v2 builder simple/selectable tables and strict callback errors
+    - Path: pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md
+      Note: Public getting-started doc now points new examples at data.v2.dsl
+    - Path: pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md
+      Note: Public API reference now labels v1 data.dsl examples as legacy and puts v2 examples first
+    - Path: pkg/xgoja/providers/widgetsite/provider.go
+      Note: Provider exposes data.v2.dsl to generated xgoja packages
+    - Path: ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/artifacts/dsl-demo-screenshots/actions.png
+      Note: Screenshot evidence for row actions demo
+    - Path: ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/artifacts/dsl-demo-screenshots/master-detail.png
+      Note: Screenshot evidence for master-detail demo
+    - Path: ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/artifacts/dsl-demo-screenshots/selectable.png
+      Note: Screenshot evidence for selectable table demo
+    - Path: ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/artifacts/dsl-demo-screenshots/table.png
+      Note: Screenshot evidence for simplest table demo
 ExternalSources: []
 Summary: 'Operational companion to the rag-evaluation-system DSL overhaul guide: simple-to-rich event timelines, HTTP/frontend/backend execution traces, and a phase/task tracker for the hard-cutover v2 implementation.'
-LastUpdated: 2026-07-05T18:50:00-04:00
+LastUpdated: 2026-07-05T20:05:00-04:00
 WhatFor: Use when implementing or reviewing Widget DSL v2 behavior. It explains what authors write, what Widget IR is produced, what HTTP requests happen, what React code runs, and what backend code handles each interaction.
 WhenToUse: Read beside design-doc 05 before implementing table, selection, master-detail editor, form submit, row action, or richer collection examples.
 ---
+
 
 
 
@@ -828,6 +843,67 @@ This inventory captures the current baseline before v2 demo pages are added. Tre
 ### Deprecated-example policy
 
 When a v2 demo exists, any v1 option-bag example that teaches the same concept must be either removed from public docs or moved under a clearly named historical/legacy section. Small models should not see both forms as equally valid.
+
+### Deprecated example cleanup status
+
+Public provider documentation now treats v1 `data.dsl` option-bag examples as legacy/current-runtime material and puts `data.v2.dsl` examples first for new work. This cleanup does not delete historical ticket documents or the current admin Course CMS page because those are evidence and active runtime consumers, but it removes ambiguity from the public API reference and getting-started docs.
+
+Updated public docs:
+
+- `pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md` now lists `data.v2.dsl` and shows the v2 fluent table example before the older direct `data.dsl` table form.
+- `pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md` now lists `data.v2.dsl`, adds simple/selectable/master-detail/action examples, and labels the v1 `data.dsl` grammar as legacy.
+
+Historical docs under `ttmp/2026/07/04/RAGEVAL-UI-GRAMMAR...` intentionally still contain v1 examples because they document how the previous grammar was designed. The real admin Course CMS page also still uses v1 until the P6 rewrite task.
+
+### Real browser/demo validation
+
+The v2 demos were tested against a locally built `go-go-course` runtime, not only by unit tests.
+
+Commands and checks:
+
+```bash
+cd go-go-course
+make build
+cd cmd/go-go-course
+go run ./hotreload-host -listen 127.0.0.1:8787
+
+# API/interaction checks
+curl -fsS http://127.0.0.1:8787/api/widget/pages/dsl-examples-table
+curl -fsS 'http://127.0.0.1:8787/api/widget/pages/dsl-examples-selectable-table?selected=sess-debug'
+curl -fsS 'http://127.0.0.1:8787/api/widget/pages/dsl-examples-master-detail?agenda=demo-selection'
+curl -fsS -X POST http://127.0.0.1:8787/api/widget/actions/dsl-demo-reorder-agenda \
+  -H 'Content-Type: application/json' \
+  --data '{"payload":{"direction":"up"},"context":{"row":{"id":"demo-actions","title":"Actions"},"rowKey":"demo-actions","componentType":"DataTableCell"}}'
+curl -fsS -X POST http://127.0.0.1:8787/settings/dsl-demo-agenda-item \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  --data 'id=demo-selection&title=Selection' -D -
+```
+
+Observed API results:
+
+- `/api/widget/pages/dsl-examples-table` returned page id `dsl-examples-table` and a component root.
+- `/api/widget/pages/dsl-examples-selectable-table?selected=sess-debug` returned selected key `sess-debug`.
+- `/api/widget/pages/dsl-examples-master-detail?agenda=demo-selection` returned detail title `Edit: Selection`.
+- `POST /api/widget/actions/dsl-demo-reorder-agenda` returned `ok: true`, `refresh: true`, and toast `Demo reorder demo-actions up`.
+- `POST /settings/dsl-demo-agenda-item` returned `302 Location: /pages/dsl-examples-master-detail?agenda=demo-selection&status=demo-saved`.
+
+Screenshots were captured with Playwright CLI:
+
+```bash
+npx --yes playwright screenshot --browser=chromium --viewport-size=1440,1100 http://127.0.0.1:8787/pages/dsl-examples-table /tmp/dsl-screens/table.png
+npx --yes playwright screenshot --browser=chromium --viewport-size=1440,1100 'http://127.0.0.1:8787/pages/dsl-examples-selectable-table?selected=sess-debug' /tmp/dsl-screens/selectable.png
+npx --yes playwright screenshot --browser=chromium --viewport-size=1440,1200 'http://127.0.0.1:8787/pages/dsl-examples-master-detail?agenda=demo-selection' /tmp/dsl-screens/master-detail.png
+npx --yes playwright screenshot --browser=chromium --viewport-size=1440,1200 'http://127.0.0.1:8787/pages/dsl-examples-actions?agenda=demo-actions' /tmp/dsl-screens/actions.png
+```
+
+Stored screenshot evidence:
+
+- `artifacts/dsl-demo-screenshots/table.png`
+- `artifacts/dsl-demo-screenshots/selectable.png`
+- `artifacts/dsl-demo-screenshots/master-detail.png`
+- `artifacts/dsl-demo-screenshots/actions.png`
+
+A visual QA pass confirmed that all four screenshots show the intended demo page content and no visible error page.
 
 ### Baseline validation commands
 

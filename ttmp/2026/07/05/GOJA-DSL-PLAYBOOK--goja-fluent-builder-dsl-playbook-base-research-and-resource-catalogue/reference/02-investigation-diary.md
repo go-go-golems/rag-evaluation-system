@@ -1059,3 +1059,82 @@ To make the demo expressive, I also added small v2 action-builder helpers for co
   - `go test ./pkg/widgetdsl/... -count=1`
   - `pnpm --dir packages/rag-evaluation-site typecheck`
   - `go test ./...` in `go-go-course`
+
+## Step 19: Clean up deprecated examples and perform real browser validation
+
+The user asked whether I had tested the demos for real, including screenshots. At that point I had run unit/type/build checks and added live pages, but I had not yet browser-tested them. I corrected that in this step: I built the generated `go-go-course` runtime, ran it through the hotreload host, exercised the Widget page/action/form endpoints with `curl`, captured Playwright screenshots for all four v2 demo pages, and stored the screenshots under the ticket artifacts.
+
+I also cleaned up public examples so new readers see `data.v2.dsl` first. The public provider docs now list `data.v2.dsl`, show v2 fluent examples for table/selectable/master-detail/actions, and explicitly label the old `data.dsl` option-bag grammar as legacy/current-runtime behavior rather than the recommended direction.
+
+### Prompt Context
+
+**User prompt (verbatim):** "cleanup deprecated examples. Did you already test it for real? like up to taking screenshots or so?"
+
+**Assistant interpretation:** Remove ambiguity around deprecated examples and perform actual browser/demo validation with screenshots, not just unit tests.
+
+**Inferred user intent:** Ensure the demos are actually usable in the app and that public documentation does not train humans or agents on deprecated APIs.
+
+**Commit (code):** pending — "Document Widget DSL v2 docs cleanup and browser validation"
+
+### What I did
+- Added `data.v2.dsl` to the widgetsite provider module list.
+- Added `data.v2.dsl` to `go-go-course/cmd/go-go-course/xgoja.package.yaml`.
+- Rebuilt generated `go-go-course` runtime package with `make build`.
+- Updated public widgetsite docs:
+  - `01-widget-dsl-getting-started.md`
+  - `02-widget-dsl-js-api-reference.md`
+- Marked v1 `data.dsl` option-bag examples as legacy/current-runtime examples.
+- Added v2 examples for simplest table, selectable table, master-detail editor, and row actions.
+- Started local server with `go run ./hotreload-host -listen 127.0.0.1:8787`.
+- Captured four screenshots with Playwright CLI and copied them to ticket artifacts.
+- Ran API checks for page JSON, selected key, form title, demo server action, and native form redirect.
+- Updated design-doc 06 with the cleanup and browser-validation evidence.
+- Checked off task 33.
+- Ran `docmgr doctor` successfully.
+
+### Why
+- Tests alone did not prove that the generated xgoja runtime could import `data.v2.dsl`, that the live demo pages rendered in a browser, or that public docs had stopped teaching deprecated option-bag forms as the main path.
+
+### What worked
+- After exposing `data.v2.dsl` through the provider and package YAML, `make build` succeeded.
+- The hotreload host served the demo pages at `127.0.0.1:8787`.
+- Playwright screenshots showed the intended simplest table, selectable table, master-detail editor, and row-action pages.
+- API checks returned the expected selected key, form title, reorder action result, and native form redirect.
+
+### What didn't work
+- Initial `make build` failed because `server.js` imported `data.v2.dsl`, but `xgoja.package.yaml` did not select that module:
+  - Command: `cd go-go-course && make build`
+  - Error: `Error: server.js imports unknown bare specifier "data.v2.dsl"`
+- I fixed this by adding `data.v2.dsl` to both the widgetsite provider module list and the go-go-course xgoja package selected modules.
+- I also tried the stale Makefile/comment command shape with `--http-listen`, but the generated runtime rejected it:
+  - `go-go-course: unknown flag: --http-listen`
+- The working local server command was `go run ./hotreload-host -listen 127.0.0.1:8787` from `go-go-course/cmd/go-go-course`.
+
+### What I learned
+- Adding a native module to `widgetdsl.Register` is not enough for generated xgoja binaries; the provider must advertise it and each generated app must select it in `xgoja.package.yaml`.
+- The current README/Makefile command comments around `--http-listen` appear stale for the generated binary path; hotreload-host is the reliable local validation path here.
+
+### What was tricky to build
+- The browser tooling harness was initially unavailable because a Playwright MCP profile was locked by a running process. I used the Playwright CLI for screenshots instead and stored the resulting PNGs as ticket artifacts.
+- I also had to distinguish cleanup of public examples from deletion of historical research docs: old RAGEVAL-UI-GRAMMAR ticket docs intentionally keep v1 examples as historical evidence, while public provider docs now direct new work to v2.
+
+### What warrants a second pair of eyes
+- Review whether `data.v2.dsl` should be listed as experimental in public provider docs or whether it should replace `data.dsl` naming before broader publication.
+- Review whether the stale `--http-listen` comments/Makefile help should be cleaned up in a separate go-go-course task.
+
+### What should be done in the future
+- Add a durable automated browser smoke test rather than relying on ad-hoc Playwright CLI screenshots.
+- Finish P3.4 formal action tests once a JS/Playwright test harness decision is made.
+
+### Code review instructions
+- Review public docs in `pkg/xgoja/providers/widgetsite/doc/` for v2-first examples and legacy labeling.
+- Review `pkg/xgoja/providers/widgetsite/provider.go` and `go-go-course/cmd/go-go-course/xgoja.package.yaml` for `data.v2.dsl` exposure.
+- Inspect screenshot artifacts under `ttmp/.../artifacts/dsl-demo-screenshots/`.
+- Reproduce with `go run ./hotreload-host -listen 127.0.0.1:8787` and Playwright screenshot commands listed in design-doc 06.
+
+### Technical details
+- Screenshot files:
+  - `artifacts/dsl-demo-screenshots/table.png`
+  - `artifacts/dsl-demo-screenshots/selectable.png`
+  - `artifacts/dsl-demo-screenshots/master-detail.png`
+  - `artifacts/dsl-demo-screenshots/actions.png`

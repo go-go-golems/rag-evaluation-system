@@ -34,6 +34,13 @@ func Register(registry *providerapi.ProviderRegistry) error {
 			NewModuleFactory: loader(widgetdsl.DataModuleName),
 		},
 		providerapi.Module{
+			Name:             widgetdsl.DataV2ModuleName,
+			DefaultAs:        widgetdsl.DataV2ModuleName,
+			Description:      "Experimental hard-cutover typed/fluent data DSL v2 builders.",
+			TypeScript:       widgetdsl.TypeScriptModule(widgetdsl.DataV2ModuleName),
+			NewModuleFactory: loader(widgetdsl.DataV2ModuleName),
+		},
+		providerapi.Module{
 			Name:             widgetdsl.ContextWindowModuleName,
 			DefaultAs:        widgetdsl.ContextWindowModuleName,
 			Description:      "Context-window, transcript, annotation, and anchored-comment Widget IR helpers.",

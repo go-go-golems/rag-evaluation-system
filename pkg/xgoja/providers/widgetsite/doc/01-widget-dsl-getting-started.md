@@ -25,12 +25,13 @@ This tutorial explains how to use the `rag-widget-site` xgoja provider to write 
 
 ## Modules
 
-The provider exposes four clean-break domain modules:
+The provider exposes clean-break domain modules:
 
 | Module | Owns |
 | --- | --- |
 | `ui.dsl` | page wrapper, text/element/component helpers, generic layout, primitive, foundation, and UI recipes |
-| `data.dsl` | `DataTable`, `cell.*` helpers, and data recipes |
+| `data.dsl` | legacy/current `DataTable`, `cell.*` helpers, and data recipes |
+| `data.v2.dsl` | experimental hard-cutover typed/fluent data builders for new table/editor examples |
 | `context_window.dsl` | context-window diagrams, transcript, annotation, comment, and upload helpers |
 | `course.dsl` | course, slide, handout, course-studio helpers, and `contextStudioNavIcon` |
 
@@ -48,6 +49,9 @@ modules:
   - package: rag-widget-site
     name: data.dsl
     as: data.dsl
+  - package: rag-widget-site
+    name: data.v2.dsl
+    as: data.v2.dsl
   - package: rag-widget-site
     name: context_window.dsl
     as: context_window.dsl
@@ -75,6 +79,25 @@ const page = ui.page({
 `ui.page(...)` returns a page object with `schemaVersion`, `id`, `title`, and `root`. Strings and numbers used as children are normalized into text nodes.
 
 ## Data table example
+
+For new hard-cutover examples, prefer `data.v2.dsl`:
+
+```js
+const data = require("data.v2.dsl")
+
+const schema = data.schema("Query")
+  .field("id", data.f.key().label("ID"))
+  .field("name", data.f.primary().label("Name"))
+  .field("status", data.f.status().label("Status"))
+  .build()
+
+return data.collection("queries", rows)
+  .schema(schema)
+  .table()
+  .toIR()
+```
+
+The older direct `data.dsl` table form is still supported for existing pages:
 
 ```js
 const ui = require("ui.dsl")
