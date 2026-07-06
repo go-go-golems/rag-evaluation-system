@@ -18,6 +18,12 @@ RelatedFiles:
       Note: Step 21 hotreload-host Playwright server setup (commit 06aa1c9)
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/webapp/tests/dsl-examples.spec.ts
       Note: Step 21 durable browser/action smoke tests (commit 06aa1c9)
+    - Path: pkg/widgetdsl/typescript.go
+      Note: Step 22 precise data.v2.dsl TypeScript declarations (commit dcd5156)
+    - Path: pkg/widgetdsl/typescript_test.go
+      Note: Step 22 declaration shape and legacy-API absence tests (commit dcd5156)
+    - Path: pkg/xgoja/providers/widgetsite/provider_test.go
+      Note: Step 22 provider TypeScript descriptor coverage for data.v2.dsl (commit dcd5156)
     - Path: ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md
       Note: Step 5 records the DSL overhaul design guide
 ExternalSources: []
@@ -26,6 +32,7 @@ LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: Record the research journey so a senior researcher can resume without re-reading every source.
 WhenToUse: Read before resuming work on this ticket.
 ---
+
 
 
 
@@ -1292,3 +1299,67 @@ This closes the earlier gap where screenshots and `curl` checks proved the demos
 - Passing result: `7 passed (9.9s)`
 - Code commit: `06aa1c9ca4e49f986475007c2221767b9aaadc60`
 - Ticket task checked: `[28] P3.4 Add action tests for navigate, reorder, delete, confirm cancel, and refresh`
+
+## Step 22: Add precise TypeScript declarations for data.v2.dsl
+
+I implemented the first TypeScript hard-cutover task by giving `data.v2.dsl` an explicit typed/fluent declaration surface instead of inheriting only the loose Widget IR helper declarations. The generated declaration now names opaque handles and builder interfaces for fields, schemas, selections, actions, tables, editors, and collections.
+
+The important behavior change is that the v2 declaration surface teaches `data.collection(name, rows).schema(schema).select(...).edit(...).table(...).toIR()` and does not expose the legacy `dataTable`, `cell`, `record`, or option-bag `collection(rows, options)` grammar. This keeps the public type surface aligned with the hard-cutover direction.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 21)
+
+**Assistant interpretation:** Continue the remaining GOJA-DSL-PLAYBOOK implementation tasks after browser smoke validation, starting with P5 TypeScript declaration work.
+
+**Inferred user intent:** Make the new DSL discoverable and type-checkable so humans and agents are guided toward v2 fluent builders instead of legacy option bags.
+
+**Commit (code):** dcd5156 — "Add Widget DSL v2 TypeScript declarations"
+
+### What I did
+- Added `dataV2TypeScriptLines()` in `pkg/widgetdsl/typescript.go`.
+- Declared opaque-ish branded handle interfaces for `FieldHandle`, `SchemaHandle`, `SelectionHandle`, and `ActionHandle`.
+- Declared fluent interfaces for `FieldBuilder`, `SchemaBuilder`, `SelectionBuilder`, `ActionBuilder`, `TableBuilder`, `EditorBuilder`, `CollectionActionsBuilder`, and `CollectionBuilder`.
+- Declared `f`, `schema`, `collection`, `selection`, and `action` exports for `data.v2.dsl`.
+- Added `pkg/widgetdsl/typescript_test.go` with tests that assert the v2 builder declarations exist and legacy option-bag declarations are absent from `data.v2.dsl`.
+- Updated the widgetsite provider test so `data.v2.dsl` is included in TypeScript descriptor/export coverage.
+- Ran `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite -count=1`.
+- Checked off task 34.
+
+### Why
+- Without precise declarations, v2 remains mostly a runtime experiment. The ticket goal explicitly includes compile-time help from generated types, and P5.1 called for precise v2 TypeScript declarations.
+- The declarations also serve as API documentation for small models: the types constrain the sequence of builder handles and make the absence of legacy v1 API visible.
+
+### What worked
+- The declaration unit tests passed and guard against accidentally exposing the old `data.dsl` option-bag helpers through `data.v2.dsl`.
+- Provider registration still resolves `data.v2.dsl` and now tests its TypeScript descriptor in the widgetsite package.
+
+### What didn't work
+- N/A for the implementation step. I did not yet add external TypeScript positive/negative fixture compilation; that belongs to P5.2.
+
+### What I learned
+- The current `TypeScriptModule` generator is line-oriented `RawDTS`, which is simple enough for the v2 declaration but has no structural parity test yet. The next step should compile fixture TypeScript against the emitted module declarations.
+
+### What was tricky to build
+- The runtime uses hidden Goja refs, while TypeScript needs a way to represent handles that users cannot freely construct. I used a `unique symbol` brand in interfaces to make handles nominal-ish in the declaration surface.
+- The v2 module still inherits generic `text`, `element`, `component`, and `fragment` helpers from the shared module installer. The declaration keeps those generic helpers while adding the v2-specific builder surface; a future hard cutover may decide whether `data.v2.dsl` should be purely data-only.
+
+### What warrants a second pair of eyes
+- Review whether branded handles should be stricter or whether the current exported interfaces are sufficient for go-go-goja generated declarations.
+- Review whether `payload(name, value: JsonValue)` is too narrow, since the runtime currently accepts `value.Export()` for arbitrary Goja values.
+- Confirm whether `select(selection?: SelectionHandle | SelectionCallback | null)` should also type the callback as accepting and returning `SelectionBuilder`; runtime accepts the builder if the callback returns nothing after mutating it.
+
+### What should be done in the future
+- Complete P5.2: add runtime export parity plus TypeScript positive/negative fixtures.
+- Consider a generated declaration snapshot test once the xgoja declaration bundling path is selected.
+
+### Code review instructions
+- Start with `pkg/widgetdsl/typescript.go`, especially `dataV2TypeScriptLines()`.
+- Then review `pkg/widgetdsl/typescript_test.go` for the desired v2 API surface and legacy exclusions.
+- Validate with:
+  - `cd rag-evaluation-system && go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite -count=1`
+
+### Technical details
+- Successful command: `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite -count=1`
+- Code commit: `dcd5156e0633c80669e45103fdb5b24e51042b75`
+- Ticket task checked: `[34] P5.1 Generate precise v2 TypeScript declarations`

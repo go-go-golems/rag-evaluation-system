@@ -224,3 +224,14 @@ Step 21: Added durable Playwright browser smoke tests for Widget DSL v2 demo pag
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/webapp/playwright.config.ts — Playwright webServer config for hotreload-host
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/webapp/tests/dsl-examples.spec.ts — Browser smoke tests for all four Widget DSL v2 demo pages and action confirm flows
 
+
+## 2026-07-05
+
+Step 22: Added precise data.v2.dsl TypeScript declarations for typed/fluent builders and tests guarding the hard-cutover API surface (commit dcd5156).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/typescript.go — data.v2.dsl DTS declaration source
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/typescript_test.go — DTS tests for typed builders and absence of legacy option-bag grammar
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/xgoja/providers/widgetsite/provider_test.go — Provider test now asserts data.v2.dsl TypeScript descriptor/export
+
