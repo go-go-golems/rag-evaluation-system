@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { contextCourseFixture } from "../../../context";
 import { CourseLessonPanel } from "./CourseLessonPanel";
+
 const meta = {
 	title: "Component Library/Organisms/CourseLessonPanel",
 	component: CourseLessonPanel,

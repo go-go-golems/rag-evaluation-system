@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Button } from "../components/atoms";
 import { Caption, StatusText } from "../components/foundation";
-import type { ActionSpec, CellSpec, JsonObject, RenderableValue, WidgetNode } from "./ir";
+import type { ActionSpec, CellSpec, JsonObject, RenderableValue, RowKeySpec, WidgetNode } from "./ir";
 import { isWidgetNode } from "./ir";
 
 export type RenderWidgetNode = (node: WidgetNode) => ReactNode;
@@ -11,6 +11,7 @@ export function renderCell(
 	row: JsonObject,
 	renderWidgetNode: RenderWidgetNode,
 	dispatchAction?: (action: ActionSpec, context: JsonObject) => void,
+	rowKeySpec?: RowKeySpec,
 ): ReactNode {
 	switch (spec.kind) {
 		case "field":
@@ -72,7 +73,7 @@ export function renderCell(
 						event.stopPropagation();
 						dispatchAction?.(spec.action, {
 							row,
-							rowKey: rowKey(row, "file"),
+							rowKey: rowKey(row, rowKeySpec ?? "id"),
 							componentType: "DataTableCell",
 						});
 					}}

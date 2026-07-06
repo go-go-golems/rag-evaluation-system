@@ -1,6 +1,6 @@
-import { CourseStepNav } from "./CourseStepNav";
-import { defineWidget } from "../../../widgets/registry";
 import type { CourseStepNavWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { CourseStepNav } from "./CourseStepNav";
 
 export const courseStepNavWidget = defineWidget<CourseStepNavWidgetProps>({
 	type: "CourseStepNav",

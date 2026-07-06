@@ -34,6 +34,13 @@ func Register(registry *providerapi.ProviderRegistry) error {
 			NewModuleFactory: loader(widgetdsl.DataModuleName),
 		},
 		providerapi.Module{
+			Name:             widgetdsl.DataV2ModuleName,
+			DefaultAs:        widgetdsl.DataV2ModuleName,
+			Description:      "Experimental hard-cutover typed/fluent data DSL v2 builders.",
+			TypeScript:       widgetdsl.TypeScriptModule(widgetdsl.DataV2ModuleName),
+			NewModuleFactory: loader(widgetdsl.DataV2ModuleName),
+		},
+		providerapi.Module{
 			Name:             widgetdsl.ContextWindowModuleName,
 			DefaultAs:        widgetdsl.ContextWindowModuleName,
 			Description:      "Context-window, transcript, annotation, and anchored-comment Widget IR helpers.",
@@ -46,6 +53,13 @@ func Register(registry *providerapi.ProviderRegistry) error {
 			Description:      "Course, lesson, slide, handout, and course-studio Widget IR helpers.",
 			TypeScript:       widgetdsl.TypeScriptModule(widgetdsl.CourseModuleName),
 			NewModuleFactory: loader(widgetdsl.CourseModuleName),
+		},
+		providerapi.Module{
+			Name:             widgetdsl.CmsModuleName,
+			DefaultAs:        widgetdsl.CmsModuleName,
+			Description:      "Media, asset, and article-management Widget IR helpers.",
+			TypeScript:       widgetdsl.TypeScriptModule(widgetdsl.CmsModuleName),
+			NewModuleFactory: loader(widgetdsl.CmsModuleName),
 		},
 		providerapi.HelpSource{
 			Name:        "widget-dsl",

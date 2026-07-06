@@ -1,6 +1,6 @@
-import { SidebarShell } from "./SidebarShell";
-import { defineWidget } from "../../../widgets/registry";
 import type { SidebarShellWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { SidebarShell } from "./SidebarShell";
 
 export const sidebarShellWidget = defineWidget<SidebarShellWidgetProps>({
 	type: "SidebarShell",

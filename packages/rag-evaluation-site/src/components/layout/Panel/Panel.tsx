@@ -6,6 +6,7 @@ export interface PanelProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"
 	actions?: ReactNode;
 	density?: "normal" | "condensed";
 	fill?: boolean;
+	titleTone?: "default" | "accent";
 	children?: ReactNode;
 }
 
@@ -14,6 +15,7 @@ export function Panel({
 	actions,
 	density = "normal",
 	fill = false,
+	titleTone = "default",
 	className,
 	children,
 	...rest
@@ -25,7 +27,11 @@ export function Panel({
 			{...rest}
 		>
 			{(title || actions) && (
-				<div className={styles.header}>
+				<div
+					className={[styles.header, titleTone === "accent" ? styles.headerAccent : ""]
+						.filter(Boolean)
+						.join(" ")}
+				>
 					<span>{title}</span>
 					{actions}
 				</div>

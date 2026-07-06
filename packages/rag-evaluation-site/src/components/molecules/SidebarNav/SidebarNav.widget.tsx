@@ -1,6 +1,6 @@
-import { SidebarNav } from "./SidebarNav";
-import { defineWidget } from "../../../widgets/registry";
 import type { SidebarNavWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { SidebarNav } from "./SidebarNav";
 
 export const sidebarNavWidget = defineWidget<SidebarNavWidgetProps>({
 	type: "SidebarNav",

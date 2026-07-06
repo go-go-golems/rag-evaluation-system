@@ -1,6 +1,6 @@
-import { AnnotationBadge } from "./AnnotationBadge";
-import { defineWidget } from "../../../widgets/registry";
 import type { AnnotationBadgeWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { AnnotationBadge } from "./AnnotationBadge";
 
 export const annotationBadgeWidget = defineWidget<AnnotationBadgeWidgetProps>({
 	type: "AnnotationBadge",

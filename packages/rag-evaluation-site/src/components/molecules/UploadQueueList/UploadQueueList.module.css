@@ -1,0 +1,52 @@
+.root {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+}
+
+.row {
+	display: grid;
+	grid-template-columns: minmax(120px, 1fr) minmax(80px, 160px) 76px auto;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 8px;
+}
+
+.row + .row {
+	border-top: 1px solid var(--mac-border-subtle);
+}
+
+.fileCell {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	min-width: 0;
+}
+
+.filename {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	word-break: normal;
+}
+
+.meter {
+	min-width: 0;
+}
+
+.status {
+	white-space: nowrap;
+}
+
+.actions {
+	display: inline-flex;
+	gap: 2px;
+	justify-content: flex-end;
+}
+
+.error {
+	grid-column: 1 / -1;
+	padding-left: 2px;
+}

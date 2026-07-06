@@ -1,6 +1,6 @@
-import { AppShell } from "./AppShell";
-import { defineWidget } from "../../../widgets/registry";
 import type { AppShellWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { AppShell } from "./AppShell";
 
 export const appShellWidget = defineWidget<AppShellWidgetProps>({
 	type: "AppShell",

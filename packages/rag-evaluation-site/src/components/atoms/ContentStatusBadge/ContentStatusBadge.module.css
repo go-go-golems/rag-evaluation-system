@@ -1,0 +1,32 @@
+.root {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+	padding: 1px 5px;
+	font: var(--rag-font-role-label);
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+}
+
+.glyph {
+	font: var(--rag-font-role-metadata);
+}
+
+.draft {
+	color: var(--mac-text-dim);
+}
+
+.published {
+	color: var(--mac-green);
+}
+
+.scheduled {
+	color: var(--mac-accent);
+}
+
+.archived {
+	color: var(--mac-text-dim);
+	text-decoration: line-through;
+}

@@ -1,0 +1,35 @@
+.root {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+	color: var(--mac-text);
+	font: var(--rag-font-role-metadata);
+	padding: 1px 5px;
+	max-width: 100%;
+}
+
+.label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.remove {
+	line-height: 1;
+}
+
+.selected {
+	background: var(--mac-bg-dark);
+	color: var(--mac-text-inv);
+}
+
+.selected .remove {
+	color: var(--mac-text-inv);
+}
+
+.disabled {
+	color: var(--mac-text-dim);
+	border-color: var(--mac-border-subtle);
+}

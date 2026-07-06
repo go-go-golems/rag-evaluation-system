@@ -1,23 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import {
-	anchoredCommentFixtures,
-	contextPaletteOptions,
-	transcriptFixture,
-	transcriptStyleSetForPalette,
-	type ContextPaletteName,
-	type ContextStyleSet,
-} from "../context";
-import { WidgetRenderer, type WidgetRendererProps } from "./WidgetRenderer";
+import { anchoredCommentFixtures, transcriptFixture } from "../context";
 import { defaultWidgetRegistry } from "./defaultRegistry";
 import { component, text, type WidgetNode } from "./ir";
+import { WidgetRenderer, type WidgetRendererProps } from "./WidgetRenderer";
 
-type StoryArgs = WidgetRendererProps & { palette: ContextPaletteName };
+type StoryArgs = WidgetRendererProps;
 
 const meta = {
 	title: "Widget IR/Renderer/Transcript and Notes",
-	args: { registry: defaultWidgetRegistry, palette: "Dusty Magenta / Blue" },
+	args: { registry: defaultWidgetRegistry },
 	argTypes: {
-		palette: { control: "select", options: contextPaletteOptions },
 		node: { control: false },
 		registry: { control: false },
 		onAction: { control: false },
@@ -34,7 +26,7 @@ function renderNode(node: WidgetNode, registry = defaultWidgetRegistry) {
 	return <WidgetRenderer node={node} registry={registry} />;
 }
 
-function transcriptWorkspaceNode(styleSet: ContextStyleSet, showNotes = true): WidgetNode {
+function transcriptWorkspaceNode(showNotes = true): WidgetNode {
 	return component("TranscriptWorkspacePanel", {
 		title: transcriptFixture.title,
 		subtitle: transcriptFixture.subtitle,
@@ -42,12 +34,11 @@ function transcriptWorkspaceNode(styleSet: ContextStyleSet, showNotes = true): W
 		annotations: showNotes ? transcriptFixture.annotations : [],
 		selectedAnnotationId: showNotes ? transcriptFixture.selectedAnnotationId : undefined,
 		showNotes,
-		styleSet,
 		onAnnotationSelectAction: { kind: "event", event: "widget-ir:annotation-select" },
 	});
 }
 
-function messageCardStatesNode(styleSet: ContextStyleSet): WidgetNode {
+function messageCardStatesNode(): WidgetNode {
 	return component(
 		"Stack",
 		{ gap: "sm" },
@@ -56,7 +47,6 @@ function messageCardStatesNode(styleSet: ContextStyleSet): WidgetNode {
 				message,
 				annotations: transcriptFixture.annotations,
 				selectedAnnotationId: transcriptFixture.selectedAnnotationId,
-				styleSet,
 				onAnnotationSelectAction: { kind: "event", event: "widget-ir:annotation-select" },
 			}),
 		),
@@ -64,19 +54,16 @@ function messageCardStatesNode(styleSet: ContextStyleSet): WidgetNode {
 }
 
 export const TranscriptWithoutNotes: Story = {
-	render: ({ palette, registry }) =>
-		renderNode(transcriptWorkspaceNode(transcriptStyleSetForPalette(palette), false), registry),
+	render: ({ registry }) => renderNode(transcriptWorkspaceNode(false), registry),
 };
 
 export const AnnotatedTranscriptWithNotesRail: Story = {
-	render: ({ palette, registry }) =>
-		renderNode(transcriptWorkspaceNode(transcriptStyleSetForPalette(palette), true), registry),
+	render: ({ registry }) => renderNode(transcriptWorkspaceNode(true), registry),
 };
 
 export const TranscriptReaderPlusCustomRail: Story = {
-	render: ({ palette, registry }) => {
-		const styleSet = transcriptStyleSetForPalette(palette);
-		return renderNode(
+	render: ({ registry }) =>
+		renderNode(
 			component("SplitPane", {
 				ratio: "rightNarrow",
 				divider: true,
@@ -86,28 +73,24 @@ export const TranscriptReaderPlusCustomRail: Story = {
 					messages: transcriptFixture.messages,
 					annotations: transcriptFixture.annotations,
 					selectedAnnotationId: transcriptFixture.selectedAnnotationId,
-					styleSet,
 					onAnnotationSelectAction: { kind: "event", event: "widget-ir:annotation-select" },
 				}),
 				right: component("AnnotationRailPanel", {
 					annotations: transcriptFixture.annotations,
 					selectedAnnotationId: transcriptFixture.selectedAnnotationId,
-					styleSet,
 					onAnnotationSelectAction: { kind: "event", event: "widget-ir:annotation-select" },
 				}),
 			}),
 			registry,
-		);
-	},
+		),
 };
 
 export const MessageCardStates: Story = {
-	render: ({ palette, registry }) =>
-		renderNode(messageCardStatesNode(transcriptStyleSetForPalette(palette)), registry),
+	render: ({ registry }) => renderNode(messageCardStatesNode(), registry),
 };
 
 export const AnchoredCommentsOverTranscript: Story = {
-	render: ({ palette, registry }) =>
+	render: ({ registry }) =>
 		renderNode(
 			component("SplitPane", {
 				ratio: "rightNarrow",
@@ -117,7 +100,6 @@ export const AnchoredCommentsOverTranscript: Story = {
 					messages: transcriptFixture.messages.slice(0, 5),
 					annotations: transcriptFixture.annotations,
 					selectedAnnotationId: transcriptFixture.selectedAnnotationId,
-					styleSet: transcriptStyleSetForPalette(palette),
 				}),
 				right: component("AnchoredCommentRail", {
 					comments: anchoredCommentFixtures,
@@ -131,7 +113,7 @@ export const AnchoredCommentsOverTranscript: Story = {
 
 export const TranscriptActionLogger: Story = {
 	args: { node: component("Caption", {}, [text("action logger")]) },
-	render: ({ palette }) => (
+	render: () => (
 		<WidgetRenderer
 			node={component("Stack", { gap: "md" }, [
 				panel("Action logger harness", [
@@ -141,7 +123,7 @@ export const TranscriptActionLogger: Story = {
 						),
 					]),
 				]),
-				transcriptWorkspaceNode(transcriptStyleSetForPalette(palette), true),
+				transcriptWorkspaceNode(true),
 			])}
 			registry={defaultWidgetRegistry}
 			onAction={(action, context) => {

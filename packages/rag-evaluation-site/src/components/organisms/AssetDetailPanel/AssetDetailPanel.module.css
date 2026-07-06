@@ -1,0 +1,46 @@
+.root {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+	min-width: 0;
+}
+
+.body {
+	padding: 0;
+}
+
+.preview {
+	max-height: 360px;
+	width: 100%;
+}
+
+.usageList {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.usageLink {
+	appearance: none;
+	border: none;
+	background: transparent;
+	padding: 0;
+	color: var(--mac-accent);
+	font: var(--rag-font-role-compact);
+	cursor: pointer;
+	text-align: start;
+}
+
+.usageLink:hover {
+	text-decoration: underline;
+}
+
+.usageLink:focus-visible {
+	outline: 1px solid var(--mac-accent);
+	outline-offset: 1px;
+}

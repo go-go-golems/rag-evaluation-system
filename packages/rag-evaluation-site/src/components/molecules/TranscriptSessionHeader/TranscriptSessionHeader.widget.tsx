@@ -1,6 +1,6 @@
-import { TranscriptSessionHeader } from "./TranscriptSessionHeader";
-import { defineWidget } from "../../../widgets/registry";
 import type { TranscriptSessionHeaderWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { TranscriptSessionHeader } from "./TranscriptSessionHeader";
 
 export const transcriptSessionHeaderWidget = defineWidget<TranscriptSessionHeaderWidgetProps>({
 	type: "TranscriptSessionHeader",

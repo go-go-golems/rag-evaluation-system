@@ -1,6 +1,6 @@
-import { AnnotationRailPanel } from "./AnnotationRailPanel";
-import { defineWidget } from "../../../widgets/registry";
 import type { AnnotationRailPanelWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { AnnotationRailPanel } from "./AnnotationRailPanel";
 
 export const annotationRailPanelWidget = defineWidget<AnnotationRailPanelWidgetProps>({
 	type: "AnnotationRailPanel",

@@ -1,6 +1,6 @@
-import { PersonSummary } from "./PersonSummary";
-import { defineWidget } from "../../../widgets/registry";
 import type { PersonSummaryWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { PersonSummary } from "./PersonSummary";
 
 export const personSummaryWidget = defineWidget<PersonSummaryWidgetProps>({
 	type: "PersonSummary",

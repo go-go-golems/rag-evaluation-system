@@ -1,0 +1,14 @@
+.root {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--rag-tile-min, 160px), 1fr));
+	align-items: start;
+	min-width: 0;
+}
+
+.gapSm {
+	gap: 4px;
+}
+
+.gapMd {
+	gap: 8px;
+}

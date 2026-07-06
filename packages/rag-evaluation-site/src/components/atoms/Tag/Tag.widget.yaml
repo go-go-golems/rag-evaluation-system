@@ -1,0 +1,15 @@
+schemaVersion: widget-manifest/v1
+type: Tag
+module: cms.dsl
+helper: tag
+props: TagWidgetProps
+adapter:
+  path: ./Tag.widget.tsx
+  export: tagWidget
+reactComponent: Tag
+children: false
+slots: []
+actions:
+  - onRemoveAction
+status: experimental
+docs: Bordered taxonomy chip; onRemoveAction dispatches with {tag, value} context.

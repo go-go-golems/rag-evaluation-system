@@ -1,6 +1,6 @@
-import { SlideShell } from "./SlideShell";
-import { defineWidget } from "../../../widgets/registry";
 import type { SlideShellWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { SlideShell } from "./SlideShell";
 
 export const slideShellWidget = defineWidget<SlideShellWidgetProps>({
 	type: "SlideShell",

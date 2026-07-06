@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
+	type ContextPaletteName,
 	contextCobaltSandStyleSet,
 	contextPaletteOptions,
 	contextStyleSetForPalette,
 	contextWindowSnapshots,
-	type ContextPaletteName,
 } from "../../../context";
 import { Panel, Stack } from "../../layout";
 import { ContextTreemap, type ContextTreemapProps } from "./ContextTreemap";

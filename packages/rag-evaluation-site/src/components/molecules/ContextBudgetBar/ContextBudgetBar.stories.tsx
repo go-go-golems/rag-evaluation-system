@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
+	type ContextPaletteName,
 	contextCobaltSandStyleSet,
 	contextPaletteOptions,
 	contextSignalOrangeStyleSet,
 	contextStyleSetForPalette,
 	contextWindowSnapshots,
-	type ContextPaletteName,
 } from "../../../context";
 import { Panel, Stack } from "../../layout";
 import { ContextBudgetBar, type ContextBudgetBarProps } from "./ContextBudgetBar";

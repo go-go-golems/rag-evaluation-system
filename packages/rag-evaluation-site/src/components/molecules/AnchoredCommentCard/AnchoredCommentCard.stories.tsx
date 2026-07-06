@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { anchoredCommentFixtures } from "../../../context";
 import { Stack } from "../../layout";
 import { AnchoredCommentCard } from "./AnchoredCommentCard";
+
 const meta = {
 	title: "Component Library/Molecules/AnchoredCommentCard",
 	component: AnchoredCommentCard,

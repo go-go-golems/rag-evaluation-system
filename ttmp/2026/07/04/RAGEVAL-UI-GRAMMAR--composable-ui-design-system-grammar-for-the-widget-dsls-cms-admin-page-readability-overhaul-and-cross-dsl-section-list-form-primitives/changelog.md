@@ -1,0 +1,26 @@
+# Changelog
+
+## 2026-07-04
+
+- Initial workspace created
+
+
+## 2026-07-04
+
+Ticket created from user brainstorm request; audited /pages/admin-course-cms section-by-section (5611px, 21 panels, agenda = 2158px/8 nested panels/40 form rows) with screenshots; wrote design-doc 01: diagnosis (panel-only sectioning, no collection primitive, no disclosure/wayfinding) + brainstormed alternatives (flat sections, sub-page/rail navigation, collection editing patterns, new primitives wishlist, composable grammar-of-graphics-style UI grammar across all five DSLs). No implementation, per instruction.
+
+
+## 2026-07-04
+
+Step 2: cross-page audit (sessions/course/handouts read well = recipe/shell/document pages; admin pages degrade with collections) + design-doc 02 API sketch: no grammar.dsl — data.dsl grows schema/record/collection (data grammar), ui.dsl grows section/subpages (structure grammar), domain modules become schemas+marks with generic primitives migrating to ui.dsl; three worked page rewrites; hybrid two-phase compilation. Tasks 2, 5 checked.
+
+
+## 2026-07-04
+
+Doc 02 §4.4 added: context-window rendering pipeline analyzed (snapshot → paletteStyleSet scale → budget-bar/stack/strip/treemap marks) — context_window.dsl is the existence proof for schemas+marks; consequences: promote styleSet to data.scale.*, add f.measure role, multi-view arrangements, declarative group-by shaping.
+
+
+## 2026-07-04
+
+Step 3: grammar implemented — SectionBlock levels/rule/actions + FieldGrid (51aca3c), pkg/widgetdsl/grammar.go with schema/f/record/collection/section + module promotion + tests + TS decls + API-reference chapter (4a70c56), confirm-interpolation encoding fix (9c91539), admin Course CMS rebuilt on the grammar in go-go-course (319c545): 5611px/21 panels/depth 2 → 3496px/5 panels/depth 0; agenda = master-detail collection with URL selection, per-record saves, id-based reorder, confirm deletes. Tasks 4 and 6 checked; five follow-up tasks added.
+

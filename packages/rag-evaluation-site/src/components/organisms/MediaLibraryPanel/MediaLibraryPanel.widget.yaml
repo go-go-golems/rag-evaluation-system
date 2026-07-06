@@ -1,0 +1,22 @@
+schemaVersion: widget-manifest/v1
+type: MediaLibraryPanel
+module: cms.dsl
+helper: mediaLibraryPanel
+props: MediaLibraryPanelWidgetProps
+adapter:
+  path: ./MediaLibraryPanel.widget.tsx
+  export: mediaLibraryPanelWidget
+reactComponent: MediaLibraryPanel
+children: false
+slots:
+  - title
+  - emptyMessage
+actions:
+  - onAssetSelectAction
+  - onAssetOpenAction
+  - onQuerySubmitAction
+  - onKindFilterChangeAction
+  - onPageChangeAction
+  - onFilesSelectedAction
+status: experimental
+docs: Asset browser (tabs, search, pager, drop zone, tile grid). onFilesSelectedAction receives serialized files ({files, fileNames, fileCount}) exactly like ContextUploadDropArea; selection/paging/filtering pair with action.navigate query params.

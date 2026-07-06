@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { CheckList } from "./CheckList";
+
 const meta = {
 	title: "Component Library/Molecules/CheckList",
 	component: CheckList,

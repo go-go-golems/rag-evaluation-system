@@ -1,10 +1,16 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { ErrorCallout } from "../components/atoms";
 import { Caption } from "../components/foundation";
 import { AppShell, Panel } from "../components/layout";
 import { AppNav } from "../components/molecules";
 import { CourseStudioShell } from "../components/organisms";
-import { WidgetRenderer } from "../widgets/WidgetRenderer";
+import { useWidgetPage, type WidgetPageResponse } from "../hooks/useWidgetPage";
+import {
+	confirmWidgetAction,
+	dispatchWidgetAction,
+	resolveActionPayload,
+	type WidgetActionContext,
+} from "../widgets/actions";
 import { defaultWidgetRegistry } from "../widgets/defaultRegistry";
 import type {
 	ActionSpec,
@@ -14,8 +20,7 @@ import type {
 	RenderableValue,
 	WidgetNode,
 } from "../widgets/ir";
-import { dispatchWidgetAction, type WidgetActionContext } from "../widgets/actions";
-import { useWidgetPage, type WidgetPageResponse } from "../hooks/useWidgetPage";
+import { WidgetRenderer } from "../widgets/WidgetRenderer";
 import "./app.css";
 
 export interface RagEvaluationSiteAppProps {
@@ -59,6 +64,9 @@ export function RagEvaluationSiteApp({
 	);
 
 	async function handleAction(action: ActionSpec, context: WidgetActionContext): Promise<void> {
+		if (!confirmWidgetAction(action, context)) {
+			return;
+		}
 		if (action.kind !== "server") {
 			dispatchWidgetAction(action, context);
 			return;
@@ -66,7 +74,7 @@ export function RagEvaluationSiteApp({
 		const response = await fetch(`${cleanApiBase}/actions/${encodeURIComponent(action.name)}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ payload: action.payload ?? {}, context }),
+			body: JSON.stringify({ payload: resolveActionPayload(action.payload, context), context }),
 		});
 		if (!response.ok) {
 			throw new Error(`Widget action failed: ${response.status} ${response.statusText}`);
@@ -201,7 +209,11 @@ function renderPage(
 						onItemSelect={(itemId) => {
 							const item = navItems.find((candidate) => candidate.id === itemId);
 							if (item?.action) {
-								onAction(item.action, { value: itemId, componentType: "AppNav" });
+								dispatchWidgetAction(
+									item.action,
+									{ value: itemId, componentType: "AppNav" },
+									onAction,
+								);
 								return;
 							}
 							navigateToPage(itemId);
@@ -238,11 +250,15 @@ function renderCourseStudioShellPage(
 			activeItemId={props.activeItemId}
 			onNavigate={(itemId) => {
 				if (props.onNavigateAction)
-					onAction(props.onNavigateAction, {
-						itemId,
-						value: itemId,
-						componentType: "CourseStudioShell",
-					});
+					dispatchWidgetAction(
+						props.onNavigateAction,
+						{
+							itemId,
+							value: itemId,
+							componentType: "CourseStudioShell",
+						},
+						onAction,
+					);
 			}}
 			title={renderRenderableValue(props.title, onAction)}
 			subtitle={renderRenderableValue(props.subtitle, onAction)}

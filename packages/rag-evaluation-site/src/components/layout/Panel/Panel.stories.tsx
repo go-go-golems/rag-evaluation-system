@@ -30,3 +30,11 @@ export const WithActions: Story = {
 		</Panel>
 	),
 };
+
+export const AccentTitle: Story = {
+	args: {
+		title: "Retrieval Results",
+		titleTone: "accent",
+		children: "Panel body content with an accent-colored heading.",
+	},
+};

@@ -1,13 +1,3 @@
-import type {
-	ContextCourse,
-	AnchoredComment,
-	ContextHandoutBundle,
-	ContextSlide,
-	ContextStyleSet,
-	ContextWindowPart,
-	ContextWindowSnapshot,
-	TranscriptFixture,
-} from "./types";
 import {
 	cobaltSand,
 	createContextStyleSetFromPalette,
@@ -17,6 +7,16 @@ import {
 	slateCoral,
 	transcriptStyleSet,
 } from "./styles";
+import type {
+	AnchoredComment,
+	ContextCourse,
+	ContextHandoutBundle,
+	ContextSlide,
+	ContextStyleSet,
+	ContextWindowPart,
+	ContextWindowSnapshot,
+	TranscriptFixture,
+} from "./types";
 
 export const CONTEXT_WINDOW_LIMIT = 200_000;
 

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { KeyValueStrip } from "./KeyValueStrip";
+
 const meta = {
 	title: "Component Library/Molecules/KeyValueStrip",
 	component: KeyValueStrip,

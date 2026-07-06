@@ -15,10 +15,10 @@ importers:
   packages/rag-evaluation-site:
     dependencies:
       react:
-        specifier: ^18 || ^19
+        specifier: ^19
         version: 19.2.7
       react-dom:
-        specifier: ^18 || ^19
+        specifier: ^19
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@storybook/react-vite':

@@ -189,7 +189,25 @@ export interface ArticleImageBlock {
 	caption?: string;
 }
 
-export type ArticleBlock = ArticleMarkdownBlock | ArticleContextWindowBlock | ArticleImageBlock;
+export interface ArticleGalleryImage {
+	src: string;
+	alt: string;
+	caption?: string;
+}
+
+export interface ArticleGalleryBlock {
+	kind: "gallery";
+	id: string;
+	images: ArticleGalleryImage[];
+	columns?: 2 | 3 | 4;
+	caption?: string;
+}
+
+export type ArticleBlock =
+	| ArticleMarkdownBlock
+	| ArticleContextWindowBlock
+	| ArticleImageBlock
+	| ArticleGalleryBlock;
 
 export interface ContextHandoutDocument {
 	id: string;

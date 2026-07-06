@@ -1,6 +1,6 @@
-import { ContextTreemap } from "./ContextTreemap";
-import { defineWidget } from "../../../widgets/registry";
 import type { ContextTreemapWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { ContextTreemap } from "./ContextTreemap";
 
 export const contextTreemapWidget = defineWidget<ContextTreemapWidgetProps>({
 	type: "ContextTreemap",

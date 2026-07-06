@@ -1,0 +1,30 @@
+.root {
+	min-width: 0;
+}
+
+.slugInput {
+	font-family: var(--font-mono);
+}
+
+.coverControl {
+	display: inline-flex;
+	align-items: flex-end;
+	gap: 8px;
+}
+
+.coverThumb {
+	width: 72px;
+}
+
+.editorPane {
+	margin-top: 8px;
+}
+
+.previewScroll {
+	max-height: 420px;
+	border: 1px solid var(--mac-border-subtle);
+}
+
+.preview {
+	padding: 8px 12px;
+}

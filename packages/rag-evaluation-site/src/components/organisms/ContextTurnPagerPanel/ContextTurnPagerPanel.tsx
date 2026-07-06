@@ -1,4 +1,4 @@
-import { useMemo, useState, type HTMLAttributes } from "react";
+import { type HTMLAttributes, useMemo, useState } from "react";
 import type {
 	ContextJsonValue,
 	ContextStyleSet,
@@ -8,10 +8,10 @@ import type {
 import { Button } from "../../atoms";
 import { Inline, Panel, Stack } from "../../layout";
 import {
-	ContextLegend,
-	ContextStripDiagram,
 	ContextGroupedStripDiagram,
 	type ContextGroupedStripGroupBy,
+	ContextLegend,
+	ContextStripDiagram,
 } from "../../molecules";
 import styles from "./ContextTurnPagerPanel.module.css";
 

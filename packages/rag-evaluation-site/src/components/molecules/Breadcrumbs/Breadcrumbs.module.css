@@ -1,0 +1,47 @@
+.root {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 4px;
+	font: var(--rag-font-role-metadata);
+	color: var(--mac-text-dim);
+	min-width: 0;
+}
+
+.item,
+.link,
+.current {
+	font: var(--rag-font-role-metadata);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 24ch;
+}
+
+.link {
+	appearance: none;
+	border: none;
+	background: transparent;
+	color: var(--mac-text-dim);
+	cursor: pointer;
+	padding: 0;
+}
+
+.link:hover {
+	color: var(--mac-accent);
+	text-decoration: underline;
+}
+
+.link:focus-visible {
+	outline: 1px solid var(--mac-accent);
+	outline-offset: 1px;
+}
+
+.current {
+	color: var(--mac-text);
+	font-weight: 700;
+}
+
+.separator {
+	flex: none;
+}

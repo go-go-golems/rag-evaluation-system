@@ -1,10 +1,10 @@
-import { useState, type HTMLAttributes, type ReactNode } from "react";
+import { type HTMLAttributes, type ReactNode, useState } from "react";
 import {
-	contextVisualStyleToCssVars,
-	resolveContextVisualStyle,
 	type ContextStyleSet,
 	type ContextWindowPart,
 	type ContextWindowSnapshot,
+	contextVisualStyleToCssVars,
+	resolveContextVisualStyle,
 } from "../../../context";
 import { Text } from "../../foundation";
 import { handleContextPartKeyDown } from "../contextKeyboardNavigation";

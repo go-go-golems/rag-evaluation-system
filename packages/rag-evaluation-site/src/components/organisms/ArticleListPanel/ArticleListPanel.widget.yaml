@@ -1,0 +1,22 @@
+schemaVersion: widget-manifest/v1
+type: ArticleListPanel
+module: cms.dsl
+helper: articleListPanel
+props: ArticleListPanelWidgetProps
+adapter:
+  path: ./ArticleListPanel.widget.tsx
+  export: articleListPanelWidget
+reactComponent: ArticleListPanel
+children: false
+slots:
+  - title
+  - emptyMessage
+actions:
+  - onArticleSelectAction
+  - onCreateAction
+  - onRowActionAction
+  - onStatusFilterChangeAction
+  - onQuerySubmitAction
+  - onPageChangeAction
+status: experimental
+docs: Article management table (status badges, tags, boxed row actions). onRowActionAction dispatches {articleId, rowAction} where rowAction is edit | publish | archive | delete; archive/delete confirm in-panel before dispatch.

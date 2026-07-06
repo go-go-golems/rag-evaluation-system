@@ -1,0 +1,11 @@
+.detail {
+	margin-top: 6px;
+}
+
+/* Danger stays flat: ErrorCallout treatment (danger border + text on surface),
+   not an invented red-filled button variant. */
+.destructive {
+	color: var(--mac-accent-2);
+	border-color: var(--mac-accent-2);
+	font-weight: 700;
+}

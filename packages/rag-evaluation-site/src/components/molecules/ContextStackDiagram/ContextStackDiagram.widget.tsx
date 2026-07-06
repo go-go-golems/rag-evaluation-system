@@ -1,6 +1,6 @@
-import { ContextStackDiagram } from "./ContextStackDiagram";
-import { defineWidget } from "../../../widgets/registry";
 import type { ContextStackDiagramWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { ContextStackDiagram } from "./ContextStackDiagram";
 
 export const contextStackDiagramWidget = defineWidget<ContextStackDiagramWidgetProps>({
 	type: "ContextStackDiagram",

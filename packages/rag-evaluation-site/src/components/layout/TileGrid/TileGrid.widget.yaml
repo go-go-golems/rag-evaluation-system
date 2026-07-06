@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: TileGrid
+module: cms.dsl
+helper: tileGrid
+props: TileGridWidgetProps
+adapter:
+  path: ./TileGrid.widget.tsx
+  export: tileGridWidget
+reactComponent: TileGrid
+children: true
+slots: []
+actions: []
+status: experimental
+docs: Auto-fill tile layout (minmax(minTileWidth, 1fr)); generic container for asset grids.

@@ -46,6 +46,7 @@
 	--rag-font-role-compact: 400 11px / 1.4 var(--font-body);
 	--rag-font-role-metadata: 400 11px / 1.35 var(--font-mono);
 	--rag-font-role-label: 700 11px / 1.2 var(--font-mono);
+	--rag-font-role-panel-heading: 700 12px / 1.55 var(--font-mono);
 	--rag-font-role-metric: 700 12px / 1.25 var(--font-mono);
 	--rag-font-role-code: 400 11px / 1.45 var(--font-mono);
 	--rag-font-role-display: 700 22px / 1.15 var(--font-body);

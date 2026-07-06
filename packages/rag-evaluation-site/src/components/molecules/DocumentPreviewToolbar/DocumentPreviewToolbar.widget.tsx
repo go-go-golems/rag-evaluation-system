@@ -1,6 +1,6 @@
-import { DocumentPreviewToolbar } from "./DocumentPreviewToolbar";
-import { defineWidget } from "../../../widgets/registry";
 import type { DocumentPreviewToolbarWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { DocumentPreviewToolbar } from "./DocumentPreviewToolbar";
 
 export const documentPreviewToolbarWidget = defineWidget<DocumentPreviewToolbarWidgetProps>({
 	type: "DocumentPreviewToolbar",

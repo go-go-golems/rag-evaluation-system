@@ -1,6 +1,6 @@
-import { StatusText } from "./StatusText";
-import { defineWidget } from "../../../widgets/registry";
 import type { StatusTextWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { StatusText } from "./StatusText";
 
 export const statusTextWidget = defineWidget<StatusTextWidgetProps>({
 	type: "StatusText",

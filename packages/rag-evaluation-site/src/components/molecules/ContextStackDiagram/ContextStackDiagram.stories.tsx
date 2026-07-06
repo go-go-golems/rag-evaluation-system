@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
-	contextPaletteOptions,
-	contextSignalOrangeStyleSet,
-	contextStyleSetForPalette,
 	type ContextPaletteName,
 	type ContextStyleSet,
 	type ContextVisualStyle,
 	type ContextWindowSnapshot,
+	contextPaletteOptions,
+	contextSignalOrangeStyleSet,
+	contextStyleSetForPalette,
 } from "../../../context";
 import { Panel, Stack } from "../../layout";
 import { ContextLegend } from "../ContextLegend";

@@ -303,3 +303,74 @@ func assertString(t *testing.T, m map[string]any, key, want string) {
 		t.Fatalf("%s = %#v, want %q (map=%#v)", key, m[key], want, m)
 	}
 }
+
+func TestCmsModuleExportsHelpersRecipesAndBoundaries(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const ui = require("ui.dsl");
+		const contextWindow = require("context_window.dsl");
+		const cms = require("cms.dsl");
+		const library = cms.recipes.mediaLibrary({
+			assets: [{ id: "a", kind: "image", title: "A", filename: "a.png", mime: "image/png", size: 10, src: "/course-assets/a.png", tags: [], status: "published", createdAt: "", updatedAt: "" }],
+			selectedAssetIds: ["a"],
+			onFilesSelected: "admin-upload-course-material",
+			onAssetSelect: cms.action.navigate("?asset=$assetId"),
+		});
+		const list = cms.recipes.articleList({
+			articles: [{ id: "x", slug: "x", title: "X", status: "draft", tags: [], updatedAt: "" }],
+			onRowAction: { kind: "event", event: "row-action", confirm: "Really?" },
+		});
+		({
+			cmsMediaLibraryPanel: typeof cms.mediaLibraryPanel,
+			cmsTag: typeof cms.tag,
+			cmsMediaThumb: typeof cms.mediaThumb,
+			cmsMarkdownEditor: typeof cms.markdownEditor,
+			cmsActionServer: typeof cms.action.server,
+			cmsPage: typeof cms.page,
+			cmsCell: typeof cms.cell,
+			uiMediaLibraryPanel: typeof ui.mediaLibraryPanel,
+			contextGroupedStrip: typeof contextWindow.contextGroupedStripDiagram,
+			libraryType: library.type,
+			libraryUploadKind: library.props.onFilesSelectedAction.kind,
+			libraryUploadName: library.props.onFilesSelectedAction.name,
+			librarySelectKind: library.props.onAssetSelectAction.kind,
+			listType: list.type,
+			listRowActionConfirm: list.props.onRowActionAction.confirm,
+		});
+	`)
+	if err != nil {
+		t.Fatalf("require cms.dsl: %v", err)
+	}
+	got := value.Export().(map[string]any)
+	wantFunctions := []string{"cmsMediaLibraryPanel", "cmsTag", "cmsMediaThumb", "cmsMarkdownEditor", "cmsActionServer", "contextGroupedStrip"}
+	for _, name := range wantFunctions {
+		if got[name] != "function" {
+			t.Fatalf("%s = %#v, want function (all: %#v)", name, got[name], got)
+		}
+	}
+	wantUndefined := []string{"cmsPage", "cmsCell", "uiMediaLibraryPanel"}
+	for _, name := range wantUndefined {
+		if got[name] != "undefined" {
+			t.Fatalf("%s = %#v, want undefined (all: %#v)", name, got[name], got)
+		}
+	}
+	if got["libraryType"] != "MediaLibraryPanel" {
+		t.Fatalf("libraryType = %#v, want MediaLibraryPanel", got["libraryType"])
+	}
+	if got["libraryUploadKind"] != "server" || got["libraryUploadName"] != "admin-upload-course-material" {
+		t.Fatalf("upload action = %#v/%#v, want server/admin-upload-course-material", got["libraryUploadKind"], got["libraryUploadName"])
+	}
+	if got["librarySelectKind"] != "navigate" {
+		t.Fatalf("select action kind = %#v, want navigate", got["librarySelectKind"])
+	}
+	if got["listType"] != "ArticleListPanel" {
+		t.Fatalf("listType = %#v, want ArticleListPanel", got["listType"])
+	}
+	if got["listRowActionConfirm"] != "Really?" {
+		t.Fatalf("confirm passthrough = %#v, want Really?", got["listRowActionConfirm"])
+	}
+}

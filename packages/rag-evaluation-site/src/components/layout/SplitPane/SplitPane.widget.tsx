@@ -1,6 +1,6 @@
-import { SplitPane } from "./SplitPane";
-import { defineWidget } from "../../../widgets/registry";
 import type { SplitPaneWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { SplitPane } from "./SplitPane";
 
 export const splitPaneWidget = defineWidget<SplitPaneWidgetProps>({
 	type: "SplitPane",

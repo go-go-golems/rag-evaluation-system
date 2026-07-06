@@ -1,5 +1,5 @@
-import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { TabList } from "./TabList";
 
 const meta = { title: "Design System/Layout/TabList", component: TabList } satisfies Meta<

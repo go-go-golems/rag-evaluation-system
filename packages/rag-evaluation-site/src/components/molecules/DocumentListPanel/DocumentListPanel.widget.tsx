@@ -1,6 +1,6 @@
-import { DocumentListPanel } from "./DocumentListPanel";
-import { defineWidget } from "../../../widgets/registry";
 import type { DocumentListPanelWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { DocumentListPanel } from "./DocumentListPanel";
 
 export const documentListPanelWidget = defineWidget<DocumentListPanelWidgetProps>({
 	type: "DocumentListPanel",

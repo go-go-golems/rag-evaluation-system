@@ -1,6 +1,6 @@
-import { ContextDiagramPanel } from "./ContextDiagramPanel";
-import { defineWidget } from "../../../widgets/registry";
 import type { ContextDiagramPanelWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { ContextDiagramPanel } from "./ContextDiagramPanel";
 
 export const contextDiagramPanelWidget = defineWidget<ContextDiagramPanelWidgetProps>({
 	type: "ContextDiagramPanel",

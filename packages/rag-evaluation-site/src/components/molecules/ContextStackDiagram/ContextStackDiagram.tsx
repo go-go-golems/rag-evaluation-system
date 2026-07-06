@@ -1,9 +1,9 @@
 import type { HTMLAttributes } from "react";
 import {
-	contextVisualStyleToCssVars,
-	resolveContextVisualStyle,
 	type ContextStyleSet,
 	type ContextWindowSnapshot,
+	contextVisualStyleToCssVars,
+	resolveContextVisualStyle,
 } from "../../../context";
 import { handleContextPartKeyDown } from "../contextKeyboardNavigation";
 import styles from "./ContextStackDiagram.module.css";

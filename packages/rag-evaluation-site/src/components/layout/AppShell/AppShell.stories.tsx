@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { AppShell } from "./AppShell";
 import { Panel } from "../Panel";
+import { AppShell } from "./AppShell";
 
 const meta = { title: "Design System/Layout/AppShell", component: AppShell } satisfies Meta<
 	typeof AppShell

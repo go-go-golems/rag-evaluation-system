@@ -1,6 +1,6 @@
-import { TextInput } from "./TextInput";
-import { defineWidget } from "../../../widgets/registry";
 import type { TextInputWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { TextInput } from "./TextInput";
 
 export const textInputWidget = defineWidget<TextInputWidgetProps>({
 	type: "TextInput",

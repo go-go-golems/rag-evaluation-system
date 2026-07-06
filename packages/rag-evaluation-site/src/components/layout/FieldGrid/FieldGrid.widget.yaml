@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: FieldGrid
+module: ui.dsl
+helper: fieldGrid
+props: FieldGridWidgetProps
+adapter:
+  path: ./FieldGrid.widget.tsx
+  export: fieldGridWidget
+reactComponent: FieldGrid
+children: true
+slots: []
+actions: []
+status: experimental
+docs: N-column label/control grid for short form fields; collapses to one column on narrow viewports. Children are typically FormRow nodes.

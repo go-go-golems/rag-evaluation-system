@@ -1,7 +1,7 @@
-import { DataTable } from "./DataTable";
-import { defineWidget } from "../../../widgets/registry";
 import { renderCell, rowKey } from "../../../widgets/cellRenderers";
 import type { DataTableWidgetProps, JsonObject } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { DataTable } from "./DataTable";
 
 export const dataTableWidget = defineWidget<DataTableWidgetProps>({
 	type: "DataTable",
@@ -18,8 +18,12 @@ export const dataTableWidget = defineWidget<DataTableWidgetProps>({
 					align: column.align,
 					maxWidth: column.maxWidth,
 					cell: (row) =>
-						renderCell(column.cell, row, ctx.renderNode, (action, context) =>
-							ctx.dispatchAction(action, context),
+						renderCell(
+							column.cell,
+							row,
+							ctx.renderNode,
+							(action, context) => ctx.dispatchAction(action, context),
+							props.getRowKey,
 						),
 				}))}
 				getRowKey={(row) => rowKey(row, props.getRowKey)}

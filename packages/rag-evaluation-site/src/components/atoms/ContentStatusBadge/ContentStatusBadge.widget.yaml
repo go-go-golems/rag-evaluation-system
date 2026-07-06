@@ -1,0 +1,14 @@
+schemaVersion: widget-manifest/v1
+type: ContentStatusBadge
+module: cms.dsl
+helper: contentStatusBadge
+props: ContentStatusBadgeWidgetProps
+adapter:
+  path: ./ContentStatusBadge.widget.tsx
+  export: contentStatusBadgeWidget
+reactComponent: ContentStatusBadge
+children: false
+slots: []
+actions: []
+status: experimental
+docs: Content-lifecycle marker (draft | published | scheduled | archived) with closed enum and tokenized tones.

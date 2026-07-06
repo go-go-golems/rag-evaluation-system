@@ -1,6 +1,6 @@
-import { TranscriptReaderPanel } from "./TranscriptReaderPanel";
-import { defineWidget } from "../../../widgets/registry";
 import type { TranscriptReaderPanelWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { TranscriptReaderPanel } from "./TranscriptReaderPanel";
 
 export const transcriptReaderPanelWidget = defineWidget<TranscriptReaderPanelWidgetProps>({
 	type: "TranscriptReaderPanel",

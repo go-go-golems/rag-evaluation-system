@@ -22,3 +22,45 @@ export const Actions: Story = {
 		</Inline>
 	),
 };
+
+export const Sizes: Story = {
+	render: () => (
+		<Inline gap="md">
+			<IconButton label="Compact edit">✎</IconButton>
+			<IconButton size="normal" label="Normal edit">
+				✎
+			</IconButton>
+			<IconButton size="large" label="Large edit">
+				✎
+			</IconButton>
+			<IconButton size="large" label="Large archive">
+				▣
+			</IconButton>
+			<IconButton size="large" label="Large delete">
+				×
+			</IconButton>
+		</Inline>
+	),
+};
+
+export const Boxed: Story = {
+	render: () => (
+		<Inline gap="xs">
+			<IconButton size="large" variant="boxed" label="Edit">
+				✎
+			</IconButton>
+			<IconButton size="large" variant="boxed" label="Publish">
+				●
+			</IconButton>
+			<IconButton size="large" variant="boxed" label="Archive">
+				▣
+			</IconButton>
+			<IconButton size="large" variant="boxed" label="Delete">
+				×
+			</IconButton>
+			<IconButton size="large" variant="boxed" label="Disabled" disabled>
+				✎
+			</IconButton>
+		</Inline>
+	),
+};

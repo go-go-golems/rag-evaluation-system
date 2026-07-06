@@ -1,6 +1,6 @@
-import { AppNav } from "./AppNav";
-import { defineWidget } from "../../../widgets/registry";
 import type { AppNavWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { AppNav } from "./AppNav";
 
 export const appNavWidget = defineWidget<AppNavWidgetProps>({
 	type: "AppNav",

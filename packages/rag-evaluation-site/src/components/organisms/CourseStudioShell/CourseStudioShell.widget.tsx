@@ -1,6 +1,6 @@
-import { CourseStudioShell } from "./CourseStudioShell";
-import { defineWidget } from "../../../widgets/registry";
 import type { CourseStudioShellWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { CourseStudioShell } from "./CourseStudioShell";
 
 export const courseStudioShellWidget = defineWidget<CourseStudioShellWidgetProps>({
 	type: "CourseStudioShell",

@@ -14,8 +14,10 @@ import (
 const (
 	UIModuleName            = "ui.dsl"
 	DataModuleName          = "data.dsl"
+	DataV2ModuleName        = "data.v2.dsl"
 	ContextWindowModuleName = "context_window.dsl"
 	CourseModuleName        = "course.dsl"
+	CmsModuleName           = "cms.dsl"
 )
 
 type moduleSpec struct {
@@ -31,36 +33,50 @@ type moduleSpec struct {
 var templatePattern = regexp.MustCompile(`\$\{([^}]+)\}|\$([A-Za-z0-9_.-]+)`)
 
 var uiHelpers = map[string]string{
-	"appShell":      "AppShell",
-	"appNav":        "AppNav",
-	"button":        "Button",
-	"caption":       "Caption",
-	"checkList":     "CheckList",
-	"codeText":      "CodeText",
-	"dashboardGrid": "DashboardGrid",
-	"divider":       "Divider",
-	"figureBlock":   "FigureBlock",
-	"formPanel":     "FormPanel",
-	"formRow":       "FormRow",
-	"inline":        "Inline",
-	"keyPointList":  "KeyPointList",
-	"keyValueStrip": "KeyValueStrip",
-	"metadataGrid":  "MetadataGrid",
-	"panel":         "Panel",
-	"personSummary": "PersonSummary",
-	"scrollRegion":  "ScrollRegion",
-	"sectionBlock":  "SectionBlock",
-	"selectInput":   "SelectInput",
-	"sidebarNav":    "SidebarNav",
-	"sidebarShell":  "SidebarShell",
-	"splitPane":     "SplitPane",
-	"stack":         "Stack",
-	"statusText":    "StatusText",
-	"stepList":      "StepList",
-	"tabList":       "TabList",
-	"textBlock":     "Text",
-	"textInput":     "TextInput",
-	"textareaInput": "TextareaInput",
+	"appShell": "AppShell",
+	"appNav":   "AppNav",
+	"button":   "Button",
+	// Generic primitives promoted from domain modules (RAGEVAL-UI-GRAMMAR
+	// design-doc 02 §3); the domain modules keep their original names as
+	// deprecated aliases.
+	"breadcrumbs":     "Breadcrumbs",
+	"emptyState":      "EmptyState",
+	"fieldGrid":       "FieldGrid",
+	"markdownArticle": "MarkdownArticle",
+	"meterBar":        "MeterBar",
+	"pagination":      "Pagination",
+	"richArticle":     "RichArticle",
+	"searchField":     "SearchField",
+	"tag":             "Tag",
+	"tileGrid":        "TileGrid",
+	"uploadDropArea":  "ContextUploadDropArea",
+	"caption":         "Caption",
+	"checkList":       "CheckList",
+	"codeText":        "CodeText",
+	"dashboardGrid":   "DashboardGrid",
+	"divider":         "Divider",
+	"figureBlock":     "FigureBlock",
+	"formPanel":       "FormPanel",
+	"formRow":         "FormRow",
+	"inline":          "Inline",
+	"keyPointList":    "KeyPointList",
+	"keyValueStrip":   "KeyValueStrip",
+	"metadataGrid":    "MetadataGrid",
+	"panel":           "Panel",
+	"personSummary":   "PersonSummary",
+	"scrollRegion":    "ScrollRegion",
+	"sectionBlock":    "SectionBlock",
+	"selectInput":     "SelectInput",
+	"sidebarNav":      "SidebarNav",
+	"sidebarShell":    "SidebarShell",
+	"splitPane":       "SplitPane",
+	"stack":           "Stack",
+	"statusText":      "StatusText",
+	"stepList":        "StepList",
+	"tabList":         "TabList",
+	"textBlock":       "Text",
+	"textInput":       "TextInput",
+	"textareaInput":   "TextareaInput",
 }
 
 var dataHelpers = map[string]string{
@@ -68,25 +84,43 @@ var dataHelpers = map[string]string{
 }
 
 var contextWindowHelpers = map[string]string{
-	"anchoredCommentCard":      "AnchoredCommentCard",
-	"anchoredCommentRail":      "AnchoredCommentRail",
-	"annotationBadge":          "AnnotationBadge",
-	"annotationNoteCard":       "AnnotationNoteCard",
-	"annotationRailPanel":      "AnnotationRailPanel",
-	"contextBudgetBar":         "ContextBudgetBar",
-	"contextDiagramPanel":      "ContextDiagramPanel",
-	"contextStyleSwatch":       "ContextStyleSwatch",
-	"contextLegend":            "ContextLegend",
-	"contextStackDiagram":      "ContextStackDiagram",
-	"contextStripDiagram":      "ContextStripDiagram",
-	"contextTreemap":           "ContextTreemap",
-	"contextTurnPagerPanel":    "ContextTurnPagerPanel",
-	"contextUploadDropArea":    "ContextUploadDropArea",
-	"transcriptMessageCard":    "TranscriptMessageCard",
-	"transcriptReaderPanel":    "TranscriptReaderPanel",
-	"transcriptRoleBadge":      "TranscriptRoleBadge",
-	"transcriptSessionHeader":  "TranscriptSessionHeader",
-	"transcriptWorkspacePanel": "TranscriptWorkspacePanel",
+	"anchoredCommentCard":        "AnchoredCommentCard",
+	"anchoredCommentRail":        "AnchoredCommentRail",
+	"annotationBadge":            "AnnotationBadge",
+	"annotationNoteCard":         "AnnotationNoteCard",
+	"annotationRailPanel":        "AnnotationRailPanel",
+	"contextBudgetBar":           "ContextBudgetBar",
+	"contextDiagramPanel":        "ContextDiagramPanel",
+	"contextGroupedStripDiagram": "ContextGroupedStripDiagram",
+	"contextStyleSwatch":         "ContextStyleSwatch",
+	"contextLegend":              "ContextLegend",
+	"contextStackDiagram":        "ContextStackDiagram",
+	"contextStripDiagram":        "ContextStripDiagram",
+	"contextTreemap":             "ContextTreemap",
+	"contextTurnPagerPanel":      "ContextTurnPagerPanel",
+	"contextUploadDropArea":      "ContextUploadDropArea",
+	"transcriptMessageCard":      "TranscriptMessageCard",
+	"transcriptReaderPanel":      "TranscriptReaderPanel",
+	"transcriptRoleBadge":        "TranscriptRoleBadge",
+	"transcriptSessionHeader":    "TranscriptSessionHeader",
+	"transcriptWorkspacePanel":   "TranscriptWorkspacePanel",
+}
+
+var cmsHelpers = map[string]string{
+	"articleListPanel":   "ArticleListPanel",
+	"assetTile":          "AssetTile",
+	"breadcrumbs":        "Breadcrumbs",
+	"cmsShell":           "CmsShell",
+	"contentStatusBadge": "ContentStatusBadge",
+	"emptyState":         "EmptyState",
+	"markdownEditor":     "MarkdownEditor",
+	"mediaLibraryPanel":  "MediaLibraryPanel",
+	"mediaThumb":         "MediaThumb",
+	"meterBar":           "MeterBar",
+	"pagination":         "Pagination",
+	"searchField":        "SearchField",
+	"tag":                "Tag",
+	"tileGrid":           "TileGrid",
 }
 
 var courseHelpers = map[string]string{
@@ -121,6 +155,10 @@ var moduleSpecs = []moduleSpec{
 		doc:     "data.dsl provides data-display helpers, table cell helpers, and data recipes.",
 	},
 	{
+		name: DataV2ModuleName,
+		doc:  "data.v2.dsl provides the hard-cutover typed/fluent collection builder experiment.",
+	},
+	{
 		name:    ContextWindowModuleName,
 		helpers: contextWindowHelpers,
 		action:  true,
@@ -133,6 +171,13 @@ var moduleSpecs = []moduleSpec{
 		action:  true,
 		recipes: []string{"courseStudio", "courseSlide", "handout"},
 		doc:     "course.dsl provides course, lesson, slide, handout, and course-studio helpers.",
+	},
+	{
+		name:    CmsModuleName,
+		helpers: cmsHelpers,
+		action:  true,
+		recipes: []string{"mediaLibrary", "articleList"},
+		doc:     "cms.dsl provides media, asset, and article-management helpers.",
 	},
 }
 
@@ -209,6 +254,15 @@ func (r *runtime) install(exports *goja.Object, spec moduleSpec) {
 	}
 	if spec.name == ContextWindowModuleName {
 		r.installContextWindowStyleHelpers(exports)
+	}
+	if spec.name == DataModuleName {
+		r.installDataGrammar(exports)
+	}
+	if spec.name == DataV2ModuleName {
+		r.installDataV2(exports)
+	}
+	if spec.name == UIModuleName {
+		setExport(exports, "section", r.sectionVerb)
 	}
 	if len(spec.recipes) > 0 {
 		setExport(exports, "recipes", r.recipesObject(spec.recipes))
@@ -458,6 +512,10 @@ func (r *runtime) recipesObject(names []string) *goja.Object {
 			setExport(recipes, name, r.courseSlideRecipe)
 		case "handout":
 			setExport(recipes, name, r.handoutRecipe)
+		case "mediaLibrary":
+			setExport(recipes, name, r.mediaLibraryRecipe)
+		case "articleList":
+			setExport(recipes, name, r.articleListRecipe)
 		}
 	}
 	return recipes
@@ -729,6 +787,67 @@ func (r *runtime) handoutRecipe(call goja.FunctionCall) goja.Value {
 		props["onDownloadAllAction"] = act
 	}
 	return r.vm.ToValue(componentNode("HandoutDocumentShell", props))
+}
+
+func (r *runtime) mediaLibraryRecipe(call goja.FunctionCall) goja.Value {
+	options := firstObject(call.Arguments)
+	props := map[string]any{
+		"assets": anySlice(options["assets"]),
+	}
+	copyIfPresent(props, options, "selectedAssetIds")
+	copyIfPresent(props, options, "selectionMode")
+	copyIfPresent(props, options, "query")
+	copyIfPresent(props, options, "kindFilter")
+	copyIfPresent(props, options, "page")
+	copyIfPresent(props, options, "pageCount")
+	copyIfPresent(props, options, "uploads")
+	copyIfPresent(props, options, "showStatusBadges")
+	copyIfPresent(props, options, "emptyMessage")
+	copyIfPresent(props, options, "title")
+	copyIfPresent(props, options, "minTileWidth")
+	actionProps := map[string]string{
+		"onAssetSelect":      "onAssetSelectAction",
+		"onAssetOpen":        "onAssetOpenAction",
+		"onQuerySubmit":      "onQuerySubmitAction",
+		"onKindFilterChange": "onKindFilterChangeAction",
+		"onPageChange":       "onPageChangeAction",
+		"onFilesSelected":    "onFilesSelectedAction",
+	}
+	for option, prop := range actionProps {
+		if act, ok := normalizeActionSpec(options[option], nil, nil); ok {
+			props[prop] = act
+		}
+	}
+	return r.vm.ToValue(componentNode("MediaLibraryPanel", props))
+}
+
+func (r *runtime) articleListRecipe(call goja.FunctionCall) goja.Value {
+	options := firstObject(call.Arguments)
+	props := map[string]any{
+		"articles": anySlice(options["articles"]),
+	}
+	copyIfPresent(props, options, "selectedArticleId")
+	copyIfPresent(props, options, "statusFilter")
+	copyIfPresent(props, options, "query")
+	copyIfPresent(props, options, "page")
+	copyIfPresent(props, options, "pageCount")
+	copyIfPresent(props, options, "emptyMessage")
+	copyIfPresent(props, options, "title")
+	copyIfPresent(props, options, "maxVisibleTags")
+	actionProps := map[string]string{
+		"onArticleSelect":      "onArticleSelectAction",
+		"onCreate":             "onCreateAction",
+		"onRowAction":          "onRowActionAction",
+		"onStatusFilterChange": "onStatusFilterChangeAction",
+		"onQuerySubmit":        "onQuerySubmitAction",
+		"onPageChange":         "onPageChangeAction",
+	}
+	for option, prop := range actionProps {
+		if act, ok := normalizeActionSpec(options[option], nil, nil); ok {
+			props[prop] = act
+		}
+	}
+	return r.vm.ToValue(componentNode("ArticleListPanel", props))
 }
 
 func (r *runtime) masterDetailTableRecipe(call goja.FunctionCall) goja.Value {

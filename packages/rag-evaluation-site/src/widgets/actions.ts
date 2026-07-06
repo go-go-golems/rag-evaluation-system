@@ -1,4 +1,11 @@
-import type { ActionSpec, JsonObject } from "./ir";
+import type {
+	ActionSpec,
+	JsonObject,
+	JsonValue,
+	PayloadTemplateSpec,
+	TemplatePartSpec,
+	TemplateSpec,
+} from "./ir";
 
 export interface WidgetActionContext {
 	row?: JsonObject;
@@ -21,6 +28,16 @@ export type WidgetActionHandler = (
 	context: WidgetActionContext,
 ) => void | Promise<void>;
 
+export function confirmWidgetAction(
+	action: ActionSpec,
+	context: WidgetActionContext = {},
+): boolean {
+	if (!action.confirm || typeof window === "undefined" || typeof window.confirm !== "function") {
+		return true;
+	}
+	return window.confirm(renderTemplate(action.confirm, context, { encode: false }));
+}
+
 export function dispatchWidgetAction(
 	action: ActionSpec,
 	context: WidgetActionContext = {},
@@ -28,6 +45,10 @@ export function dispatchWidgetAction(
 ): void {
 	if (onAction) {
 		onAction(action, context);
+		return;
+	}
+
+	if (!confirmWidgetAction(action, context)) {
 		return;
 	}
 
@@ -83,7 +104,7 @@ export function dispatchWidgetAction(
 		void fetch(`/api/widget/actions/${encodeURIComponent(action.name)}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ payload: action.payload ?? {}, context }),
+			body: JSON.stringify({ payload: resolveActionPayload(action.payload, context), context }),
 		}).then(async (response) => {
 			const result = (await response.json().catch(() => undefined)) as
 				| ServerActionResult
@@ -101,17 +122,108 @@ export function bindAction(
 	onAction?: WidgetActionHandler,
 ): (() => void) | undefined {
 	if (!action) return undefined;
-	return () => dispatchWidgetAction(action, context, onAction);
+	return () => {
+		if (onAction) {
+			onAction(action, context);
+			return;
+		}
+		dispatchWidgetAction(action, context);
+	};
 }
 
-function interpolate(template: string, context: WidgetActionContext): string {
+export function resolveActionPayload(
+	payload: JsonObject | PayloadTemplateSpec | undefined,
+	context: WidgetActionContext,
+): JsonObject {
+	if (!payload) return {};
+	if (isPayloadTemplate(payload)) {
+		const out: JsonObject = {};
+		for (const [key, value] of Object.entries(payload.fields)) {
+			out[key] = resolveTemplatePartOrLiteral(value, context);
+		}
+		return out;
+	}
+	const out: JsonObject = {};
+	for (const [key, value] of Object.entries(payload)) {
+		out[key] = resolveTemplatePartOrLiteral(value, context);
+	}
+	return out;
+}
+
+// URL targets need encoded values; human-facing text (confirm prompts) must
+// stay raw — pass { encode: false } there.
+function interpolate(
+	template: string,
+	context: WidgetActionContext,
+	options: { encode?: boolean } = {},
+): string {
+	const encode = options.encode ?? true;
 	return template.replace(
 		/\$\{([^}]+)\}|\$([A-Za-z0-9_.-]+)/g,
 		(_match, braced: string | undefined, bare: string | undefined) => {
 			const path = braced ?? bare ?? "";
 			const value = lookupContext(path, context);
-			return encodeURIComponent(String(value ?? ""));
+			const text = String(value ?? "");
+			return encode ? encodeURIComponent(text) : text;
 		},
+	);
+}
+
+function renderTemplate(
+	template: string | TemplateSpec,
+	context: WidgetActionContext,
+	options: { encode?: boolean } = {},
+): string {
+	if (typeof template === "string") return interpolate(template, context, options);
+	return template.parts.map((part) => String(resolveTemplatePart(part, context) ?? "")).join("");
+}
+
+function resolveTemplatePartOrLiteral(
+	value: TemplatePartSpec | JsonValue,
+	context: WidgetActionContext,
+): JsonValue {
+	if (isTemplatePart(value)) return toJsonValue(resolveTemplatePart(value, context));
+	return value;
+}
+
+function resolveTemplatePart(part: TemplatePartSpec, context: WidgetActionContext): unknown {
+	if (part.kind === "path") return lookupContext(part.path, context);
+	if (part.kind === "text") return part.text;
+	return part.value;
+}
+
+function toJsonValue(value: unknown): JsonValue {
+	if (value === undefined) return null;
+	if (
+		value === null ||
+		typeof value === "string" ||
+		typeof value === "number" ||
+		typeof value === "boolean"
+	)
+		return value;
+	if (Array.isArray(value)) return value.map(toJsonValue);
+	if (typeof value === "object") {
+		const out: JsonObject = {};
+		for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+			out[key] = toJsonValue(child);
+		}
+		return out;
+	}
+	return String(value);
+}
+
+function isPayloadTemplate(value: JsonObject | PayloadTemplateSpec): value is PayloadTemplateSpec {
+	return (
+		value.kind === "payloadTemplate" && typeof value.fields === "object" && value.fields !== null
+	);
+}
+
+function isTemplatePart(value: TemplatePartSpec | JsonValue): value is TemplatePartSpec {
+	return Boolean(
+		value &&
+			typeof value === "object" &&
+			"kind" in value &&
+			(value.kind === "path" || value.kind === "text" || value.kind === "literal"),
 	);
 }
 

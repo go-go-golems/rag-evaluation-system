@@ -1,0 +1,85 @@
+.root {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	background-color: var(--mac-surface);
+	min-width: 0;
+}
+
+.bordered {
+	border: 1px solid var(--mac-border);
+}
+
+.selected {
+	outline: 1px solid var(--mac-accent);
+	outline-offset: -2px;
+}
+
+.square {
+	aspect-ratio: 1 / 1;
+}
+
+.wide {
+	aspect-ratio: 16 / 10;
+}
+
+.natural {
+	aspect-ratio: auto;
+	min-height: 48px;
+}
+
+.root[data-state="loading"] {
+	background-color: var(--mac-surface-2);
+	background-image:
+		linear-gradient(45deg, var(--mac-surface) 25%, transparent 25%),
+		linear-gradient(-45deg, var(--mac-surface) 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, var(--mac-surface) 75%),
+		linear-gradient(-45deg, transparent 75%, var(--mac-surface) 75%);
+	background-size: 8px 8px;
+	background-position:
+		0 0,
+		0 4px,
+		4px -4px,
+		-4px 0;
+}
+
+.image {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.cover {
+	object-fit: cover;
+}
+
+.contain {
+	object-fit: contain;
+}
+
+.natural .image {
+	height: auto;
+	max-height: 100%;
+}
+
+.fallback {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	padding: 8px;
+	text-align: center;
+}
+
+.glyph {
+	color: var(--mac-text-dim);
+	font: var(--rag-font-role-heading);
+}
+
+@media print {
+	.root {
+		print-color-adjust: exact;
+	}
+}

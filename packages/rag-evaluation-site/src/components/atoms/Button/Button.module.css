@@ -4,8 +4,16 @@
 	background: var(--mac-surface);
 	color: var(--mac-text);
 	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35rem;
+	min-inline-size: 2.25rem;
+	min-block-size: 1.625rem;
 	font: var(--rag-font-role-metadata);
+	line-height: 1.2;
 	padding: 2px 12px;
+	white-space: nowrap;
 }
 
 .root:hover:not(:disabled) {
@@ -34,10 +42,14 @@
 }
 
 .compact {
-	padding: 2px 6px 1px;
+	min-inline-size: 1.75rem;
+	min-block-size: 1.5rem;
+	padding: 2px 8px;
 	font: var(--rag-font-role-metadata);
 }
 
 .normal {
-	padding: 3px 12px 1px;
+	min-inline-size: 4.5rem;
+	min-block-size: 1.875rem;
+	padding: 4px 14px;
 }

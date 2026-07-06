@@ -1,17 +1,17 @@
 import type { HTMLAttributes } from "react";
 import {
+	type ContextStyleSet,
+	type ContextWindowPart,
+	type ContextWindowSnapshot,
 	contextVisualStyleToCssVars,
 	contextWindowFillRatio,
 	contextWindowHeadroomStyleKeys,
 	contextWindowIsHeadroomPart,
 	contextWindowTokenTotal,
 	resolveContextVisualStyle,
-	type ContextStyleSet,
-	type ContextWindowPart,
-	type ContextWindowSnapshot,
 } from "../../../context";
-import { Caption } from "../../foundation";
 import { ContextStyleSwatch } from "../../atoms";
+import { Caption } from "../../foundation";
 import { handleContextPartKeyDown } from "../contextKeyboardNavigation";
 import styles from "./ContextBudgetBar.module.css";
 

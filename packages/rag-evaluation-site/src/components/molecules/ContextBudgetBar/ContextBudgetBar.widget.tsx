@@ -1,6 +1,6 @@
-import { ContextBudgetBar } from "./ContextBudgetBar";
-import { defineWidget } from "../../../widgets/registry";
 import type { ContextBudgetBarWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { ContextBudgetBar } from "./ContextBudgetBar";
 
 export const contextBudgetBarWidget = defineWidget<ContextBudgetBarWidgetProps>({
 	type: "ContextBudgetBar",

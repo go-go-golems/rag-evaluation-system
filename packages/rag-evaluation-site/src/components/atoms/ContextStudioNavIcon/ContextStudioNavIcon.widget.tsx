@@ -1,6 +1,6 @@
-import { ContextStudioNavIcon } from "./ContextStudioNavIcon";
-import { defineWidget } from "../../../widgets/registry";
 import type { ContextStudioNavIconWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { ContextStudioNavIcon } from "./ContextStudioNavIcon";
 
 export const contextStudioNavIconWidget = defineWidget<ContextStudioNavIconWidgetProps>({
 	type: "ContextStudioNavIcon",

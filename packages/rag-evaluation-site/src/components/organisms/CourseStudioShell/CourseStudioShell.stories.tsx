@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import {
+	type ContextPaletteName,
 	contextDefaultStyleSet,
 	contextPaletteOptions,
 	contextSlides,
 	contextStyleSetForPalette,
 	contextWindowSnapshots,
-	type ContextPaletteName,
 } from "../../../context";
 import { Caption } from "../../foundation";
 import { SlideShell } from "../../layout";

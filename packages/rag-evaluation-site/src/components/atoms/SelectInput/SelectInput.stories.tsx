@@ -1,7 +1,7 @@
-import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FormRow, Inline, Panel, Stack } from "../../layout";
+import { useState } from "react";
 import { StatusText } from "../../foundation";
+import { FormRow, Inline, Panel, Stack } from "../../layout";
 import { SelectInput } from "./SelectInput";
 
 const meta = { title: "Design System/Atoms/SelectInput", component: SelectInput } satisfies Meta<

@@ -1,0 +1,15 @@
+schemaVersion: widget-manifest/v1
+type: Pagination
+module: cms.dsl
+helper: pagination
+props: PaginationWidgetProps
+adapter:
+  path: ./Pagination.widget.tsx
+  export: paginationWidget
+reactComponent: Pagination
+children: false
+slots: []
+actions:
+  - onPageChangeAction
+status: experimental
+docs: Compact prev/next pager; page-change action dispatches with {page, value} — use action.navigate("?page=$page") for query-param paging.

@@ -1,4 +1,4 @@
-import { Fragment, createElement, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, createElement, Fragment, type ReactNode } from "react";
 import { ErrorCallout } from "../components/atoms";
 import { bindAction, dispatchWidgetAction, type WidgetActionHandler } from "./actions";
 import type { ComponentNode, WidgetNode } from "./ir";

@@ -1,6 +1,6 @@
-import { Button } from "./Button";
-import { defineWidget } from "../../../widgets/registry";
 import type { ButtonWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { Button } from "./Button";
 
 export const buttonWidget = defineWidget<ButtonWidgetProps>({
 	type: "Button",

@@ -1,6 +1,6 @@
-import { CourseSlidePanel } from "./CourseSlidePanel";
-import { defineWidget } from "../../../widgets/registry";
 import type { CourseSlidePanelWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { CourseSlidePanel } from "./CourseSlidePanel";
 
 export const courseSlidePanelWidget = defineWidget<CourseSlidePanelWidgetProps>({
 	type: "CourseSlidePanel",

@@ -30,3 +30,28 @@
 .normal {
 	font: var(--rag-font-role-metadata);
 }
+
+/* Glyph-icon size for row actions and toolbars. */
+.large {
+	font: var(--rag-font-role-metric);
+	padding: 1px 3px;
+}
+
+/* Boxed variant: bordered like Button, full-contrast glyph — for row actions
+   sitting next to bordered badges/tags where bare dim glyphs are illegible. */
+.boxed {
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+	color: var(--mac-text);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 22px;
+	min-height: 20px;
+	padding: 1px 4px;
+}
+
+.boxed:hover:not(:disabled) {
+	background: var(--mac-bg-dark);
+	color: var(--mac-text-inv);
+}

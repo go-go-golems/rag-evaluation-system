@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { anchoredCommentFixtures } from "../../../context";
 import { AnchoredCommentRail } from "./AnchoredCommentRail";
+
 const meta = {
 	title: "Component Library/Organisms/AnchoredCommentRail",
 	component: AnchoredCommentRail,

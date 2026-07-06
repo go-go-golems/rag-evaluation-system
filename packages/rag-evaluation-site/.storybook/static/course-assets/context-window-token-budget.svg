@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">
+	<defs>
+		<pattern id="checker" width="8" height="8" patternUnits="userSpaceOnUse">
+			<rect width="8" height="8" fill="#f0f2f4"/>
+			<rect width="4" height="4" fill="#c7d4ee"/>
+			<rect x="4" y="4" width="4" height="4" fill="#c7d4ee"/>
+		</pattern>
+		<pattern id="stipple" width="6" height="6" patternUnits="userSpaceOnUse">
+			<rect width="6" height="6" fill="#f6e9f0"/>
+			<circle cx="2" cy="2" r="1" fill="#b06a92"/>
+		</pattern>
+		<pattern id="diag" width="8" height="8" patternUnits="userSpaceOnUse">
+			<rect width="8" height="8" fill="#eef2ee"/>
+			<path d="M-2,10 L10,-2 M-2,2 L2,-2 M6,10 L10,6" stroke="#5b8a68" stroke-width="1.5"/>
+		</pattern>
+	</defs>
+	<rect x="0" y="0" width="960" height="540" fill="#ffffff"/>
+	<rect x="24" y="24" width="912" height="492" fill="none" stroke="#000000" stroke-width="2"/>
+	<text x="48" y="72" font-size="22" font-weight="700" fill="#1d232a" letter-spacing="2">CONTEXT WINDOW — TOKEN BUDGET</text>
+	<text x="48" y="100" font-size="14" fill="#68727d">turn 14 — deep in the bug · limit 200,000 tok</text>
+	<rect x="48" y="140" width="864" height="72" fill="#ffffff" stroke="#000000" stroke-width="2"/>
+	<rect x="48" y="140" width="120" height="72" fill="url(#checker)" stroke="#000000" stroke-width="1"/>
+	<rect x="168" y="140" width="80" height="72" fill="#f0f2f4" stroke="#000000" stroke-width="1"/>
+	<rect x="248" y="140" width="300" height="72" fill="url(#stipple)" stroke="#000000" stroke-width="1"/>
+	<rect x="548" y="140" width="140" height="72" fill="url(#diag)" stroke="#000000" stroke-width="1"/>
+	<rect x="688" y="140" width="60" height="72" fill="#8a4a6e" stroke="#000000" stroke-width="1"/>
+	<text x="60" y="182" font-size="12" fill="#1d232a">system</text>
+	<text x="178" y="182" font-size="12" fill="#1d232a">ctx</text>
+	<text x="260" y="182" font-size="12" fill="#1d232a">file reads · 38,600 tok</text>
+	<text x="558" y="182" font-size="12" fill="#1d232a">tests</text>
+	<text x="696" y="182" font-size="12" fill="#ffffff">task</text>
+	<text x="760" y="182" font-size="12" fill="#68727d">free · 91,700</text>
+	<g font-size="12" fill="#1d232a">
+		<rect x="48" y="260" width="14" height="14" fill="url(#checker)" stroke="#000000"/>
+		<text x="70" y="272">system / instructions</text>
+		<rect x="248" y="260" width="14" height="14" fill="url(#stipple)" stroke="#000000"/>
+		<text x="270" y="272">tool results</text>
+		<rect x="448" y="260" width="14" height="14" fill="url(#diag)" stroke="#000000"/>
+		<text x="470" y="272">test output</text>
+		<rect x="648" y="260" width="14" height="14" fill="#8a4a6e" stroke="#000000"/>
+		<text x="670" y="272">active task</text>
+	</g>
+	<path d="M48 320 H912" stroke="#d8dde3" stroke-width="1"/>
+	<g stroke="#000000" fill="none" stroke-width="1.5">
+		<rect x="48" y="352" width="200" height="120"/>
+		<rect x="288" y="384" width="200" height="88"/>
+		<rect x="528" y="416" width="200" height="56"/>
+	</g>
+	<text x="58" y="372" font-size="11" fill="#68727d">TURN 3</text>
+	<text x="298" y="404" font-size="11" fill="#68727d">TURN 9</text>
+	<text x="538" y="436" font-size="11" fill="#68727d">TURN 14</text>
+	<text x="760" y="470" font-size="11" fill="#68727d">context grows →</text>
+</svg>

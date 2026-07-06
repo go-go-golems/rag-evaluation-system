@@ -1,3 +1,13 @@
+import type { CmsArticleSummary, CmsAsset, CmsContentStatus, UploadQueueItem } from "../cms/types";
+import type {
+	ButtonSize,
+	ButtonVariant,
+	ContextStudioNavIconId,
+	MediaThumbAspect,
+	MediaThumbFit,
+	MediaThumbFrame,
+	MeterBarTone,
+} from "../components/atoms";
 import type {
 	CaptionTone,
 	CaptionTransform,
@@ -8,7 +18,6 @@ import type {
 	TextTone,
 	TextWeight,
 } from "../components/foundation";
-import type { ButtonSize, ButtonVariant, ContextStudioNavIconId } from "../components/atoms";
 import type {
 	DashboardGridRecipe,
 	InlineGap,
@@ -77,6 +86,7 @@ export type RagWidgetType =
 	| "Panel"
 	| "ScrollRegion"
 	| "SectionBlock"
+	| "FieldGrid"
 	| "SelectInput"
 	| "SidebarShell"
 	| "SlideShell"
@@ -112,7 +122,21 @@ export type RagWidgetType =
 	| "CourseSlidePanel"
 	| "CourseStudioShell"
 	| "HandoutDocumentShell"
-	| "ContextUploadDropArea";
+	| "ContextUploadDropArea"
+	| "MediaThumb"
+	| "Tag"
+	| "ContentStatusBadge"
+	| "MeterBar"
+	| "TileGrid"
+	| "AssetTile"
+	| "Breadcrumbs"
+	| "Pagination"
+	| "SearchField"
+	| "EmptyState"
+	| "MarkdownEditor"
+	| "MediaLibraryPanel"
+	| "ArticleListPanel"
+	| "CmsShell";
 
 export interface ComponentNode {
 	kind: "component";
@@ -130,31 +154,68 @@ export type ActionSpec =
 	| EventActionSpec
 	| CopyActionSpec;
 
-export interface NavigateActionSpec {
+export interface ActionSpecBase {
+	/**
+	 * Optional confirmation prompt shown before the action dispatches.
+	 * String prompts support `${path}` / `$name` interpolation against the action context.
+	 * Template prompts are the v2 data form produced by typed builders.
+	 * Applies to every action kind; handled centrally in dispatchWidgetAction.
+	 */
+	confirm?: string | TemplateSpec;
+}
+
+export interface TemplateSpec {
+	kind?: "template";
+	parts: TemplatePartSpec[];
+}
+
+export type TemplatePartSpec = TemplateTextPart | TemplatePathPart | TemplateLiteralPart;
+
+export interface TemplateTextPart {
+	kind: "text";
+	text: string;
+}
+
+export interface TemplatePathPart {
+	kind: "path";
+	path: string;
+}
+
+export interface TemplateLiteralPart {
+	kind: "literal";
+	value: JsonValue;
+}
+
+export interface PayloadTemplateSpec {
+	kind: "payloadTemplate";
+	fields: Record<string, TemplatePartSpec | JsonValue>;
+}
+
+export interface NavigateActionSpec extends ActionSpecBase {
 	kind: "navigate";
 	to: string;
 	params?: JsonObject;
 }
 
-export interface DownloadActionSpec {
+export interface DownloadActionSpec extends ActionSpecBase {
 	kind: "download";
 	to: string;
 	params?: JsonObject;
 }
 
-export interface ServerActionSpec {
+export interface ServerActionSpec extends ActionSpecBase {
 	kind: "server";
 	name: string;
-	payload?: JsonObject;
+	payload?: JsonObject | PayloadTemplateSpec;
 }
 
-export interface EventActionSpec {
+export interface EventActionSpec extends ActionSpecBase {
 	kind: "event";
 	event: string;
 	detail?: JsonObject;
 }
 
-export interface CopyActionSpec {
+export interface CopyActionSpec extends ActionSpecBase {
 	kind: "copy";
 	value?: string;
 	field?: string;
@@ -681,6 +742,7 @@ export interface PanelWidgetProps extends BaseWidgetProps {
 	actions?: RenderableValue;
 	density?: "normal" | "condensed";
 	fill?: boolean;
+	titleTone?: "default" | "accent";
 }
 
 export interface ScrollRegionWidgetProps extends BaseWidgetProps {
@@ -691,8 +753,17 @@ export interface SectionBlockWidgetProps extends BaseWidgetProps {
 	as?: "section" | "article" | "div";
 	label?: RenderableValue;
 	caption?: RenderableValue;
-	density?: "normal" | "spacious";
+	actions?: RenderableValue;
+	level?: 1 | 2 | 3;
+	rule?: boolean;
+	anchorId?: string;
+	density?: "normal" | "spacious" | "flush";
 	divider?: "none" | "top" | "bottom" | "both";
+}
+
+export interface FieldGridWidgetProps extends BaseWidgetProps {
+	columns?: number;
+	gap?: "sm" | "md";
 }
 
 export interface SplitPaneWidgetProps extends BaseWidgetProps {
@@ -850,6 +921,7 @@ export type WidgetProps =
 	| PanelWidgetProps
 	| ScrollRegionWidgetProps
 	| SectionBlockWidgetProps
+	| FieldGridWidgetProps
 	| SplitPaneWidgetProps
 	| SidebarShellWidgetProps
 	| SlideShellWidgetProps
@@ -859,7 +931,160 @@ export type WidgetProps =
 	| TabListWidgetProps
 	| TextInputWidgetProps
 	| TextareaInputWidgetProps
+	| MediaThumbWidgetProps
+	| TagWidgetProps
+	| ContentStatusBadgeWidgetProps
+	| MeterBarWidgetProps
+	| TileGridWidgetProps
+	| AssetTileWidgetProps
+	| BreadcrumbsWidgetProps
+	| PaginationWidgetProps
+	| SearchFieldWidgetProps
+	| EmptyStateWidgetProps
+	| MarkdownEditorWidgetProps
+	| MediaLibraryPanelWidgetProps
+	| ArticleListPanelWidgetProps
+	| CmsShellWidgetProps
 	| BaseWidgetProps;
+
+// ─── cms.dsl widget props ────────────────────────────────────────────
+
+export interface MediaThumbWidgetProps extends BaseWidgetProps {
+	src?: string;
+	alt?: string;
+	aspect?: MediaThumbAspect;
+	fit?: MediaThumbFit;
+	frame?: MediaThumbFrame;
+	selected?: boolean;
+	fallbackGlyph?: RenderableValue;
+	fallbackLabel?: RenderableValue;
+}
+
+export interface TagWidgetProps extends BaseWidgetProps {
+	label: string;
+	selected?: boolean;
+	disabled?: boolean;
+	onRemoveAction?: ActionSpec;
+}
+
+export interface ContentStatusBadgeWidgetProps extends BaseWidgetProps {
+	status: CmsContentStatus;
+	icon?: boolean;
+}
+
+export interface MeterBarWidgetProps extends BaseWidgetProps {
+	value: number;
+	tone?: MeterBarTone;
+	label?: RenderableValue;
+}
+
+export interface TileGridWidgetProps extends BaseWidgetProps {
+	minTileWidth?: number;
+	gap?: "sm" | "md";
+}
+
+export interface AssetTileWidgetProps extends BaseWidgetProps {
+	asset: CmsAsset;
+	selected?: boolean;
+	onSelectAction?: ActionSpec;
+	onOpenAction?: ActionSpec;
+	footer?: WidgetNode;
+}
+
+export interface BreadcrumbItemWidgetSpec {
+	id: string;
+	label: RenderableValue;
+}
+
+export interface BreadcrumbsWidgetProps extends BaseWidgetProps {
+	items: BreadcrumbItemWidgetSpec[];
+	onNavigateAction?: ActionSpec;
+	ariaLabel?: string;
+}
+
+export interface PaginationWidgetProps extends BaseWidgetProps {
+	page: number;
+	pageCount: number;
+	onPageChangeAction?: ActionSpec;
+	pageSize?: number;
+	totalItems?: number;
+}
+
+export interface SearchFieldWidgetProps extends BaseWidgetProps {
+	name?: string;
+	defaultValue?: string;
+	placeholder?: string;
+	disabled?: boolean;
+	onSubmitAction?: ActionSpec;
+}
+
+export interface EmptyStateWidgetProps extends BaseWidgetProps {
+	glyph?: RenderableValue;
+	title: RenderableValue;
+	hint?: RenderableValue;
+	actionSlot?: WidgetNode;
+	framed?: boolean;
+}
+
+export interface MarkdownEditorWidgetProps extends BaseWidgetProps {
+	name?: string;
+	defaultValue?: string;
+	minRows?: number;
+	maxLength?: number;
+	disabled?: boolean;
+	preview?: "live" | "hidden";
+	textareaAriaLabel?: string;
+}
+
+export interface MediaLibraryPanelWidgetProps extends BaseWidgetProps {
+	assets: CmsAsset[];
+	selectedAssetIds?: string[];
+	selectionMode?: "none" | "single" | "multi";
+	onAssetSelectAction?: ActionSpec;
+	onAssetOpenAction?: ActionSpec;
+	query?: string;
+	onQuerySubmitAction?: ActionSpec;
+	kindFilter?: "all" | "image" | "file";
+	onKindFilterChangeAction?: ActionSpec;
+	page?: number;
+	pageCount?: number;
+	onPageChangeAction?: ActionSpec;
+	onFilesSelectedAction?: ActionSpec;
+	uploads?: UploadQueueItem[];
+	showStatusBadges?: boolean;
+	emptyMessage?: RenderableValue;
+	title?: RenderableValue;
+	minTileWidth?: number;
+}
+
+export interface ArticleListPanelWidgetProps extends BaseWidgetProps {
+	articles: CmsArticleSummary[];
+	selectedArticleId?: string;
+	onArticleSelectAction?: ActionSpec;
+	onCreateAction?: ActionSpec;
+	onRowActionAction?: ActionSpec;
+	statusFilter?: CmsContentStatus | "all";
+	onStatusFilterChangeAction?: ActionSpec;
+	query?: string;
+	onQuerySubmitAction?: ActionSpec;
+	page?: number;
+	pageCount?: number;
+	onPageChangeAction?: ActionSpec;
+	emptyMessage?: RenderableValue;
+	title?: RenderableValue;
+	maxVisibleTags?: number;
+}
+
+export interface CmsShellWidgetProps extends BaseWidgetProps {
+	sections?: SidebarNavSectionWidgetSpec[];
+	activeItemId?: string;
+	onNavigateAction?: ActionSpec;
+	title?: RenderableValue;
+	subtitle?: RenderableValue;
+	headerSlot?: WidgetNode;
+	sidebarFooter?: WidgetNode;
+	contentPadding?: "default" | "none";
+}
 
 export function text(value: string | number | boolean): TextNode {
 	return { kind: "text", text: String(value) };

@@ -1,0 +1,284 @@
+# Changelog
+
+## 2026-07-05
+
+- Initial workspace created
+
+
+## 2026-07-05
+
+Created base research ticket: DSL catalogue (design-doc), research logbook (reference), investigation diary. Inventoried 12 Goja DSLs + 3 cross-cutting pieces across goja-bleve, goja-dbus, go-minitrace, rag-evaluation-system widgetdsl, go-go-goja, goja-text, goja-git, goja-github-actions, goja-treesitter, glazed, go-emrichen. Classified 5 implementation patterns; identified goja-bleve typed-ref substrate as the runtime-typecheck model and goja-dbus as the composable-grammar model.
+
+### Related Files
+
+- /home/manuel/code/wesen/go-go-golems/goja-bleve/pkg/api_types.go — Typed-ref substrate to extract into a shared fluent package
+- /home/manuel/code/wesen/go-go-golems/goja-dbus/pkg/dbusgoja/builders.go — Cleanest composable grammar reference
+
+
+## 2026-07-05
+
+Validated (docmgr doctor passes cleanly after adding fluent-builder + typescript vocabulary). Uploaded bundle 'Goja DSL Playbook — base research' (3 docs, toc-depth 2) to reMarkable at /ai/2026/07/05/GOJA-DSL-PLAYBOOK and verified listing. Ticket ready for senior-researcher handoff.
+
+
+## 2026-07-05
+
+Design-doc 02 added: insider self-assessment of the widgetdsl grammar. Five silent-failure modes empirically verified against the built binary (typo'd arrange/options/verbs, wrong markers, out-of-range enums all absorbed without error); root cause named as IR-as-API vs IR-as-output; v2 sketch keeps the grammar language on typed Go specs with configurator builders, strict option decoding, and error-panel rendering; eleven proposed catalogue additions including a silent-ignore failure taxonomy, a tree-shaped-data axis, dormant type sources (ir.ts + 80 widget manifests, zero consumers), and agent-authorship as a design constraint.
+
+
+## 2026-07-05
+
+Extended catalogue with 4 new DSLs: geppetto (typed-ref + clone-on-each-step + DTS parity test), discord-bot (defineBot + Proxy-trap ui builders), researchctl (lambda-configurator project builder), codesign (strongest model: runSpec + .use() fragment composition + lambda configurators + precise TS interfaces via TypeScriptDeclarer). Added Patterns A-prime, F, G. Gap analysis updated: composable-grammar and lambdas are now realised; remaining gap is extraction + standardisation. Related 6 new key files.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-06-30/benchmark-cpu-inference/researchctl/pkg/gojamodules/codesign/builders.go — Strongest composable-grammar model - use fragment composition
+
+
+## 2026-07-05
+
+Added widgetdsl grammar self-assessment report: the RAGEVAL-UI-GRAMMAR work is valuable as UI/vocabulary evidence but remains Pattern C; recommends typed builders, validation terminals, precise TypeScript, and lambda-configurable marks/arrangements.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/02-self-assessment-of-the-widgetdsl-grammar-what-pattern-c-actually-costs-and-what-the-playbook-should-add.md — New assessment report
+
+
+## 2026-07-05
+
+Added intern-facing deep dive on optional researchctl lambdas, typed Go-side IR/specs, geppetto DTS parity testing, and go-emrichen tag-operator composition; uploaded as a separate reMarkable document.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/04-goja-dsl-deep-dive-optional-lambdas-typed-ir-dts-parity-and-tag-operators.md — New deep-dive document
+
+
+## 2026-07-05
+
+Design-doc 05 written (into the placeholder): the v2 overhaul design for all five DSLs, synthesizing docs 01-04 — typed intent specs + two-tier builders (defaulted chains, optional lambda configurators, .use fragments), strict decoding, accumulated validation rendered as ValidationIssues nodes, marks contract shrinking domain modules to schemas+marks, callback action kind making JS lambdas safe across the renderer/runtime boundary (deterministic ids, fail-closed declaration-site hashes, 409/rebuild/retry staleness protocol), manifest-driven codegen with DTS parity, and a 5-phase file-level implementation plan.
+
+
+## 2026-07-05
+
+Added full rag-evaluation-system DSL overhaul guide covering all Widget DSL modules, typed intent IR, renderer/runtime action serialization, API alternatives, examples, migration phases, and testing strategy.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md — New design and implementation guide
+
+
+## 2026-07-05
+
+Revised the rag-evaluation-system DSL overhaul guide for a no-backwards-compatibility hard cutover: v1 APIs are now vocabulary evidence, compatibility facades are rejected, and the implementation plan targets clean v2 specs/builders, Action IR v2, widget.unsafe, page rewrites, and removal of old public exports.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md — Hard-cutover revision
+
+
+## 2026-07-05
+
+Added the Widget DSL event-timeline companion document and hard-cutover phase/task tracker, covering simple table, selectable table, master-detail editor, HTTP requests, frontend execution, backend handlers, and precise implementation phases.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md — Parent design guide being operationalized
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — New companion operational spec and task tracker
+
+
+## 2026-07-05
+
+Inventoried current live pages, Storybook examples, missing v2 demos, and deprecated-example policy for the Widget DSL cutover companion document.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — Demo and example inventory
+
+
+## 2026-07-05
+
+Recorded baseline validation commands for the Widget DSL cutover: widgetdsl Go tests, rag-evaluation-site typecheck/build, and docmgr doctor all pass before v2 implementation.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — Baseline validation section
+
+
+## 2026-07-05
+
+Started P1 typed v2 spec implementation by adding pkg/widgetdsl/v2/spec with PageSpec, NodeSpec, SchemaSpec, FieldSpec, CollectionSpec, ActionSpec, TemplateSpec, and ValidationIssue skeletons.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/types.go — Typed v2 spec model
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — Task tracker updated for P1.1
+
+
+## 2026-07-05
+
+Implemented initial P1.2 validation rules for the v2 Widget DSL spec model, including schema/field uniqueness, collection mode/arrangement, URL selection, action shape, payload fields, template parts, and diagnostic helpers.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/validate.go — Validation implementation
+
+
+## 2026-07-05
+
+Implemented initial P1.3 lowering from typed v2 specs to current Widget IR shapes, covering pages, nodes, sections, simple/selectable tables, master-detail form trees, and serializable actions.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/lower.go — Typed spec to Widget IR lowering
+
+
+## 2026-07-05
+
+Added P1.4 v2 spec tests for simplest table, selectable table, master-detail editor lowering, and invalid arrangement validation.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/lower_test.go — Spec validation/lowering tests
+
+
+## 2026-07-05
+
+Implemented P2.1-P2.3 initial data.v2.dsl Goja builder substrate: hidden typed refs, strict callback errors, field/schema builders, simple/selectable table collection builders, and runtime tests.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders.go — V2 Goja builder implementation
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders_test.go — V2 builder tests
+
+
+## 2026-07-05
+
+Completed P2.4-P2.5 by adding data.v2.dsl master-detail editor builders with edit/selectUrl/submitPost/create/actions/masterDetail and runtime tests for the full simple/selectable/master-detail authoring examples.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders.go — Master-detail editor builder implementation
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders_test.go — Master-detail Goja runtime test
+
+
+## 2026-07-05
+
+Added live go-go-course demo pages for P4.1-P4.3: simplest table, selectable table, and master-detail editor using data.v2.dsl (go-go-course commit f82f20a99780902cb776e022ad6d1a3b3c2ee9a7).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/course-pages.js — Routes demo page IDs to demo builder
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js — Live v2 DSL demo pages
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/server.js — Requires data.v2.dsl and adds safe demo form redirect route
+
+
+## 2026-07-05
+
+Implemented P3.1-P3.3 frontend Action IR foundations: added v2 template/payload types, payload template hydration, confirmation-safe direct app navigation dispatch, and DataTable action-cell rowKey context based on the table row key.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/actions.ts — Payload hydration and confirm rendering
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/cellRenderers.tsx — Row key context fix
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/ir.ts — Action IR v2 types
+
+
+## 2026-07-05
+
+Added P4.4 row/server-action demo page and small v2 action-builder methods for confirm/payload helpers (go-go-course commit f7bac955bcbbbc1221636462deea65efbeec4fba).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js — Row/server-action demo page
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/server.js — Safe demo server actions
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders.go — V2 action builder confirm and payload helper methods
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders_test.go — Runtime assertion for lowered confirm prompt
+
+
+## 2026-07-05
+
+Cleaned up public Widget DSL docs so v2 examples are primary and v1 option-bag data.dsl examples are labelled legacy; exposed data.v2.dsl in the widgetsite provider; built and browser-tested the demo pages with screenshots and API checks.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md — Deprecated-example cleanup
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — Real browser/demo validation evidence
+
+
+## 2026-07-05
+
+Fixed demo form usability: FormPanel submit buttons now show the default Save label visibly, buttons have minimum sizes, __new master-detail forms keep key fields editable, and demo pages explain that New demo agenda item is non-persistent.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js — New item explanatory caption
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/FormPanel/FormPanel.tsx — Submit label fix
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/lower.go — New-item editable key behavior
+
+
+## 2026-07-05
+
+Step 21: Added durable Playwright browser smoke tests for Widget DSL v2 demo pages and checked off P3.4 action validation (go-go-course commit 06aa1c9).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/webapp/playwright.config.ts — Playwright webServer config for hotreload-host
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/webapp/tests/dsl-examples.spec.ts — Browser smoke tests for all four Widget DSL v2 demo pages and action confirm flows
+
+
+## 2026-07-05
+
+Step 22: Added precise data.v2.dsl TypeScript declarations for typed/fluent builders and tests guarding the hard-cutover API surface (commit dcd5156).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/typescript.go — data.v2.dsl DTS declaration source
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/typescript_test.go — DTS tests for typed builders and absence of legacy option-bag grammar
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/xgoja/providers/widgetsite/provider_test.go — Provider test now asserts data.v2.dsl TypeScript descriptor/export
+
+
+## 2026-07-05
+
+Step 23: Added data.v2.dsl runtime export parity checks and TypeScript positive/negative fixture compilation (commit cee7525).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/typescript_fixture_test.go — Runtime export parity and TypeScript fixture compilation for data.v2.dsl
+
+
+## 2026-07-05
+
+Step 24: Added a cross-module Widget DSL gallery demo covering ui.dsl, data.v2.dsl, context_window.dsl, cms.dsl, and course.dsl, plus Playwright coverage (go-go-course commit 30ab8c3).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/course-pages.js — Route for /pages/dsl-examples-modules
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js — Cross-module gallery authoring examples
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/webapp/tests/dsl-examples.spec.ts — Browser smoke coverage for module gallery
+
+
+## 2026-07-06
+
+Step 25: Ported the real go-go-course admin agenda editor from data.dsl collection/schema helpers to data.v2.dsl typed/fluent master-detail API after the origin/main merge (go-go-course commit 34bc642).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/internal/xgojaruntime/xgoja_embed/jsverbs/minitrace_viz_site/lib/pages/admin-course-cms.js — Generated xgoja mirror refreshed by make build (commit 34bc642)
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/admin-course-cms.js — Real admin agenda editor source ported to data.v2.dsl (commit 34bc642)
+
+
+## 2026-07-06
+
+Steps 26-28: Completed P6 after the agenda port: extended data.v2.dsl table action columns/empty/className/rowSelect separation (commit 166e8dc), migrated remaining go-go-course material/session tables to data.v2.dsl (go-go-course commit 0bf3820), and removed legacy data.dsl from the course xgoja runtime selection (go-go-course commit 49dc871).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/admin-common.js — Admin material tables migrated from data.dsl dataTable/cell helpers to data.v2.dsl (commit 0bf3820)
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/sessions.js — Session browse table migrated to data.v2.dsl selectable table with explicit transcript action column (commit 0bf3820)
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/xgoja.package.yaml — Legacy data.dsl removed from selected course runtime modules (commit 49dc871)
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders.go — Added table action-column/className/empty support and rowSelect separation (commit 166e8dc)
+
+
+## 2026-07-06
+
+Ticket closed after Widget DSL v2 hard cutover: P1-P6 complete, P7.1 intentionally skipped by user request, validation and handoff details recorded in the investigation diary.
+

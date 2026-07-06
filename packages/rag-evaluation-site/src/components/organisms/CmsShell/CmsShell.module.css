@@ -1,0 +1,22 @@
+.header {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.title {
+	color: var(--mac-text);
+	font: var(--rag-font-role-heading);
+	letter-spacing: -0.01em;
+	padding-top: 24px;
+}
+
+.content {
+	min-width: 0;
+	min-height: 100vh;
+	padding: 26px;
+}
+
+.contentPaddingNone {
+	padding: 0;
+}

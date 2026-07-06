@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import {
+	type ContextPaletteName,
+	type ContextStyleSet,
 	contextCobaltSandStyleSet,
 	contextDefaultStyleSet,
 	contextPaletteOptions,
@@ -8,8 +10,6 @@ import {
 	contextSlateCoralStyleSet,
 	contextStyleSetForPalette,
 	contextWindowSnapshots,
-	type ContextPaletteName,
-	type ContextStyleSet,
 } from "../../../context";
 import { Button } from "../../atoms";
 import { Inline, Panel, Stack } from "../../layout";

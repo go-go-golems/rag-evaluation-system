@@ -1,6 +1,6 @@
-import { ContextLegend } from "./ContextLegend";
-import { defineWidget } from "../../../widgets/registry";
 import type { ContextLegendWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { ContextLegend } from "./ContextLegend";
 
 export const contextLegendWidget = defineWidget<ContextLegendWidgetProps>({
 	type: "ContextLegend",

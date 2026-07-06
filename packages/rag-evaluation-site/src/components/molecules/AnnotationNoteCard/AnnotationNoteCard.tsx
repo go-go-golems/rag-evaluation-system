@@ -1,11 +1,11 @@
 import type { CSSProperties, HTMLAttributes } from "react";
 import {
-	contextVisualStyleToCssVars,
-	resolveContextVisualStyle,
-	transcriptDefaultStyleSet,
 	type ContextStyleSet,
 	type ContextVisualStyle,
+	contextVisualStyleToCssVars,
+	resolveContextVisualStyle,
 	type TranscriptAnnotation,
+	useTranscriptStyleSet,
 } from "../../../context";
 import { ContextStyleSwatch } from "../../atoms";
 import { Caption } from "../../foundation";
@@ -24,14 +24,15 @@ function patternClass(style: ContextVisualStyle) {
 
 export function AnnotationNoteCard({
 	annotation,
-	styleSet = transcriptDefaultStyleSet,
+	styleSet,
 	selected = false,
 	index,
 	className,
 	style,
 	...rest
 }: AnnotationNoteCardProps) {
-	const visualStyle = resolveContextVisualStyle(annotation.styleKey, styleSet);
+	const resolvedStyleSet = useTranscriptStyleSet(styleSet);
+	const visualStyle = resolveContextVisualStyle(annotation.styleKey, resolvedStyleSet);
 	return (
 		<aside
 			className={[

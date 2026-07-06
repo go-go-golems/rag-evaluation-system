@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { contextCourseFixture } from "../../../context";
 import { StepList } from "./StepList";
+
 const items = contextCourseFixture.agenda.map((item) => ({
 	id: item.id,
 	index: item.number,

@@ -1,6 +1,6 @@
-import { HandoutDocumentShell } from "./HandoutDocumentShell";
-import { defineWidget } from "../../../widgets/registry";
 import type { HandoutDocumentShellWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { HandoutDocumentShell } from "./HandoutDocumentShell";
 
 export const handoutDocumentShellWidget = defineWidget<HandoutDocumentShellWidgetProps>({
 	type: "HandoutDocumentShell",

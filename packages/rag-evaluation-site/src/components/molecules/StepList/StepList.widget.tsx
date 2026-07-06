@@ -1,6 +1,6 @@
-import { StepList } from "./StepList";
-import { defineWidget } from "../../../widgets/registry";
 import type { StepListWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { StepList } from "./StepList";
 
 export const stepListWidget = defineWidget<StepListWidgetProps>({
 	type: "StepList",

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { WidgetRenderer } from "./WidgetRenderer";
 import { defaultWidgetRegistry } from "./defaultRegistry";
 import { component, text } from "./ir";
+import { WidgetRenderer } from "./WidgetRenderer";
 
 const meta = {
 	title: "Widget IR/Renderer/Registry Dispatch",

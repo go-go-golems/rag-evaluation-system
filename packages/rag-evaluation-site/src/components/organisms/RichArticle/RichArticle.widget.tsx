@@ -1,6 +1,6 @@
-import { RichArticle } from "./RichArticle";
-import { defineWidget } from "../../../widgets/registry";
 import type { RichArticleWidgetProps } from "../../../widgets/ir";
+import { defineWidget } from "../../../widgets/registry";
+import { RichArticle } from "./RichArticle";
 
 export const richArticleWidget = defineWidget<RichArticleWidgetProps>({
 	type: "RichArticle",

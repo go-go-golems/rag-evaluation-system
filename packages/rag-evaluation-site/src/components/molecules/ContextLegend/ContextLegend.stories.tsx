@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
+	type ContextPaletteName,
 	contextDefaultStyleSet,
 	contextPaletteOptions,
 	contextStyleSetForPalette,
 	contextThreeLabelStyleSets,
-	type ContextPaletteName,
 } from "../../../context";
 import { Caption } from "../../foundation";
 import { Panel, Stack } from "../../layout";

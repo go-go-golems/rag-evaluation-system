@@ -1,0 +1,15 @@
+.root {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.counter {
+	white-space: nowrap;
+}
+
+.totals {
+	white-space: nowrap;
+	border-left: 1px solid var(--mac-border-subtle);
+	padding-left: 6px;
+}

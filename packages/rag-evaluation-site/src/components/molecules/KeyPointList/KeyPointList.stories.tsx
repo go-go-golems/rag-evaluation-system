@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { KeyPointList } from "./KeyPointList";
+
 const meta = {
 	title: "Component Library/Molecules/KeyPointList",
 	component: KeyPointList,
