@@ -20,6 +20,8 @@ RelatedFiles:
       Note: Step 21 durable browser/action smoke tests (commit 06aa1c9)
     - Path: pkg/widgetdsl/typescript.go
       Note: Step 22 precise data.v2.dsl TypeScript declarations (commit dcd5156)
+    - Path: pkg/widgetdsl/typescript_fixture_test.go
+      Note: Step 23 runtime export parity and TypeScript positive/negative fixtures (commit cee7525)
     - Path: pkg/widgetdsl/typescript_test.go
       Note: Step 22 declaration shape and legacy-API absence tests (commit dcd5156)
     - Path: pkg/xgoja/providers/widgetsite/provider_test.go
@@ -32,6 +34,7 @@ LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: Record the research journey so a senior researcher can resume without re-reading every source.
 WhenToUse: Read before resuming work on this ticket.
 ---
+
 
 
 
@@ -1363,3 +1366,72 @@ The important behavior change is that the v2 declaration surface teaches `data.c
 - Successful command: `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite -count=1`
 - Code commit: `dcd5156e0633c80669e45103fdb5b24e51042b75`
 - Ticket task checked: `[34] P5.1 Generate precise v2 TypeScript declarations`
+
+## Step 23: Add runtime export parity and TypeScript positive/negative fixtures
+
+I completed the second TypeScript validation task by adding a Go test that renders the generated `data.v2.dsl` declaration bundle, writes a real TypeScript fixture, and compiles it with the repository's frontend TypeScript compiler. The fixture includes positive fluent-builder examples and negative examples guarded by `@ts-expect-error`, so the test fails both when valid v2 code stops compiling and when legacy/raw option-bag misuse accidentally becomes accepted.
+
+I also added a runtime export parity check for the declared v2 public surface. The test verifies that `f`, `schema`, `collection`, `selection`, and `action` exist at runtime while legacy v1 exports such as `dataTable` and `cell` remain absent from `data.v2.dsl`.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 21)
+
+**Assistant interpretation:** Continue P5 after adding declarations by validating that the runtime export surface and TypeScript compiler behavior match the intended hard-cutover API.
+
+**Inferred user intent:** Prevent divergence between generated `.d.ts` files, Goja runtime exports, and public examples before expanding the DSL surface further.
+
+**Commit (code):** cee7525 — "Test Widget DSL v2 TypeScript fixtures"
+
+### What I did
+- Added `pkg/widgetdsl/typescript_fixture_test.go`.
+- Rendered the `data.v2.dsl` declaration through `tsgen/render.Bundle` in a test.
+- Wrote a temp `widgetdsl.d.ts` plus `data-v2-fixture.ts`.
+- Compiled the fixture with `packages/rag-evaluation-site/node_modules/.bin/tsc` under `--strict --noEmit`.
+- Included positive examples for schema fields, selectable table, master-detail edit, action payload paths, confirm, and `toIR()`.
+- Included expected-negative examples for:
+  - `data.dataTable(...)`,
+  - missing `schema(name)`,
+  - raw object passed to `schema.field`,
+  - non-object collection rows,
+  - raw JSON action passed to `table.rowSelect`.
+- Added a runtime export parity test for top-level `data.v2.dsl` exports and legacy-export absence.
+- Ran `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite -count=1`.
+- Checked off task 35.
+
+### Why
+- Declaration strings alone are easy to accidentally make syntactically invalid or structurally too loose. Compiling real TypeScript is the cheapest way to prove the declarations guide valid code and reject invalid code.
+- Runtime export parity prevents public declarations from documenting functions that the Goja module does not actually export.
+
+### What worked
+- The fixture compiled successfully with TypeScript, including the `@ts-expect-error` assertions.
+- The runtime parity test confirmed the v2 module exports the typed/fluent surface and does not expose v1 `dataTable`/`cell` helpers.
+
+### What didn't work
+- N/A. The first fixture/test design passed after adding the local TypeScript compiler lookup.
+
+### What I learned
+- A Go test can exercise the TypeScript declaration pipeline without committing generated `.d.ts` files: render the module declaration into a temp dir, write fixtures, then invoke `tsc`.
+- `@ts-expect-error` is useful here because it turns negative examples into durable assertions rather than comments.
+
+### What was tricky to build
+- The TypeScript compiler path is not at the repository root; it currently lives under `packages/rag-evaluation-site/node_modules/.bin/tsc`. The test locates the repo root and uses that compiler, with `WIDGETDSL_TSC` as an override.
+- The test skips if the compiler is not installed, which keeps Go-only environments from failing before `pnpm install`, but means CI should ensure frontend dependencies are installed for full validation.
+
+### What warrants a second pair of eyes
+- Decide whether the TypeScript fixture should live as a committed `.ts` file under `testdata/` instead of an embedded string in Go.
+- Decide whether the test should fail hard instead of skipping when TypeScript is unavailable once CI has a guaranteed Node setup.
+
+### What should be done in the future
+- Add the TypeScript fixture command to CI once the repo's Node dependency installation step is standardized.
+- Continue with P6 migrations: rewrite real admin/session examples to v2 APIs.
+
+### Code review instructions
+- Review `pkg/widgetdsl/typescript_fixture_test.go` first; it defines the parity and compile contract.
+- Validate with:
+  - `cd rag-evaluation-system && go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite -count=1`
+
+### Technical details
+- Successful command: `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite -count=1`
+- Code commit: `cee7525306500256690955deb340660bc0492c0d`
+- Ticket task checked: `[35] P5.2 Add runtime export parity and TypeScript positive/negative fixtures`

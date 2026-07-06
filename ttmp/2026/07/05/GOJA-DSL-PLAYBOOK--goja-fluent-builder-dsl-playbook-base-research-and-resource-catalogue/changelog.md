@@ -235,3 +235,12 @@ Step 22: Added precise data.v2.dsl TypeScript declarations for typed/fluent buil
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/typescript_test.go — DTS tests for typed builders and absence of legacy option-bag grammar
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/xgoja/providers/widgetsite/provider_test.go — Provider test now asserts data.v2.dsl TypeScript descriptor/export
 
+
+## 2026-07-05
+
+Step 23: Added data.v2.dsl runtime export parity checks and TypeScript positive/negative fixture compilation (commit cee7525).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/typescript_fixture_test.go — Runtime export parity and TypeScript fixture compilation for data.v2.dsl
+

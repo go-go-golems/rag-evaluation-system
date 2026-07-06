@@ -37,7 +37,7 @@
 - [x] P4.4 Add DSL demo page for row/server actions
 - [x] P4.5 Add demo README and remove or quarantine deprecated examples
 - [x] P5.1 Generate precise v2 TypeScript declarations
-- [ ] P5.2 Add runtime export parity and TypeScript positive/negative fixtures
+- [x] P5.2 Add runtime export parity and TypeScript positive/negative fixtures
 - [ ] P6.1 Rewrite admin agenda editor to v2 master-detail API
 - [ ] P6.2 Rewrite media library and session browse examples to v2 APIs
 - [ ] P6.3 Delete old public v1 exports from v2 modules
