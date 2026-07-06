@@ -23,6 +23,7 @@ func TestRegisterExposesSplitWidgetModules(t *testing.T) {
 	}{
 		{widgetdsl.UIModuleName, "panel"},
 		{widgetdsl.DataModuleName, "dataTable"},
+		{widgetdsl.DataV2ModuleName, "collection"},
 		{widgetdsl.ContextWindowModuleName, "contextDiagramPanel"},
 		{widgetdsl.CourseModuleName, "courseStudioShell"},
 	}
