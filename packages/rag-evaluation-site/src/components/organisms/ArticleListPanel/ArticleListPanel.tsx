@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from "react";
+import type { HTMLAttributes, MouseEvent, ReactNode } from "react";
 import { useState } from "react";
 import type { CmsArticleSummary, CmsContentStatus } from "../../../cms/types";
 import { Button, ContentStatusBadge, IconButton, SelectInput, Tag } from "../../atoms";
@@ -72,6 +72,11 @@ export function ArticleListPanel({
 }: ArticleListPanelProps) {
 	const [pending, setPending] = useState<PendingConfirm>();
 
+	const runRowAction = (event: MouseEvent<HTMLButtonElement>, action: () => void) => {
+		event.stopPropagation();
+		action();
+	};
+
 	const columns: DataTableColumn<CmsArticleSummary>[] = [
 		{
 			id: "title",
@@ -126,7 +131,7 @@ export function ArticleListPanel({
 						size="large"
 						variant="boxed"
 						label={`Edit ${row.title}`}
-						onClick={() => onRowAction(row.id, "edit")}
+						onClick={(event) => runRowAction(event, () => onRowAction(row.id, "edit"))}
 					>
 						✎
 					</IconButton>
@@ -135,7 +140,7 @@ export function ArticleListPanel({
 							size="large"
 							variant="boxed"
 							label={`Publish ${row.title}`}
-							onClick={() => onRowAction(row.id, "publish")}
+							onClick={(event) => runRowAction(event, () => onRowAction(row.id, "publish"))}
 						>
 							●
 						</IconButton>
@@ -145,7 +150,9 @@ export function ArticleListPanel({
 							size="large"
 							variant="boxed"
 							label={`Archive ${row.title}`}
-							onClick={() => setPending({ article: row, action: "archive" })}
+							onClick={(event) =>
+								runRowAction(event, () => setPending({ article: row, action: "archive" }))
+							}
 						>
 							▣
 						</IconButton>
@@ -154,7 +161,9 @@ export function ArticleListPanel({
 						size="large"
 						variant="boxed"
 						label={`Delete ${row.title}`}
-						onClick={() => setPending({ article: row, action: "delete" })}
+						onClick={(event) =>
+							runRowAction(event, () => setPending({ article: row, action: "delete" }))
+						}
 					>
 						×
 					</IconButton>

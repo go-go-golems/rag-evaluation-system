@@ -66,8 +66,8 @@ func (r *runtime) v2FieldBuilder(field v2spec.FieldSpec) *goja.Object {
 		fieldCopy.Validation.Required = true
 		return obj
 	})
-	setExport(obj, "maxLength", func(max int) *goja.Object {
-		fieldCopy.Validation.MaxLength = max
+	setExport(obj, "maxLength", func(limit int) *goja.Object {
+		fieldCopy.Validation.MaxLength = limit
 		return obj
 	})
 	setExport(obj, "rows", func(rows int) *goja.Object {
@@ -364,7 +364,7 @@ func (r *runtime) mustV2Ref(value goja.Value, wantKind string) *v2Ref {
 	if !ok || ref == nil {
 		panic(r.vm.NewGoError(fmt.Errorf("invalid v2 %s handle", wantKind)))
 	}
-	if ref.kind != wantKind && !(wantKind == "selection" && ref.kind == "selectionBuilder") {
+	if ref.kind != wantKind && (wantKind != "selection" || ref.kind != "selectionBuilder") {
 		panic(r.vm.NewGoError(fmt.Errorf("expected v2 %s handle, got %s", wantKind, ref.kind)))
 	}
 	return ref

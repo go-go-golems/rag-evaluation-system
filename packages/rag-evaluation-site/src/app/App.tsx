@@ -5,7 +5,12 @@ import { AppShell, Panel } from "../components/layout";
 import { AppNav } from "../components/molecules";
 import { CourseStudioShell } from "../components/organisms";
 import { useWidgetPage, type WidgetPageResponse } from "../hooks/useWidgetPage";
-import { dispatchWidgetAction, resolveActionPayload, type WidgetActionContext } from "../widgets/actions";
+import {
+	confirmWidgetAction,
+	dispatchWidgetAction,
+	resolveActionPayload,
+	type WidgetActionContext,
+} from "../widgets/actions";
 import { defaultWidgetRegistry } from "../widgets/defaultRegistry";
 import type {
 	ActionSpec,
@@ -59,6 +64,9 @@ export function RagEvaluationSiteApp({
 	);
 
 	async function handleAction(action: ActionSpec, context: WidgetActionContext): Promise<void> {
+		if (!confirmWidgetAction(action, context)) {
+			return;
+		}
 		if (action.kind !== "server") {
 			dispatchWidgetAction(action, context);
 			return;
@@ -201,7 +209,11 @@ function renderPage(
 						onItemSelect={(itemId) => {
 							const item = navItems.find((candidate) => candidate.id === itemId);
 							if (item?.action) {
-								dispatchWidgetAction(item.action, { value: itemId, componentType: "AppNav" }, onAction);
+								dispatchWidgetAction(
+									item.action,
+									{ value: itemId, componentType: "AppNav" },
+									onAction,
+								);
 								return;
 							}
 							navigateToPage(itemId);

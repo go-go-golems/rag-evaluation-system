@@ -396,6 +396,8 @@ func cellKind(field FieldSpec) string {
 		return "number"
 	case FieldSemanticStatus:
 		return "status"
+	case FieldSemanticPrimary, FieldSemanticShort, FieldSemanticProse, FieldSemanticTags:
+		return "field"
 	default:
 		return "field"
 	}
@@ -405,8 +407,13 @@ func gridableField(field FieldSpec) bool {
 	switch field.Semantic {
 	case FieldSemanticShort, FieldSemanticKey, FieldSemanticCount, FieldSemanticSize, FieldSemanticMeasure:
 		return true
+	case FieldSemanticProse:
+		return false
+	case FieldSemanticPrimary, FieldSemanticStatus, FieldSemanticTags:
+		return field.Editor.Control != EditorControlTextarea
+	default:
+		return field.Editor.Control != EditorControlTextarea
 	}
-	return field.Editor.Control != EditorControlTextarea && field.Semantic != FieldSemanticProse
 }
 
 func actionWithLiteralPayload(action ActionSpec, key string, value JSONValue) ActionSpec {

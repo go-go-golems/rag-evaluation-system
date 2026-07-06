@@ -1,4 +1,11 @@
-import type { ActionSpec, JsonObject, JsonValue, PayloadTemplateSpec, TemplatePartSpec, TemplateSpec } from "./ir";
+import type {
+	ActionSpec,
+	JsonObject,
+	JsonValue,
+	PayloadTemplateSpec,
+	TemplatePartSpec,
+	TemplateSpec,
+} from "./ir";
 
 export interface WidgetActionContext {
 	row?: JsonObject;
@@ -21,21 +28,27 @@ export type WidgetActionHandler = (
 	context: WidgetActionContext,
 ) => void | Promise<void>;
 
+export function confirmWidgetAction(
+	action: ActionSpec,
+	context: WidgetActionContext = {},
+): boolean {
+	if (!action.confirm || typeof window === "undefined" || typeof window.confirm !== "function") {
+		return true;
+	}
+	return window.confirm(renderTemplate(action.confirm, context, { encode: false }));
+}
+
 export function dispatchWidgetAction(
 	action: ActionSpec,
 	context: WidgetActionContext = {},
 	onAction?: WidgetActionHandler,
 ): void {
-	// Central destructive-action gate: `confirm` is part of the action contract,
-	// so it applies before both custom handlers and the built-in dispatch.
-	if (action.confirm && typeof window !== "undefined" && typeof window.confirm === "function") {
-		if (!window.confirm(renderTemplate(action.confirm, context, { encode: false }))) {
-			return;
-		}
-	}
-
 	if (onAction) {
 		onAction(action, context);
+		return;
+	}
+
+	if (!confirmWidgetAction(action, context)) {
 		return;
 	}
 
@@ -109,7 +122,13 @@ export function bindAction(
 	onAction?: WidgetActionHandler,
 ): (() => void) | undefined {
 	if (!action) return undefined;
-	return () => dispatchWidgetAction(action, context, onAction);
+	return () => {
+		if (onAction) {
+			onAction(action, context);
+			return;
+		}
+		dispatchWidgetAction(action, context);
+	};
 }
 
 export function resolveActionPayload(
@@ -175,7 +194,13 @@ function resolveTemplatePart(part: TemplatePartSpec, context: WidgetActionContex
 
 function toJsonValue(value: unknown): JsonValue {
 	if (value === undefined) return null;
-	if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
+	if (
+		value === null ||
+		typeof value === "string" ||
+		typeof value === "number" ||
+		typeof value === "boolean"
+	)
+		return value;
 	if (Array.isArray(value)) return value.map(toJsonValue);
 	if (typeof value === "object") {
 		const out: JsonObject = {};
@@ -188,11 +213,18 @@ function toJsonValue(value: unknown): JsonValue {
 }
 
 function isPayloadTemplate(value: JsonObject | PayloadTemplateSpec): value is PayloadTemplateSpec {
-	return value.kind === "payloadTemplate" && typeof value.fields === "object" && value.fields !== null;
+	return (
+		value.kind === "payloadTemplate" && typeof value.fields === "object" && value.fields !== null
+	);
 }
 
 function isTemplatePart(value: TemplatePartSpec | JsonValue): value is TemplatePartSpec {
-	return Boolean(value && typeof value === "object" && "kind" in value && (value.kind === "path" || value.kind === "text" || value.kind === "literal"));
+	return Boolean(
+		value &&
+			typeof value === "object" &&
+			"kind" in value &&
+			(value.kind === "path" || value.kind === "text" || value.kind === "literal"),
+	);
 }
 
 function lookupContext(path: string, context: WidgetActionContext): unknown {
