@@ -88,8 +88,12 @@ const schema = data.schema("sessions")
 
 const tableNode = data.collection("sessions", rows)
   .schema(schema)
+  .empty("No sessions yet.")
   .select((selection) => selection.urlParam("selected", "sess-intro"))
-  .table((table) => table.rowSelect(data.action.navigate("?selected=${row.id}")))
+  .table((table) => table
+    .className("sessions-table")
+    .rowSelect(data.action.navigate("?selected=${row.id}"))
+    .actionColumn("open", "Open", "Open", data.action.navigate("/sessions/${row.id}"), { maxWidth: "8ch" }))
   .toIR();
 
 tableNode.kind;

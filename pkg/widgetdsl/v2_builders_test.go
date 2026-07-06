@@ -52,6 +52,57 @@ func TestDataV2BuilderBuildsSimpleTable(t *testing.T) {
 	}
 }
 
+func TestDataV2BuilderBuildsTableWithExplicitActionColumns(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const data = require("data.v2.dsl");
+		const schema = data.schema("Material")
+			.field("file", data.f.key().label("File"))
+			.field("title", data.f.primary().label("Title"))
+			.field("size", data.f.short().label("Size"))
+			.build();
+		const ir = data.collection("materials", [{ file: "deck.md", title: "Deck", href: "/slides/deck.md", size: "2 KB" }])
+			.schema(schema)
+			.empty("No files.")
+			.table(t => t
+				.className("course-material-table")
+				.actionColumn("open", "Open", "Open", data.action.navigate("${row.href}"), { maxWidth: "8ch" })
+				.actionColumn("delete", "Delete", "Delete", data.action.server("delete-material").confirm("Delete ${row.file}?"), { maxWidth: "9ch" }))
+			.toIR();
+		JSON.stringify(ir.children[0].props);
+	`)
+	if err != nil {
+		t.Fatalf("build table with action columns: %v", err)
+	}
+	var props map[string]any
+	if err := json.Unmarshal([]byte(value.String()), &props); err != nil {
+		t.Fatalf("decode props: %v", err)
+	}
+	if props["emptyMessage"] != "No files." {
+		t.Fatalf("emptyMessage = %#v", props["emptyMessage"])
+	}
+	if props["className"] != "course-material-table" {
+		t.Fatalf("className = %#v", props["className"])
+	}
+	columns := props["columns"].([]any)
+	if len(columns) != 5 {
+		t.Fatalf("columns len = %d, want 5", len(columns))
+	}
+	open := columns[len(columns)-2].(map[string]any)
+	if open["id"] != "open" || open["maxWidth"] != "8ch" {
+		t.Fatalf("open column = %#v", open)
+	}
+	cell := open["cell"].(map[string]any)
+	action := cell["action"].(map[string]any)
+	if action["to"] != "${row.href}" {
+		t.Fatalf("open action.to = %#v", action["to"])
+	}
+}
+
 func TestDataV2BuilderBuildsSelectableTable(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()

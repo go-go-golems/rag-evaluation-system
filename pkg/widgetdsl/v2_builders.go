@@ -139,6 +139,10 @@ func (r *runtime) v2CollectionCtor(call goja.FunctionCall) goja.Value {
 		collection.Schema = *schemaRef.schema
 		return obj
 	})
+	setExport(obj, "empty", func(message string) *goja.Object {
+		collection.Empty = message
+		return obj
+	})
 	setExport(obj, "select", func(arg goja.Value) *goja.Object {
 		if fn, ok := goja.AssertFunction(arg); ok {
 			selectionBuilder := r.v2SelectionBuilder()
@@ -289,9 +293,24 @@ func (r *runtime) v2CollectionActionsBuilder(collection *v2spec.CollectionSpec) 
 
 func (r *runtime) v2TableBuilder(collection *v2spec.CollectionSpec) *goja.Object {
 	obj := r.vm.NewObject()
+	setExport(obj, "className", func(className string) *goja.Object {
+		collection.Table.ClassName = className
+		return obj
+	})
 	setExport(obj, "rowSelect", func(actionValue goja.Value) *goja.Object {
 		actionRef := r.mustV2Ref(actionValue, "action")
-		collection.Actions.Open = actionRef.action
+		collection.Table.RowSelect = actionRef.action
+		return obj
+	})
+	setExport(obj, "actionColumn", func(id string, header string, label string, actionValue goja.Value, options ...goja.Value) *goja.Object {
+		actionRef := r.mustV2Ref(actionValue, "action")
+		column := v2spec.TableActionColumnSpec{ID: id, Header: header, Label: label, Action: *actionRef.action}
+		if opts := exportOptions(options); opts != nil {
+			if maxWidth, ok := opts["maxWidth"].(string); ok {
+				column.MaxWidth = maxWidth
+			}
+		}
+		collection.Table.ActionColumns = append(collection.Table.ActionColumns, column)
 		return obj
 	})
 	return obj

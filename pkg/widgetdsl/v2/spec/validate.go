@@ -136,6 +136,10 @@ func (s CollectionSpec) Validate(path string) []ValidationIssue {
 	if s.Selection != nil {
 		issues = append(issues, s.Selection.Validate(path+".selection")...)
 	}
+	for i, column := range s.Table.ActionColumns {
+		issues = append(issues, column.Validate(fmt.Sprintf("%s.table.actionColumns[%d]", path, i))...)
+	}
+	issues = append(issues, validateOptionalAction(s.Table.RowSelect, path+".table.rowSelect")...)
 	issues = append(issues, validateOptionalAction(s.Actions.Open, path+".actions.open")...)
 	issues = append(issues, validateOptionalAction(s.Actions.Reorder, path+".actions.reorder")...)
 	issues = append(issues, validateOptionalAction(s.Actions.Remove, path+".actions.remove")...)
@@ -237,6 +241,19 @@ func (s TemplateValue) Validate(path string) []ValidationIssue {
 		return []ValidationIssue{errorIssue("template.value.kind.invalid", path+".kind", fmt.Sprintf("Unknown template value kind %q.", s.Kind), "Use text, path, or literal.")}
 	}
 	return nil
+}
+
+// Validate checks an explicit row-action table column.
+func (s TableActionColumnSpec) Validate(path string) []ValidationIssue {
+	issues := []ValidationIssue{}
+	if strings.TrimSpace(s.ID) == "" {
+		issues = append(issues, errorIssue("table_action.id.required", path+".id", "Table action column id is required.", "Use a stable id such as open, edit, or delete."))
+	}
+	if strings.TrimSpace(s.Label) == "" {
+		issues = append(issues, errorIssue("table_action.label.required", path+".label", "Table action column label is required.", "Set the visible button label."))
+	}
+	issues = append(issues, s.Action.Validate(path+".action")...)
+	return issues
 }
 
 func validateOptionalAction(action *ActionSpec, path string) []ValidationIssue {

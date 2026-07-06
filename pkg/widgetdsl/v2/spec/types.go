@@ -143,6 +143,7 @@ type CollectionSpec struct {
 	Selection   *SelectionSpec
 	Arrangement ArrangementSpec
 	Actions     CollectionActions
+	Table       TableSpec
 	Empty       string
 }
 
@@ -177,6 +178,20 @@ const (
 	ArrangementKindTable        ArrangementKind = "table"
 	ArrangementKindMasterDetail ArrangementKind = "master-detail"
 )
+
+type TableSpec struct {
+	ActionColumns []TableActionColumnSpec
+	RowSelect     *ActionSpec
+	ClassName     string
+}
+
+type TableActionColumnSpec struct {
+	ID       string
+	Header   string
+	Label    string
+	Action   ActionSpec
+	MaxWidth string
+}
 
 type CollectionActions struct {
 	Open    *ActionSpec

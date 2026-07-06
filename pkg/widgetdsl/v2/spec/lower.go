@@ -90,6 +90,9 @@ func (s CollectionSpec) tableNode(keyField string) NodeSpec {
 		"getRowKey": keyField,
 		"columns":   s.tableColumns(),
 	}
+	if s.Table.ClassName != "" {
+		props["className"] = s.Table.ClassName
+	}
 	if s.Empty != "" {
 		props["emptyMessage"] = s.Empty
 	}
@@ -97,11 +100,13 @@ func (s CollectionSpec) tableNode(keyField string) NodeSpec {
 		if s.Selection.Value != "" && s.Selection.Value != "__new" {
 			props["selectedKey"] = s.Selection.Value
 		}
-		if s.Actions.Open != nil {
-			props["onRowSelect"] = s.Actions.Open.ToWidgetAction()
+		if s.Table.RowSelect != nil {
+			props["onRowSelect"] = s.Table.RowSelect.ToWidgetAction()
 		} else {
 			props["onRowSelect"] = ActionSpec{Kind: ActionKindNavigate, To: fmt.Sprintf("?%s=${row.%s}", s.Selection.Param, keyField)}.ToWidgetAction()
 		}
+	} else if s.Table.RowSelect != nil {
+		props["onRowSelect"] = s.Table.RowSelect.ToWidgetAction()
 	} else if s.Actions.Open != nil {
 		props["onRowSelect"] = s.Actions.Open.ToWidgetAction()
 	}
@@ -130,6 +135,17 @@ func (s CollectionSpec) tableColumns() []JSONValue {
 
 func (s CollectionSpec) actionColumns() []JSONValue {
 	columns := []JSONValue{}
+	for _, actionColumn := range s.Table.ActionColumns {
+		column := JSONObject{
+			"id":     actionColumn.ID,
+			"header": actionColumn.Header,
+			"cell":   JSONObject{"kind": "actionButton", "label": actionColumn.Label, "action": actionColumn.Action.ToWidgetAction()},
+		}
+		if actionColumn.MaxWidth != "" {
+			column["maxWidth"] = actionColumn.MaxWidth
+		}
+		columns = append(columns, column)
+	}
 	if s.Actions.Open != nil {
 		columns = append(columns, JSONObject{
 			"id": "open", "header": "Open", "maxWidth": "8ch",
