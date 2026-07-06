@@ -9,15 +9,19 @@
 }
 
 .header {
-	color: var(--mac-accent);
+	color: var(--mac-text);
 	font: var(--rag-font-role-panel-heading);
 	letter-spacing: 0.07em;
 	text-transform: uppercase;
-	margin-bottom: 12px;
+	margin-bottom: 8px;
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
 	gap: 12px;
+}
+
+.headerAccent {
+	color: var(--mac-accent);
 }
 
 .body,

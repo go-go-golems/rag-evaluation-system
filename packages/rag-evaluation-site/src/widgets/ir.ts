@@ -742,6 +742,7 @@ export interface PanelWidgetProps extends BaseWidgetProps {
 	actions?: RenderableValue;
 	density?: "normal" | "condensed";
 	fill?: boolean;
+	titleTone?: "default" | "accent";
 }
 
 export interface ScrollRegionWidgetProps extends BaseWidgetProps {

@@ -11,6 +11,7 @@ export const panelWidget = defineWidget<PanelWidgetProps>({
 			title={ctx.renderValue(props.title)}
 			actions={ctx.renderValue(props.actions)}
 			density={props.density}
+			titleTone={props.titleTone}
 			fill={props.fill}
 		>
 			{children}
