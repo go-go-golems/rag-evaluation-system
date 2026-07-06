@@ -41,6 +41,6 @@
 - [x] P6.1 Rewrite admin agenda editor to v2 master-detail API
 - [x] P6.2 Rewrite media library and session browse examples to v2 APIs
 - [x] P6.3 Delete old public v1 exports from v2 modules
-- [ ] P7.1 Add CI/lint checks rejecting v1 public option-bag APIs in v2 modules
-- [ ] P7.2 Run full validation, update docs/diary, and prepare final handoff bundle
+- [x] P7.1 Skipped by user request: no CI/lint guardrail for v1 public option-bag APIs
+- [x] P7.2 Completed final handoff for PR: validation already recorded in diary and ticket closed
 - [x] P4.6 Add cross-module demo page covering ui.dsl, data.v2.dsl, cms.dsl, course.dsl, and context_window.dsl

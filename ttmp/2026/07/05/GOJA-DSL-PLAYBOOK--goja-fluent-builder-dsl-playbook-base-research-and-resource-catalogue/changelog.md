@@ -277,3 +277,8 @@ Steps 26-28: Completed P6 after the agenda port: extended data.v2.dsl table acti
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/xgoja.package.yaml — Legacy data.dsl removed from selected course runtime modules (commit 49dc871)
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders.go — Added table action-column/className/empty support and rowSelect separation (commit 166e8dc)
 
+
+## 2026-07-06
+
+Ticket closed after Widget DSL v2 hard cutover: P1-P6 complete, P7.1 intentionally skipped by user request, validation and handoff details recorded in the investigation diary.
+

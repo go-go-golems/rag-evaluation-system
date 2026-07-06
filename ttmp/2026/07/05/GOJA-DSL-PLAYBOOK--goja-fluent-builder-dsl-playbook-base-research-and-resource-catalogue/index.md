@@ -1,7 +1,7 @@
 ---
 Title: Goja fluent-builder DSL playbook — base research and resource catalogue
 Ticket: GOJA-DSL-PLAYBOOK
-Status: active
+Status: complete
 Topics:
     - goja
     - dsl
@@ -14,10 +14,11 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2026-07-05T12:33:51.438669467-04:00
+LastUpdated: 2026-07-06T15:25:55.720909659-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 # Goja fluent-builder DSL playbook — base research and resource catalogue
 
