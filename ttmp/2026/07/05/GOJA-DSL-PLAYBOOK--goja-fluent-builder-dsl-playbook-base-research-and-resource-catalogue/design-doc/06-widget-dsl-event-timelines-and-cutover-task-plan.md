@@ -22,6 +22,10 @@ RelatedFiles:
         Clarifies New demo agenda item behavior in demo page captions
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/server.js
       Note: Backend Widget page
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/webapp/playwright.config.ts
+      Note: Starts hotreload-host for browser validation (commit 06aa1c9)
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/webapp/tests/dsl-examples.spec.ts
+      Note: Durable browser/action smoke validation for DSL examples (commit 06aa1c9)
     - Path: packages/rag-evaluation-site/src/app/App.tsx
       Note: |-
         Frontend page loading and action dispatch timeline
@@ -86,6 +90,7 @@ LastUpdated: 2026-07-05T20:05:00-04:00
 WhatFor: Use when implementing or reviewing Widget DSL v2 behavior. It explains what authors write, what Widget IR is produced, what HTTP requests happen, what React code runs, and what backend code handles each interaction.
 WhenToUse: Read beside design-doc 05 before implementing table, selection, master-detail editor, form submit, row action, or richer collection examples.
 ---
+
 
 
 
@@ -915,6 +920,32 @@ Stored screenshot evidence:
 - `artifacts/dsl-demo-screenshots/actions.png`
 
 A visual QA pass confirmed that all four screenshots show the intended demo page content and no visible error page.
+
+### Durable browser smoke validation
+
+The manual browser/screenshot pass has now been converted into a repeatable Playwright suite in `go-go-course/cmd/go-go-course/webapp/tests/dsl-examples.spec.ts`. The test config starts the same hotreload host used for manual validation:
+
+```bash
+cd go-go-course/cmd/go-go-course/webapp
+pnpm test:dsl-examples
+```
+
+The suite covers:
+
+- simple table render and no row-navigation side effect;
+- selectable table row click, URL update, and visible selected-key text;
+- master-detail row selection and native Save redirect;
+- `__new` master-detail mode with editable `id` field and visible Save button;
+- reorder action POST to `/api/widget/actions/dsl-demo-reorder-agenda` with `ok: true` and `refresh: true`;
+- delete confirmation cancel with no delete POST;
+- delete confirmation accept with POST to `/api/widget/actions/dsl-demo-delete-agenda` and refresh result.
+
+Validation result on 2026-07-05:
+
+- `pnpm test:dsl-examples` → `7 passed (9.9s)`
+- `pnpm typecheck` in the webapp → passed
+
+Code commit: `06aa1c9ca4e49f986475007c2221767b9aaadc60` (`Add Widget DSL demo browser smoke tests`).
 
 ### Baseline validation commands
 

@@ -12,6 +12,12 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/webapp/package.json
+      Note: Step 21 test script and Playwright dependency (commit 06aa1c9)
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/webapp/playwright.config.ts
+      Note: Step 21 hotreload-host Playwright server setup (commit 06aa1c9)
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/webapp/tests/dsl-examples.spec.ts
+      Note: Step 21 durable browser/action smoke tests (commit 06aa1c9)
     - Path: ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md
       Note: Step 5 records the DSL overhaul design guide
 ExternalSources: []
@@ -20,6 +26,7 @@ LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: Record the research journey so a senior researcher can resume without re-reading every source.
 WhenToUse: Read before resuming work on this ticket.
 ---
+
 
 
 # Investigation diary
@@ -1155,7 +1162,7 @@ Also not sure if the "New demo agenda item" is uspposed to work or not"
 
 **Inferred user intent:** Make the demos usable and self-explanatory before treating them as validation/examples.
 
-**Commit (code):** pending — "Fix Widget DSL demo form controls"
+**Commit (code):** 724f3d57 — "Fix Widget DSL demo form controls"
 
 ### What I did
 - Fixed `FormPanel` to use `submitLabel ?? "Save"`, so absent labels still render visibly even when the widget adapter passes `null`.
@@ -1202,3 +1209,86 @@ Also not sure if the "New demo agenda item" is uspposed to work or not"
 - Updated screenshots:
   - `artifacts/dsl-demo-screenshots/master-detail.png`
   - `artifacts/dsl-demo-screenshots/master-detail-new.png`
+
+## Step 21: Add durable browser smoke tests for Widget DSL demos and actions
+
+I turned the prior manual browser validation into a repeatable Playwright test harness in `go-go-course`. The new smoke suite starts the `hotreload-host`, loads the four Widget DSL v2 demo pages, verifies selection URL behavior, native form save redirects, new-item editability, row action POST/refresh behavior, and both cancel and accept branches of the delete confirmation.
+
+This closes the earlier gap where screenshots and `curl` checks proved the demos once, but did not provide a durable regression test for future renderer or DSL changes. The test lives with the generated course SPA so it validates the real embedded app path rather than only backend JSON fixtures.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue, build all remaining tasks, and create examples for all DSL areas, including DSLs, CMS, UI, context, etc."
+
+**Assistant interpretation:** Continue the remaining GOJA-DSL-PLAYBOOK implementation tasks, starting with the unfinished action/browser validation work, and then expand coverage/examples across the other DSL module families.
+
+**Inferred user intent:** Move from design and one-off demos toward a complete, validated implementation with durable examples and tests across the full DSL surface.
+
+**Commit (code):** 06aa1c9 — "Add Widget DSL demo browser smoke tests"
+
+### What I did
+- Added `@playwright/test` to `go-go-course/cmd/go-go-course/webapp` and a `test:dsl-examples` script.
+- Added `playwright.config.ts` that starts `cd .. && go run ./hotreload-host -listen 127.0.0.1:18787` and waits for `/api/widget/health`.
+- Added `tests/dsl-examples.spec.ts` covering:
+  - simple table render/no-navigation behavior,
+  - selectable table row click and selected query param,
+  - master-detail selection and native Save redirect,
+  - `__new` item behavior and editable `id` field,
+  - reorder action POST and refresh result,
+  - delete confirmation cancel with no POST,
+  - delete confirmation accept with server POST and refresh result.
+- Ran `pnpm test:dsl-examples`; fixed selector assumptions; reran until all 7 tests passed.
+- Ran `pnpm typecheck` for the webapp.
+- Committed the test harness in `go-go-course`.
+- Checked off task 28 and updated the ticket changelog/file relationships.
+
+### Why
+- P3.4 required action tests for navigate/reorder/delete/confirm cancel/refresh. The existing manual screenshots were useful evidence but not sufficient as a regression harness.
+- The test should exercise the same app shell and hotreload-host route path a human uses, because previous failures involved integration boundaries such as module selection, embedded assets, and browser behavior.
+
+### What worked
+- Final command succeeded:
+  - `cd go-go-course/cmd/go-go-course/webapp && pnpm test:dsl-examples`
+  - Result: `7 passed (9.9s)`
+- TypeScript validation succeeded:
+  - `cd go-go-course/cmd/go-go-course/webapp && pnpm typecheck`
+- The confirm-cancel test confirmed that dismissing the browser dialog prevents the delete POST.
+- The confirm-accept test confirmed that accepting the dialog posts to `/api/widget/actions/dsl-demo-delete-agenda` and returns `{ ok: true, refresh: true }`.
+
+### What didn't work
+- The first Playwright run failed 5 of 7 tests because I assumed several section titles were semantic headings. The renderer exposes them as plain text, not heading roles.
+- Example failure:
+  - Command: `cd go-go-course/cmd/go-go-course/webapp && pnpm test:dsl-examples`
+  - Error: `Locator: getByRole('heading', { name: 'Simplest table' }) Expected: visible Timeout: 5000ms Error: element(s) not found`
+- I fixed the tests by using visible text locators for plain-text section titles and direct field selectors where the current form renderer does not create labelled textbox roles.
+- A second run had one remaining failure because `getByText('New item ID')` did not match text split across elements. I changed that assertion to `getByText('New item', { exact: false })`.
+
+### What I learned
+- The current renderer does not always emit accessible heading/label semantics for section titles and form fields. Tests can still validate behavior, but this is also evidence that UI accessibility should be improved separately.
+- Playwright webServer can reliably start the hotreload-host, which is better than relying on the stale generated binary flags that previously failed with `unknown flag: --http-listen`.
+
+### What was tricky to build
+- The browser-visible page content is produced by the Widget renderer, not by static HTML. That meant the test assertions needed to follow actual rendered accessibility output rather than the conceptual component names in the DSL examples.
+- Testing confirm cancel required proving a negative: after dismissing the dialog, no POST should happen. I used a request counter and a short wait after dismissal; this is sufficient for the current synchronous action path but should be revisited if actions become queued/asynchronous.
+
+### What warrants a second pair of eyes
+- The tests use text locators for section titles because they are not headings. A reviewer should decide whether the renderer should emit better semantic headings and labels, then update tests accordingly.
+- The negative assertion for confirm cancel uses a 300ms wait. It is pragmatic, but not as strong as an explicit action dispatcher test would be.
+
+### What should be done in the future
+- Add renderer accessibility improvements for headings and form label associations.
+- Consider adding lower-level frontend tests for `dispatchWidgetAction` once the frontend package has a stable JS test harness.
+- Continue with P5 TypeScript declaration generation/parity and the broader DSL family examples requested by the user.
+
+### Code review instructions
+- Start with `go-go-course/cmd/go-go-course/webapp/tests/dsl-examples.spec.ts`.
+- Review `go-go-course/cmd/go-go-course/webapp/playwright.config.ts` for the `hotreload-host` command and health URL.
+- Validate with:
+  - `cd go-go-course/cmd/go-go-course/webapp && pnpm test:dsl-examples`
+  - `cd go-go-course/cmd/go-go-course/webapp && pnpm typecheck`
+
+### Technical details
+- Test command: `pnpm test:dsl-examples`
+- Passing result: `7 passed (9.9s)`
+- Code commit: `06aa1c9ca4e49f986475007c2221767b9aaadc60`
+- Ticket task checked: `[28] P3.4 Add action tests for navigate, reorder, delete, confirm cancel, and refresh`

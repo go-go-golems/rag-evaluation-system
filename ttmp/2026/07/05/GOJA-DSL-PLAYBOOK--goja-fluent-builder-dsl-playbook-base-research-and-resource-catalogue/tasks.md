@@ -30,7 +30,7 @@
 - [x] P3.1 Define Action IR v2 payload/template model and TypeScript types
 - [x] P3.2 Centralize confirmation handling for server actions
 - [x] P3.3 Fix DataTable action-cell row context to use table row key
-- [ ] P3.4 Add action tests for navigate, reorder, delete, confirm cancel, and refresh
+- [x] P3.4 Add action tests for navigate, reorder, delete, confirm cancel, and refresh
 - [x] P4.1 Add DSL demo page for simplest table
 - [x] P4.2 Add DSL demo page for selectable table
 - [x] P4.3 Add DSL demo page for master-detail editor

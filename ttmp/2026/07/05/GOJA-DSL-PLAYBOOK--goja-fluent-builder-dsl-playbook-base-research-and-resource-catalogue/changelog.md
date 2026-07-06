@@ -214,3 +214,13 @@ Fixed demo form usability: FormPanel submit buttons now show the default Save la
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/FormPanel/FormPanel.tsx — Submit label fix
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/lower.go — New-item editable key behavior
 
+
+## 2026-07-05
+
+Step 21: Added durable Playwright browser smoke tests for Widget DSL v2 demo pages and checked off P3.4 action validation (go-go-course commit 06aa1c9).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/webapp/playwright.config.ts — Playwright webServer config for hotreload-host
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/webapp/tests/dsl-examples.spec.ts — Browser smoke tests for all four Widget DSL v2 demo pages and action confirm flows
+
