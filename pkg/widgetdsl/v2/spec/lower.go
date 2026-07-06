@@ -188,22 +188,22 @@ func (s CollectionSpec) detailNode(keyField string) NodeSpec {
 			}
 		}
 	}
-	form := s.recordFormNode(values, title)
+	form := s.recordFormNode(values, title, s.Selection.Value == "__new")
 	children := []NodeSpec{form}
 	children = append(children, NodeSpec{Kind: NodeKindComponent, Type: "Inline", Props: JSONObject{"gap": "sm"}, Children: []NodeSpec{{Kind: NodeKindComponent, Type: "Button", Props: JSONObject{"action": ActionSpec{Kind: ActionKindNavigate, To: "?" + s.Selection.Param + "="}.ToWidgetAction()}, Children: []NodeSpec{{Kind: NodeKindText, Text: "Close"}}}}})
 	return NodeSpec{Kind: NodeKindComponent, Type: "Stack", Props: JSONObject{"gap": "sm"}, Children: children}
 }
 
-func (s CollectionSpec) recordFormNode(values JSONObject, title string) NodeSpec {
+func (s CollectionSpec) recordFormNode(values JSONObject, title string, newItem bool) NodeSpec {
 	props := JSONObject{"title": title}
 	if s.Actions.Submit != nil {
 		props["formAction"] = s.Actions.Submit.FormAction
 		props["method"] = valueOrDefault(s.Actions.Submit.Method, "post")
 	}
-	return NodeSpec{Kind: NodeKindComponent, Type: "FormPanel", Props: props, Children: s.recordRows(values)}
+	return NodeSpec{Kind: NodeKindComponent, Type: "FormPanel", Props: props, Children: s.recordRows(values, newItem)}
 }
 
-func (s CollectionSpec) recordRows(values JSONObject) []NodeSpec {
+func (s CollectionSpec) recordRows(values JSONObject, newItem bool) []NodeSpec {
 	rows := []NodeSpec{}
 	grid := []NodeSpec{}
 	flush := func() {
@@ -222,7 +222,7 @@ func (s CollectionSpec) recordRows(values JSONObject) []NodeSpec {
 		grid = []NodeSpec{}
 	}
 	for _, field := range s.Schema.Fields {
-		row := fieldRowNode(field, values)
+		row := fieldRowNode(field, values, newItem)
 		if gridableField(field) {
 			grid = append(grid, row)
 			continue
@@ -289,13 +289,13 @@ func (s TemplateSpec) LegacyTemplateString() string {
 	return out
 }
 
-func fieldRowNode(field FieldSpec, values JSONObject) NodeSpec {
+func fieldRowNode(field FieldSpec, values JSONObject, newItem bool) NodeSpec {
 	controlType := "TextInput"
 	orientation := "inline"
 	controlProps := JSONObject{
 		"name":         field.Name,
 		"defaultValue": stringifyJSON(values[field.Name]),
-		"readOnly":     field.Editor.ReadOnly || field.Semantic == FieldSemanticKey,
+		"readOnly":     field.Editor.ReadOnly || (field.Semantic == FieldSemanticKey && !newItem),
 	}
 	if field.Editor.Placeholder != "" {
 		controlProps["placeholder"] = field.Editor.Placeholder

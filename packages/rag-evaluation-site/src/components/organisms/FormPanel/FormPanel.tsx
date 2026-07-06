@@ -45,6 +45,7 @@ export function FormPanel({
 	children,
 	...rest
 }: FormPanelProps) {
+	const resolvedSubmitLabel = submitLabel ?? "Save";
 	const showStatus = status !== "idle" || Boolean(statusMessage);
 	const normalizedStatus = status === "idle" ? "ready" : statusKind[status];
 	const resolvedStatusMessage =
@@ -78,8 +79,8 @@ export function FormPanel({
 									{resetLabel}
 								</Button>
 							)}
-							<Button type="submit" size="compact" variant="primary" disabled={controlsDisabled}>
-								{submitLabel}
+							<Button type="submit" size="normal" variant="primary" disabled={controlsDisabled}>
+								{resolvedSubmitLabel}
 							</Button>
 						</Inline>
 					</div>

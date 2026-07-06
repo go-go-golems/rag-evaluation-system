@@ -203,3 +203,14 @@ Cleaned up public Widget DSL docs so v2 examples are primary and v1 option-bag d
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md — Deprecated-example cleanup
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/06-widget-dsl-event-timelines-and-cutover-task-plan.md — Real browser/demo validation evidence
 
+
+## 2026-07-05
+
+Fixed demo form usability: FormPanel submit buttons now show the default Save label visibly, buttons have minimum sizes, __new master-detail forms keep key fields editable, and demo pages explain that New demo agenda item is non-persistent.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js — New item explanatory caption
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/FormPanel/FormPanel.tsx — Submit label fix
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2/spec/lower.go — New-item editable key behavior
+

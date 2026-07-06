@@ -17,19 +17,25 @@ RelatedFiles:
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/lib/pages/admin-course-cms.js
       Note: Real master-detail agenda editor consumer
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js
-      Note: Live demo pages for v2 simplest table selectable table and master-detail editor
+      Note: |-
+        Live demo pages for v2 simplest table selectable table and master-detail editor
+        Clarifies New demo agenda item behavior in demo page captions
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/server.js
       Note: Backend Widget page
     - Path: packages/rag-evaluation-site/src/app/App.tsx
       Note: |-
         Frontend page loading and action dispatch timeline
         Server action payload hydration and direct navigation confirmation paths
+    - Path: packages/rag-evaluation-site/src/components/atoms/Button/Button.module.css
+      Note: Makes compact and normal buttons visibly sized instead of tiny black squares
     - Path: packages/rag-evaluation-site/src/components/molecules/DataTable/DataTable.widget.tsx
       Note: |-
         DataTable Widget IR adapter and row action context
         Passes getRowKey into action-cell rendering
     - Path: packages/rag-evaluation-site/src/components/organisms/FormPanel/FormPanel.tsx
-      Note: Native form submit behavior for detail editors
+      Note: |-
+        Native form submit behavior for detail editors
+        Fixes missing default submit label when WidgetRenderer passed null for absent submitLabel
     - Path: packages/rag-evaluation-site/src/widgets/actions.ts
       Note: |-
         Browser action dispatcher for navigate/server/confirm behavior
@@ -45,9 +51,13 @@ RelatedFiles:
     - Path: pkg/widgetdsl/v2/spec/doc.go
       Note: Package documentation for the v2 spec layer
     - Path: pkg/widgetdsl/v2/spec/lower.go
-      Note: Initial lowering from typed v2 specs to existing Widget IR maps for pages
+      Note: |-
+        Initial lowering from typed v2 specs to existing Widget IR maps for pages
+        Allows new master-detail key fields to be editable in __new mode
     - Path: pkg/widgetdsl/v2/spec/lower_test.go
-      Note: Positive and negative tests for simple table
+      Note: |-
+        Positive and negative tests for simple table
+        Regression test for editable key in new master-detail form
     - Path: pkg/widgetdsl/v2/spec/types.go
       Note: Initial typed v2 Widget DSL intent model for pages
     - Path: pkg/widgetdsl/v2/spec/validate.go
@@ -76,6 +86,7 @@ LastUpdated: 2026-07-05T20:05:00-04:00
 WhatFor: Use when implementing or reviewing Widget DSL v2 behavior. It explains what authors write, what Widget IR is produced, what HTTP requests happen, what React code runs, and what backend code handles each interaction.
 WhenToUse: Read beside design-doc 05 before implementing table, selection, master-detail editor, form submit, row action, or richer collection examples.
 ---
+
 
 
 

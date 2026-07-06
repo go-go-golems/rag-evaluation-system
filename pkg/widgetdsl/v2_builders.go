@@ -30,7 +30,7 @@ func (r *runtime) installDataV2(exports *goja.Object) {
 func (r *runtime) v2FieldFactoryObject() *goja.Object {
 	f := r.vm.NewObject()
 	setExport(f, "key", func() *goja.Object {
-		return r.v2FieldBuilder(v2spec.FieldSpec{Kind: v2spec.FieldKindString, Semantic: v2spec.FieldSemanticKey, Editor: v2spec.EditorSpec{Control: v2spec.EditorControlText, ReadOnly: true}, Summary: v2spec.SummarySpec{CellKind: "caption"}})
+		return r.v2FieldBuilder(v2spec.FieldSpec{Kind: v2spec.FieldKindString, Semantic: v2spec.FieldSemanticKey, Editor: v2spec.EditorSpec{Control: v2spec.EditorControlText}, Summary: v2spec.SummarySpec{CellKind: "caption"}})
 	})
 	setExport(f, "primary", func() *goja.Object {
 		return r.v2FieldBuilder(v2spec.FieldSpec{Kind: v2spec.FieldKindString, Semantic: v2spec.FieldSemanticPrimary, Editor: v2spec.EditorSpec{Control: v2spec.EditorControlText}, Summary: v2spec.SummarySpec{CellKind: "field"}})

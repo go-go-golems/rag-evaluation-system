@@ -1138,3 +1138,67 @@ I also cleaned up public examples so new readers see `data.v2.dsl` first. The pu
   - `artifacts/dsl-demo-screenshots/selectable.png`
   - `artifacts/dsl-demo-screenshots/master-detail.png`
   - `artifacts/dsl-demo-screenshots/actions.png`
+
+## Step 20: Fix form submit visibility and clarify New demo agenda behavior
+
+The user reported that form submit buttons looked like tiny black squares and asked whether “New demo agenda item” was supposed to work. I reproduced the problem in screenshots: the button box was rendered, but the `Save` label was missing. The root cause was `FormPanel.widget.tsx` passing `null` for an absent `submitLabel`; React default parameters only apply to `undefined`, so `FormPanel` received `submitLabel = null` and rendered an empty primary button.
+
+I fixed the label fallback inside `FormPanel`, made button sizing more robust, and clarified the New demo flow. The New button is supposed to open a blank demo form; it is not a persistent create operation. The demo now says that explicitly, and v2 lowering makes the key field editable in `__new` mode so the blank form is less confusing.
+
+### Prompt Context
+
+**User prompt (verbatim):** "the submit button on the forms is like, a tiny black square that's barely visible. 
+
+Also not sure if the "New demo agenda item" is uspposed to work or not"
+
+**Assistant interpretation:** Fix the visual defect on form submit buttons and clarify or repair the New demo item behavior.
+
+**Inferred user intent:** Make the demos usable and self-explanatory before treating them as validation/examples.
+
+**Commit (code):** pending — "Fix Widget DSL demo form controls"
+
+### What I did
+- Fixed `FormPanel` to use `submitLabel ?? "Save"`, so absent labels still render visibly even when the widget adapter passes `null`.
+- Changed form submit buttons to use normal button size.
+- Added minimum inline/block sizes and inline-flex centering to button CSS.
+- Changed v2 key field defaults so existing rows remain read-only through lowering logic, but new `__new` master-detail forms can edit the key field.
+- Added a regression test for editable key fields in new master-detail mode.
+- Added explanatory captions to the master-detail/action demos when `agenda=__new`.
+- Rebuilt the rag frontend package and go-go-course embedded SPA assets from the local rag source.
+- Re-ran browser screenshots and verified the Save button is visible and the new-item caption appears.
+
+### Why
+- Empty primary buttons make the form look broken. The New demo behavior also needed to be explicit because the demo route intentionally does not persist new agenda rows.
+
+### What worked
+- Visual QA confirmed that the button is now labelled “Save” and the new-item screenshot shows a blank editable form plus explanatory caption.
+- `go test ./pkg/widgetdsl/... -count=1` passed.
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `pnpm --dir packages/rag-evaluation-site build` passed.
+- `cd go-go-course && go test ./...` passed.
+
+### What didn't work
+- The first screenshot after only CSS changes still showed a black square. That revealed the true bug was not only size/contrast; the label was null because default props did not apply to null.
+
+### What I learned
+- Widget adapter `ctx.renderValue(undefined)` returns `null`, so React component defaults should use nullish fallbacks internally for optional renderable labels.
+
+### What was tricky to build
+- New-item mode needed both UI clarification and model behavior. If the key field is always read-only, a blank new form is confusing. The lowering code now treats `__new` as an editable-key context unless a field explicitly sets readOnly.
+
+### What warrants a second pair of eyes
+- Check whether all optional renderable props in other widgets should also use nullish fallbacks rather than relying on default parameters.
+- Decide whether the demo should eventually persist rows in memory for the session, or remain a non-persistent interaction demo.
+
+### What should be done in the future
+- Add automated browser smoke tests for the Save label and New-item behavior.
+
+### Code review instructions
+- Start with `FormPanel.tsx` and `Button.module.css`.
+- Then review `pkg/widgetdsl/v2/spec/lower.go` and `lower_test.go` for new-item key editability.
+- Finally review `go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js` for the explanatory caption.
+
+### Technical details
+- Updated screenshots:
+  - `artifacts/dsl-demo-screenshots/master-detail.png`
+  - `artifacts/dsl-demo-screenshots/master-detail-new.png`

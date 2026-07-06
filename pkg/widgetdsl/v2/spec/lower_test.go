@@ -108,6 +108,32 @@ func TestCollectionSpecLowersMasterDetailEditor(t *testing.T) {
 	}
 }
 
+func TestCollectionSpecLowersNewMasterDetailWithEditableKey(t *testing.T) {
+	collection := CollectionSpec{
+		Name:        "agenda",
+		Rows:        []JSONObject{{"id": "agenda-intro", "title": "Intro"}},
+		Schema:      agendaSchema(),
+		Mode:        CollectionModeEdit,
+		Selection:   &SelectionSpec{Kind: SelectionKindURLParam, Param: "agenda", Value: "__new"},
+		Arrangement: ArrangementSpec{Kind: ArrangementKindMasterDetail},
+		Actions:     CollectionActions{Submit: &SubmitSpec{FormAction: "/settings/agenda-item", Method: "post"}},
+	}
+	if issues := collection.Validate("collection"); HasErrors(issues) {
+		t.Fatalf("Validate() unexpected errors: %#v", issues)
+	}
+
+	root := collection.ToNode().ToWidgetNode()
+	detail := child(root, 1)
+	form := child(detail, 0)
+	fieldGrid := child(form, 0)
+	idRow := child(fieldGrid, 0)
+	control := idRow["props"].(JSONObject)["control"].(JSONObject)
+	controlProps := control["props"].(JSONObject)
+	if controlProps["readOnly"] != false {
+		t.Fatalf("new item key readOnly = %#v, want false", controlProps["readOnly"])
+	}
+}
+
 func TestCollectionSpecValidationRejectsBadArrangement(t *testing.T) {
 	collection := CollectionSpec{
 		Name:        "sessions",
