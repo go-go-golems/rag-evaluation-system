@@ -7,7 +7,7 @@ import {
 	type TranscriptAnnotation,
 	type TranscriptMessage,
 	type TranscriptRole,
-	transcriptDefaultStyleSet,
+	useTranscriptStyleSet,
 } from "../../../context";
 import { Caption } from "../../foundation";
 import styles from "./TranscriptMessageCard.module.css";
@@ -61,11 +61,12 @@ export function TranscriptMessageCard({
 	selectedAnnotationId,
 	onAnnotationSelect,
 	showAnnotationChips = true,
-	styleSet = transcriptDefaultStyleSet,
+	styleSet,
 	className,
 	style,
 	...rest
 }: TranscriptMessageCardProps) {
+	const resolvedStyleSet = useTranscriptStyleSet(styleSet);
 	const messageAnnotations = annotations.filter(
 		(annotation) =>
 			annotation.targetMessageId === message.id || message.annotationIds?.includes(annotation.id),
@@ -76,8 +77,8 @@ export function TranscriptMessageCard({
 	const title = message.name
 		? `${ROLE_LABEL[message.role]} · ${message.name}`
 		: ROLE_LABEL[message.role];
-	const visualStyle = resolveContextVisualStyle(roleStyleKey(message.role), styleSet);
-	const codeStyle = resolveContextVisualStyle("code", styleSet);
+	const visualStyle = resolveContextVisualStyle(roleStyleKey(message.role), resolvedStyleSet);
+	const codeStyle = resolveContextVisualStyle("code", resolvedStyleSet);
 	const bodyClassName = [styles.body, message.role === "tool" ? styles.toolBody : ""]
 		.filter(Boolean)
 		.join(" ");
@@ -125,7 +126,7 @@ export function TranscriptMessageCard({
 									type="button"
 									className={styles.noteChip}
 									data-selected={selected ? "true" : undefined}
-									style={toneVars(resolveContextVisualStyle(annotation.styleKey, styleSet))}
+									style={toneVars(resolveContextVisualStyle(annotation.styleKey, resolvedStyleSet))}
 									onClick={() => onAnnotationSelect?.(annotation.id)}
 								>
 									note {index > 0 ? index : ""}

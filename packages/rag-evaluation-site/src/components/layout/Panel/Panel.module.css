@@ -9,12 +9,10 @@
 }
 
 .header {
-	color: var(--mac-text);
+	color: var(--mac-accent);
 	font: var(--rag-font-role-panel-heading);
 	letter-spacing: 0.07em;
 	text-transform: uppercase;
-	border-bottom: 1px solid var(--mac-border);
-	padding-bottom: 7px;
 	margin-bottom: 12px;
 	display: flex;
 	align-items: baseline;
