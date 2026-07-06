@@ -10,7 +10,7 @@
 
 .header {
 	color: var(--mac-text);
-	font: 700 12px / 1.55 var(--font-mono);
+	font: var(--rag-font-role-panel-heading);
 	letter-spacing: 0.07em;
 	text-transform: uppercase;
 	border-bottom: 1px solid var(--mac-border);

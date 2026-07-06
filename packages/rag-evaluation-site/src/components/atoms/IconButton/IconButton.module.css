@@ -31,10 +31,9 @@
 	font: var(--rag-font-role-metadata);
 }
 
-/* Glyph-icon size for row actions and toolbars; deliberate raw size like .compact. */
+/* Glyph-icon size for row actions and toolbars. */
 .large {
-	font-size: 14px;
-	line-height: 1;
+	font: var(--rag-font-role-metric);
 	padding: 1px 3px;
 }
 
