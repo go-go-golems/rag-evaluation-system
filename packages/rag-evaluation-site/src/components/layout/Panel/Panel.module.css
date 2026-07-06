@@ -1,5 +1,6 @@
 .root {
 	min-width: 0;
+	padding-top: 16px;
 	background: transparent;
 }
 
@@ -9,12 +10,12 @@
 
 .header {
 	color: var(--mac-text);
-	font: var(--rag-font-role-label);
-	letter-spacing: 0.06em;
+	font: 700 12px / 1.55 var(--font-mono);
+	letter-spacing: 0.07em;
 	text-transform: uppercase;
 	border-bottom: 1px solid var(--mac-border);
-	padding-bottom: 6px;
-	margin-bottom: 10px;
+	padding-bottom: 7px;
+	margin-bottom: 12px;
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
