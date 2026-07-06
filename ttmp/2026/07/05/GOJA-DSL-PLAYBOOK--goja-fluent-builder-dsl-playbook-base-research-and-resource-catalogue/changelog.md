@@ -255,3 +255,13 @@ Step 24: Added a cross-module Widget DSL gallery demo covering ui.dsl, data.v2.d
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js — Cross-module gallery authoring examples
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/webapp/tests/dsl-examples.spec.ts — Browser smoke coverage for module gallery
 
+
+## 2026-07-06
+
+Step 25: Ported the real go-go-course admin agenda editor from data.dsl collection/schema helpers to data.v2.dsl typed/fluent master-detail API after the origin/main merge (go-go-course commit 34bc642).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/internal/xgojaruntime/xgoja_embed/jsverbs/minitrace_viz_site/lib/pages/admin-course-cms.js — Generated xgoja mirror refreshed by make build (commit 34bc642)
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/admin-course-cms.js — Real admin agenda editor source ported to data.v2.dsl (commit 34bc642)
+

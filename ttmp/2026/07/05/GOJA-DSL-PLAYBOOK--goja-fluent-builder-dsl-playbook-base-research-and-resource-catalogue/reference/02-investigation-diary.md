@@ -12,6 +12,10 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/internal/xgojaruntime/xgoja_embed/jsverbs/minitrace_viz_site/lib/pages/admin-course-cms.js
+      Note: Step 25 generated mirror refreshed after xgoja build (commit 34bc642)
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/lib/pages/admin-course-cms.js
+      Note: Step 25 real admin agenda editor data.v2.dsl port (commit 34bc642)
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js
       Note: Step 24 cross-module DSL gallery examples (commit 30ab8c3)
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/webapp/package.json
@@ -38,6 +42,7 @@ LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: Record the research journey so a senior researcher can resume without re-reading every source.
 WhenToUse: Read before resuming work on this ticket.
 ---
+
 
 
 
@@ -1511,3 +1516,96 @@ This is not a replacement for deeper per-domain examples, but it creates a disco
 - Successful Go command: `go test ./...` in `go-go-course`
 - Code commit: `30ab8c3c8257e3cc8bf0e852c886397385b2a8ec`
 - Ticket task added and checked: `[41] P4.6 Add cross-module demo page covering ui.dsl, data.v2.dsl, cms.dsl, course.dsl, and context_window.dsl`
+
+## Step 25: Port the real admin agenda editor to data.v2.dsl
+
+With the `origin/main` merge completed, I resumed the hard-cutover sequence on the first real page still using the previous `data.dsl` grammar. The admin Course CMS agenda editor now uses the typed/fluent `data.v2.dsl` collection API instead of the v1 option-bag `dataDsl.collection(...)` helper, while preserving the merged active-site wording and the existing server endpoints for save, reorder, and delete.
+
+This step intentionally leaves the media library and session browse migrations for the next P6 task. Keeping the commit narrow made it possible to validate the real page route, generated xgoja mirror, and smoke suite without mixing agenda migration risk with CMS recipe or session-table changes.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead, keep detailed diary as you work, commit at appropriate intervals."
+
+**Assistant interpretation:** Start the next post-merge cutover task, make focused commits, validate as work lands, and keep the GOJA-DSL-PLAYBOOK diary current.
+
+**Inferred user intent:** Continue the Widget DSL v2 hard cutover now that the go-go-course merge blocker is resolved, with enough documentation to review or resume safely.
+
+**Commit (code):** 34bc642 — "Port admin agenda editor to data.v2 DSL"
+
+### What I did
+- Confirmed `go-go-course` was on `task/improve-rag-evaluation-system`, clean, and fully merged with `origin/main`.
+- Inspected the current admin page and verified it still used v1 `dataDsl.schema`, `dataDsl.f.*`, `dataDsl.collection`, `dataDsl.urlParam`, and `dataDsl.formPost` for the agenda editor.
+- Rewrote `agendaSchema()` in `cmd/go-go-course/lib/pages/admin-course-cms.js` to use `dataV2.schema("AgendaItem")` with ordered fluent `.field(...)` calls.
+- Replaced `dataDsl.collection(agenda, { ... })` with `dataV2.collection("agenda", agenda).schema(...).edit(...).masterDetail().toIR()`.
+- Preserved the existing `/settings/agenda-item`, `admin-reorder-course-agenda`, and `admin-delete-agenda-item` contracts.
+- Moved the save/error/idle message outside the v2 collection as a `ui.caption(...)` because the current v2 collection builder does not yet expose FormPanel status props.
+- Ran `make -C cmd/go-go-course build` so the generated xgoja mirror under `internal/xgojaruntime/.../admin-course-cms.js` matched the source page.
+- Ran broad and targeted validation, then committed the code change as `34bc642`.
+- Checked ticket task `[36] P6.1 Rewrite admin agenda editor to v2 master-detail API` and updated changelog/relations.
+
+### Why
+- P6.1 is the first real-page proof that `data.v2.dsl` can replace the previous map/option-bag grammar outside dedicated demo pages.
+- The merge resolved content-directory conflicts but deliberately kept the older admin page grammar; this step moves the agenda editor forward without disturbing media and session work that belong to P6.2.
+
+### What worked
+- `node --check` passed for the edited page and all source JS files.
+- `GOWORK=off go test ./...` passed in `go-go-course`.
+- `pnpm --dir cmd/go-go-course/webapp typecheck` passed.
+- `GOWORK=off make -C cmd/go-go-course build XGOJA_LOCAL_DIR=/home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-goja` passed and refreshed the generated mirror.
+- The existing smoke suite passed on alternate port `18789`: `11 passed, 0 failed`.
+- A targeted admin Widget IR smoke passed on port `18791` after setting the profile display name to `admin_p6`; it verified the page id, Agenda section, DataTable, FormPanel, New agenda item button, delete/reorder actions, success message, and selected edit title.
+
+### What didn't work
+- My first targeted admin smoke used the wrong profile endpoint, `POST /api/user/profile`, and failed with curl exit 22 because the server returned 404:
+
+```text
+method=POST path=/api/user/profile ... status=404
+```
+
+- I inspected `server.js`, found the correct endpoint is `PUT /api/user-session`, and reran the targeted smoke successfully.
+
+### What I learned
+- The real admin page can consume `data.v2.dsl` without server changes because the v2 action cells still dispatch row context, and the existing handlers already read `ctx.body.context.row` for agenda delete/reorder.
+- The current v2 builder surface is sufficient for the agenda master-detail interaction, but it does not yet expose every v1 convenience (`empty`, FormPanel `status/statusMessage`, field `hint/placeholder`). For P6.1 I preserved status messaging with an outer `ui.caption` and kept the empty message as a conditional caption.
+
+### What was tricky to build
+- The biggest sharp edge was preserving behavior while moving from v1's option bag to v2's narrower typed builder surface. The source v1 call configured schema, selection, submit, create, reorder, delete, empty-state text, and status text in one object. The v2 chain cleanly covers schema/selection/submit/create/actions/layout, but status and empty text needed to be represented alongside the collection rather than inside it.
+- The generated xgoja mirror is easy to forget because the source JS lives under `cmd/go-go-course/lib/...`, while runtime embeds a synchronized copy under `cmd/go-go-course/internal/xgojaruntime/...`. Running `make -C cmd/go-go-course build` after source edits kept those in sync.
+
+### What warrants a second pair of eyes
+- Review whether `data.v2.dsl` should grow first-class `.empty(...)`, `.status(...)`, `.placeholder(...)`, and `.hint(...)` builder methods before more real-page migrations, or whether status/empty presentation should remain explicit `ui.*` composition around typed collections.
+- Review the visual placement of the outer agenda status caption versus the old FormPanel-integrated status message.
+- Review the generated xgoja mirror to confirm it matches the source page and contains no stale v1 agenda grammar.
+
+### What should be done in the future
+- Continue with P6.2: migrate the remaining real media-library/session-browse v1 usages to v2 APIs.
+- Consider adding a permanent admin-course-cms API smoke test so regressions in the real admin page are caught without manually starting the server.
+- Consider making `cmd/go-go-course/test-fixtures/smoke-test.sh` accept `PORT` from the environment, as already noted by the merge diary.
+
+### Code review instructions
+- Start with `go-go-course/cmd/go-go-course/lib/pages/admin-course-cms.js`, specifically `agendaSchema()` and `agendaSection()`.
+- Then compare the generated mirror at `go-go-course/cmd/go-go-course/internal/xgojaruntime/xgoja_embed/jsverbs/minitrace_viz_site/lib/pages/admin-course-cms.js`.
+- Validate with:
+  - `cd go-go-course && GOWORK=off go test ./...`
+  - `cd go-go-course && find cmd/go-go-course/lib -name '*.js' -print0 | xargs -0 -n1 node --check`
+  - `cd go-go-course && pnpm --dir cmd/go-go-course/webapp typecheck`
+  - `cd go-go-course && GOWORK=off make -C cmd/go-go-course build XGOJA_LOCAL_DIR=/home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-goja`
+  - `cd go-go-course/cmd/go-go-course && cp test-fixtures/smoke-test.sh /tmp/gocourse-smoke-18789.sh && perl -0pi -e 's/PORT=18787/PORT=18789/' /tmp/gocourse-smoke-18789.sh && bash /tmp/gocourse-smoke-18789.sh`
+
+### Technical details
+- Code commit: `34bc642e452311939f17f0dc086acd61c9811967`
+- Successful targeted admin smoke used:
+
+```bash
+cd go-go-course/cmd/go-go-course
+./dist/go-go-course serve site start --http-listen 127.0.0.1:18791
+curl -sf -c /tmp/gocourse-admin-p6-cookie.txt -b /tmp/gocourse-admin-p6-cookie.txt \
+  -H 'Content-Type: application/json' \
+  -X PUT http://127.0.0.1:18791/api/user-session \
+  -d '{"displayName":"admin_p6"}'
+curl -sf -c /tmp/gocourse-admin-p6-cookie.txt -b /tmp/gocourse-admin-p6-cookie.txt \
+  'http://127.0.0.1:18791/api/widget/pages/admin-course-cms?agenda=agenda-regenerate&status=agenda-item-saved'
+```
+- Targeted smoke assertions passed for page id, Agenda section, DataTable, FormPanel, New agenda item, delete action, reorder action, save status, and selected edit title.
+- Ticket task checked: `[36] P6.1 Rewrite admin agenda editor to v2 master-detail API`
