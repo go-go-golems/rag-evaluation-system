@@ -14,10 +14,14 @@ Owners: []
 RelatedFiles:
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/internal/xgojaruntime/xgoja_embed/jsverbs/minitrace_viz_site/lib/pages/admin-course-cms.js
       Note: Step 25 generated mirror refreshed after xgoja build (commit 34bc642)
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/lib/pages/admin-common.js
+      Note: Step 27 admin material tables data.v2.dsl migration (commit 0bf3820)
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/lib/pages/admin-course-cms.js
       Note: Step 25 real admin agenda editor data.v2.dsl port (commit 34bc642)
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js
       Note: Step 24 cross-module DSL gallery examples (commit 30ab8c3)
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/lib/pages/sessions.js
+      Note: Step 27 session browse data.v2.dsl migration (commit 0bf3820)
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/webapp/package.json
       Note: Step 21 test script and Playwright dependency (commit 06aa1c9)
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/webapp/playwright.config.ts
@@ -26,12 +30,18 @@ RelatedFiles:
       Note: |-
         Step 21 durable browser/action smoke tests (commit 06aa1c9)
         Step 24 module gallery browser test (commit 30ab8c3)
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/xgoja.package.yaml
+      Note: Step 28 legacy data.dsl runtime removal (commit 49dc871)
     - Path: pkg/widgetdsl/typescript.go
       Note: Step 22 precise data.v2.dsl TypeScript declarations (commit dcd5156)
     - Path: pkg/widgetdsl/typescript_fixture_test.go
       Note: Step 23 runtime export parity and TypeScript positive/negative fixtures (commit cee7525)
     - Path: pkg/widgetdsl/typescript_test.go
       Note: Step 22 declaration shape and legacy-API absence tests (commit dcd5156)
+    - Path: pkg/widgetdsl/v2/spec/lower.go
+      Note: Step 26 lowering for explicit table action columns and table rowSelect (commit 166e8dc)
+    - Path: pkg/widgetdsl/v2_builders.go
+      Note: Step 26 v2 table action API and rowSelect split (commit 166e8dc)
     - Path: pkg/xgoja/providers/widgetsite/provider_test.go
       Note: Step 22 provider TypeScript descriptor coverage for data.v2.dsl (commit dcd5156)
     - Path: ttmp/2026/07/05/GOJA-DSL-PLAYBOOK--goja-fluent-builder-dsl-playbook-base-research-and-resource-catalogue/design-doc/05-rag-evaluation-system-dsl-overhaul-design-and-implementation-guide.md
@@ -42,6 +52,7 @@ LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: Record the research journey so a senior researcher can resume without re-reading every source.
 WhenToUse: Read before resuming work on this ticket.
 ---
+
 
 
 
@@ -1609,3 +1620,214 @@ curl -sf -c /tmp/gocourse-admin-p6-cookie.txt -b /tmp/gocourse-admin-p6-cookie.t
 ```
 - Targeted smoke assertions passed for page id, Agenda section, DataTable, FormPanel, New agenda item, delete action, reorder action, save status, and selected edit title.
 - Ticket task checked: `[36] P6.1 Rewrite admin agenda editor to v2 master-detail API`
+
+## Step 26: Extend data.v2.dsl for real table action columns
+
+Before migrating the remaining real pages, I found that the existing v2 table surface was still too narrow for `go-go-course` material/session tables. Demo pages only needed row selection, reorder, and remove, but the real pages needed explicit per-row action columns such as Open, Edit, and Delete while still preserving URL-backed row selection.
+
+I added the smallest v2 API extension needed for P6: collection empty text, table class names, explicit action columns, and a separate table row-select action. The row-select separation matters because the original builder stored `rowSelect(...)` in `Actions.Open`, which could both create an unintended Open column and override selection behavior.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 25)
+
+**Assistant interpretation:** Finish all remaining P6 work, including any v2 API support required to migrate real pages safely.
+
+**Inferred user intent:** Complete the hard-cutover page migration rather than stopping at the agenda editor proof-of-concept.
+
+**Commit (code):** 166e8dc — "Extend data v2 table action API"
+
+### What I did
+- Added `TableSpec` and `TableActionColumnSpec` to `pkg/widgetdsl/v2/spec/types.go`.
+- Added validation for explicit table action columns and table-level row-select actions.
+- Extended lowering so `CollectionSpec.Table.ClassName` lowers to DataTable `className`, `CollectionSpec.Empty` lowers to `emptyMessage`, and table action columns lower to `actionButton` cells.
+- Split `.table(t => t.rowSelect(...))` away from `CollectionActions.Open` by storing it in `CollectionSpec.Table.RowSelect`.
+- Added Goja builder methods:
+  - `collection.empty(message)`
+  - `table.className(className)`
+  - `table.actionColumn(id, header, label, action, { maxWidth })`
+  - corrected `table.rowSelect(action)` to set `Table.RowSelect`
+- Updated `data.v2.dsl` TypeScript declarations and the TS fixture to compile the new surface.
+- Added a Go runtime test covering explicit Open/Delete action columns, empty text, className, and action lowering.
+
+### Why
+- `adminMaterialTable` needs Open/Edit/Delete columns; v2 had no general action-column mechanism.
+- `sessions.js` needs row click to select the row and a separate transcript action column; reusing one `Open` action for both was semantically wrong.
+
+### What worked
+- The new `actionColumn` API lets real pages express link-button-like behavior as typed action data without reintroducing v1 `data.cell.*` helpers.
+- The TypeScript fixture still compiles and now covers `.empty`, `.className`, and `.actionColumn`.
+- `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite -count=1` passed.
+
+### What didn't work
+- First formatting/test run failed because I introduced an unterminated DTS string literal in `pkg/widgetdsl/typescript.go`:
+
+```text
+pkg/widgetdsl/typescript.go:200:3: string literal not terminated
+```
+
+- I fixed the declaration line to close the string and reran `gofmt` plus the widgetdsl/provider tests successfully.
+
+### What I learned
+- `rowSelect` and `Open` are not the same concept. A row can be selected for details while also having an Open Transcript or Open File button; conflating them produces duplicate or wrong action behavior.
+- A typed table API can still support pragmatic row action columns without falling back to raw v1 column/cell specs.
+
+### What was tricky to build
+- The tricky bit was noticing the design bug before migrating pages: the initial extension would have let sessions add a transcript action column, but `rowSelect` would also have generated an automatic Open column and changed the row-click behavior. Splitting row selection into `TableSpec.RowSelect` fixed the underlying representation instead of papering over it in page code.
+- The public TypeScript declaration and Goja runtime needed to evolve together; the DTS fixture made the string-literal typo visible immediately.
+
+### What warrants a second pair of eyes
+- Review whether `actionColumn(id, header, label, action, options)` is the right final API name/shape before P7 locks the surface with lint rules.
+- Review whether `CollectionActions.Open` is still needed now that table rowSelect and explicit table action columns cover the real cases.
+
+### What should be done in the future
+- Add docs examples for explicit table action columns in the public v2 API reference during P7 documentation cleanup.
+- Consider richer action-column options later (variant/size/disabled) if real pages need them.
+
+### Code review instructions
+- Start in `pkg/widgetdsl/v2/spec/types.go`, `validate.go`, and `lower.go` to review the typed representation.
+- Then review `pkg/widgetdsl/v2_builders.go` and `pkg/widgetdsl/typescript.go` for the JS/DTS API.
+- Validate with:
+  - `cd rag-evaluation-system && go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite -count=1`
+
+### Technical details
+- Successful command: `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite -count=1`
+- Code commit: `166e8dcb2d2e5a9c052663d0134092d21f175673`
+
+## Step 27: Migrate remaining go-go-course tables to data.v2.dsl
+
+With table action columns available, I migrated the remaining real `go-go-course` page code away from `data.dsl`. The shared admin material table now uses a typed `CourseMaterial` schema and v2 explicit action columns, and the sessions browse page now uses a typed selectable v2 table with a separate Open Transcript action column.
+
+This completes the real-page part of P6: the agenda editor, material tables, and sessions browse table are no longer authored with `dataDsl.dataTable`, `dataDsl.cell.*`, or the v1 `dataDsl.collection` option bag.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 25)
+
+**Assistant interpretation:** Apply the new v2 table API to the remaining real course pages and validate source plus generated runtime code.
+
+**Inferred user intent:** Remove old table grammar from `go-go-course` real pages, not just demos.
+
+**Commit (code):** 0bf3820 — "Migrate remaining course tables to data.v2 DSL"
+
+### What I did
+- Changed `cmd/go-go-course/lib/pages/admin-common.js` from `{ ui, dataDsl, contextWindow }` to `{ ui, dataV2, contextWindow }`.
+- Replaced `adminMaterialTable`'s raw `dataDsl.dataTable({ columns: dataDsl.cell.* })` construction with:
+  - `dataV2.schema("CourseMaterial")`
+  - `dataV2.collection(...).schema(...).empty(...).edit(...).table(...).toIR()`
+  - explicit Open/Edit action columns via `table.actionColumn(...)`
+  - delete via the v2 remove action path, preserving `admin-delete-course-material`
+- Changed `cmd/go-go-course/lib/pages/sessions.js` from `dataDsl.dataTable` to a v2 selectable `Session` collection.
+- Added an explicit transcript action column while keeping row click selection via `/pages/sessions?scope=...&selected=${row.sessionId}`.
+- Removed `dataDsl` from `cmd/go-go-course/server.js` dependency wiring because no source page consumed it anymore.
+- Rebuilt xgoja output so generated mirrors under `internal/xgojaruntime/...` matched source.
+
+### Why
+- P6.2 required migrating the remaining media/material and session-browse table examples to v2 APIs.
+- The hard-cutover goal is to make real page code use typed/fluent v2 builders rather than preserving v1 option bags indefinitely.
+
+### What worked
+- `node --check` passed for source JS.
+- `GOWORK=off go test ./...` passed in `go-go-course`.
+- `pnpm --dir cmd/go-go-course/webapp typecheck` passed.
+- `GOWORK=off make -C cmd/go-go-course build XGOJA_LOCAL_DIR=/home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-goja` passed and refreshed generated mirrors.
+- Generic smoke passed on port `18792`: `11 passed, 0 failed`.
+- Targeted P6 API smoke passed on port `18793` for:
+  - sessions page id/table/selected-query action/transcript action column;
+  - admin material page id/table class/delete action/open action;
+  - admin Course CMS page id/agenda delete/material table/media library.
+- A grep over source and generated course runtime found no remaining `dataDsl`, `data.dsl`, `dataTable(`, or `cell.` usage in go-go-course page/server code.
+
+### What didn't work
+- N/A for the page migration after Step 26 fixed the rowSelect/action-column split.
+
+### What I learned
+- Route templates should avoid substituting a whole URL as `${row.href}` because the frontend navigate interpolation URL-encodes variable values. The material-table migration therefore uses route-specific templates such as `/pages/slides?slide=${row.id}`, `/pages/handouts?doc=${row.id}`, and `/course-assets/${row.file}`.
+- The existing server handlers already accept row context, so material delete and session selection did not require backend changes.
+
+### What was tricky to build
+- `adminMaterialTable` is shared across slide, handout, and media rows. The open target had to be selected from homogeneous row kind rather than using the raw `href` field as a whole URL template.
+- Handouts have an extra Edit action while slides/media do not. The new explicit table action columns made this conditional column straightforward without reintroducing v1 cell helpers.
+
+### What warrants a second pair of eyes
+- Review route templates in `adminMaterialTable`, especially the assumption that each rendered table contains homogeneous `kind` rows.
+- Review whether the sessions table should keep an explicit Open Transcript action column or rely solely on the selected-session panel buttons.
+
+### What should be done in the future
+- Add a permanent targeted API/browser smoke for sessions and admin material tables during P7.
+- Update public docs so examples match the new `actionColumn` approach.
+
+### Code review instructions
+- Start with `go-go-course/cmd/go-go-course/lib/pages/admin-common.js` and `go-go-course/cmd/go-go-course/lib/pages/sessions.js`.
+- Compare generated mirrors under `go-go-course/cmd/go-go-course/internal/xgojaruntime/xgoja_embed/jsverbs/minitrace_viz_site/lib/pages/`.
+- Validate with:
+  - `cd go-go-course && GOWORK=off go test ./...`
+  - `cd go-go-course && find cmd/go-go-course/lib -name '*.js' -print0 | xargs -0 -n1 node --check && node --check cmd/go-go-course/server.js`
+  - `cd go-go-course && pnpm --dir cmd/go-go-course/webapp typecheck`
+  - `cd go-go-course && GOWORK=off make -C cmd/go-go-course build XGOJA_LOCAL_DIR=/home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-goja`
+
+### Technical details
+- Code commit: `0bf382064c421a77b533c7f1725d03404eba9318`
+- Successful smoke command: copied `cmd/go-go-course/test-fixtures/smoke-test.sh` to `/tmp/gocourse-smoke-18792.sh`, changed `PORT=18787` to `PORT=18792`, and ran it from `cmd/go-go-course`.
+- Successful targeted page smoke used port `18793` and `PUT /api/user-session` with `displayName=admin_p6` before fetching admin pages.
+
+## Step 28: Remove legacy data.dsl from the course runtime selection
+
+After the page migration, `data.dsl` was no longer imported by `go-go-course` source or generated page code. I removed the legacy module from the course xgoja package specs so the built course runtime selects `data.v2.dsl` without also carrying the old public `data.dsl` table/cell module.
+
+This is the P6 cleanup step for the course runtime: real course pages no longer author against v1, and the xgoja runtime no longer selects the legacy data module for this app.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 25)
+
+**Assistant interpretation:** Complete the public/runtime cleanup portion of P6 after real pages have stopped importing the legacy data module.
+
+**Inferred user intent:** Make the hard cutover visible in runtime packaging, not only in source page style.
+
+**Commit (code):** 49dc871 — "Remove legacy data DSL from course runtime"
+
+### What I did
+- Removed the `rag-widget-site` selected module entry for `data.dsl` from `cmd/go-go-course/xgoja.package.yaml`.
+- Replaced the stale `data.dsl` entry in `cmd/go-go-course/xgoja.yaml` with `data.v2.dsl`.
+- Rebuilt xgoja output, which removed the generated `data.dsl` module selection from `cmd/go-go-course/internal/xgojaruntime/xgoja_runtime.gen.go`.
+- Verified with `rg` that `go-go-course` source, package specs, and generated site code no longer mention `data.dsl`, `dataDsl`, `dataTable(`, or `cell.`.
+
+### Why
+- P6.3 required deleting old public v1 exports from the selected v2/course runtime path. Since the shared provider still offers `data.dsl` for historical docs/tests, the safe app-level cleanup is to stop selecting it in the course app package.
+
+### What worked
+- Rebuild after module removal passed.
+- `GOWORK=off go test ./...` passed.
+- JS source syntax checks passed.
+- `pnpm --dir cmd/go-go-course/webapp typecheck` passed.
+- Generic smoke passed again on port `18794`: `11 passed, 0 failed`.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- There were two xgoja specs to update: `xgoja.package.yaml` and the older `xgoja.yaml`. They were not identical: `xgoja.package.yaml` already selected both `data.dsl` and `data.v2.dsl`, while `xgoja.yaml` still selected only `data.dsl`.
+
+### What was tricky to build
+- The provider-level `data.dsl` module still exists for legacy tests/docs in `rag-evaluation-system`; deleting it globally would be a larger compatibility decision. The correct P6 scope was app-level removal from `go-go-course` selected modules after confirming no source import remained.
+
+### What warrants a second pair of eyes
+- Review whether P7 should add a generated-runtime assertion that `go-go-course` does not select `data.dsl`.
+- Review whether the legacy provider/docs should be renamed from "current" to "legacy-only" now that course app no longer uses it.
+
+### What should be done in the future
+- P7 should add CI/lint checks rejecting `require("data.dsl")`, `dataDsl`, `dataTable(`, and `cell.*` in go-go-course page code.
+- P7 should update public docs and final handoff material to state that `go-go-course` has completed the course-app v2 data cutover.
+
+### Code review instructions
+- Start with `go-go-course/cmd/go-go-course/xgoja.package.yaml` and `go-go-course/cmd/go-go-course/xgoja.yaml`.
+- Then inspect `go-go-course/cmd/go-go-course/internal/xgojaruntime/xgoja_runtime.gen.go` to confirm the generated module list dropped `data.dsl`.
+- Validate with:
+  - `cd go-go-course && rg -n 'data\.dsl|dataDsl|dataTable\(|cell\.' cmd/go-go-course/lib cmd/go-go-course/server.js cmd/go-go-course/xgoja.package.yaml cmd/go-go-course/xgoja.yaml cmd/go-go-course/internal/xgojaruntime/xgoja_embed/jsverbs/minitrace_viz_site -S`
+  - `cd go-go-course && GOWORK=off make -C cmd/go-go-course build XGOJA_LOCAL_DIR=/home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-goja`
+
+### Technical details
+- Code commit: `49dc8716aa44db7ecb663be9545a9d6a5c5b1313`
+- Successful final smoke command: copied `cmd/go-go-course/test-fixtures/smoke-test.sh` to `/tmp/gocourse-smoke-18794.sh`, changed `PORT=18787` to `PORT=18794`, and ran it from `cmd/go-go-course`.
+- Ticket tasks checked: `[37] P6.2 Rewrite media library and session browse examples to v2 APIs`, `[38] P6.3 Delete old public v1 exports from v2 modules`.

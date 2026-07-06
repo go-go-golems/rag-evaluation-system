@@ -39,8 +39,8 @@
 - [x] P5.1 Generate precise v2 TypeScript declarations
 - [x] P5.2 Add runtime export parity and TypeScript positive/negative fixtures
 - [x] P6.1 Rewrite admin agenda editor to v2 master-detail API
-- [ ] P6.2 Rewrite media library and session browse examples to v2 APIs
-- [ ] P6.3 Delete old public v1 exports from v2 modules
+- [x] P6.2 Rewrite media library and session browse examples to v2 APIs
+- [x] P6.3 Delete old public v1 exports from v2 modules
 - [ ] P7.1 Add CI/lint checks rejecting v1 public option-bag APIs in v2 modules
 - [ ] P7.2 Run full validation, update docs/diary, and prepare final handoff bundle
 - [x] P4.6 Add cross-module demo page covering ui.dsl, data.v2.dsl, cms.dsl, course.dsl, and context_window.dsl

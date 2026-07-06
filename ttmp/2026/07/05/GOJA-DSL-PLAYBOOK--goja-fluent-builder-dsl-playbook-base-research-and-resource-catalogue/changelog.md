@@ -265,3 +265,15 @@ Step 25: Ported the real go-go-course admin agenda editor from data.dsl collecti
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/internal/xgojaruntime/xgoja_embed/jsverbs/minitrace_viz_site/lib/pages/admin-course-cms.js — Generated xgoja mirror refreshed by make build (commit 34bc642)
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/admin-course-cms.js — Real admin agenda editor source ported to data.v2.dsl (commit 34bc642)
 
+
+## 2026-07-06
+
+Steps 26-28: Completed P6 after the agenda port: extended data.v2.dsl table action columns/empty/className/rowSelect separation (commit 166e8dc), migrated remaining go-go-course material/session tables to data.v2.dsl (go-go-course commit 0bf3820), and removed legacy data.dsl from the course xgoja runtime selection (go-go-course commit 49dc871).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/admin-common.js — Admin material tables migrated from data.dsl dataTable/cell helpers to data.v2.dsl (commit 0bf3820)
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/sessions.js — Session browse table migrated to data.v2.dsl selectable table with explicit transcript action column (commit 0bf3820)
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/xgoja.package.yaml — Legacy data.dsl removed from selected course runtime modules (commit 49dc871)
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v2_builders.go — Added table action-column/className/empty support and rowSelect separation (commit 166e8dc)
+
