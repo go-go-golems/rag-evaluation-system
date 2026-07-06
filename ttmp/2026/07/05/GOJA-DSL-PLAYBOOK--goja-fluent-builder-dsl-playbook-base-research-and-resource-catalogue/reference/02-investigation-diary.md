@@ -12,12 +12,16 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: ../../../../../../../go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js
+      Note: Step 24 cross-module DSL gallery examples (commit 30ab8c3)
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/webapp/package.json
       Note: Step 21 test script and Playwright dependency (commit 06aa1c9)
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/webapp/playwright.config.ts
       Note: Step 21 hotreload-host Playwright server setup (commit 06aa1c9)
     - Path: ../../../../../../../go-go-course/cmd/go-go-course/webapp/tests/dsl-examples.spec.ts
-      Note: Step 21 durable browser/action smoke tests (commit 06aa1c9)
+      Note: |-
+        Step 21 durable browser/action smoke tests (commit 06aa1c9)
+        Step 24 module gallery browser test (commit 30ab8c3)
     - Path: pkg/widgetdsl/typescript.go
       Note: Step 22 precise data.v2.dsl TypeScript declarations (commit dcd5156)
     - Path: pkg/widgetdsl/typescript_fixture_test.go
@@ -34,6 +38,7 @@ LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: Record the research journey so a senior researcher can resume without re-reading every source.
 WhenToUse: Read before resuming work on this ticket.
 ---
+
 
 
 
@@ -1435,3 +1440,74 @@ I also added a runtime export parity check for the declared v2 public surface. T
 - Successful command: `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite -count=1`
 - Code commit: `cee7525306500256690955deb340660bc0492c0d`
 - Ticket task checked: `[35] P5.2 Add runtime export parity and TypeScript positive/negative fixtures`
+
+## Step 24: Add a cross-module Widget DSL gallery demo
+
+I added the first broader example requested by the user: a single live gallery page that imports and renders every public Widget DSL family currently used by `go-go-course`. The page now covers `ui.dsl`, `data.v2.dsl`, `context_window.dsl`, `cms.dsl`, and `course.dsl` in one place instead of only demonstrating the data-table family.
+
+This is not a replacement for deeper per-domain examples, but it creates a discoverable browser-visible contract for the full module set and extends the Playwright smoke suite so regressions in any of these public DSL modules are caught when the demo page fails to render.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 21)
+
+**Assistant interpretation:** Start fulfilling the expanded request to make examples for all DSL areas, not only the new data v2 builders.
+
+**Inferred user intent:** Ensure every DSL family has at least one current, runnable example so future humans and agents do not have to infer usage from old v1 or internal code.
+
+**Commit (code):** 30ab8c3 — "Add Widget DSL module gallery demo"
+
+### What I did
+- Extended `go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js` with `/pages/dsl-examples-modules` content.
+- Added navigation tab text `All DSL modules` to the DSL examples page.
+- Added a `ui.dsl` primitive panel with status text and buttons.
+- Added a `data.v2.dsl` typed collection table.
+- Added a `context_window.dsl` `contextDiagramPanel` with a small snapshot and style set.
+- Added a `cms.dsl` media-library recipe example using an inline data-URI demo asset to avoid missing asset requests.
+- Added a `course.dsl` mini course shell and slide panel.
+- Added routing for `dsl-examples-modules` in `course-pages.js`.
+- Extended the Playwright smoke test with a module-gallery test that asserts all five DSL-family sections render.
+- Ran `pnpm test:dsl-examples` and `go test ./...` in `go-go-course`.
+- Added and checked off task 41.
+
+### Why
+- The existing demo pages validated `data.v2.dsl`, but the user's expanded request explicitly called for examples across DSLs, CMS, UI, context, and related modules.
+- A single gallery page is the smallest useful cross-module fixture: it proves the modules can be imported together and gives readers a concrete starting point for each family.
+
+### What worked
+- Final Playwright result: `8 passed (4.0s)`.
+- `cd go-go-course && go test ./...` passed.
+- The module gallery renders through the real hotreload-host path and is covered by the same browser smoke harness as the data v2 demos.
+
+### What didn't work
+- The first version used `/course-assets/hero.png` for the CMS asset example. The page rendered, but the server logged a 404 for that image request during Playwright validation.
+- I fixed that by using a tiny inline data-URI image for the demo asset so the example stays self-contained.
+
+### What I learned
+- Cross-module examples should avoid external or file-backed assets unless the test fixture also creates those assets. Self-contained examples are much more reliable for smoke tests.
+- The existing DSL examples navigation can naturally scale from data-v2 pages to broader module pages without adding a separate docs page yet.
+
+### What was tricky to build
+- The `course.dsl` example is rendered inside the existing course shell, which can create a nested-shell layout. I kept it as a mini shell example because the goal is API coverage, not final page layout polish.
+- The `cms.dsl` recipe wants realistic asset metadata. Using a data URI keeps the browser path clean but may not represent real upload/media serving behavior.
+
+### What warrants a second pair of eyes
+- Review whether the cross-module gallery should stay as one page or split into separate `/pages/dsl-examples-ui`, `/pages/dsl-examples-cms`, `/pages/dsl-examples-course`, and `/pages/dsl-examples-context-window` pages as examples grow.
+- Review the nested `courseStudioShell` visual layout in the module gallery.
+
+### What should be done in the future
+- Add deeper domain-specific examples for CMS editing flows, course slide/handout flows, and context-window transcript/annotation flows.
+- Keep the module gallery current as public DSL exports change.
+
+### Code review instructions
+- Start with `go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js`, especially `moduleGallerySection()`.
+- Review `go-go-course/cmd/go-go-course/webapp/tests/dsl-examples.spec.ts` for the new browser smoke assertion.
+- Validate with:
+  - `cd go-go-course/cmd/go-go-course/webapp && pnpm test:dsl-examples`
+  - `cd go-go-course && go test ./...`
+
+### Technical details
+- Successful browser command: `pnpm test:dsl-examples` → `8 passed (4.0s)`
+- Successful Go command: `go test ./...` in `go-go-course`
+- Code commit: `30ab8c3c8257e3cc8bf0e852c886397385b2a8ec`
+- Ticket task added and checked: `[41] P4.6 Add cross-module demo page covering ui.dsl, data.v2.dsl, cms.dsl, course.dsl, and context_window.dsl`

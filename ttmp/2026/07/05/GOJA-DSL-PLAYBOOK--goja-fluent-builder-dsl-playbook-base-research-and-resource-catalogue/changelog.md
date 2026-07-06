@@ -244,3 +244,14 @@ Step 23: Added data.v2.dsl runtime export parity checks and TypeScript positive/
 
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/typescript_fixture_test.go — Runtime export parity and TypeScript fixture compilation for data.v2.dsl
 
+
+## 2026-07-05
+
+Step 24: Added a cross-module Widget DSL gallery demo covering ui.dsl, data.v2.dsl, context_window.dsl, cms.dsl, and course.dsl, plus Playwright coverage (go-go-course commit 30ab8c3).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/course-pages.js — Route for /pages/dsl-examples-modules
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/lib/pages/dsl-examples.js — Cross-module gallery authoring examples
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/go-go-course/cmd/go-go-course/webapp/tests/dsl-examples.spec.ts — Browser smoke coverage for module gallery
+
