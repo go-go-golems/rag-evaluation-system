@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: RecordFieldList
-module: crm.dsl
+module: data.dsl
 helper: recordFieldList
 props: RecordFieldListWidgetProps
 adapter:

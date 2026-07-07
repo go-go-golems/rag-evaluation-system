@@ -46,7 +46,6 @@ export type RagWidgetType =
 	| "BoardEngine"
 	| "ActivityFeed"
 	| "StatTile"
-	| "MetricRow"
 	| "RecordShell"
 	| "Divider"
 	| "FormPanel"

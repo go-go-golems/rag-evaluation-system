@@ -258,7 +258,9 @@ export interface ActivityFeedWidgetProps extends BaseWidgetProps {
 	onLoadMoreAction?: ActionSpec;
 }
 
-// ─── StatTile / MetricRow (dashboard numbers) ────────────────────────────
+// ─── StatTile (dashboard number) ─────────────────────────────────────────
+// Several tiles are laid out with the existing DashboardGrid layout primitive —
+// no bespoke row engine (follow the layout/molecule split already in the kit).
 
 export interface StatTileWidgetProps extends BaseWidgetProps {
 	label: RenderableValue;
@@ -266,14 +268,8 @@ export interface StatTileWidgetProps extends BaseWidgetProps {
 	delta?: number;
 	deltaLabel?: RenderableValue;
 	trend?: "up" | "down" | "flat";
-	/** optional inline proportion 0..1 for a SegmentedBar/track. */
+	/** optional inline proportion 0..1 for a MeterBar track. */
 	progress?: number;
-	styleKey?: string;
-	styleSet?: ContextStyleSet;
+	tone?: "accent" | "positive" | "warning" | "neutral";
 	onAction?: ActionSpec;
-}
-
-export interface MetricRowWidgetProps extends BaseWidgetProps {
-	tiles: StatTileWidgetProps[];
-	minTileWidth?: number;
 }

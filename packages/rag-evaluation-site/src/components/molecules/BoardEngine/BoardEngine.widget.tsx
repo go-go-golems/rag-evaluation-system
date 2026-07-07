@@ -4,7 +4,7 @@ import { renderCell, rowKey } from "../../../widgets/cellRenderers";
 import type { BoardEngineWidgetProps, JsonObject } from "../../../widgets/ir";
 import { defineWidget } from "../../../widgets/registry";
 import type { RenderContext } from "../../../widgets/registry";
-import { DealCard, type DealCardStatus } from "../../atoms";
+import { DealCard, type DealCardStatus } from "../DealCard";
 import { BoardEngine } from "./BoardEngine";
 
 function accentFor(
@@ -18,7 +18,7 @@ function accentFor(
 
 export const boardEngineWidget = defineWidget<BoardEngineWidgetProps>({
 	type: "BoardEngine",
-	module: "crm.dsl",
+	module: "data.dsl",
 	render: (props, _children, ctx: RenderContext) => {
 		const columns = props.columns.map((column) => ({
 			id: column.id,

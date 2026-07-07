@@ -8,8 +8,7 @@ export type WidgetModule =
 	| "time.dsl"
 	| "context_window.dsl"
 	| "course.dsl"
-	| "cms.dsl"
-	| "crm.dsl";
+	| "cms.dsl";
 
 export interface RenderContext {
 	renderNode(node: WidgetNode): ReactNode;

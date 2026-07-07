@@ -54,7 +54,6 @@ import type {
 	BoardEngineWidgetProps,
 	FieldRendererWidgetProps,
 	MatrixGridWidgetProps,
-	MetricRowWidgetProps,
 	MonthGridWidgetProps,
 	RecordFieldListWidgetProps,
 	SegmentedBarWidgetProps,
@@ -671,7 +670,6 @@ export type WidgetProps =
 	| BoardEngineWidgetProps
 	| ActivityFeedWidgetProps
 	| StatTileWidgetProps
-	| MetricRowWidgetProps
 	| FormPanelWidgetProps
 	| FormRowWidgetProps
 	| InlineWidgetProps

@@ -5,7 +5,6 @@
 	padding: 8px 10px 8px 12px;
 	background: var(--mac-surface);
 	border: 1px solid var(--mac-border);
-	border-radius: 6px;
 	cursor: grab;
 	overflow: hidden;
 	--deal-accent: var(--ctx-line, var(--mac-border));
@@ -41,7 +40,7 @@
 .title {
 	font: var(--rag-font-role-compact);
 	color: var(--mac-text);
-	font-weight: 600;
+	font-weight: 700;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -64,7 +63,6 @@
 .badge {
 	align-self: flex-start;
 	padding: 0 6px;
-	border-radius: 999px;
 	font: var(--rag-font-role-compact);
 	white-space: nowrap;
 }

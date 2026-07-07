@@ -34,7 +34,7 @@ export function DealCard({
 	return (
 		<div
 			className={styles.root}
-			data-rag-atom="DealCard"
+			data-rag-molecule="DealCard"
 			data-status={status}
 			data-selected={selected || undefined}
 			data-dragging={dragging || undefined}

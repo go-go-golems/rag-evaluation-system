@@ -43,7 +43,6 @@
 	display: inline-flex;
 	align-items: center;
 	padding: 1px 8px;
-	border-radius: 999px;
 	font: var(--rag-font-role-compact);
 	background: var(--mac-surface-2);
 	color: var(--mac-text);
@@ -68,7 +67,6 @@
 	align-items: center;
 	gap: 5px;
 	padding: 1px 8px 1px 3px;
-	border-radius: 999px;
 	background: var(--mac-surface-2);
 	color: var(--mac-text);
 	text-decoration: none;
@@ -85,7 +83,6 @@ a.chip:hover {
 	justify-content: center;
 	width: 18px;
 	height: 18px;
-	border-radius: 50%;
 	background: var(--mac-accent);
 	color: var(--mac-text-inv);
 	font: var(--rag-font-role-compact);

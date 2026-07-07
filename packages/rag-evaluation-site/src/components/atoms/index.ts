@@ -6,7 +6,6 @@ export * from "./ContextStudioNavIcon";
 export * from "./ContextStyleSwatch";
 export * from "./CycleCell";
 export * from "./DateTile";
-export * from "./DealCard";
 export * from "./ErrorCallout";
 export * from "./IconButton";
 export * from "./MediaThumb";

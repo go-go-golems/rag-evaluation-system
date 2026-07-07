@@ -119,15 +119,15 @@ export const uiWidgetRegistry = createWidgetRegistry([
 	textWidget,
 ]);
 
-export const dataWidgetRegistry = createWidgetRegistry([dataTableWidget, matrixGridWidget]);
-
-export const timeWidgetRegistry = createWidgetRegistry([monthGridWidget, timeGridWidget]);
-
-export const crmWidgetRegistry = createWidgetRegistry([
+export const dataWidgetRegistry = createWidgetRegistry([
 	boardEngineWidget,
+	dataTableWidget,
 	fieldRendererWidget,
+	matrixGridWidget,
 	recordFieldListWidget,
 ]);
+
+export const timeWidgetRegistry = createWidgetRegistry([monthGridWidget, timeGridWidget]);
 
 export const contextWindowWidgetRegistry = createWidgetRegistry([
 	anchoredCommentCardWidget,
@@ -187,7 +187,6 @@ export const defaultWidgetRegistry = mergeWidgetRegistries(
 	uiWidgetRegistry,
 	dataWidgetRegistry,
 	timeWidgetRegistry,
-	crmWidgetRegistry,
 	contextWindowWidgetRegistry,
 	courseWidgetRegistry,
 	cmsWidgetRegistry,

@@ -22,6 +22,7 @@ export * from "./KeyPointList";
 export * from "./KeyValueStrip";
 export * from "./MarkdownArticle";
 export * from "./MarkdownEditor";
+export * from "./DealCard";
 export * from "./FieldRenderer";
 export * from "./MatrixGrid";
 export * from "./MetadataGrid";

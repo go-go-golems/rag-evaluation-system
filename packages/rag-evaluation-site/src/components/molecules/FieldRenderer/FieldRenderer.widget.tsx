@@ -54,6 +54,6 @@ export function renderFieldSpec(
 
 export const fieldRendererWidget = defineWidget<FieldRendererWidgetProps>({
 	type: "FieldRenderer",
-	module: "crm.dsl",
+	module: "data.dsl",
 	render: (props, _children, ctx) => renderFieldSpec(props.spec, props.value, props, ctx),
 });
