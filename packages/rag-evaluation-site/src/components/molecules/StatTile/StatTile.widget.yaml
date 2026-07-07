@@ -1,0 +1,21 @@
+schemaVersion: widget-manifest/v1
+type: StatTile
+module: data.dsl
+helper: statTile
+props: StatTileWidgetProps
+adapter:
+  path: ./StatTile.widget.tsx
+  export: statTileWidget
+reactComponent: StatTile
+children: false
+slots:
+  - label
+  - value
+  - deltaLabel
+actions:
+  - onAction
+status: proposed
+docs: >
+  A labeled number with an optional delta/trend and inline MeterBar, for
+  dashboards. Lay several out with the TileGrid / DashboardGrid layout
+  primitives (no bespoke row engine).

@@ -7,11 +7,19 @@ import {
 	sampleDeals,
 	sampleSalesPipeline,
 	sampleStageSummaries,
+	sampleTasks,
 	sampleUsers,
 } from "../crm";
 import { defaultWidgetRegistry } from "./defaultRegistry";
 import { component, type JsonObject, type WidgetNode } from "./ir";
-import { buildRefs, contactRecord, fieldSections, pipelineBoard } from "./presets/crm";
+import {
+	buildRefs,
+	contactRecord,
+	crmDashboard,
+	fieldSections,
+	pipelineBoard,
+	tasksInbox,
+} from "./presets/crm";
 import { WidgetRenderer } from "./WidgetRenderer";
 
 const meta = {
@@ -79,4 +87,16 @@ export const ContactRecordPage: Story = {
 			companies: sampleCompanies,
 		}),
 	},
+};
+
+/** The CRM dashboard — StatTiles + pipeline funnel + recent activity. */
+export const Dashboard: Story = {
+	args: {
+		node: crmDashboard(sampleSalesPipeline, sampleStageSummaries, { activities: sampleActivities }),
+	},
+};
+
+/** The tasks inbox — inline "mark done" field editing outside a record page. */
+export const TasksInbox: Story = {
+	args: { node: tasksInbox(sampleTasks) },
 };

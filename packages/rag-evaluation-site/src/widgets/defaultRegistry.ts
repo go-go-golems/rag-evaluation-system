@@ -50,6 +50,7 @@ import { matrixGridWidget } from "../components/molecules/MatrixGrid/MatrixGrid.
 import { recordFieldListWidget } from "../components/molecules/RecordFieldList/RecordFieldList.widget";
 import { monthGridWidget } from "../components/molecules/MonthGrid/MonthGrid.widget";
 import { segmentedBarWidget } from "../components/molecules/SegmentedBar/SegmentedBar.widget";
+import { statTileWidget } from "../components/molecules/StatTile/StatTile.widget";
 import { timeGridWidget } from "../components/molecules/TimeGrid/TimeGrid.widget";
 import { documentListPanelWidget } from "../components/molecules/DocumentListPanel/DocumentListPanel.widget";
 import { documentPreviewToolbarWidget } from "../components/molecules/DocumentPreviewToolbar/DocumentPreviewToolbar.widget";
@@ -127,6 +128,7 @@ export const dataWidgetRegistry = createWidgetRegistry([
 	fieldRendererWidget,
 	matrixGridWidget,
 	recordFieldListWidget,
+	statTileWidget,
 ]);
 
 export const timeWidgetRegistry = createWidgetRegistry([monthGridWidget, timeGridWidget]);

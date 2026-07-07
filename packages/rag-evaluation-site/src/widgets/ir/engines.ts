@@ -270,6 +270,6 @@ export interface StatTileWidgetProps extends BaseWidgetProps {
 	trend?: "up" | "down" | "flat";
 	/** optional inline proportion 0..1 for a MeterBar track. */
 	progress?: number;
-	tone?: "accent" | "positive" | "warning" | "neutral";
+	tone?: "accent" | "success" | "danger";
 	onAction?: ActionSpec;
 }

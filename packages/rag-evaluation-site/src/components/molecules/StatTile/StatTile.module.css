@@ -1,0 +1,45 @@
+.root {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 10px 12px;
+	background: var(--mac-surface);
+	border: 1px solid var(--mac-border);
+	min-width: 0;
+}
+
+.value {
+	font: var(--rag-font-role-metric);
+	font-size: 1.5em;
+	line-height: 1.1;
+	font-variant-numeric: tabular-nums;
+	color: var(--mac-text);
+}
+
+.delta {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font: var(--rag-font-role-compact);
+	font-variant-numeric: tabular-nums;
+}
+
+.delta[data-trend="up"] {
+	color: var(--mac-green);
+}
+
+.delta[data-trend="down"] {
+	color: var(--mac-accent-2);
+}
+
+.delta[data-trend="flat"] {
+	color: var(--mac-text-dim);
+}
+
+.arrow {
+	font-size: 0.85em;
+}
+
+.bar {
+	margin-top: 2px;
+}

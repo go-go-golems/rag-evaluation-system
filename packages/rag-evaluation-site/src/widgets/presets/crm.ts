@@ -17,14 +17,19 @@ import {
 	type BoardColumnWidgetSpec,
 	type BoardEngineWidgetProps,
 	component,
+	type FieldRendererWidgetProps,
 	type FieldRefSpec,
 	type FieldSpec,
 	type JsonObject,
 	type RecordFieldListSectionSpec,
 	type RecordFieldListWidgetProps,
+	type SegmentedBarSegmentSpec,
+	type SegmentedBarWidgetProps,
+	type StatTileWidgetProps,
 	text,
 	type WidgetNode,
 } from "../ir";
+import type { Stage, Task } from "../../crm/types";
 
 // ── Field-system presets (FieldDef -> FieldSpec / sections) ──────────────────
 
@@ -234,5 +239,110 @@ export function contactRecord(
 			...(subtitle ? [component("Caption", {}, [text(subtitle)])] : []),
 			splitPane,
 		]),
+	]) as WidgetNode;
+}
+
+// ── Dashboard + tasks-inbox presets (compositions of registered widgets) ─────
+
+/** `crm.dsl` preset: a single dashboard metric tile. */
+export function statTile(
+	label: string,
+	value: string,
+	options: {
+		delta?: number;
+		deltaLabel?: string;
+		trend?: "up" | "down" | "flat";
+		progress?: number;
+		tone?: "accent" | "success" | "danger";
+	} = {},
+): WidgetNode {
+	const props: StatTileWidgetProps = {
+		label: text(label),
+		value: text(value),
+		delta: options.delta,
+		deltaLabel: options.deltaLabel != null ? text(options.deltaLabel) : undefined,
+		trend: options.trend,
+		progress: options.progress,
+		tone: options.tone,
+	};
+	return component("StatTile", props);
+}
+
+/**
+ * `crm.dsl` preset: stage counts as a funnel — a SegmentedBar colored by stage.
+ * No new engine, per the design.
+ */
+export function pipelineFunnel(pipeline: Pipeline, summaries: StageSummary[]): WidgetNode {
+	const byStage = new Map(summaries.map((s) => [s.stageId, s]));
+	const stages = [...pipeline.stages].sort((a: Stage, b: Stage) => a.order - b.order);
+	const segments: SegmentedBarSegmentSpec[] = stages.map((stage) => ({
+		value: byStage.get(stage.id)?.count ?? 0,
+		styleKey: stage.colorKey,
+		label: text(stage.name),
+	}));
+	const props: SegmentedBarWidgetProps = {
+		segments,
+		styleSet: stageStyleSet,
+		showCounts: true,
+		size: "lg",
+	};
+	return component("SegmentedBar", props);
+}
+
+/**
+ * `crm.dsl` preset: the CRM dashboard — a TileGrid of StatTiles, a pipeline
+ * funnel, and a recent-activity feed. Pure composition of existing engines.
+ */
+export function crmDashboard(
+	pipeline: Pipeline,
+	summaries: StageSummary[],
+	options: { activities?: Activity[]; tiles?: WidgetNode[] } = {},
+): WidgetNode {
+	const totalOpen = summaries.reduce((sum, s) => sum + s.amountTotal, 0);
+	const totalDeals = summaries.reduce((sum, s) => sum + s.count, 0);
+	const tiles = options.tiles ?? [
+		statTile("Open pipeline", formatAmount(totalOpen), { delta: 12, progress: 0.62 }),
+		statTile("Open deals", String(totalDeals), { delta: 4, tone: "success", progress: 0.5 }),
+		statTile("Win rate", "38%", { delta: -3, tone: "danger", progress: 0.38 }),
+	];
+	return component("Stack", { gap: "md" }, [
+		component("TileGrid", { minTileWidth: 160 }, tiles),
+		component("Panel", { title: "Pipeline funnel", density: "condensed" }, [
+			pipelineFunnel(pipeline, summaries),
+		]),
+		component("Panel", { title: "Recent activity", density: "condensed" }, [
+			activityFeed(options.activities ?? []),
+		]),
+	]) as WidgetNode;
+}
+
+/**
+ * `crm.dsl` preset: the tasks inbox — tasks with an inline FieldRenderer-driven
+ * "mark done", exercising inline field editing outside a record page. Composed
+ * from Stack + FieldRenderer + Text (no ItemList engine yet).
+ */
+export function tasksInbox(tasks: Task[]): WidgetNode {
+	const rows = tasks.map((task) => {
+		const doneField: FieldRendererWidgetProps = {
+			spec: { key: "done", type: "boolean" },
+			value: task.status === "done",
+			mode: "edit",
+			onChangeAction: {
+				kind: "server",
+				name: "task.complete",
+				payload: { taskId: task.id } as JsonObject,
+			},
+		};
+		const due = task.dueISO ? task.dueISO.slice(5) : "—";
+		return component("Inline", { gap: "sm", justify: "between" }, [
+			component("Inline", { gap: "sm" }, [
+				component("FieldRenderer", doneField),
+				component("Text", { size: "compact" }, [text(task.title)]),
+			]),
+			component("Caption", {}, [text(`${task.priority ?? ""} · ${due}`)]),
+		]);
+	});
+	return component("Panel", { title: "Tasks", density: "condensed" }, [
+		component("Stack", { gap: "xs" }, rows),
 	]) as WidgetNode;
 }

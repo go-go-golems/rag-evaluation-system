@@ -31,6 +31,7 @@ export * from "./MonthGrid";
 export * from "./Pagination";
 export * from "./RecordFieldList";
 export * from "./SegmentedBar";
+export * from "./StatTile";
 export * from "./PersonSummary";
 export * from "./SearchField";
 export * from "./SidebarNav";
