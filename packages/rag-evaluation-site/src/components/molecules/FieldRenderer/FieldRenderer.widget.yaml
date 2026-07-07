@@ -1,0 +1,20 @@
+schemaVersion: widget-manifest/v1
+type: FieldRenderer
+module: crm.dsl
+helper: field
+props: FieldRendererWidgetProps
+adapter:
+  path: ./FieldRenderer.widget.tsx
+  export: fieldRendererWidget
+reactComponent: FieldRenderer
+children: false
+slots:
+  - spec.label
+actions:
+  - onChangeAction
+status: proposed
+docs: >
+  The CRM field-system engine. Renders one typed value (spec.type) in read or
+  edit mode via a FieldSpec, switching on type x mode to produce the right
+  control. Reuses the ContextStyleSet palette for select/tag colors. Domain-blind
+  — the CRM analogue of the MatrixGrid CellSpec renderer.

@@ -43,6 +43,12 @@ import { contextStripDiagramWidget } from "../components/molecules/ContextStripD
 import { contextTreemapWidget } from "../components/molecules/ContextTreemap/ContextTreemap.widget";
 import { courseStepNavWidget } from "../components/molecules/CourseStepNav/CourseStepNav.widget";
 import { dataTableWidget } from "../components/molecules/DataTable/DataTable.widget";
+import { fieldRendererWidget } from "../components/molecules/FieldRenderer/FieldRenderer.widget";
+import { matrixGridWidget } from "../components/molecules/MatrixGrid/MatrixGrid.widget";
+import { recordFieldListWidget } from "../components/molecules/RecordFieldList/RecordFieldList.widget";
+import { monthGridWidget } from "../components/molecules/MonthGrid/MonthGrid.widget";
+import { segmentedBarWidget } from "../components/molecules/SegmentedBar/SegmentedBar.widget";
+import { timeGridWidget } from "../components/molecules/TimeGrid/TimeGrid.widget";
 import { documentListPanelWidget } from "../components/molecules/DocumentListPanel/DocumentListPanel.widget";
 import { documentPreviewToolbarWidget } from "../components/molecules/DocumentPreviewToolbar/DocumentPreviewToolbar.widget";
 import { emptyStateWidget } from "../components/molecules/EmptyState/EmptyState.widget";
@@ -99,6 +105,7 @@ export const uiWidgetRegistry = createWidgetRegistry([
 	fieldGridWidget,
 	sectionBlockWidget,
 	selectInputWidget,
+	segmentedBarWidget,
 	sidebarNavWidget,
 	sidebarShellWidget,
 	splitPaneWidget,
@@ -111,7 +118,11 @@ export const uiWidgetRegistry = createWidgetRegistry([
 	textWidget,
 ]);
 
-export const dataWidgetRegistry = createWidgetRegistry([dataTableWidget]);
+export const dataWidgetRegistry = createWidgetRegistry([dataTableWidget, matrixGridWidget]);
+
+export const timeWidgetRegistry = createWidgetRegistry([monthGridWidget, timeGridWidget]);
+
+export const crmWidgetRegistry = createWidgetRegistry([fieldRendererWidget, recordFieldListWidget]);
 
 export const contextWindowWidgetRegistry = createWidgetRegistry([
 	anchoredCommentCardWidget,
@@ -170,6 +181,8 @@ export const cmsWidgetRegistry = createWidgetRegistry([
 export const defaultWidgetRegistry = mergeWidgetRegistries(
 	uiWidgetRegistry,
 	dataWidgetRegistry,
+	timeWidgetRegistry,
+	crmWidgetRegistry,
 	contextWindowWidgetRegistry,
 	courseWidgetRegistry,
 	cmsWidgetRegistry,
