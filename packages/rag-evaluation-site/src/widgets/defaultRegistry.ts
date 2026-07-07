@@ -42,6 +42,7 @@ import { contextStackDiagramWidget } from "../components/molecules/ContextStackD
 import { contextStripDiagramWidget } from "../components/molecules/ContextStripDiagram/ContextStripDiagram.widget";
 import { contextTreemapWidget } from "../components/molecules/ContextTreemap/ContextTreemap.widget";
 import { courseStepNavWidget } from "../components/molecules/CourseStepNav/CourseStepNav.widget";
+import { boardEngineWidget } from "../components/molecules/BoardEngine/BoardEngine.widget";
 import { dataTableWidget } from "../components/molecules/DataTable/DataTable.widget";
 import { fieldRendererWidget } from "../components/molecules/FieldRenderer/FieldRenderer.widget";
 import { matrixGridWidget } from "../components/molecules/MatrixGrid/MatrixGrid.widget";
@@ -122,7 +123,11 @@ export const dataWidgetRegistry = createWidgetRegistry([dataTableWidget, matrixG
 
 export const timeWidgetRegistry = createWidgetRegistry([monthGridWidget, timeGridWidget]);
 
-export const crmWidgetRegistry = createWidgetRegistry([fieldRendererWidget, recordFieldListWidget]);
+export const crmWidgetRegistry = createWidgetRegistry([
+	boardEngineWidget,
+	fieldRendererWidget,
+	recordFieldListWidget,
+]);
 
 export const contextWindowWidgetRegistry = createWidgetRegistry([
 	anchoredCommentCardWidget,

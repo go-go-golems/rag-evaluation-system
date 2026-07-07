@@ -2,6 +2,7 @@ export * from "./AnchoredCommentCard";
 export * from "./AnnotationNoteCard";
 export * from "./AppNav";
 export * from "./AssetTile";
+export * from "./BoardEngine";
 export * from "./Breadcrumbs";
 export * from "./CheckList";
 export * from "./ContextBudgetBar";

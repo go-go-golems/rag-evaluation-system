@@ -1,0 +1,25 @@
+schemaVersion: widget-manifest/v1
+type: BoardEngine
+module: crm.dsl
+helper: board
+props: BoardEngineWidgetProps
+adapter:
+  path: ./BoardEngine.widget.tsx
+  export: boardEngineWidget
+reactComponent: BoardEngine
+children: false
+slots:
+  - columns.header
+  - columns.footer
+  - card.title
+  - card.subtitle
+  - card.meta
+actions:
+  - onMoveAction
+  - onCardSelectAction
+status: proposed
+docs: >
+  Generic kanban engine — columns of cards where a card can be dragged from one
+  column to another. Domain-blind (knows nothing about deals or stages); each
+  card renders from a BoardCardSpec (title/subtitle/meta CellSpecs) into a
+  DealCard. The pipelineBoard preset configures it with pipeline stages and deals.

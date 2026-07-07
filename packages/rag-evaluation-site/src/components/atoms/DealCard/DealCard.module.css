@@ -1,0 +1,80 @@
+.root {
+	position: relative;
+	display: flex;
+	gap: 8px;
+	padding: 8px 10px 8px 12px;
+	background: var(--mac-surface);
+	border: 1px solid var(--mac-border);
+	border-radius: 6px;
+	cursor: grab;
+	overflow: hidden;
+	--deal-accent: var(--ctx-line, var(--mac-border));
+}
+
+.root[data-selected] {
+	border-color: var(--mac-accent);
+	box-shadow: 0 0 0 1px var(--mac-accent) inset;
+}
+
+.root[data-dragging] {
+	opacity: 0.5;
+	cursor: grabbing;
+}
+
+.accent {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 3px;
+	background: var(--deal-accent);
+}
+
+.body {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	flex: 1;
+}
+
+.title {
+	font: var(--rag-font-role-compact);
+	color: var(--mac-text);
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.subtitle {
+	font: var(--rag-font-role-metric);
+	font-variant-numeric: tabular-nums;
+	color: var(--mac-text);
+}
+
+.meta {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font: var(--rag-font-role-compact);
+	color: var(--mac-text-dim);
+}
+
+.badge {
+	align-self: flex-start;
+	padding: 0 6px;
+	border-radius: 999px;
+	font: var(--rag-font-role-compact);
+	white-space: nowrap;
+}
+
+.badge[data-status="won"] {
+	background: color-mix(in srgb, var(--mac-green) 24%, var(--mac-surface));
+	color: var(--mac-text);
+}
+
+.badge[data-status="lost"] {
+	background: color-mix(in srgb, var(--mac-accent-2) 24%, var(--mac-surface));
+	color: var(--mac-text);
+}
