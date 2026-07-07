@@ -42,6 +42,7 @@ import { contextStackDiagramWidget } from "../components/molecules/ContextStackD
 import { contextStripDiagramWidget } from "../components/molecules/ContextStripDiagram/ContextStripDiagram.widget";
 import { contextTreemapWidget } from "../components/molecules/ContextTreemap/ContextTreemap.widget";
 import { courseStepNavWidget } from "../components/molecules/CourseStepNav/CourseStepNav.widget";
+import { activityFeedWidget } from "../components/molecules/ActivityFeed/ActivityFeed.widget";
 import { boardEngineWidget } from "../components/molecules/BoardEngine/BoardEngine.widget";
 import { dataTableWidget } from "../components/molecules/DataTable/DataTable.widget";
 import { fieldRendererWidget } from "../components/molecules/FieldRenderer/FieldRenderer.widget";
@@ -120,6 +121,7 @@ export const uiWidgetRegistry = createWidgetRegistry([
 ]);
 
 export const dataWidgetRegistry = createWidgetRegistry([
+	activityFeedWidget,
 	boardEngineWidget,
 	dataTableWidget,
 	fieldRendererWidget,

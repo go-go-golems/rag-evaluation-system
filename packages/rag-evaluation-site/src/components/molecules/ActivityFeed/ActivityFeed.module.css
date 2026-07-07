@@ -1,0 +1,148 @@
+.root {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	max-width: 100%;
+}
+
+.group {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.dayLabel {
+	margin: 4px 0 2px;
+	font: var(--rag-font-role-label);
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+	color: var(--mac-text-dim);
+}
+
+.list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.row {
+	display: grid;
+	grid-template-columns: 24px 1fr;
+	gap: 8px;
+	position: relative;
+}
+
+/* connective spine: a vertical line behind the dots, stopped at the last row. */
+.spine {
+	position: relative;
+	display: flex;
+	justify-content: center;
+}
+
+.spine::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	background: var(--mac-border);
+}
+
+.row[data-last] .spine::before {
+	bottom: auto;
+	height: 12px;
+}
+
+.dot {
+	position: relative;
+	z-index: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	margin-top: 2px;
+	background: var(--ctx-fill, var(--mac-surface-2));
+	color: var(--ctx-label, var(--mac-text));
+	border: 1px solid var(--ctx-line, var(--mac-border));
+	font-size: 11px;
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	padding-bottom: 8px;
+	min-width: 0;
+}
+
+.head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.title {
+	font: var(--rag-font-role-compact);
+	color: var(--mac-text);
+	background: none;
+	border: none;
+	padding: 0;
+	text-align: left;
+	cursor: default;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+button.title {
+	cursor: pointer;
+}
+
+button.title:hover {
+	color: var(--mac-accent);
+	text-decoration: underline;
+}
+
+.metaRight {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 8px;
+	flex-shrink: 0;
+	font: var(--rag-font-role-metadata);
+	color: var(--mac-text-dim);
+}
+
+.time {
+	font-variant-numeric: tabular-nums;
+}
+
+.body {
+	font: var(--rag-font-role-metadata);
+	color: var(--mac-text-dim);
+}
+
+.loadMore {
+	align-self: flex-start;
+	margin-left: 32px;
+	background: none;
+	border: none;
+	padding: 2px 0;
+	font: var(--rag-font-role-compact);
+	color: var(--mac-accent);
+	cursor: pointer;
+}
+
+.loadMore:hover {
+	text-decoration: underline;
+}
+
+.empty {
+	margin: 0;
+	padding: 12px;
+	text-align: center;
+	color: var(--mac-text-dim);
+	font: var(--rag-font-role-compact);
+}

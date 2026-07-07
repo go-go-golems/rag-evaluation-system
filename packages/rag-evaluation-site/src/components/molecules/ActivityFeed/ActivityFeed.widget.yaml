@@ -1,0 +1,23 @@
+schemaVersion: widget-manifest/v1
+type: ActivityFeed
+module: data.dsl
+helper: activityFeed
+props: ActivityFeedWidgetProps
+adapter:
+  path: ./ActivityFeed.widget.tsx
+  export: activityFeedWidget
+reactComponent: ActivityFeed
+children: false
+slots:
+  - activities.title
+  - activities.body
+  - glyphs
+actions:
+  - onOpenAction
+  - onLoadMoreAction
+status: proposed
+docs: >
+  A record's history as one reverse-chronological stream, grouped by day with a
+  connective spine. Each item's glyph and color come from its `kind` via the
+  shared ContextStyleSet. Domain-blind — the CRM analogue of the transcript
+  message list.

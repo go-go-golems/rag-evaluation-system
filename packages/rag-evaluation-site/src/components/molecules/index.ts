@@ -1,3 +1,4 @@
+export * from "./ActivityFeed";
 export * from "./AnchoredCommentCard";
 export * from "./AnnotationNoteCard";
 export * from "./AppNav";

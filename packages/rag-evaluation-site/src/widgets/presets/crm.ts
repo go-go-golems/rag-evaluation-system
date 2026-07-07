@@ -1,5 +1,9 @@
 import {
+	ACTIVITY_GLYPHS,
+	type Activity,
+	activityStyleSet,
 	type Company,
+	type Contact,
 	type CrmUser,
 	type Deal,
 	type FieldDef,
@@ -9,6 +13,7 @@ import {
 	tagStyleSet,
 } from "../../crm";
 import {
+	type ActivityFeedWidgetProps,
 	type BoardColumnWidgetSpec,
 	type BoardEngineWidgetProps,
 	component,
@@ -16,6 +21,7 @@ import {
 	type FieldSpec,
 	type JsonObject,
 	type RecordFieldListSectionSpec,
+	type RecordFieldListWidgetProps,
 	text,
 	type WidgetNode,
 } from "../ir";
@@ -144,5 +150,89 @@ export function pipelineBoardPanel(
 ): WidgetNode {
 	return component("Panel", { title: `Pipeline · ${pipeline.name}`, density: "condensed" }, [
 		pipelineBoard(pipeline, deals, options),
+	]) as WidgetNode;
+}
+
+// ── Record-page presets (IR compositions of registered widgets) ──────────────
+
+/** `crm.dsl` preset: a record's activity timeline. */
+export function activityFeed(activities: Activity[]): WidgetNode {
+	const props: ActivityFeedWidgetProps = {
+		activities: activities.map((a) => ({
+			id: a.id,
+			kind: a.kind,
+			title: text(a.title),
+			body: a.body != null ? text(a.body) : undefined,
+			atISO: a.atISO,
+			actor: { id: a.actor.id, name: a.actor.name, avatarUrl: a.actor.avatarUrl },
+		})),
+		styleSet: activityStyleSet,
+		glyphs: ACTIVITY_GLYPHS,
+		onOpenAction: { kind: "event", event: "activity.open" },
+	};
+	return component("ActivityFeed", props);
+}
+
+/** `crm.dsl` preset: a record's field list from its FieldDefs + values. */
+export function recordFieldList(
+	values: Record<string, unknown>,
+	defs: FieldDef[],
+	options: { mode?: "read" | "edit"; refs?: Record<string, FieldRefSpec> } = {},
+): WidgetNode {
+	const props: RecordFieldListWidgetProps = {
+		values: values as JsonObject,
+		sections: fieldSections(defs),
+		mode: options.mode ?? "read",
+		refs: options.refs,
+		onFieldChangeAction: { kind: "server", name: "field.update" },
+	};
+	return component("RecordFieldList", props);
+}
+
+export interface RecordPageOptions {
+	activities?: Activity[];
+	users?: CrmUser[];
+	companies?: Company[];
+	mode?: "read" | "edit";
+	related?: WidgetNode;
+}
+
+/**
+ * `crm.dsl` preset: the record page as an IR composition of already-registered
+ * widgets (Panel + SplitPane + RecordFieldList + ActivityFeed) — no bespoke
+ * RecordShell node, mirroring how the scheduling presets compose Stack +
+ * SegmentedBar. The React `RecordShell` organism is the hand-authored twin.
+ */
+export function contactRecord(
+	contact: Contact,
+	defs: FieldDef[],
+	options: RecordPageOptions = {},
+): WidgetNode {
+	const refs = buildRefs(options.users ?? [], options.companies ?? []);
+	const subtitle = [contact.title, ...(contact.tags ?? []).map((t) => `🏷 ${t}`)]
+		.filter(Boolean)
+		.join(" · ");
+
+	const rightChildren: WidgetNode[] = [
+		component("Panel", { title: "Activity", density: "condensed" }, [
+			activityFeed(options.activities ?? []),
+		]),
+	];
+	if (options.related) rightChildren.push(options.related);
+
+	const splitPane = component("SplitPane", {
+		ratio: "leftNarrow",
+		gutter: "lg",
+		left: component("Panel", { title: "Details", density: "condensed" }, [
+			recordFieldList(contact.fields, defs, { mode: options.mode, refs }),
+		]),
+		right: component("Stack", { gap: "md" }, rightChildren),
+	});
+
+	return component("Panel", { title: contact.name, density: "condensed" }, [
+		component("Stack", { gap: "sm" }, [
+			...(subtitle ? [component("Caption", {}, [text(subtitle)])] : []),
+			splitPane,
+		]),
 	]) as WidgetNode;
 }

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
 	contactFieldDefs,
+	sampleActivities,
 	sampleCompanies,
 	sampleContacts,
 	sampleDeals,
@@ -10,7 +11,7 @@ import {
 } from "../crm";
 import { defaultWidgetRegistry } from "./defaultRegistry";
 import { component, type JsonObject, type WidgetNode } from "./ir";
-import { buildRefs, fieldSections, pipelineBoard } from "./presets/crm";
+import { buildRefs, contactRecord, fieldSections, pipelineBoard } from "./presets/crm";
 import { WidgetRenderer } from "./WidgetRenderer";
 
 const meta = {
@@ -65,5 +66,17 @@ export const RecordFieldsEdit: Story = {
 		node: component("Panel", { title: `Edit · ${contact.name}`, density: "condensed" }, [
 			recordFields("edit"),
 		]) as WidgetNode,
+	},
+};
+
+/** The full contact record page — a preset composing Panel + SplitPane +
+ * RecordFieldList + ActivityFeed, all from serialized IR. */
+export const ContactRecordPage: Story = {
+	args: {
+		node: contactRecord(contact, contactFieldDefs, {
+			activities: sampleActivities,
+			users: sampleUsers,
+			companies: sampleCompanies,
+		}),
 	},
 };
