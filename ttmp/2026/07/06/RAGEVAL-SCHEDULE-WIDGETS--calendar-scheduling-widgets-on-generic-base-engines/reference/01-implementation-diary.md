@@ -1132,7 +1132,7 @@ This phase deliberately stays thin: each helper lowers to existing Widget IR com
 
 **Inferred user intent:** The user wanted a clean checkpoint that includes previously untracked work, followed by more Widget DSL implementation progress.
 
-**Commit (code):** pending — Phase 3 UI composition slice to be committed after validation and diary update.
+**Commit (code):** 501a0714821bf5e150b1dc1525c47d1d54ef55ea — "Widget DSL v3: implement UI composition"
 
 ### What I did
 - Committed all remaining workspace files in `5e563f5` before starting Phase 3, as requested.
