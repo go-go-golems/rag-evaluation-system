@@ -9,6 +9,10 @@
 						"props": {
 							"items": [
 								{
+									"key": {
+										"kind": "text",
+										"text": "Documents"
+									},
 									"label": {
 										"kind": "text",
 										"text": "Documents"
@@ -27,6 +31,10 @@
 						"props": {
 							"items": [
 								{
+									"key": {
+										"kind": "text",
+										"text": "Chunks"
+									},
 									"label": {
 										"kind": "text",
 										"text": "Chunks"
@@ -45,6 +53,10 @@
 						"props": {
 							"items": [
 								{
+									"key": {
+										"kind": "text",
+										"text": "Recall"
+									},
 									"label": {
 										"kind": "text",
 										"text": "Recall"

@@ -12,13 +12,36 @@
 							"slide": {
 								"id": "s1",
 								"notes": ["Explain the budget", "Show diagram"],
-								"title": "Speaker notes"
+								"title": "Speaker notes",
+								"view": "stack"
 							},
 							"snapshot": {
 								"id": "ctx",
 								"limit": 2048,
-								"parts": [],
-								"title": "Context"
+								"parts": [
+									{
+										"contentPreview": "Course facilitation guardrails and output format.",
+										"id": "system",
+										"label": "System prompt",
+										"styleKey": "system",
+										"tokens": 320
+									},
+									{
+										"contentPreview": "Context budget examples and reclaim-policy notes.",
+										"id": "retrieval",
+										"label": "Retrieved notes",
+										"styleKey": "retrieval",
+										"tokens": 960
+									},
+									{
+										"contentPreview": "Explain the budget and show the diagram.",
+										"id": "speaker",
+										"label": "Speaker notes",
+										"styleKey": "assistant",
+										"tokens": 420
+									}
+								],
+								"title": "Speaker context"
 							},
 							"total": 1,
 							"visualSide": "right"

@@ -9,24 +9,28 @@
 						"props": {
 							"documents": [
 								{
-									"body": "# Deck",
+									"body": "# Overview\n\nRead this before starting the lab.",
 									"format": "Markdown",
-									"id": "deck",
-									"title": "Deck"
+									"id": "overview",
+									"title": "Overview"
 								},
 								{
-									"body": "# Lab",
+									"body": "# Lab\n\nFollow the worksheet and capture your findings.",
 									"format": "Markdown",
 									"id": "lab",
 									"title": "Lab guide"
 								}
 							],
 							"intro": "Downloadable workshop material",
+							"onDocumentSelectAction": {
+								"kind": "navigate",
+								"to": "?item=${documentId}"
+							},
 							"onDownloadAction": {
 								"kind": "download",
-								"to": "/handouts/${doc.id}"
+								"to": "/handouts/${document.id}"
 							},
-							"selectedDocumentId": "lab"
+							"selectedDocumentId": "overview"
 						},
 						"type": "HandoutDocumentShell"
 					}

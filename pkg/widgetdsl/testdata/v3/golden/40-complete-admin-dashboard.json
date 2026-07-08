@@ -9,6 +9,10 @@
 						"props": {
 							"items": [
 								{
+									"key": {
+										"kind": "text",
+										"text": "Assets"
+									},
 									"label": {
 										"kind": "text",
 										"text": "Assets"
@@ -27,6 +31,10 @@
 						"props": {
 							"items": [
 								{
+									"key": {
+										"kind": "text",
+										"text": "Events"
+									},
 									"label": {
 										"kind": "text",
 										"text": "Events"

@@ -1372,6 +1372,7 @@ func (r *runtime) v3SectionBuilder(spec *v3SectionSpec) *goja.Object {
 	})
 	setExport(obj, "metric", func(label goja.Value, value goja.Value, options ...goja.Value) *goja.Object {
 		props := exportOptions(options)
+		props["key"] = r.v3Renderable(label)
 		props["label"] = r.v3Renderable(label)
 		props["value"] = r.v3Renderable(value)
 		spec.Children = append(spec.Children, v3NodeSpecFromIR(componentNode("KeyValueStrip", map[string]any{"items": []any{props}})))
