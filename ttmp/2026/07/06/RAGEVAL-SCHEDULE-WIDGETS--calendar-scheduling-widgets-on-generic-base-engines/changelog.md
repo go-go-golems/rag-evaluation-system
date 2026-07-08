@@ -444,3 +444,15 @@ Committed Widget DSL v3 Phases 8 and 9 in 0e5c85d68137036d1c2f2a07eaaa733e3c30b1
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3.go — Committed Phase 8 schedule/time runtime helpers
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3_descriptors.go — Committed Phase 9 descriptor inventory
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/01-implementation-diary.md — Step 22 commit reference
+
+## 2026-07-08
+
+Completed Widget DSL v3 Phase 10: runnable example scripts, renderer CLI, golden Widget IR snapshots, stability tests, README, and typed-map normalization for embedding data collection nodes in v3 pages.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/cmd/widgetdsl-v3-examples/main.go — Example renderer CLI
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/module.go — Typed map normalization for v3 embedding
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/testdata/v3/examples — Runnable Phase 10 widget.dsl example scripts
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3_examples_test.go — Golden example stability tests
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/01-implementation-diary.md — Diary Step 23 records Phase 10

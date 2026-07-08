@@ -1600,7 +1600,11 @@ func (r *runtime) v3ExportChild(value goja.Value) []v3NodeSpec {
 		return out
 	}
 	if isWidgetNode(r.vm, value) {
-		return []v3NodeSpec{v3NodeSpecFromIR(value.Export().(map[string]any))}
+		node, ok := widgetNodeFromAny(value.Export())
+		if !ok {
+			return []v3NodeSpec{r.v3TextNode(value)}
+		}
+		return []v3NodeSpec{v3NodeSpecFromIR(node)}
 	}
 	return []v3NodeSpec{r.v3TextNode(value)}
 }

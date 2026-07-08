@@ -1,0 +1,116 @@
+{
+	"id": "handouts-and-slide",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"documents": [
+								{
+									"format": "PDF",
+									"id": "deck",
+									"title": "Slide deck"
+								},
+								{
+									"format": "Markdown",
+									"id": "lab",
+									"title": "Lab guide"
+								}
+							],
+							"intro": "Printable materials for the workshop.",
+							"onDocumentSelectAction": {
+								"event": "course.handout.select",
+								"kind": "event",
+								"payload": {
+									"documentId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "doc.id"
+									}
+								}
+							},
+							"onDownloadAction": {
+								"kind": "download",
+								"to": "/handouts/[object Object]"
+							},
+							"onPrintAction": {
+								"event": "course.handout.print",
+								"kind": "event",
+								"payload": {
+									"documentId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "doc.id"
+									}
+								}
+							},
+							"selectedDocumentId": "deck"
+						},
+						"type": "HandoutDocumentShell"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Handouts",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"index": 1,
+							"mode": "speaker",
+							"onNextAction": {
+								"event": "course.slide.next",
+								"kind": "event"
+							},
+							"onPresentAction": {
+								"event": "course.slide.present",
+								"kind": "event"
+							},
+							"onPreviousAction": {
+								"event": "course.slide.previous",
+								"kind": "event"
+							},
+							"slide": {
+								"body": "Think in segments, budgets, and reclaim policies.",
+								"id": "s1",
+								"title": "Context windows"
+							},
+							"snapshot": {
+								"id": "ctx",
+								"limit": 2000,
+								"parts": [],
+								"title": "Slide context"
+							},
+							"total": 1
+						},
+						"type": "CourseSlidePanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Slide",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Handouts and slide"
+}

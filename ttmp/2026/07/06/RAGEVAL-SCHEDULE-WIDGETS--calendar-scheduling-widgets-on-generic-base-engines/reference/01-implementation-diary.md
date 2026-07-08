@@ -1576,3 +1576,81 @@ Implemented Phase 9 as a first descriptor-backed declaration/documentation pass.
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`
+
+## Step 23: Phase 10 — runnable v3 examples and golden Widget IR snapshots
+
+Built a Phase 10 example suite so the new `widget.dsl` API can be inspected as real scripts rather than only unit-test snippets. The examples live under `pkg/widgetdsl/testdata/v3/examples`, and a small CLI renders them to Widget IR JSON that can be reviewed directly or served by a host at a widget page endpoint.
+
+The examples cover the intended go-go-course migration shapes: simple data tables, selectable tables, master-detail editing, row actions, an all-modules gallery, a course CMS admin slice, and handouts plus a slide deck. Golden snapshots under `pkg/widgetdsl/testdata/v3/golden` make the output stable and reviewable.
+
+### Prompt Context
+
+**User prompt (verbatim):** "can you build some example scripts so i can view how this works? what's the full runtime/interface generation? phase 10?"
+
+**Assistant interpretation:** Add runnable v3 example scripts and explain how Phase 10 relates to the remaining descriptor/runtime/interface generation work.
+
+**Inferred user intent:** See concrete `widget.dsl` authoring examples and understand whether Phase 10 should be done now or whether Phase 9 needs deeper generation first.
+
+**Commit (code):** pending — Phase 10 examples and snapshots to be committed after validation and diary update.
+
+### What I did
+- Added `pkg/widgetdsl/testdata/v3/examples` with seven runnable `widget.dsl` scripts:
+  - simple table;
+  - selectable table;
+  - master-detail editor;
+  - row actions;
+  - all-modules gallery;
+  - course CMS admin;
+  - handouts and slide deck.
+- Added `cmd/widgetdsl-v3-examples`, a CLI that executes examples in Goja and writes rendered Widget IR JSON.
+- Added `pkg/widgetdsl/testdata/v3/golden` snapshots for each example.
+- Added `pkg/widgetdsl/v3_examples_test.go` to execute every example and compare rendered IR against committed goldens.
+- Added `pkg/widgetdsl/testdata/v3/README.md` with commands for rendering examples and refreshing goldens.
+- Fixed v3 embedding of typed v2 `spec.JSONObject` nodes so `data.collection(...).toNode()` can be embedded directly in v3 page sections.
+- Marked Phase 10 complete in the tracker, with the old/new comparison item explicitly deferred because it was optional.
+
+### Why
+- The user needs scripts that make the new DSL tangible and inspectable.
+- Golden examples are the safest next step before broad migration: they prove the APIs execute without browser dependencies and produce stable JSON.
+- Embedding `data.collection(...).toNode()` inside pages is central to the example workflow, so the typed-map normalization bug needed to be fixed rather than worked around.
+
+### What worked
+- The renderer CLI produced JSON for all seven examples.
+- Golden tests pass and verify stable Widget IR for each script.
+- The examples use only public `widget.dsl` APIs and avoid `raw.component` in the complex course CMS fixture.
+
+### What didn't work
+- The first render attempt exposed a panic when a v2 typed `spec.JSONObject` node was passed to v3 `section.view(...)`:
+  `panic: interface conversion: interface {} is spec.JSONObject, not map[string]interface {}`
+- The first course CMS script draft referenced non-existent intent names (`course.intent.updateMetadata`, `cms.intent.uploadAsset`) and had nested parenthesis mistakes. I rewrote it using intermediate constants and existing intent/action names.
+
+### What I learned
+- The v3 page builder should accept typed map aliases from lower layers, not only literal `map[string]any`; otherwise v2 data builders are awkward to compose with v3 pages.
+- Example scripts are a better integration test than narrow snippets because they catch authoring ergonomics issues like non-existent intent names and confusing parenthesis nesting.
+
+### What was tricky to build
+- Goja exports Go map aliases like `v2/spec.JSONObject` with their concrete type, so a direct `value.Export().(map[string]any)` assertion is unsafe. I added reflective normalization for string-keyed maps and slices so typed JSON-ish values become regular `map[string]any` / `[]any` before v3 embedding.
+- The CLI wraps each script and returns a `page` variable, calling `.toPage()` when available. This keeps examples concise while making them renderable without CommonJS exports.
+
+### What warrants a second pair of eyes
+- Whether the example CLI should eventually serve a temporary HTTP endpoint for the React SPA instead of only writing JSON files.
+- Whether the typed-map normalization should be reused more broadly in old module helpers, not only where v3 touched it.
+- Whether the optional old-module vs v3 component/action comparison should be implemented before Phase 11 migration docs.
+
+### What should be done in the future
+- Add an HTTP preview mode or dev-server integration that serves a selected golden JSON page to the WidgetRenderer.
+- Expand examples as descriptor generation grows so every descriptor-backed view has a runnable fixture.
+- Continue to Phase 11 integration and cutover guidance.
+
+### Code review instructions
+- Start with `pkg/widgetdsl/testdata/v3/README.md` and the scripts in `pkg/widgetdsl/testdata/v3/examples`.
+- Run `go run ./cmd/widgetdsl-v3-examples --stdout` to inspect rendered IR quickly.
+- Review `pkg/widgetdsl/v3_examples_test.go` for golden snapshot validation.
+- Review `pkg/widgetdsl/module.go` and `pkg/widgetdsl/v3.go` for the typed-map normalization fix.
+- Validate with `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`.
+
+### Technical details
+- Render command:
+  `go run ./cmd/widgetdsl-v3-examples --out pkg/widgetdsl/testdata/v3/golden`
+- Validation command:
+  `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`

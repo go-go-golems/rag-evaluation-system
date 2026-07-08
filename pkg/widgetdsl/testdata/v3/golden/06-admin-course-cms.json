@@ -1,0 +1,275 @@
+{
+	"id": "course-cms-admin",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"activeItemId": "lab",
+							"onNavigateAction": {
+								"kind": "navigate",
+								"to": "?item=[object Object]"
+							},
+							"sections": [
+								{
+									"id": "modules",
+									"items": [
+										{
+											"id": "intro",
+											"label": "Intro"
+										},
+										{
+											"id": "lab",
+											"label": "Lab"
+										}
+									],
+									"label": "Modules"
+								}
+							],
+							"subtitle": "Admin preview",
+							"title": "Context Window Engineering"
+						},
+						"type": "CourseStudioShell"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Course shell",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"children": [
+							{
+								"kind": "component",
+								"props": {
+									"items": [
+										{
+											"key": "title",
+											"label": "title",
+											"value": "Context Window Engineering"
+										},
+										{
+											"key": "status",
+											"label": "status",
+											"value": "draft"
+										},
+										{
+											"key": "owner",
+											"label": "owner",
+											"value": "Manuel"
+										}
+									]
+								},
+								"type": "MetadataGrid"
+							}
+						],
+						"kind": "component",
+						"props": {
+							"onSubmitAction": {
+								"kind": "server",
+								"name": "course.metadata.update",
+								"payload": {
+									"form": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "form"
+									}
+								}
+							},
+							"title": "Course metadata"
+						},
+						"type": "FormPanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Metadata",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"children": [
+							{
+								"kind": "component",
+								"props": {
+									"columns": [
+										{
+											"cell": {
+												"action": {
+													"event": "server",
+													"kind": "server",
+													"name": "course.agenda.edit",
+													"payload": {
+														"direction": "up",
+														"id": {
+															"kind": "path",
+															"path": "rows"
+														}
+													}
+												},
+												"kind": "actionButton",
+												"label": "↑"
+											},
+											"header": "",
+											"id": "moveUp",
+											"maxWidth": "5ch"
+										},
+										{
+											"cell": {
+												"action": {
+													"event": "server",
+													"kind": "server",
+													"name": "course.agenda.edit",
+													"payload": {
+														"direction": "down",
+														"id": {
+															"kind": "path",
+															"path": "rows"
+														}
+													}
+												},
+												"kind": "actionButton",
+												"label": "↓"
+											},
+											"header": "",
+											"id": "moveDown",
+											"maxWidth": "5ch"
+										}
+									],
+									"getRowKey": "id",
+									"rows": [
+										{
+											"duration": 20,
+											"id": "intro",
+											"status": "ready",
+											"title": "Introduction"
+										},
+										{
+											"duration": 60,
+											"id": "lab",
+											"status": "draft",
+											"title": "Hands-on Lab"
+										}
+									]
+								},
+								"type": "DataTable"
+							}
+						],
+						"kind": "component",
+						"props": {
+							"gap": "md"
+						},
+						"type": "Stack"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Agenda",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"accept": ["application/pdf", "image/png"],
+							"description": "Slides, handouts, diagrams",
+							"onDeleteAction": {
+								"kind": "server",
+								"name": "course.material.delete",
+								"payload": {
+									"id": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "asset.id"
+									}
+								}
+							},
+							"onFilesSelectedAction": {
+								"kind": "server",
+								"name": "course.material.upload"
+							},
+							"title": "Upload material"
+						},
+						"type": "ContextUploadDropArea"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Materials",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"assets": [
+								{
+									"id": "asset-hero",
+									"kind": "image",
+									"title": "Hero diagram"
+								}
+							],
+							"onAssetOpenAction": {
+								"event": "cms.asset.open",
+								"kind": "event",
+								"payload": {
+									"assetId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "asset.id"
+									}
+								}
+							},
+							"onFilesSelectedAction": {
+								"kind": "server",
+								"name": "cms.assets.upload"
+							}
+						},
+						"type": "MediaLibraryPanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Media",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"shell": {
+		"kind": "course-admin"
+	},
+	"title": "Course CMS admin"
+}

@@ -1,0 +1,104 @@
+{
+	"id": "selectable-table",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"children": [
+							{
+								"kind": "component",
+								"props": {
+									"columns": [
+										{
+											"cell": {
+												"field": "id",
+												"kind": "caption",
+												"tone": "muted"
+											},
+											"header": "id",
+											"id": "id"
+										},
+										{
+											"cell": {
+												"field": "title",
+												"kind": "field"
+											},
+											"header": "title",
+											"id": "title"
+										},
+										{
+											"cell": {
+												"field": "owner",
+												"kind": "field"
+											},
+											"header": "Owner",
+											"id": "owner"
+										},
+										{
+											"cell": {
+												"field": "status",
+												"kind": "status"
+											},
+											"header": "status",
+											"id": "status"
+										}
+									],
+									"getRowKey": "id",
+									"onRowSelect": {
+										"event": "navigate",
+										"kind": "navigate",
+										"payload": {
+											"id": {
+												"kind": "path",
+												"path": "row.id"
+											}
+										},
+										"to": "/courses/${row.id}"
+									},
+									"rows": [
+										{
+											"id": "course-101",
+											"owner": "Mira",
+											"status": "draft",
+											"title": "Foundations"
+										},
+										{
+											"id": "course-202",
+											"owner": "Noah",
+											"status": "published",
+											"title": "Context diagrams"
+										}
+									],
+									"selectedKey": "course-202"
+								},
+								"type": "DataTable"
+							}
+						],
+						"kind": "component",
+						"props": {
+							"gap": "md"
+						},
+						"type": "Stack"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"caption": "Row selection is expressed as serializable ActionSpec data.",
+					"density": "flush",
+					"label": "Courses",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Selectable table"
+}

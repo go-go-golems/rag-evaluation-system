@@ -1,0 +1,124 @@
+{
+	"id": "row-actions",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"children": [
+							{
+								"kind": "component",
+								"props": {
+									"columns": [
+										{
+											"cell": {
+												"field": "id",
+												"kind": "caption",
+												"tone": "muted"
+											},
+											"header": "id",
+											"id": "id"
+										},
+										{
+											"cell": {
+												"field": "title",
+												"kind": "field"
+											},
+											"header": "title",
+											"id": "title"
+										},
+										{
+											"cell": {
+												"field": "kind",
+												"kind": "field"
+											},
+											"header": "kind",
+											"id": "kind"
+										},
+										{
+											"cell": {
+												"field": "status",
+												"kind": "status"
+											},
+											"header": "status",
+											"id": "status"
+										},
+										{
+											"cell": {
+												"action": {
+													"event": "navigate",
+													"kind": "navigate",
+													"to": "?article=[object Object]\u0026preview=1"
+												},
+												"kind": "actionButton",
+												"label": "Open"
+											},
+											"header": "Preview",
+											"id": "preview"
+										},
+										{
+											"cell": {
+												"action": {
+													"event": "server",
+													"kind": "server",
+													"name": "cms.article.archive",
+													"payload": {
+														"articleId": {
+															"kind": "path",
+															"path": "row.id"
+														}
+													}
+												},
+												"kind": "actionButton",
+												"label": "Archive"
+											},
+											"header": "Archive",
+											"id": "archive"
+										}
+									],
+									"getRowKey": "id",
+									"rows": [
+										{
+											"id": "asset-hero",
+											"kind": "image",
+											"status": "ready",
+											"title": "Hero diagram"
+										},
+										{
+											"id": "asset-notes",
+											"kind": "markdown",
+											"status": "draft",
+											"title": "Workshop notes"
+										}
+									]
+								},
+								"type": "DataTable"
+							}
+						],
+						"kind": "component",
+						"props": {
+							"gap": "md"
+						},
+						"type": "Stack"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"caption": "Action columns hide low-level Button/Action wiring.",
+					"density": "flush",
+					"label": "Media rows",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Row actions"
+}

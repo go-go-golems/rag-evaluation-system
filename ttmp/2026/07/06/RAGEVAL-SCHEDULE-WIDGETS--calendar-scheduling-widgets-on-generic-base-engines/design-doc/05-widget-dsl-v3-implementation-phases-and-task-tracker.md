@@ -13,6 +13,8 @@ DocType: design-doc
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: repo://cmd/widgetdsl-v3-examples/main.go
+      Note: CLI renders widget.dsl v3 example scripts to Widget IR JSON
     - Path: repo://pkg/widgetdsl/module.go
       Note: |-
         Current runtime module registry and helper/recipe implementation to refactor behind widget.dsl
@@ -22,6 +24,7 @@ RelatedFiles:
         widget.dsl installs concrete v3 course namespace
         widget.dsl installs concrete v3 context namespace
         widget.dsl installs concrete schedule/time namespaces
+        Normalizes typed v2 JSONObject nodes when embedded in v3 pages
     - Path: repo://pkg/widgetdsl/module_test.go
       Note: |-
         Phase 1 runtime tests for widget.dsl coexistence and raw/bind/act output
@@ -33,6 +36,10 @@ RelatedFiles:
         Phase 6 runtime coverage for course views
         Phase 7 runtime coverage for context views
         Phase 8 schedule/time runtime tests
+    - Path: repo://pkg/widgetdsl/testdata/v3/examples
+      Note: Phase 10 runnable widget.dsl v3 example scripts
+    - Path: repo://pkg/widgetdsl/testdata/v3/golden
+      Note: Phase 10 golden Widget IR snapshots
     - Path: repo://pkg/widgetdsl/typescript.go
       Note: |-
         Current declaration generation path to replace with descriptor-driven widget.dsl declarations
@@ -63,10 +70,13 @@ RelatedFiles:
         Phase 6 course shell, landing, slide deck, handouts, metadata form, agenda/material helpers, and intents
         Phase 7 context style sets, palettes, diagrams, workspaces, slots, and intents
         Phase 8 schedule/time runtime namespaces
+        Embeds normalized Widget IR nodes from data collection builders
     - Path: repo://pkg/widgetdsl/v3_descriptors.go
       Note: Phase 9 namespace/view descriptor inventory
     - Path: repo://pkg/widgetdsl/v3_descriptors_test.go
       Note: Phase 9 descriptor tests
+    - Path: repo://pkg/widgetdsl/v3_examples_test.go
+      Note: Phase 10 golden stability test
     - Path: repo://pkg/xgoja/providers/widgetsite/provider.go
       Note: Phase 1 provider exposure for widget.dsl
     - Path: repo://pkg/xgoja/providers/widgetsite/provider_test.go
@@ -95,6 +105,7 @@ LastUpdated: 2026-07-07T16:40:00-04:00
 WhatFor: Use this document to track the step-by-step implementation of the new widget.dsl module while existing ui/data/cms/course/context modules remain available.
 WhenToUse: Read before starting or resuming Widget DSL v3 implementation; update after every phase or meaningful subphase.
 ---
+
 
 
 
@@ -701,29 +712,30 @@ components.
 
 **Goal:** Prove the new DSL on real pages before broad migration.
 
-**Status:** not started.
+**Status:** complete.
 
 ### Tasks
 
-- [ ] Add a fixture directory under the ticket or under `pkg/widgetdsl/testdata` for
+- [x] Add a fixture directory under the ticket or under `pkg/widgetdsl/testdata` for
       v3 go-go-course examples.
-- [ ] Port `dsl-examples.js` examples:
+- [x] Port `dsl-examples.js` examples:
   - simple table;
   - selectable table;
   - master-detail editor;
   - row actions;
   - all-modules gallery.
-- [ ] Port `admin-course-cms.js` in slices:
+- [x] Port `admin-course-cms.js` in slices:
   - shell;
   - metadata forms;
   - agenda editor;
   - file upload section;
   - media library;
   - preview actions.
-- [ ] Port `handouts.js` and one slide page.
-- [ ] Execute each fixture in Goja and snapshot emitted Widget IR.
+- [x] Port `handouts.js` and one slide page.
+- [x] Execute each fixture in Goja and snapshot emitted Widget IR.
 - [ ] Optionally compare current old-module output with new v3 output at the
-      component-type/action-contract level.
+      component-type/action-contract level. Deferred because the v3 golden snapshots
+      already prove browser-free execution and stable Widget IR for the ported pages.
 
 ### Acceptance criteria
 
@@ -780,5 +792,5 @@ components.
 | Phase 7 — Context namespace | complete | Added style sets, palettes, diagrams, workspaces, slots, intents, tests, and declarations. |
 | Phase 8 — Schedule/time namespaces | complete | Added schedule polls, booking picker, time month/week helpers, intents, declarations, and tests. |
 | Phase 9 — Descriptor-driven declarations/docs | complete | Added descriptor inventory, generated namespace exports/API reference, TS fixtures, and descriptor tests. |
-| Phase 10 — Golden go-go-course fixtures | not started | Snapshot old/new page fixtures. |
+| Phase 10 — Golden go-go-course fixtures | complete | Added runnable widget.dsl v3 examples, renderer CLI, golden snapshots, and stability tests. |
 | Phase 11 — Integration/cutover guidance | not started | Document provider and migration workflow. |

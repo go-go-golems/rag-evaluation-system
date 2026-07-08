@@ -1029,7 +1029,7 @@ func isWidgetNode(vm *goja.Runtime, value goja.Value) bool {
 }
 
 func looksLikeWidgetNodeExport(value goja.Value) bool {
-	exported, ok := value.Export().(map[string]any)
+	exported, ok := toStringAnyMap(value.Export())
 	if !ok {
 		return false
 	}
@@ -1053,7 +1053,7 @@ func exportObject(value goja.Value) map[string]any {
 	if value == nil || goja.IsUndefined(value) || goja.IsNull(value) {
 		return map[string]any{}
 	}
-	if exported, ok := value.Export().(map[string]any); ok {
+	if exported, ok := toStringAnyMap(value.Export()); ok {
 		return exported
 	}
 	return map[string]any{}
@@ -1147,8 +1147,45 @@ func componentNode(componentType string, props map[string]any, children ...any) 
 }
 
 func widgetNodeFromAny(value any) (map[string]any, bool) {
-	node, ok := value.(map[string]any)
+	node, ok := toStringAnyMap(value)
 	return node, ok && isWidgetNodeExport(node)
+}
+
+func toStringAnyMap(value any) (map[string]any, bool) {
+	if value == nil {
+		return nil, false
+	}
+	if out, ok := value.(map[string]any); ok {
+		return out, true
+	}
+	rv := reflect.ValueOf(value)
+	if rv.Kind() != reflect.Map || rv.Type().Key().Kind() != reflect.String {
+		return nil, false
+	}
+	out := make(map[string]any, rv.Len())
+	iter := rv.MapRange()
+	for iter.Next() {
+		out[iter.Key().String()] = normalizeJSONValue(iter.Value().Interface())
+	}
+	return out, true
+}
+
+func normalizeJSONValue(value any) any {
+	if value == nil {
+		return nil
+	}
+	if m, ok := toStringAnyMap(value); ok {
+		return m
+	}
+	rv := reflect.ValueOf(value)
+	if rv.Kind() == reflect.Slice || rv.Kind() == reflect.Array {
+		out := make([]any, 0, rv.Len())
+		for i := 0; i < rv.Len(); i++ {
+			out = append(out, normalizeJSONValue(rv.Index(i).Interface()))
+		}
+		return out
+	}
+	return value
 }
 
 func isWidgetNodeExport(exported map[string]any) bool {

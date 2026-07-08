@@ -1,0 +1,275 @@
+{
+	"id": "all-modules",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"children": [
+							{
+								"kind": "text",
+								"text": "Cards, stacks, captions, badges, and buttons."
+							}
+						],
+						"kind": "component",
+						"props": {
+							"title": "Composable UI",
+							"tone": "info"
+						},
+						"type": "Panel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "UI",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"assets": [
+								{
+									"id": "asset-1",
+									"title": "Hero"
+								}
+							],
+							"onAssetSelectAction": {
+								"event": "cms.asset.select",
+								"kind": "event",
+								"payload": {
+									"assetId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "asset.id"
+									}
+								}
+							}
+						},
+						"type": "MediaLibraryPanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "CMS",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"activeItemId": "start",
+							"sections": [
+								{
+									"id": "intro",
+									"items": [
+										{
+											"id": "start",
+											"label": "Start"
+										}
+									]
+								}
+							],
+							"title": "Course"
+						},
+						"type": "CourseStudioShell"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Course",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"snapshot": {
+								"id": "ctx",
+								"limit": 1000,
+								"parts": [
+									{
+										"id": "p1",
+										"label": "Prompt",
+										"styleKey": "prompt",
+										"tokens": 100
+									}
+								],
+								"title": "Context"
+							},
+							"styleSet": {
+								"legend": [
+									{
+										"id": "prompt",
+										"label": "Prompt"
+									},
+									{
+										"id": "answer",
+										"label": "Answer"
+									}
+								],
+								"styles": {
+									"answer": {
+										"fill": "#e0f2fe",
+										"stroke": "#0284c7"
+									},
+									"prompt": {
+										"fill": "#f7e8ff",
+										"stroke": "#9d4edd"
+									}
+								}
+							}
+						},
+						"type": "ContextDiagramPanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Context",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"ariaLabel": "Workshop availability",
+							"cell": {
+								"kind": "cycle",
+								"states": ["available", "maybe", "unavailable"]
+							},
+							"columns": [
+								{
+									"header": "Wed 9",
+									"id": "wed-9",
+									"meta": {
+										"endISO": "2026-07-08T10:00:00Z",
+										"id": "wed-9",
+										"label": "Wed 9",
+										"startISO": "2026-07-08T09:00:00Z"
+									}
+								}
+							],
+							"getRowKey": {
+								"field": "id"
+							},
+							"rowHeader": {
+								"field": "name",
+								"kind": "field"
+							},
+							"rows": [
+								{
+									"availability": {
+										"wed-9": "available"
+									},
+									"id": "ana",
+									"name": "Ana"
+								}
+							],
+							"stickyHeader": true,
+							"valueAt": {
+								"mapField": "availability"
+							}
+						},
+						"type": "MatrixGrid"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Schedule",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"blocks": [
+								{
+									"dayISO": "2026-07-08",
+									"endISO": "2026-07-08T10:00:00Z",
+									"id": "ev1",
+									"label": "Lab",
+									"startISO": "2026-07-08T09:00:00Z",
+									"styleKey": "answer"
+								}
+							],
+							"days": [
+								"2026-07-06",
+								"2026-07-07",
+								"2026-07-08",
+								"2026-07-09",
+								"2026-07-10",
+								"2026-07-11",
+								"2026-07-12"
+							],
+							"hourEnd": 18,
+							"hourStart": 8,
+							"styleSet": {
+								"legend": [
+									{
+										"id": "prompt",
+										"label": "Prompt"
+									},
+									{
+										"id": "answer",
+										"label": "Answer"
+									}
+								],
+								"styles": {
+									"answer": {
+										"fill": "#e0f2fe",
+										"stroke": "#0284c7"
+									},
+									"prompt": {
+										"fill": "#f7e8ff",
+										"stroke": "#9d4edd"
+									}
+								}
+							}
+						},
+						"type": "TimeGrid"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Time",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "All modules gallery"
+}
