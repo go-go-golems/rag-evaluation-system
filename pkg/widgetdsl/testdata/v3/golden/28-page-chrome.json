@@ -1,0 +1,84 @@
+{
+	"id": "page-chrome",
+	"root": {
+		"children": [
+			{
+				"kind": "component",
+				"props": {
+					"items": [
+						{
+							"href": "/pages/index",
+							"label": {
+								"kind": "text",
+								"text": "Home"
+							}
+						},
+						{
+							"label": {
+								"kind": "text",
+								"text": "Chrome"
+							}
+						}
+					]
+				},
+				"type": "Breadcrumbs"
+			},
+			{
+				"children": [
+					{
+						"children": [
+							{
+								"kind": "text",
+								"text": "Breadcrumbs and section actions."
+							}
+						],
+						"kind": "component",
+						"type": "Caption"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"actions": {
+						"children": [
+							{
+								"children": [
+									{
+										"kind": "text",
+										"text": "Refresh"
+									}
+								],
+								"kind": "component",
+								"props": {
+									"action": {
+										"event": "refresh",
+										"kind": "event"
+									}
+								},
+								"type": "Button"
+							}
+						],
+						"kind": "component",
+						"props": {
+							"gap": "sm",
+							"justify": "end"
+						},
+						"type": "Inline"
+					},
+					"density": "flush",
+					"label": "Actions",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"density": "compact",
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Page chrome"
+}

@@ -1,0 +1,94 @@
+{
+	"id": "dashboard-metrics",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"items": [
+								{
+									"label": {
+										"kind": "text",
+										"text": "Documents"
+									},
+									"value": {
+										"kind": "text",
+										"text": "128"
+									}
+								}
+							]
+						},
+						"type": "KeyValueStrip"
+					},
+					{
+						"kind": "component",
+						"props": {
+							"items": [
+								{
+									"label": {
+										"kind": "text",
+										"text": "Chunks"
+									},
+									"value": {
+										"kind": "text",
+										"text": "42k"
+									}
+								}
+							]
+						},
+						"type": "KeyValueStrip"
+					},
+					{
+						"kind": "component",
+						"props": {
+							"items": [
+								{
+									"label": {
+										"kind": "text",
+										"text": "Recall"
+									},
+									"value": {
+										"kind": "text",
+										"text": "91%"
+									}
+								}
+							]
+						},
+						"type": "KeyValueStrip"
+					},
+					{
+						"children": [
+							{
+								"kind": "text",
+								"text": "The evaluation corpus is ready."
+							}
+						],
+						"kind": "component",
+						"props": {
+							"title": "Healthy",
+							"tone": "success"
+						},
+						"type": "Panel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Metrics",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Dashboard metrics"
+}

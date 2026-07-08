@@ -603,13 +603,13 @@ func (r *runtime) v3CourseObject() *goja.Object {
 func (r *runtime) v3CourseIntentObject() *goja.Object {
 	intent := r.vm.NewObject()
 	setExport(intent, "navigate", func(id goja.Value) map[string]any {
-		return map[string]any{"kind": "navigate", "to": "?item=" + id.String()}
+		return map[string]any{"kind": "navigate", "to": "?item=" + v3URLTemplateValue(id)}
 	})
 	setExport(intent, "selectHandout", func(id goja.Value) map[string]any {
 		return map[string]any{"kind": "event", "event": "course.handout.select", "payload": map[string]any{"documentId": id.Export()}}
 	})
 	setExport(intent, "downloadHandout", func(id goja.Value) map[string]any {
-		return map[string]any{"kind": "download", "to": "/handouts/" + id.String()}
+		return map[string]any{"kind": "download", "to": "/handouts/" + v3URLTemplateValue(id)}
 	})
 	setExport(intent, "printHandout", func(id goja.Value) map[string]any {
 		return map[string]any{"kind": "event", "event": "course.handout.print", "payload": map[string]any{"documentId": id.Export()}}
@@ -685,7 +685,7 @@ func (r *runtime) v3CourseSlideDeck(deck goja.Value, cb ...goja.Value) map[strin
 			slide = m
 		}
 	}
-	props := map[string]any{"slide": valueOrDefault(d["slide"], slide), "snapshot": valueOrDefault(d["snapshot"], map[string]any{"id": "empty", "title": "Context", "limit": 0, "parts": []any{}}), "index": index + 1, "total": len(slides)}
+	props := map[string]any{"slide": valueOrDefault(d["slide"], slide), "snapshot": valueOrDefault(d["snapshot"], map[string]any{"id": "empty", "title": "Context", "limit": 0, "parts": []any{}}), "index": index, "total": len(slides)}
 	if len(cb) > 0 {
 		r.applyV3BuilderCallback(r.v3CourseSlideBuilder(props), cb[0], "course.slideDeck")
 	}
@@ -789,7 +789,7 @@ func (r *runtime) v3CMSIntentObject() *goja.Object {
 		return map[string]any{"kind": "server", "name": "cms.article.archive", "payload": map[string]any{"articleId": id.Export()}}
 	})
 	setExport(intent, "previewArticle", func(id goja.Value) map[string]any {
-		return map[string]any{"kind": "navigate", "to": "?article=" + id.String() + "&preview=1"}
+		return map[string]any{"kind": "navigate", "to": "?article=" + v3URLTemplateValue(id) + "&preview=1"}
 	})
 	return intent
 }
@@ -1230,7 +1230,7 @@ func (r *runtime) v3MatrixBuilder(spec map[string]any) *goja.Object {
 	setExport(obj, "column", func(id string, label goja.Value, options ...goja.Value) *goja.Object {
 		column := exportOptions(options)
 		column["id"] = id
-		column["label"] = r.v3Renderable(label)
+		column["header"] = r.v3Renderable(label)
 		spec["columns"] = append(anySlice(spec["columns"]), column)
 		return obj
 	})
@@ -1558,6 +1558,31 @@ func (r *runtime) v3PageToIR(spec *v3PageSpec) map[string]any {
 	return out
 }
 
+func v3SectionActionsNode(actions []any) map[string]any {
+	buttons := make([]any, 0, len(actions))
+	for _, raw := range actions {
+		item, ok := toStringAnyMap(raw)
+		if !ok {
+			continue
+		}
+		props := map[string]any{}
+		copyIfPresent(props, item, "variant")
+		copyIfPresent(props, item, "size")
+		copyIfPresent(props, item, "disabled")
+		copyIfPresent(props, item, "selected")
+		copyIfPresent(props, item, "action")
+		buttons = append(buttons, componentNode("Button", props, v3RenderableToNode(item["label"])))
+	}
+	return componentNode("Inline", map[string]any{"gap": "sm", "justify": "end"}, buttons...)
+}
+
+func v3RenderableToNode(value any) map[string]any {
+	if node, ok := widgetNodeFromAny(value); ok {
+		return node
+	}
+	return map[string]any{"kind": "text", "text": fmt.Sprint(value)}
+}
+
 func (r *runtime) v3SectionToNode(spec v3SectionSpec) map[string]any {
 	props := map[string]any{"label": spec.Title, "level": 1, "rule": true, "density": "flush"}
 	if spec.Caption != "" {
@@ -1570,7 +1595,7 @@ func (r *runtime) v3SectionToNode(spec v3SectionSpec) map[string]any {
 		props["tone"] = spec.Tone
 	}
 	if len(spec.Actions) > 0 {
-		props["actions"] = spec.Actions
+		props["actions"] = v3SectionActionsNode(spec.Actions)
 	}
 	return componentNode("SectionBlock", props, r.v3NodeSpecsToIR(spec.Children)...)
 }
@@ -1803,6 +1828,24 @@ func v3AccessorSpec(mode string, valueKey string, value string) map[string]any {
 		out[valueKey] = value
 	}
 	return out
+}
+
+func v3URLTemplateValue(value goja.Value) string {
+	if value == nil || goja.IsUndefined(value) || goja.IsNull(value) {
+		return ""
+	}
+	if m, ok := value.Export().(map[string]any); ok {
+		if kind, _ := m["kind"].(string); kind == "accessor" {
+			path := stringFromMap(m, "path", stringFromMap(m, "field", stringFromMap(m, "mapField", stringFromMap(m, "template", ""))))
+			if strings.TrimSpace(path) != "" {
+				return "${" + path + "}"
+			}
+		}
+		if kind, _ := m["kind"].(string); kind == "const" {
+			return fmt.Sprint(m["value"])
+		}
+	}
+	return value.String()
 }
 
 func slugID(s string) string {

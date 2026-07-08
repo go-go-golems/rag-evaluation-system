@@ -1,0 +1,56 @@
+{
+	"id": "crm-field-renderers",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"children": [
+							{
+								"kind": "component",
+								"props": {
+									"spec": {
+										"key": "email",
+										"label": "Email",
+										"type": "email"
+									},
+									"value": "ops@example.com"
+								},
+								"type": "FieldRenderer"
+							},
+							{
+								"kind": "component",
+								"props": {
+									"spec": {
+										"key": "status",
+										"label": "Status",
+										"type": "select"
+									},
+									"value": "Active"
+								},
+								"type": "FieldRenderer"
+							}
+						],
+						"kind": "component",
+						"type": "Stack"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Fields",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "CRM field renderers"
+}

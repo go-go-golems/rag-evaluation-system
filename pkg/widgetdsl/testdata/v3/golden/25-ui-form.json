@@ -1,0 +1,67 @@
+{
+	"id": "ui-form",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"children": [
+							{
+								"kind": "component",
+								"props": {
+									"control": {
+										"kind": "component",
+										"props": {
+											"defaultValue": "Ada",
+											"name": "name"
+										},
+										"type": "TextInput"
+									},
+									"label": "Name"
+								},
+								"type": "FormRow"
+							},
+							{
+								"kind": "component",
+								"props": {
+									"control": {
+										"kind": "component",
+										"props": {
+											"defaultValue": "Hello",
+											"name": "notes"
+										},
+										"type": "TextareaInput"
+									},
+									"label": "Notes"
+								},
+								"type": "FormRow"
+							}
+						],
+						"kind": "component",
+						"props": {
+							"formAction": "/api/contact",
+							"method": "post",
+							"title": "Contact"
+						},
+						"type": "FormPanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Form",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "UI form"
+}

@@ -2,6 +2,11 @@
 	display: flex;
 	align-items: baseline;
 	gap: 0;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	overflow-x: auto;
+	overflow-y: hidden;
 	padding: 6px 16px 4px;
 	border-bottom: 1px solid var(--mac-border);
 	background: var(--mac-bg);
@@ -11,16 +16,19 @@
 }
 
 .brand {
+	flex: 0 0 auto;
 	font-weight: bold;
 	letter-spacing: -0.5px;
 	margin-right: 16px;
 	padding-right: 16px;
 	border-right: 1px solid var(--mac-border);
 	cursor: default;
+	white-space: nowrap;
 }
 
 .item {
 	appearance: none;
+	flex: 0 0 auto;
 	background: transparent;
 	color: inherit;
 	font: inherit;
@@ -28,6 +36,7 @@
 	padding: 2px 10px;
 	border: 1px solid transparent;
 	transition: none;
+	white-space: nowrap;
 }
 
 .item:hover {

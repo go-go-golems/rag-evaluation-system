@@ -1,0 +1,33 @@
+{
+	"id": "markdown-article",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"source": "# Widget DSL notes\n\n- Builder callbacks stay serializable.\n- React owns rendering.\n- Actions remain data."
+						},
+						"type": "MarkdownArticle"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Article",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Markdown article"
+}

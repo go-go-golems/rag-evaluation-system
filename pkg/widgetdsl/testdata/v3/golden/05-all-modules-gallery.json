@@ -35,7 +35,10 @@
 						"props": {
 							"assets": [
 								{
+									"filename": "hero.png",
 									"id": "asset-1",
+									"kind": "image",
+									"mime": "image/png",
 									"title": "Hero"
 								}
 							],

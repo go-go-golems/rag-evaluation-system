@@ -24,6 +24,7 @@ export const courseStudioShellWidget = defineWidget<CourseStudioShellWidgetProps
 					? (itemId) =>
 							ctx.dispatchAction(props.onNavigateAction!, {
 								itemId,
+								item: { id: itemId },
 								value: itemId,
 								componentType: "CourseStudioShell",
 							})

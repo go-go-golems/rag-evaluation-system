@@ -1,0 +1,146 @@
+{
+	"id": "complete-admin-dashboard",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"items": [
+								{
+									"label": {
+										"kind": "text",
+										"text": "Assets"
+									},
+									"value": {
+										"kind": "text",
+										"text": "1"
+									}
+								}
+							]
+						},
+						"type": "KeyValueStrip"
+					},
+					{
+						"kind": "component",
+						"props": {
+							"items": [
+								{
+									"label": {
+										"kind": "text",
+										"text": "Events"
+									},
+									"value": {
+										"kind": "text",
+										"text": "1"
+									}
+								}
+							]
+						},
+						"type": "KeyValueStrip"
+					},
+					{
+						"children": [
+							{
+								"kind": "text",
+								"text": "All modules are available."
+							}
+						],
+						"kind": "component",
+						"props": {
+							"title": "Ready",
+							"tone": "callout"
+						},
+						"type": "Panel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Overview",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"assets": [
+								{
+									"filename": "hero.png",
+									"id": "hero",
+									"kind": "image",
+									"mime": "image/png",
+									"title": "Hero"
+								}
+							]
+						},
+						"type": "MediaLibraryPanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Media",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"blocks": [
+								{
+									"dayISO": "2026-07-08",
+									"endISO": "2026-07-08T15:00:00Z",
+									"id": "review",
+									"label": "Review",
+									"startISO": "2026-07-08T14:00:00Z",
+									"styleKey": "review"
+								}
+							],
+							"days": [
+								"2026-07-06",
+								"2026-07-07",
+								"2026-07-08",
+								"2026-07-09",
+								"2026-07-10",
+								"2026-07-11",
+								"2026-07-12"
+							],
+							"hourEnd": 18,
+							"hourStart": 8,
+							"styleSet": {
+								"legend": [],
+								"styles": {}
+							}
+						},
+						"type": "TimeGrid"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Calendar",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Complete admin dashboard"
+}

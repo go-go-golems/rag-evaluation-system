@@ -1,0 +1,75 @@
+{
+	"id": "crm-board",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"ariaLabel": "Deals",
+							"card": {
+								"meta": {
+									"field": "value",
+									"kind": "field"
+								},
+								"subtitle": {
+									"field": "owner",
+									"kind": "field"
+								},
+								"title": {
+									"field": "title",
+									"kind": "field"
+								}
+							},
+							"cards": [
+								{
+									"id": "d1",
+									"owner": "Mira",
+									"stage": "lead",
+									"title": "Acme",
+									"value": "$12k"
+								},
+								{
+									"id": "d2",
+									"owner": "Noah",
+									"stage": "won",
+									"title": "Globex",
+									"value": "$25k"
+								}
+							],
+							"columnField": "stage",
+							"columns": [
+								{
+									"header": "Lead",
+									"id": "lead"
+								},
+								{
+									"header": "Won",
+									"id": "won"
+								}
+							],
+							"getCardId": "id"
+						},
+						"type": "BoardEngine"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Pipeline",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "CRM board"
+}

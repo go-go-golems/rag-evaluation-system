@@ -18,6 +18,7 @@ web/dist/
 web/node_modules/
 web/storybook-static/
 packages/rag-evaluation-site/storybook-static/
+examples/xgoja-widgetdsl-v3/dist/
 /node_modules/
 
 # IDE

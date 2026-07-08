@@ -1,0 +1,71 @@
+{
+	"id": "course-landing",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"activeAgendaItemId": "lab",
+							"course": {
+								"agenda": [
+									{
+										"duration": "20 min",
+										"id": "intro",
+										"number": "01",
+										"title": "Intro"
+									},
+									{
+										"duration": "60 min",
+										"id": "lab",
+										"number": "02",
+										"title": "Lab"
+									}
+								],
+								"format": "Live lab",
+								"outcomes": [
+									"Model context as budgeted segments",
+									"Pick a visual representation for long prompts",
+									"Design reclaim policies for overloaded windows"
+								],
+								"subtitle": "Four lessons",
+								"tagline": "Learn how to budget, visualize, and reclaim context in production RAG systems.",
+								"title": "Context Engineering",
+								"when": "July cohort",
+								"where": "Remote workshop"
+							},
+							"onAgendaItemSelectAction": {
+								"kind": "server",
+								"name": "course.agenda.edit",
+								"payload": {
+									"id": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "agenda.id"
+									}
+								}
+							}
+						},
+						"type": "CourseLessonPanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Landing",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Course landing"
+}

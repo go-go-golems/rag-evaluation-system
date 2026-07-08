@@ -1,0 +1,61 @@
+{
+	"id": "cms-rich-media",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"assets": [
+								{
+									"filename": "diagram.png",
+									"id": "img-1",
+									"kind": "image",
+									"mime": "image/png",
+									"title": "Diagram"
+								},
+								{
+									"filename": "slides.pdf",
+									"id": "pdf-1",
+									"kind": "document",
+									"mime": "application/pdf",
+									"title": "Slides"
+								}
+							],
+							"onAssetOpenAction": {
+								"event": "cms.asset.open",
+								"kind": "event",
+								"payload": {
+									"assetId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "asset.id"
+									}
+								}
+							},
+							"selectedAssetIds": ["img-1"],
+							"selectionMode": "multi"
+						},
+						"type": "MediaLibraryPanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Library",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "CMS rich media"
+}

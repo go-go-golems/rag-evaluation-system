@@ -1,0 +1,46 @@
+{
+	"id": "context-empty-state",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"emptySlot": {
+								"kind": "slot",
+								"registered": true
+							},
+							"snapshot": {
+								"id": "empty",
+								"limit": 4000,
+								"parts": [],
+								"title": "Empty context"
+							},
+							"styleSet": {
+								"legend": [],
+								"styles": {}
+							}
+						},
+						"type": "ContextDiagramPanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Empty",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Context empty state"
+}

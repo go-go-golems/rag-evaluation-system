@@ -48,7 +48,7 @@
 												"action": {
 													"event": "navigate",
 													"kind": "navigate",
-													"to": "?article=[object Object]\u0026preview=1"
+													"to": "?article=${row.id}\u0026preview=1"
 												},
 												"kind": "actionButton",
 												"label": "Open"

@@ -1,0 +1,72 @@
+{
+	"id": "transcript-workspace",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"annotations": [
+								{
+									"confidence": 0.91,
+									"id": "a1",
+									"label": "Root cause",
+									"styleKey": "assistant",
+									"targetMessageId": "m2",
+									"text": "The filter was scoped to one corpus instead of the full evaluation fixture set."
+								}
+							],
+							"messages": [
+								{
+									"id": "m1",
+									"role": "user",
+									"text": "Why did retrieval fail?",
+									"tokens": 42
+								},
+								{
+									"annotationIds": ["a1"],
+									"id": "m2",
+									"role": "assistant",
+									"text": "The corpus filter was too narrow, so the retriever excluded the documents that contained the answer.",
+									"tokens": 96
+								}
+							],
+							"onAnnotationSelectAction": {
+								"event": "context.annotation.select",
+								"kind": "event",
+								"payload": {
+									"annotationId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "annotation.id"
+									}
+								}
+							},
+							"selectedAnnotationId": "a1",
+							"showNotes": true,
+							"subtitle": "Retrieval failure triage",
+							"title": "Debug session"
+						},
+						"type": "TranscriptWorkspacePanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Workspace",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Transcript workspace"
+}

@@ -33,8 +33,17 @@ const page = widget.page({ id: "all-modules", title: "All modules gallery" }, (p
 		)
 		.section("CMS", (s) =>
 			s.view(
-				widget.cms.mediaLibrary([{ id: "asset-1", title: "Hero" }], (m) =>
-					m.onSelect(widget.cms.intent.selectAsset(widget.bind.context("asset.id"))),
+				widget.cms.mediaLibrary(
+					[
+						{
+							id: "asset-1",
+							title: "Hero",
+							kind: "image",
+							mime: "image/png",
+							filename: "hero.png",
+						},
+					],
+					(m) => m.onSelect(widget.cms.intent.selectAsset(widget.bind.context("asset.id"))),
 				),
 			),
 		)

@@ -9,11 +9,13 @@
 						"props": {
 							"documents": [
 								{
-									"format": "PDF",
+									"body": "# Slide deck\n\nUse this deck to explain context-window pressure and reclaim policies.",
+									"format": "Markdown",
 									"id": "deck",
 									"title": "Slide deck"
 								},
 								{
+									"body": "# Lab guide\n\n1. Inspect the prompt parts.\n2. Pick a reclaim policy.\n3. Validate with the token diagram.",
 									"format": "Markdown",
 									"id": "lab",
 									"title": "Lab guide"
@@ -21,19 +23,12 @@
 							],
 							"intro": "Printable materials for the workshop.",
 							"onDocumentSelectAction": {
-								"event": "course.handout.select",
-								"kind": "event",
-								"payload": {
-									"documentId": {
-										"kind": "accessor",
-										"mode": "context",
-										"path": "doc.id"
-									}
-								}
+								"kind": "navigate",
+								"to": "?doc=${documentId}\u0026slide=0"
 							},
 							"onDownloadAction": {
 								"kind": "download",
-								"to": "/handouts/[object Object]"
+								"to": "/handouts/${documentId}"
 							},
 							"onPrintAction": {
 								"event": "course.handout.print",
@@ -42,7 +37,7 @@
 									"documentId": {
 										"kind": "accessor",
 										"mode": "context",
-										"path": "doc.id"
+										"path": "documentId"
 									}
 								}
 							},
@@ -65,23 +60,24 @@
 					{
 						"kind": "component",
 						"props": {
-							"index": 1,
+							"index": 0,
 							"mode": "speaker",
 							"onNextAction": {
-								"event": "course.slide.next",
-								"kind": "event"
+								"kind": "navigate",
+								"to": "?doc=deck\u0026slide=1"
 							},
 							"onPresentAction": {
 								"event": "course.slide.present",
 								"kind": "event"
 							},
 							"onPreviousAction": {
-								"event": "course.slide.previous",
-								"kind": "event"
+								"kind": "navigate",
+								"to": "?doc=deck\u0026slide=0"
 							},
 							"slide": {
 								"body": "Think in segments, budgets, and reclaim policies.",
 								"id": "s1",
+								"notes": ["Introduce token limits", "Connect the diagram to the handout"],
 								"title": "Context windows"
 							},
 							"snapshot": {
@@ -90,7 +86,7 @@
 								"parts": [],
 								"title": "Slide context"
 							},
-							"total": 1
+							"total": 2
 						},
 						"type": "CourseSlidePanel"
 					}

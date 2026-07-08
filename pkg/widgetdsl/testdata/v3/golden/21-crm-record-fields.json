@@ -1,0 +1,60 @@
+{
+	"id": "crm-record-fields",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"mode": "read",
+							"sections": [
+								{
+									"fields": [
+										{
+											"key": "name",
+											"label": "Name",
+											"type": "text"
+										},
+										{
+											"key": "stage",
+											"label": "Stage",
+											"type": "select"
+										},
+										{
+											"key": "value",
+											"label": "Value",
+											"type": "currency"
+										}
+									],
+									"label": "Basics"
+								}
+							],
+							"values": {
+								"name": "Acme",
+								"stage": "Proposal",
+								"value": 42000
+							}
+						},
+						"type": "RecordFieldList"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Record",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "CRM record fields"
+}

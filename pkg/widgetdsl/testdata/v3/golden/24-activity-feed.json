@@ -1,0 +1,55 @@
+{
+	"id": "activity-feed",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"activities": [
+								{
+									"actor": {
+										"name": "Mira"
+									},
+									"atISO": "2026-07-08T10:00:00Z",
+									"body": "Follow up next week",
+									"id": "a1",
+									"kind": "note",
+									"title": "Note added"
+								},
+								{
+									"actor": {
+										"name": "Noah"
+									},
+									"atISO": "2026-07-08T12:00:00Z",
+									"body": "Proposal shared",
+									"id": "a2",
+									"kind": "email",
+									"title": "Email sent"
+								}
+							],
+							"groupByDay": true
+						},
+						"type": "ActivityFeed"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Timeline",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Activity feed"
+}

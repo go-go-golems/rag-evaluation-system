@@ -1,0 +1,75 @@
+{
+	"id": "matrix-heatmap",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"cell": {
+								"kind": "value"
+							},
+							"columns": [
+								{
+									"header": {
+										"kind": "text",
+										"text": "Precision"
+									},
+									"id": "precision"
+								},
+								{
+									"header": {
+										"kind": "text",
+										"text": "Recall"
+									},
+									"id": "recall"
+								}
+							],
+							"rows": [
+								{
+									"id": "q1",
+									"label": "Query 1",
+									"scores": {
+										"precision": 0.8,
+										"recall": 0.7
+									}
+								},
+								{
+									"id": "q2",
+									"label": "Query 2",
+									"scores": {
+										"precision": 0.6,
+										"recall": 0.9
+									}
+								}
+							],
+							"valueAt": {
+								"kind": "accessor",
+								"mapField": "scores",
+								"mode": "map"
+							}
+						},
+						"type": "MatrixGrid"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"caption": "Resolved matrix cells use the scores map for each query row.",
+					"density": "flush",
+					"label": "Scores",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Matrix heatmap"
+}

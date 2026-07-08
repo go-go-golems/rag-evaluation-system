@@ -225,8 +225,9 @@ func TestWidgetV3UICompositionHelpersEmitPageIR(t *testing.T) {
 	}
 	section := rootChildren[1].(map[string]any)
 	sectionProps := section["props"].(map[string]any)
-	if len(anySlice(sectionProps["actions"])) != 1 {
-		t.Fatalf("section actions = %#v, want one action", sectionProps["actions"])
+	actionsNode := anyMap(sectionProps["actions"])
+	if actionsNode["type"] != "Inline" || len(anySlice(actionsNode["children"])) != 1 {
+		t.Fatalf("section actions = %#v, want inline action button", sectionProps["actions"])
 	}
 	children := anySlice(section["children"])
 	if len(children) != 3 {
@@ -521,9 +522,17 @@ func TestWidgetV3CourseDomainViews(t *testing.T) {
 	if shellProps["activeItemId"] != "intro" || shellProps["onNavigateAction"] == nil {
 		t.Fatalf("shell props = %#v", shellProps)
 	}
+	navigateAction := anyMap(shellProps["onNavigateAction"])
+	if navigateAction["to"] != "?item=${item.id}" {
+		t.Fatalf("course navigate action = %#v, want template URL", navigateAction)
+	}
 	handoutProps := anyMap(anyMap(got["handouts"])["props"])
 	if handoutProps["selectedDocumentId"] != "h1" || handoutProps["onPrintAction"] == nil {
 		t.Fatalf("handout props = %#v", handoutProps)
+	}
+	downloadAction := anyMap(handoutProps["onDownloadAction"])
+	if downloadAction["to"] != "/handouts/${document.id}" {
+		t.Fatalf("handout download action = %#v, want template URL", downloadAction)
 	}
 }
 
@@ -595,6 +604,10 @@ func TestWidgetV3CMSDomainViews(t *testing.T) {
 	queueProps := anyMap(queue["props"])
 	if queueProps["selectedArticleId"] != "p" || queueProps["statusFilter"] != "draft" || queueProps["onCreateAction"] == nil {
 		t.Fatalf("queue props = %#v", queueProps)
+	}
+	previewAction := anyMap(queueProps["onPreviewAction"])
+	if previewAction["to"] != "?article=${article.id}&preview=1" {
+		t.Fatalf("preview action = %#v, want template URL", previewAction)
 	}
 	editor := anyMap(got["editor"])
 	if editor["type"] != "MarkdownEditor" {

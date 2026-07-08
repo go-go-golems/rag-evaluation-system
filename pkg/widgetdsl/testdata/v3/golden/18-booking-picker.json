@@ -1,0 +1,92 @@
+{
+	"id": "booking-picker",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"ariaLabel": "Rooms",
+							"cell": {
+								"kind": "cycle",
+								"states": ["available", "selected", "unavailable"]
+							},
+							"columns": [
+								{
+									"header": "Wed 9",
+									"id": "wed9",
+									"meta": {
+										"endISO": "2026-07-08T10:00:00Z",
+										"id": "wed9",
+										"label": "Wed 9",
+										"startISO": "2026-07-08T09:00:00Z"
+									}
+								}
+							],
+							"getRowKey": {
+								"field": "id"
+							},
+							"onCellAction": {
+								"event": "schedule.availability.toggle",
+								"kind": "event",
+								"payload": {
+									"optionId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "column.id"
+									},
+									"responseId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "row.id"
+									}
+								}
+							},
+							"rowHeader": {
+								"field": "label",
+								"kind": "field"
+							},
+							"rows": [
+								{
+									"availability": {
+										"wed9": "available"
+									},
+									"id": "room-a",
+									"label": "Room A"
+								},
+								{
+									"availability": {
+										"wed9": "unavailable"
+									},
+									"id": "room-b",
+									"label": "Room B"
+								}
+							],
+							"stickyHeader": true,
+							"valueAt": {
+								"mapField": "availability"
+							}
+						},
+						"type": "MatrixGrid"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Rooms",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Booking picker"
+}

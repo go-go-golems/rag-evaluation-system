@@ -1,0 +1,58 @@
+{
+	"id": "slide-deck",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"index": 1,
+							"mode": "speaker",
+							"onNextAction": {
+								"event": "course.slide.next",
+								"kind": "event"
+							},
+							"onPresentAction": {
+								"event": "course.slide.present",
+								"kind": "event"
+							},
+							"onPreviousAction": {
+								"event": "course.slide.previous",
+								"kind": "event"
+							},
+							"slide": {
+								"id": "s2",
+								"notes": ["Expire stale turns", "Keep cited evidence pinned"],
+								"title": "Reclaim"
+							},
+							"snapshot": {
+								"id": "ctx",
+								"limit": 4096,
+								"parts": [],
+								"title": "Slide context"
+							},
+							"total": 2
+						},
+						"type": "CourseSlidePanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Slides",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Slide deck"
+}

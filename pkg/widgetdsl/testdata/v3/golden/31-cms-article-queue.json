@@ -1,0 +1,68 @@
+{
+	"id": "cms-article-queue",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"articles": [
+								{
+									"author": "Manuel",
+									"id": "a1",
+									"slug": "context-budgets",
+									"status": "draft",
+									"tags": ["context"],
+									"title": "Context budgets",
+									"updatedAt": "2026-07-08T09:00:00Z"
+								},
+								{
+									"author": "Manuel",
+									"id": "a2",
+									"slug": "retrieval-eval",
+									"status": "published",
+									"tags": ["rag"],
+									"title": "Retrieval eval",
+									"updatedAt": "2026-07-07T15:30:00Z"
+								}
+							],
+							"onArticleSelectAction": {
+								"event": "cms.article.select",
+								"kind": "event",
+								"payload": {
+									"articleId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "article.id"
+									}
+								}
+							},
+							"onCreateAction": {
+								"event": "cms.article.create",
+								"kind": "event"
+							},
+							"selectedArticleId": "a1"
+						},
+						"type": "ArticleListPanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Queue",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "CMS article queue"
+}

@@ -1,0 +1,76 @@
+{
+	"id": "time-week",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"blocks": [
+								{
+									"dayISO": "2026-07-08",
+									"endISO": "2026-07-08T11:00:00Z",
+									"id": "e1",
+									"label": "Workshop",
+									"startISO": "2026-07-08T09:00:00Z",
+									"styleKey": "busy"
+								},
+								{
+									"dayISO": "2026-07-09",
+									"endISO": "2026-07-09T16:00:00Z",
+									"id": "e2",
+									"label": "Retro",
+									"startISO": "2026-07-09T15:00:00Z",
+									"styleKey": "focus"
+								}
+							],
+							"days": [
+								"2026-07-06",
+								"2026-07-07",
+								"2026-07-08",
+								"2026-07-09",
+								"2026-07-10",
+								"2026-07-11",
+								"2026-07-12"
+							],
+							"hourEnd": 18,
+							"hourStart": 8,
+							"onBlockSelectAction": {
+								"event": "time.event.select",
+								"kind": "event",
+								"payload": {
+									"eventId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "block.id"
+									}
+								}
+							},
+							"styleSet": {
+								"legend": [],
+								"styles": {}
+							}
+						},
+						"type": "TimeGrid"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Week",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Time week"
+}

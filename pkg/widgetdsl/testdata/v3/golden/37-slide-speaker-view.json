@@ -1,0 +1,47 @@
+{
+	"id": "slide-speaker-view",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"index": 0,
+							"mode": "speaker",
+							"slide": {
+								"id": "s1",
+								"notes": ["Explain the budget", "Show diagram"],
+								"title": "Speaker notes"
+							},
+							"snapshot": {
+								"id": "ctx",
+								"limit": 2048,
+								"parts": [],
+								"title": "Context"
+							},
+							"total": 1,
+							"visualSide": "right"
+						},
+						"type": "CourseSlidePanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Speaker",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Slide speaker view"
+}

@@ -254,6 +254,7 @@ function renderCourseStudioShellPage(
 						props.onNavigateAction,
 						{
 							itemId,
+							item: { id: itemId },
 							value: itemId,
 							componentType: "CourseStudioShell",
 						},
