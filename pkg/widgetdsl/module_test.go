@@ -3,6 +3,7 @@ package widgetdsl
 import (
 	"context"
 	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -286,6 +287,113 @@ func TestWidgetV3SlotsAndChildNormalization(t *testing.T) {
 	fallbackCaption := children[3].(map[string]any)
 	if fallbackCaption["type"] != "Caption" {
 		t.Fatalf("fallback child = %#v, want Caption", fallbackCaption)
+	}
+}
+
+func TestWidgetV3DataCollectionMatchesDataV2TableShape(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		const v2 = require("data.v2.dsl");
+		const rows = [{ id: "a", title: "Alpha", status: "draft" }];
+		const oldSchema = v2.schema("articles")
+			.field("id", v2.f.key().label("ID"))
+			.field("title", v2.f.primary().label("Title"))
+			.field("status", v2.f.status().label("Status"))
+			.build();
+		const oldNode = v2.collection("articles", rows)
+			.schema(oldSchema)
+			.empty("No articles")
+			.select(v2.selection.urlParam("article", "a"))
+			.table(t => t.actionColumn("open", "Open", "Open", v2.action.navigate("?article=${row.id}")))
+			.toIR();
+		const schema = widget.data.fields("articles", f => f
+			.key("id", { label: "ID" })
+			.primary("title", { label: "Title" })
+			.status("status", { label: "Status" })
+		).build();
+		const node = widget.data.collection("articles", rows, c => c
+			.schema(schema)
+			.empty("No articles")
+			.select(widget.data.selection.urlParam("article", "a"))
+			.table(t => t.actionColumn("open", "Open", "Open", widget.act.navigate("?article=${row.id}")))
+		).toNode();
+		({ oldNode, node });
+	`)
+	if err != nil {
+		t.Fatalf("build v3 data collection: %v", err)
+	}
+	got := value.Export().(map[string]any)
+	oldNode := anyMap(got["oldNode"])
+	node := anyMap(got["node"])
+	if node["type"] != oldNode["type"] || node["type"] != "Stack" {
+		t.Fatalf("node types old=%#v new=%#v", oldNode, node)
+	}
+	oldTable := anyMap(anySlice(oldNode["children"])[0])
+	table := anyMap(anySlice(node["children"])[0])
+	if table["type"] != "DataTable" || oldTable["type"] != "DataTable" {
+		t.Fatalf("table nodes old=%#v new=%#v", oldTable, table)
+	}
+	props := anyMap(table["props"])
+	oldProps := anyMap(oldTable["props"])
+	if props["getRowKey"] != oldProps["getRowKey"] || props["selectedKey"] != oldProps["selectedKey"] || props["emptyMessage"] != oldProps["emptyMessage"] {
+		t.Fatalf("table props old=%#v new=%#v", oldProps, props)
+	}
+	if len(anySlice(props["columns"])) != len(anySlice(oldProps["columns"])) {
+		t.Fatalf("columns old=%#v new=%#v", oldProps["columns"], props["columns"])
+	}
+}
+
+func TestWidgetV3DataMasterDetailEditAndMatrix(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		const rows = [{ id: "a", title: "Alpha", status: "draft", cells: { mon: "yes" } }];
+		const schema = widget.data.fields(f => f.key("id").primary("title").status("status")).build();
+		const detail = widget.data.collection(rows, c => c
+			.id("articles")
+			.schema(schema)
+			.select(widget.data.selection.urlParam("article", "a"))
+			.edit(e => e
+				.create({ label: "New article" })
+				.submit("/articles")
+				.reorder(widget.act.server("reorder", { payload: { id: widget.bind.context("row.id") } }))
+				.remove(widget.act.server("remove", { confirm: "Remove?" }))
+			)
+			.masterDetail()
+		).toNode();
+		const matrix = widget.data.matrix(rows, m => m
+			.id("availability")
+			.column("mon", "Monday")
+			.valueAt(widget.bind.map("cells"))
+			.cell(widget.data.cell.cycle("availability"))
+			.onCellAction(widget.act.server("set-cell"))
+		).toNode();
+		({ detail, matrix });
+	`)
+	if err != nil {
+		t.Fatalf("build v3 data master-detail/matrix: %v", err)
+	}
+	got := value.Export().(map[string]any)
+	detail := anyMap(got["detail"])
+	if detail["type"] != "Stack" || len(anySlice(detail["children"])) < 2 {
+		t.Fatalf("detail node = %#v, want Stack with table/detail", detail)
+	}
+	matrix := anyMap(got["matrix"])
+	if matrix["type"] != "MatrixGrid" {
+		t.Fatalf("matrix node = %#v, want MatrixGrid", matrix)
+	}
+	props := anyMap(matrix["props"])
+	if len(anySlice(props["columns"])) != 1 || props["valueAt"] == nil || props["onCellAction"] == nil {
+		t.Fatalf("matrix props = %#v", props)
 	}
 }
 
@@ -599,6 +707,31 @@ func TestEngineRegistrarRegistersSplitModulesOnly(t *testing.T) {
 	if got["widget"] != true || got["rag"] != false {
 		t.Fatalf("widget.dsl should be present and rag.dsl should be absent from engine registrar, got %#v", got)
 	}
+}
+
+func anyMap(value any) map[string]any {
+	if m, ok := value.(map[string]any); ok {
+		return m
+	}
+	out := map[string]any{}
+	for key, value := range exportAnyMap(value) {
+		out[key] = value
+	}
+	return out
+}
+
+func exportAnyMap(value any) map[string]any {
+	out := map[string]any{}
+	rv := reflect.ValueOf(value)
+	if rv.Kind() != reflect.Map {
+		return out
+	}
+	for _, key := range rv.MapKeys() {
+		if key.Kind() == reflect.String {
+			out[key.String()] = rv.MapIndex(key).Interface()
+		}
+	}
+	return out
 }
 
 func exportedSliceLen(value any) int {

@@ -1191,3 +1191,83 @@ This phase deliberately stays thin: each helper lowers to existing Widget IR com
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`
+
+## Step 18: Phase 4 — data fields, collections, cells, and matrix helper
+
+Implemented Phase 4 by moving the useful `data.v2.dsl` field/schema/collection pattern under the parallel `widget.dsl.data` namespace. The new v3 data APIs reuse the existing v2 `SchemaSpec`, `CollectionSpec`, validation, and lowering path rather than duplicating table/master-detail logic.
+
+This phase also adds a first matrix-engine helper for scheduling-style grids. It is intentionally thin: `data.matrix(rows, builder)` lowers to a `MatrixGrid` component node with columns, value accessor, cell spec, and cell action data preserved for the frontend engine.
+
+### Prompt Context
+
+**User prompt (verbatim):** "phase 4"
+
+**Assistant interpretation:** Implement the Phase 4 data namespace from the tracker, including fields/schema, collections, selection URL params, editor actions, cells, matrix helper, tests, declarations, diary, and commit.
+
+**Inferred user intent:** The user wants to continue the phased Widget DSL v3 implementation and complete the next phase as a coherent unit.
+
+**Commit (code):** pending — Phase 4 data namespace slice to be committed after validation and diary update.
+
+### What I did
+- Added `widget.data.fields(name?, callback)` with field methods: `key`, `primary`, `short`, `prose`, `count`, `status`, `date`, `currency`, `media`, and `url`.
+- Lowered v3 field sets to existing `v2/spec.SchemaSpec` handles via the existing opaque v2 ref mechanism.
+- Added `widget.data.collection(name?, rows, callback)` with `.id`, `.schema`, `.empty`, `.select`, `.table`, `.edit`, `.masterDetail`, `.validate`, `.toNode`, and `.toIR`.
+- Reused `v2/spec.CollectionSpec.Validate` and `CollectionSpec.ToNode()` for collection lowering.
+- Added `widget.data.selection.urlParam(param, value)` for v2-compatible URL-backed selection.
+- Added editor actions: `.create`, `.submit`, `.submitPost`, `.reorder`, and `.remove`.
+- Added `widget.data.cell.field`, `.status`, `.template`, `.cycle`, and `.value`.
+- Added `widget.data.matrix(rows, callback)` with `.id`, `.columns`, `.column`, `.valueAt`, `.cell`, `.onCellAction`, and `.toNode()`.
+- Added runtime tests comparing v2 and v3 table output shape and covering master-detail edit plus matrix output.
+- Updated TypeScript declarations with `FieldSetBuilder`, `CollectionBuilder`, `TableBuilder`, `EditorBuilder`, `CellNamespace`, and `MatrixBuilder`.
+- Marked Phase 4 complete in the tracker.
+
+### Why
+- The v2 data builder already has the strongest internal model in the current DSL: typed specs, validation, and lowering. Reusing it keeps Phase 4 small and avoids another table/schema dialect.
+- Collections are the first real domain builder family that benefits from the Phase 2/3 kernel.
+- MatrixGrid is needed for scheduling/calendar phase follow-up work and proves data-engine helpers can live alongside field/table helpers.
+
+### What worked
+- Existing v2 validation and lowering were reusable with only small adapters for v3 actions and selections.
+- The v3 `widget.act.*` map shape can be converted to v2 action specs for table row/action columns and edit actions.
+- Runtime tests confirm v3 table output matches the important old v2 DataTable shape: `Stack` root, `DataTable`, row key, selected key, empty message, and columns.
+
+### What didn't work
+- Goja exports from v2 lowering use named map aliases like `spec.JSONObject`, so tests that assumed `map[string]any` panicked with:
+  `panic: interface conversion: interface {} is spec.JSONObject, not map[string]interface {}`
+- I fixed the tests with a small reflection-backed `anyMap` helper for exported map aliases.
+- TypeScript declaration string editing remained brittle; the declaration test briefly contained malformed text and had to be cleaned again.
+
+### What I learned
+- The opaque v2 ref mechanism is useful as an implementation bridge for v3, not just a legacy compatibility layer.
+- The current v3 action map is adequate for frontend IR, but v2 collection lowering wants typed `v2spec.ActionSpec`; a small conversion helper is enough for now.
+- Matrix support should probably grow into a typed spec later, but a thin component-node lowerer is sufficient for Phase 4.
+
+### What was tricky to build
+- `data.collection` supports both `collection(rows, cb)` and `collection(name, rows, cb)`. That keeps examples concise but makes argument normalization more careful.
+- `data.selection` is both callable and has a `.urlParam` helper. This required setting a property on the Goja function object after export.
+- V3 generic `SelectionSpec` and v2 URL selection are not the same model. For collection lowering, only `urlParam` and simple selected-key cases are converted into v2 selection specs.
+
+### What warrants a second pair of eyes
+- Whether `data.fields(...).build()` should remain necessary or whether `.fields(...)` should be accepted directly by `.schema(...)`.
+- Whether `data.matrix` should gain a real typed Go spec before schedule/time helpers depend on it heavily.
+- Whether v3 action-to-v2 conversion should preserve more fields for copy/download/event actions.
+
+### What should be done in the future
+- Phase 5 can now use the collection primitives when implementing CMS queue/library helpers.
+- Add richer matrix validation and frontend AccessorSpec resolution when MatrixGrid adapters are cleaned up.
+- Add TypeScript fixture compilation once declaration generation is less manual.
+
+### Code review instructions
+- Start in `pkg/widgetdsl/v3.go` at `v3DataObject`, `v3Fields`, `v3Collection`, `v3CellObject`, and `v3Matrix`.
+- Review the v2 bridge helpers `v3SelectionToV2`, `v3ActionFromAny`, and `v3TemplateValueFromAny`.
+- Review `TestWidgetV3DataCollectionMatchesDataV2TableShape` and `TestWidgetV3DataMasterDetailEditAndMatrix` in `pkg/widgetdsl/module_test.go`.
+- Review `pkg/widgetdsl/typescript.go` / `typescript_test.go` for Phase 4 declarations.
+- Validate with `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`.
+
+### Technical details
+- Validation command run:
+  `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+- Final result:
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`

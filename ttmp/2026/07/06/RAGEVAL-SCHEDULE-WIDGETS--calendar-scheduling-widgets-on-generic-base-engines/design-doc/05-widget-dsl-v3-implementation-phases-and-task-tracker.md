@@ -24,12 +24,14 @@ RelatedFiles:
         Runtime coverage for slot helpers and child normalization
         Phase 2 final tests for accessors, selections, list items, actions, and validation
         Phase 3 runtime test for UI composition without old modules
+        Phase 4 runtime tests comparing v2/v3 table shape and covering master-detail/matrix
     - Path: repo://pkg/widgetdsl/typescript.go
       Note: |-
         Current declaration generation path to replace with descriptor-driven widget.dsl declarations
         Slot and SlotHelpers declarations for widget.dsl
         Phase 2 final TypeScript declarations for AccessorSpec, SelectionSpec, ListItemSpec, and DataNamespace
         Phase 3 UINamespace, ActionsBuilder, and page/section declarations
+        Phase 4 data namespace declarations
     - Path: repo://pkg/widgetdsl/typescript_test.go
       Note: Phase 1 TypeScript declaration fragment tests
     - Path: repo://pkg/widgetdsl/v2/spec/types.go
@@ -42,6 +44,7 @@ RelatedFiles:
         Phase 2 node/source specs, v3 child normalization, slot specs/calls, and slot helpers
         Phase 2 final node validation, selection spec, list item spec, and renderable helpers
         Phase 3 page shell/density/breadcrumbs, section actions/metrics/metadata, and UI helper namespace
+        Phase 4 data.fields, data.collection, data.cell, matrix, and v2 lowering reuse
     - Path: repo://pkg/xgoja/providers/widgetsite/provider.go
       Note: Phase 1 provider exposure for widget.dsl
     - Path: repo://pkg/xgoja/providers/widgetsite/provider_test.go
@@ -68,6 +71,7 @@ LastUpdated: 2026-07-07T16:40:00-04:00
 WhatFor: Use this document to track the step-by-step implementation of the new widget.dsl module while existing ui/data/cms/course/context modules remain available.
 WhenToUse: Read before starting or resuming Widget DSL v3 implementation; update after every phase or meaningful subphase.
 ---
+
 
 
 
@@ -406,14 +410,14 @@ sure the implementation starts from evidence rather than memory.
 **Goal:** Replace public `data.v2.dsl` with `widget.dsl.data` while reusing the good
 v2 spec/lowering foundation.
 
-**Status:** not started.
+**Status:** complete.
 
 ### Tasks
 
 #### Fields and schema
 
-- [ ] Add `data.fields<T>(callback)` builder.
-- [ ] Support field builders:
+- [x] Add `data.fields<T>(callback)` builder.
+- [x] Support field builders:
   - `.key`
   - `.primary`
   - `.short`
@@ -424,12 +428,12 @@ v2 spec/lowering foundation.
   - `.currency`
   - `.media`
   - `.url`
-- [ ] Lower to existing or extended `v2/spec.SchemaSpec`.
+- [x] Lower to existing or extended `v2/spec.SchemaSpec`.
 
 #### Collections
 
-- [ ] Add `data.collection<T>(rows, callback)`.
-- [ ] Add collection builder methods:
+- [x] Add `data.collection<T>(rows, callback)`.
+- [x] Add collection builder methods:
   - `.id(name)`
   - `.schema(schema)`
   - `.empty(message)`
@@ -439,16 +443,16 @@ v2 spec/lowering foundation.
   - `.masterDetail(callback?)`
   - `.validate()`
   - `.toNode()`
-- [ ] Reuse `v2/spec.CollectionSpec.Validate` and lowering where practical.
-- [ ] Add `data.selection.urlParam`.
-- [ ] Add editor actions: create, submit, reorder, remove.
+- [x] Reuse `v2/spec.CollectionSpec.Validate` and lowering where practical.
+- [x] Add `data.selection.urlParam`.
+- [x] Add editor actions: create, submit, reorder, remove.
 
 #### Cells and matrices
 
-- [ ] Add `data.cell.field`, `data.cell.status`, `data.cell.template`,
+- [x] Add `data.cell.field`, `data.cell.status`, `data.cell.template`,
       `data.cell.cycle`, and `data.cell.value`.
-- [ ] Add `data.matrix<T>(rows, callback)` engine-level helper.
-- [ ] Lower matrix to `MatrixGrid` IR.
+- [x] Add `data.matrix<T>(rows, callback)` engine-level helper.
+- [x] Lower matrix to `MatrixGrid` IR.
 
 ### Acceptance criteria
 
@@ -461,8 +465,6 @@ v2 spec/lowering foundation.
 ### Suggested commit
 
 `Widget DSL v3: implement data collections and matrix engine`
-
----
 
 ## Phase 5 — CMS namespace: media library, article queue, markdown editor
 
@@ -744,7 +746,7 @@ components.
 | Phase 1 — `widget.dsl` skeleton | complete | Begin Phase 2 core builder/spec kernel. |
 | Phase 2 — Core spec kernel | complete | Page/section builders, node/source specs, slots, accessors, selection, list items, actions, and TS declarations are implemented. |
 | Phase 3 — UI namespace | complete | Page composition, generic UI helpers, section actions/metrics/metadata, tests, and TypeScript declarations are implemented. |
-| Phase 4 — Data namespace | not started | Port data.v2 examples under `widget.dsl.data`. |
+| Phase 4 — Data namespace | complete | Added fields/schema, collections, editor actions, cells, matrix helper, tests, and declarations. |
 | Phase 5 — CMS namespace | not started | Port media library section. |
 | Phase 6 — Course namespace | not started | Port course shell and handouts. |
 | Phase 7 — Context namespace | not started | Port context diagram/workspace fixture. |
