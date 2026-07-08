@@ -899,7 +899,7 @@ This is the first slice where `widget.dsl` begins to look like the intended v3 g
 
 **Inferred user intent:** The user wants forward implementation progress, not just planning, with enough diary detail to resume or review safely.
 
-**Commit (code):** pending — Phase 2 initial builder-kernel slice to be committed after validation and diary update.
+**Commit (code):** 8f8abfebba039ef2fd057507f8d2c32d55fc3690 — "Widget DSL v3: add page builder kernel"
 
 ### What I did
 - Added `pkg/widgetdsl/v3.go` with initial `v3PageSpec` and `v3SectionSpec` backing structs.
