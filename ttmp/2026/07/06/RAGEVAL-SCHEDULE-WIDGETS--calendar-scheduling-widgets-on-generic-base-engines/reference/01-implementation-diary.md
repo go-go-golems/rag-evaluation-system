@@ -1345,3 +1345,78 @@ The implementation also adds CMS intent wrappers. These wrappers let examples ex
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`
+
+## Step 20: Phase 6 — course domain views
+
+Implemented Phase 6 by replacing the placeholder `widget.course` namespace with course-facing helpers for shells, landing pages, slide decks, handouts, metadata forms, agenda editing, and material uploads. The helpers lower to existing course and layout components, keeping the frontend renderer unchanged.
+
+The phase also adds course intent wrappers so scripts can request navigation, handout, slide, agenda, and material operations without spelling low-level event/server names directly.
+
+### Prompt Context
+
+**User prompt (verbatim):** "phase 6"
+
+**Assistant interpretation:** Complete Phase 6 from the Widget DSL tracker, including course DTO declarations, builder APIs, intent wrappers, tests, tracker updates, diary, and commits.
+
+**Inferred user intent:** Continue the sequential Widget DSL v3 implementation after Phase 5.
+
+**Commit (code):** pending — Phase 6 course namespace slice to be committed after validation and diary update.
+
+### What I did
+- Added concrete `widget.course` namespace installation.
+- Added `course.shell(definition, callback)` over `CourseStudioShell`.
+- Added `course.landing(definition, callback)` over `CourseLessonPanel`.
+- Added `course.slideDeck(deck, callback)` over `CourseSlidePanel`.
+- Added `course.handouts(bundle, callback)` over `HandoutDocumentShell`.
+- Added `course.metadataForm(metadata, callback)` over `FormPanel` + `MetadataGrid`.
+- Added `course.agendaEditor(items, callback)` as a wrapper over `data.collection`.
+- Added `course.materialUploads(material, callback)` over `ContextUploadDropArea`.
+- Added `course.intent.*` wrappers for navigation, handout select/download/print, slide navigation, agenda edit, and material upload/delete.
+- Added TypeScript DTOs and builder declarations for the course namespace.
+- Added runtime coverage for all Phase 6 helpers.
+- Marked Phase 6 complete in the tracker.
+
+### Why
+- Course views are already built from stable renderer components; v3 mostly needs ergonomic product-facing builders.
+- Agenda editing can reuse the Phase 4 data collection builder, proving that domain namespaces can compose earlier phases.
+- Material uploads reuse an existing upload-drop component rather than adding frontend work.
+
+### What worked
+- The existing course recipes mapped cleanly to v3 builder methods.
+- `course.agendaEditor` could directly delegate to `v3Collection`.
+- The course test builds shell, landing, slide deck, handouts, metadata form, agenda editor, and material upload nodes in one Goja runtime.
+
+### What didn't work
+- Nothing blocked this phase after the initial `v3Collection(items, cb...)` call was corrected to build a variadic argument slice explicitly.
+
+### What I learned
+- The v3 namespace pattern is now repeatable: install namespace, add thin domain builders, add intent wrappers, add declarations and runtime tests.
+- Course helpers highlight the need for shared descriptor generation because declaration size is growing quickly.
+
+### What was tricky to build
+- `course.slideDeck` accepts either a deck with `slides` and an `index` or a direct `slide`; the implementation normalizes to the current `CourseSlidePanel` prop shape.
+- Intent wrappers use plain action maps, which keeps them serializable but means stronger typing will need descriptors later.
+
+### What warrants a second pair of eyes
+- Whether `course.materialUploads` should lower to `ContextUploadDropArea` or a more course-specific wrapper component later.
+- Whether `course.metadataForm` should become a data collection/form spec instead of `FormPanel` plus `MetadataGrid`.
+- Whether `course.intent.navigate` should use URL query strings or a route/action abstraction.
+
+### What should be done in the future
+- Phase 7 should implement context diagrams/workspaces using the same namespace pattern.
+- Add richer fixture parity against `go-go-course` pages if needed.
+- Move intent names into descriptors when Phase 9 starts.
+
+### Code review instructions
+- Start in `pkg/widgetdsl/v3.go` at `v3CourseObject` and `v3CourseIntentObject`.
+- Review `TestWidgetV3CourseDomainViews` in `pkg/widgetdsl/module_test.go`.
+- Review `pkg/widgetdsl/typescript.go` / `typescript_test.go` for course declarations.
+- Validate with `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`.
+
+### Technical details
+- Validation command run:
+  `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+- Final result:
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`

@@ -89,6 +89,179 @@ func (r *runtime) v3Page(call goja.FunctionCall) goja.Value {
 	return builder
 }
 
+func (r *runtime) v3CourseObject() *goja.Object {
+	course := r.vm.NewObject()
+	setExport(course, "shell", r.v3CourseShell)
+	setExport(course, "landing", r.v3CourseLanding)
+	setExport(course, "slideDeck", r.v3CourseSlideDeck)
+	setExport(course, "handouts", r.v3CourseHandouts)
+	setExport(course, "metadataForm", r.v3CourseMetadataForm)
+	setExport(course, "agendaEditor", r.v3CourseAgendaEditor)
+	setExport(course, "materialUploads", r.v3CourseMaterialUploads)
+	setExport(course, "intent", r.v3CourseIntentObject())
+	return course
+}
+
+func (r *runtime) v3CourseIntentObject() *goja.Object {
+	intent := r.vm.NewObject()
+	setExport(intent, "navigate", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "navigate", "to": "?item=" + id.String()}
+	})
+	setExport(intent, "selectHandout", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "event", "event": "course.handout.select", "payload": map[string]any{"documentId": id.Export()}}
+	})
+	setExport(intent, "downloadHandout", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "download", "to": "/handouts/" + id.String()}
+	})
+	setExport(intent, "printHandout", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "event", "event": "course.handout.print", "payload": map[string]any{"documentId": id.Export()}}
+	})
+	setExport(intent, "previousSlide", func() map[string]any { return map[string]any{"kind": "event", "event": "course.slide.previous"} })
+	setExport(intent, "nextSlide", func() map[string]any { return map[string]any{"kind": "event", "event": "course.slide.next"} })
+	setExport(intent, "presentSlide", func() map[string]any { return map[string]any{"kind": "event", "event": "course.slide.present"} })
+	setExport(intent, "editAgenda", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "server", "name": "course.agenda.edit", "payload": map[string]any{"id": id.Export()}}
+	})
+	setExport(intent, "uploadMaterial", func() map[string]any { return map[string]any{"kind": "server", "name": "course.material.upload"} })
+	setExport(intent, "deleteMaterial", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "server", "name": "course.material.delete", "payload": map[string]any{"id": id.Export()}}
+	})
+	return intent
+}
+
+func (r *runtime) v3CourseShell(definition goja.Value, cb ...goja.Value) map[string]any {
+	def := exportObject(definition)
+	props := map[string]any{"sections": anySlice(valueOrDefault(def["sections"], []any{})), "title": valueOrDefault(def["title"], "Course")}
+	copyIfPresent(props, def, "subtitle")
+	builder := r.v3CourseShellBuilder(props)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "course.shell")
+	}
+	children := []any{}
+	if main, ok := widgetNodeFromAny(props["main"]); ok {
+		children = append(children, main)
+		delete(props, "main")
+	}
+	return componentNode("CourseStudioShell", props, children...)
+}
+
+func (r *runtime) v3CourseShellBuilder(props map[string]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "active", func(id string) *goja.Object { props["activeItemId"] = id; return obj })
+	setExport(obj, "subtitle", func(value goja.Value) *goja.Object { props["subtitle"] = r.v3Renderable(value); return obj })
+	setExport(obj, "contentPadding", func(value string) *goja.Object { props["contentPadding"] = value; return obj })
+	setExport(obj, "main", func(node goja.Value) *goja.Object { props["main"] = r.v3Renderable(node); return obj })
+	setExport(obj, "footer", func(node goja.Value) *goja.Object { props["sidebarFooter"] = r.v3Renderable(node); return obj })
+	setExport(obj, "onNavigate", func(action goja.Value) *goja.Object { props["onNavigateAction"] = action.Export(); return obj })
+	return obj
+}
+
+func (r *runtime) v3CourseLanding(definition goja.Value, cb ...goja.Value) map[string]any {
+	def := exportObject(definition)
+	props := map[string]any{"course": def}
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(r.v3CourseLandingBuilder(props), cb[0], "course.landing")
+	}
+	return componentNode("CourseLessonPanel", props)
+}
+
+func (r *runtime) v3CourseLandingBuilder(props map[string]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "activeAgenda", func(id string) *goja.Object { props["activeAgendaItemId"] = id; return obj })
+	setExport(obj, "onAgendaSelect", func(action goja.Value) *goja.Object { props["onAgendaItemSelectAction"] = action.Export(); return obj })
+	setExport(obj, "onPrimary", func(action goja.Value) *goja.Object { props["onPrimaryCtaAction"] = action.Export(); return obj })
+	setExport(obj, "onSecondary", func(action goja.Value) *goja.Object { props["onSecondaryCtaAction"] = action.Export(); return obj })
+	return obj
+}
+
+func (r *runtime) v3CourseSlideDeck(deck goja.Value, cb ...goja.Value) map[string]any {
+	d := exportObject(deck)
+	slides := anySlice(valueOrDefault(d["slides"], []any{}))
+	index := 0
+	if v, ok := d["index"].(int64); ok {
+		index = int(v)
+	}
+	slide := map[string]any{}
+	if len(slides) > index {
+		if m, ok := slides[index].(map[string]any); ok {
+			slide = m
+		}
+	}
+	props := map[string]any{"slide": valueOrDefault(d["slide"], slide), "snapshot": valueOrDefault(d["snapshot"], map[string]any{"id": "empty", "title": "Context", "limit": 0, "parts": []any{}}), "index": index + 1, "total": len(slides)}
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(r.v3CourseSlideBuilder(props), cb[0], "course.slideDeck")
+	}
+	return componentNode("CourseSlidePanel", props)
+}
+
+func (r *runtime) v3CourseSlideBuilder(props map[string]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "mode", func(mode string) *goja.Object { props["mode"] = mode; return obj })
+	setExport(obj, "visualSide", func(side string) *goja.Object { props["visualSide"] = side; return obj })
+	setExport(obj, "onPrevious", func(action goja.Value) *goja.Object { props["onPreviousAction"] = action.Export(); return obj })
+	setExport(obj, "onNext", func(action goja.Value) *goja.Object { props["onNextAction"] = action.Export(); return obj })
+	setExport(obj, "onPresent", func(action goja.Value) *goja.Object { props["onPresentAction"] = action.Export(); return obj })
+	setExport(obj, "onFullscreen", func(action goja.Value) *goja.Object { props["onFullscreenAction"] = action.Export(); return obj })
+	return obj
+}
+
+func (r *runtime) v3CourseHandouts(bundle goja.Value, cb ...goja.Value) map[string]any {
+	b := exportObject(bundle)
+	props := map[string]any{"intro": valueOrDefault(b["intro"], "Handout"), "documents": anySlice(valueOrDefault(b["docs"], b["documents"]))}
+	builder := r.v3CourseHandoutsBuilder(props)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "course.handouts")
+	}
+	return componentNode("HandoutDocumentShell", props)
+}
+
+func (r *runtime) v3CourseHandoutsBuilder(props map[string]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "selected", func(id string) *goja.Object { props["selectedDocumentId"] = id; return obj })
+	setExport(obj, "title", func(title goja.Value) *goja.Object { props["title"] = r.v3Renderable(title); return obj })
+	setExport(obj, "empty", func(message goja.Value) *goja.Object { props["emptyMessage"] = r.v3Renderable(message); return obj })
+	setExport(obj, "onSelect", func(action goja.Value) *goja.Object { props["onDocumentSelectAction"] = action.Export(); return obj })
+	setExport(obj, "onDownload", func(action goja.Value) *goja.Object { props["onDownloadAction"] = action.Export(); return obj })
+	setExport(obj, "onPrint", func(action goja.Value) *goja.Object { props["onPrintAction"] = action.Export(); return obj })
+	return obj
+}
+
+func (r *runtime) v3CourseMetadataForm(metadata goja.Value, cb ...goja.Value) map[string]any {
+	props := map[string]any{"title": "Course metadata"}
+	children := []any{r.v3MetadataNode(exportObject(metadata))}
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(r.v3CourseFormBuilder(props), cb[0], "course.metadataForm")
+	}
+	return componentNode("FormPanel", props, children...)
+}
+
+func (r *runtime) v3CourseFormBuilder(props map[string]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "title", func(title string) *goja.Object { props["title"] = title; return obj })
+	setExport(obj, "onSubmit", func(action goja.Value) *goja.Object { props["onSubmitAction"] = action.Export(); return obj })
+	return obj
+}
+
+func (r *runtime) v3CourseAgendaEditor(items goja.Value, cb ...goja.Value) *goja.Object {
+	args := append([]goja.Value{items}, cb...)
+	return r.v3Collection(args...)
+}
+
+func (r *runtime) v3CourseMaterialUploads(material goja.Value, cb ...goja.Value) map[string]any {
+	props := exportObject(material)
+	if _, ok := props["title"]; !ok {
+		props["title"] = "Course materials"
+	}
+	builder := r.vm.NewObject()
+	setExport(builder, "accept", func(list goja.Value) *goja.Object { props["accept"] = anySlice(list.Export()); return builder })
+	setExport(builder, "onUpload", func(action goja.Value) *goja.Object { props["onFilesSelectedAction"] = action.Export(); return builder })
+	setExport(builder, "onDelete", func(action goja.Value) *goja.Object { props["onDeleteAction"] = action.Export(); return builder })
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "course.materialUploads")
+	}
+	return componentNode("ContextUploadDropArea", props)
+}
+
 func (r *runtime) v3CMSObject() *goja.Object {
 	cms := r.vm.NewObject()
 	setExport(cms, "mediaLibrary", r.v3CMSMediaLibrary)

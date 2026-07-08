@@ -290,6 +290,83 @@ func TestWidgetV3SlotsAndChildNormalization(t *testing.T) {
 	}
 }
 
+func TestWidgetV3CourseDomainViews(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		const definition = { title: "Course", subtitle: "Week 1", sections: [{ id: "intro", label: "Intro", items: [] }] };
+		const shell = widget.course.shell(definition, s => s
+			.active("intro")
+			.contentPadding("none")
+			.footer(widget.ui.caption("Draft"))
+			.main(widget.ui.card({ title: "Welcome" }, "Hello"))
+			.onNavigate(widget.course.intent.navigate(widget.bind.context("item.id")))
+		);
+		const landing = widget.course.landing({ title: "Course", agenda: [] }, l => l
+			.activeAgenda("day-1")
+			.onAgendaSelect(widget.course.intent.editAgenda(widget.bind.context("agenda.id")))
+		);
+		const deck = widget.course.slideDeck({ slides: [{ id: "s1", title: "Slide" }], index: 0 }, d => d
+			.mode("present")
+			.visualSide("right")
+			.onPrevious(widget.course.intent.previousSlide())
+			.onNext(widget.course.intent.nextSlide())
+			.onPresent(widget.course.intent.presentSlide())
+		);
+		const handouts = widget.course.handouts({ intro: "Read", docs: [{ id: "h1", title: "Handout" }] }, h => h
+			.selected("h1")
+			.title("Handouts")
+			.onSelect(widget.course.intent.selectHandout(widget.bind.context("document.id")))
+			.onDownload(widget.course.intent.downloadHandout(widget.bind.context("document.id")))
+			.onPrint(widget.course.intent.printHandout(widget.bind.context("document.id")))
+		);
+		const metadata = widget.course.metadataForm({ Title: "Course" }, f => f
+			.title("Metadata")
+			.onSubmit(widget.act.server("save-metadata"))
+		);
+		const agenda = widget.course.agendaEditor([{ id: "a", title: "Intro" }], c => c
+			.schema(widget.data.fields(f => f.key("id").primary("title")).build())
+			.edit(e => e.submit("/agenda"))
+		).toNode();
+		const uploads = widget.course.materialUploads({ description: "Upload" }, u => u
+			.accept(["application/pdf"])
+			.onUpload(widget.course.intent.uploadMaterial())
+			.onDelete(widget.course.intent.deleteMaterial(widget.bind.context("material.id")))
+		);
+		({ shell, landing, deck, handouts, metadata, agenda, uploads });
+	`)
+	if err != nil {
+		t.Fatalf("build widget.dsl course views: %v", err)
+	}
+	got := value.Export().(map[string]any)
+	for name, wantType := range map[string]string{
+		"shell":    "CourseStudioShell",
+		"landing":  "CourseLessonPanel",
+		"deck":     "CourseSlidePanel",
+		"handouts": "HandoutDocumentShell",
+		"metadata": "FormPanel",
+		"agenda":   "Stack",
+		"uploads":  "ContextUploadDropArea",
+	} {
+		node := anyMap(got[name])
+		if node["type"] != wantType {
+			t.Fatalf("%s = %#v, want %s", name, node, wantType)
+		}
+	}
+	shellProps := anyMap(anyMap(got["shell"])["props"])
+	if shellProps["activeItemId"] != "intro" || shellProps["onNavigateAction"] == nil {
+		t.Fatalf("shell props = %#v", shellProps)
+	}
+	handoutProps := anyMap(anyMap(got["handouts"])["props"])
+	if handoutProps["selectedDocumentId"] != "h1" || handoutProps["onPrintAction"] == nil {
+		t.Fatalf("handout props = %#v", handoutProps)
+	}
+}
+
 func TestWidgetV3CMSDomainViews(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
