@@ -1055,7 +1055,7 @@ This step also adds validation beyond page title/id checks. Page validation now 
 
 **Inferred user intent:** The user wants Phase 2 fully finished rather than continued in incremental partial slices.
 
-**Commit (code):** pending — final Phase 2 completion slice to be committed after validation and diary update.
+**Commit (code):** e3d9d955a1bc007a177d12f6fe51f09ed6c7ec71 — "Widget DSL v3: complete core spec kernel"
 
 ### What I did
 - Changed `bind.field`, `bind.path`, `bind.map`, `bind.template`, and `bind.context` to emit `kind: "accessor"` specs with explicit `mode` values.
