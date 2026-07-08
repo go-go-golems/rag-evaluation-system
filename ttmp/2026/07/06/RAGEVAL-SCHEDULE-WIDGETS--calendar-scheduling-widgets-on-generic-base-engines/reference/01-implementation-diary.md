@@ -690,7 +690,9 @@ No runtime behavior changed. The only executable artifact is a small ticket-loca
 
 **Inferred user intent:** The user wants implementation to proceed step by step with exact progress tracking, not jump straight into code without a baseline.
 
-**Commit (code):** pending — documentation/script-only Phase 0 slice, to be committed after validation.
+**Commit (docs):** 4ff1ae57d55f478addb71679718cf6b4e19bbb03 — "Docs: complete Widget DSL v3 inventory"
+
+**Commit (code):** N/A — documentation/script-only Phase 0 slice; no runtime code changed.
 
 ### What I did
 - Added `scripts/01-widget-dsl-export-inventory.py` under the ticket workspace.
