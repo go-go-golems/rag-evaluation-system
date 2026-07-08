@@ -1420,3 +1420,77 @@ The phase also adds course intent wrappers so scripts can request navigation, ha
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`
+
+## Step 21: Phase 7 — context diagrams and transcript workspace
+
+Implemented Phase 7 by replacing the placeholder `widget.context` namespace with context-analysis helpers for style sets, palettes, diagrams, and transcript workspaces. The first implementation lowers to the existing `ContextDiagramPanel` and `TranscriptWorkspacePanel` components while exposing an API shaped around future segment-engine customization.
+
+The namespace also adds context intent wrappers for selecting parts and annotations. Slot methods are present for message, annotation, legend, and empty-state customization, stored as serializable placeholders until frontend slot consumption is implemented.
+
+### Prompt Context
+
+**User prompt (verbatim):** "phase 7"
+
+**Assistant interpretation:** Complete Phase 7 from the tracker, including context DTO declarations, style/palette builders, diagram/workspace helpers, slot seams, intents, tests, tracker updates, diary, and commits.
+
+**Inferred user intent:** Continue the sequential Widget DSL v3 implementation after Phase 6.
+
+**Commit (code):** pending — Phase 7 context namespace slice to be committed after validation and diary update.
+
+### What I did
+- Added concrete `widget.context` namespace installation.
+- Added `context.styleSet(callback)` with `.style(id, options)` and `.legend(id, label, options?)` builder methods.
+- Added `context.palette(nameOrOptions, entries?)` over the existing palette style-set lowering.
+- Added `context.diagram(snapshot, callback)` lowering to `ContextDiagramPanel`.
+- Added diagram builder methods for style set, palette, view, selected part, legend/empty slots, and select action.
+- Added `context.workspace(session, callback)` lowering to `TranscriptWorkspacePanel`.
+- Added workspace builder methods for selected annotation, show notes, style set, message/annotation/empty slots, and annotation select action.
+- Added `context.intent.selectPart` and `context.intent.selectAnnotation` wrappers.
+- Added TypeScript declarations for context DTOs, builders, intents, and namespace.
+- Added runtime test coverage for style-set builder lowering, palette lowering, diagram output, workspace output, slot placeholders, and intents.
+- Marked Phase 7 complete in the tracker.
+
+### Why
+- The context namespace is the main proof point for task-level APIs over current component families.
+- Style sets and palettes already exist in the old context DSL; reusing their lowering keeps visual behavior stable.
+- Diagram/workspace helpers should expose stable authoring seams now, even though frontend slot consumption remains future work.
+
+### What worked
+- Existing `buildPaletteStyleSet` could be reused directly for `context.palette`.
+- Current diagram and transcript workspace components accept enough props to support initial v3 lowering without React changes.
+- Runtime tests verify the style-set object contains expected legend/styles entries and that diagram/workspace nodes target the right components.
+
+### What didn't work
+- No hard blocker. Slots remain placeholders as in Phase 5 because frontend components do not yet invoke serialized slot specs.
+
+### What I learned
+- The context API benefits from keeping `context.palette` and `context.styleSet` separate: palette is concise for examples, styleSet is precise for custom styling.
+- The same namespace pattern now works for CMS, course, and context with little new infrastructure.
+
+### What was tricky to build
+- `context.styleSet` accepts either an options object or a callback. The implementation normalizes missing `legend` and `styles` so both forms produce renderer-compatible output.
+- Diagram selection uses a future-facing `onPartSelectAction` prop even though existing older recipes did not expose it everywhere. This keeps the intent API aligned with segment-engine goals.
+
+### What warrants a second pair of eyes
+- Whether diagram `onPartSelectAction` should become part of the frontend prop contract immediately or remain ignored until adapter cleanup.
+- Whether slot placeholders should store more metadata than `{kind:"slot", registered:true}`.
+- Whether `context.workspace` should emit a composed layout containing both transcript and diagram nodes instead of one `TranscriptWorkspacePanel` node.
+
+### What should be done in the future
+- Add frontend slot consumption for message/annotation/legend/empty slots.
+- Align diagram props with the future segment-engine contract once that frontend work starts.
+- Continue to Phase 8 schedule/time views.
+
+### Code review instructions
+- Start in `pkg/widgetdsl/v3.go` at `v3ContextObject`, `v3ContextStyleSet`, `v3ContextDiagram`, and `v3ContextWorkspace`.
+- Review `TestWidgetV3ContextDomainViews` in `pkg/widgetdsl/module_test.go`.
+- Review `pkg/widgetdsl/typescript.go` / `typescript_test.go` for context declarations.
+- Validate with `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`.
+
+### Technical details
+- Validation command run:
+  `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+- Final result:
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`

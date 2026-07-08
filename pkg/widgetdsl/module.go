@@ -287,7 +287,8 @@ func (r *runtime) installWidgetV3(exports *goja.Object) {
 	setExport(exports, "data", r.v3DataObject())
 	setExport(exports, "cms", r.v3CMSObject())
 	setExport(exports, "course", r.v3CourseObject())
-	for _, name := range []string{"context", "schedule", "time", "style"} {
+	setExport(exports, "context", r.v3ContextObject())
+	for _, name := range []string{"schedule", "time", "style"} {
 		setExport(exports, name, r.vm.NewObject())
 	}
 }

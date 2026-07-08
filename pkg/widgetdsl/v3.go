@@ -89,6 +89,141 @@ func (r *runtime) v3Page(call goja.FunctionCall) goja.Value {
 	return builder
 }
 
+func (r *runtime) v3ContextObject() *goja.Object {
+	context := r.vm.NewObject()
+	setExport(context, "styleSet", r.v3ContextStyleSet)
+	setExport(context, "palette", r.v3ContextPalette)
+	setExport(context, "diagram", r.v3ContextDiagram)
+	setExport(context, "workspace", r.v3ContextWorkspace)
+	setExport(context, "intent", r.v3ContextIntentObject())
+	return context
+}
+
+func (r *runtime) v3ContextIntentObject() *goja.Object {
+	intent := r.vm.NewObject()
+	setExport(intent, "selectPart", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "event", "event": "context.part.select", "payload": map[string]any{"partId": id.Export()}}
+	})
+	setExport(intent, "selectAnnotation", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "event", "event": "context.annotation.select", "payload": map[string]any{"annotationId": id.Export()}}
+	})
+	return intent
+}
+
+func (r *runtime) v3ContextStyleSet(args ...goja.Value) map[string]any {
+	styleSet := map[string]any{"legend": []any{}, "styles": map[string]any{}}
+	if len(args) > 0 && isPlainObject(args[0]) {
+		styleSet = exportObject(args[0])
+	}
+	if len(args) > 0 {
+		if fn, ok := goja.AssertFunction(args[len(args)-1]); ok {
+			builder := r.v3ContextStyleSetBuilder(styleSet)
+			if _, err := fn(goja.Undefined(), builder); err != nil {
+				panic(err)
+			}
+		}
+	}
+	if _, ok := styleSet["legend"]; !ok {
+		styleSet["legend"] = []any{}
+	}
+	if _, ok := styleSet["styles"]; !ok {
+		styleSet["styles"] = map[string]any{}
+	}
+	return styleSet
+}
+
+func (r *runtime) v3ContextStyleSetBuilder(styleSet map[string]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "style", func(id string, options goja.Value) *goja.Object {
+		styles, _ := styleSet["styles"].(map[string]any)
+		if styles == nil {
+			styles = map[string]any{}
+			styleSet["styles"] = styles
+		}
+		styles[id] = exportObject(options)
+		return obj
+	})
+	setExport(obj, "legend", func(id string, label string, options ...goja.Value) *goja.Object {
+		legend := anySlice(styleSet["legend"])
+		item := map[string]any{"id": id, "label": label}
+		mergeOptions(item, exportOptions(options))
+		styleSet["legend"] = append(legend, item)
+		return obj
+	})
+	return obj
+}
+
+func (r *runtime) v3ContextPalette(nameOrOptions goja.Value, entries ...goja.Value) map[string]any {
+	options := map[string]any{}
+	if isPlainObject(nameOrOptions) {
+		options = exportObject(nameOrOptions)
+	} else if nameOrOptions != nil && !goja.IsUndefined(nameOrOptions) && !goja.IsNull(nameOrOptions) {
+		options["palette"] = nameOrOptions.String()
+	}
+	if len(entries) > 0 {
+		options["entries"] = entries[0].Export()
+	}
+	return buildPaletteStyleSet(options)
+}
+
+func (r *runtime) v3ContextDiagram(snapshot goja.Value, cb ...goja.Value) map[string]any {
+	props := map[string]any{"snapshot": valueOrDefault(snapshot.Export(), map[string]any{"id": "empty", "title": "Context", "limit": 0, "parts": []any{}})}
+	builder := r.v3ContextDiagramBuilder(props)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "context.diagram")
+	}
+	if props["styleSet"] == nil {
+		props["styleSet"] = r.v3ContextStyleSet()
+	}
+	return componentNode("ContextDiagramPanel", props)
+}
+
+func (r *runtime) v3ContextDiagramBuilder(props map[string]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
+	setExport(obj, "palette", func(nameOrOptions goja.Value, entries ...goja.Value) *goja.Object {
+		props["styleSet"] = r.v3ContextPalette(nameOrOptions, entries...)
+		return obj
+	})
+	setExport(obj, "view", func(view string) *goja.Object { props["initialView"] = view; return obj })
+	setExport(obj, "selected", func(id string) *goja.Object { props["selectedPartId"] = id; return obj })
+	setExport(obj, "legend", func(slot goja.Value) *goja.Object { props["legendSlot"] = r.v3SlotRef(slot); return obj })
+	setExport(obj, "empty", func(slot goja.Value) *goja.Object { props["emptySlot"] = r.v3SlotRef(slot); return obj })
+	setExport(obj, "onSelect", func(action goja.Value) *goja.Object { props["onPartSelectAction"] = action.Export(); return obj })
+	return obj
+}
+
+func (r *runtime) v3ContextWorkspace(session goja.Value, cb ...goja.Value) map[string]any {
+	s := exportObject(session)
+	props := map[string]any{
+		"title":       valueOrDefault(s["title"], "Transcript"),
+		"subtitle":    s["subtitle"],
+		"messages":    anySlice(s["messages"]),
+		"annotations": anySlice(s["annotations"]),
+		"showNotes":   true,
+	}
+	if snapshot := s["snapshot"]; snapshot != nil {
+		props["snapshot"] = snapshot
+	}
+	builder := r.v3ContextWorkspaceBuilder(props)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "context.workspace")
+	}
+	return componentNode("TranscriptWorkspacePanel", props)
+}
+
+func (r *runtime) v3ContextWorkspaceBuilder(props map[string]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "selectedAnnotation", func(id string) *goja.Object { props["selectedAnnotationId"] = id; return obj })
+	setExport(obj, "showNotes", func(show bool) *goja.Object { props["showNotes"] = show; return obj })
+	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
+	setExport(obj, "message", func(slot goja.Value) *goja.Object { props["messageSlot"] = r.v3SlotRef(slot); return obj })
+	setExport(obj, "annotation", func(slot goja.Value) *goja.Object { props["annotationSlot"] = r.v3SlotRef(slot); return obj })
+	setExport(obj, "empty", func(slot goja.Value) *goja.Object { props["emptySlot"] = r.v3SlotRef(slot); return obj })
+	setExport(obj, "onAnnotationSelect", func(action goja.Value) *goja.Object { props["onAnnotationSelectAction"] = action.Export(); return obj })
+	return obj
+}
+
 func (r *runtime) v3CourseObject() *goja.Object {
 	course := r.vm.NewObject()
 	setExport(course, "shell", r.v3CourseShell)

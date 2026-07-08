@@ -290,6 +290,77 @@ func TestWidgetV3SlotsAndChildNormalization(t *testing.T) {
 	}
 }
 
+func TestWidgetV3ContextDomainViews(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		const styleSet = widget.context.styleSet(s => s
+			.style("prompt", { fill: "#fff", line: "#111" })
+			.legend("prompt", "Prompt", { swatch: "solid" })
+		);
+		const palette = widget.context.palette("Dusty Magenta / Blue", [
+			{ id: "answer", label: "Answer", accent: "a", pattern: "solid" },
+		]);
+		const snapshot = { id: "ctx", title: "Context", limit: 1000, parts: [{ id: "prompt", label: "Prompt", styleKey: "prompt", tokens: 10 }] };
+		const diagram = widget.context.diagram(snapshot, d => d
+			.styleSet(styleSet)
+			.view("stack")
+			.selected("prompt")
+			.legend((ctx, h) => h.caption("Legend"))
+			.empty((ctx, h) => h.caption("Empty"))
+			.onSelect(widget.context.intent.selectPart(widget.bind.context("part.id")))
+		);
+		const workspace = widget.context.workspace({
+			title: "Session",
+			subtitle: "Review",
+			messages: [{ id: "m1", role: "user", content: "Hello" }],
+			annotations: [{ id: "a1", messageId: "m1", note: "Important" }],
+			snapshot,
+		}, w => w
+			.selectedAnnotation("a1")
+			.showNotes(false)
+			.styleSet(palette)
+			.message((message, h) => h.card({ title: message.role }, message.content))
+			.annotation((annotation, h) => h.caption(annotation.note))
+			.empty((ctx, h) => h.caption("No transcript"))
+			.onAnnotationSelect(widget.context.intent.selectAnnotation(widget.bind.context("annotation.id")))
+		);
+		({ styleSet, palette, diagram, workspace });
+	`)
+	if err != nil {
+		t.Fatalf("build widget.dsl context views: %v", err)
+	}
+	got := value.Export().(map[string]any)
+	styleSet := anyMap(got["styleSet"])
+	if len(anySlice(styleSet["legend"])) != 1 || anyMap(styleSet["styles"])["prompt"] == nil {
+		t.Fatalf("styleSet = %#v", styleSet)
+	}
+	palette := anyMap(got["palette"])
+	if len(anySlice(palette["legend"])) != 1 || anyMap(palette["styles"])["answer"] == nil {
+		t.Fatalf("palette = %#v", palette)
+	}
+	diagram := anyMap(got["diagram"])
+	if diagram["type"] != "ContextDiagramPanel" {
+		t.Fatalf("diagram = %#v, want ContextDiagramPanel", diagram)
+	}
+	diagramProps := anyMap(diagram["props"])
+	if diagramProps["selectedPartId"] != "prompt" || diagramProps["onPartSelectAction"] == nil || diagramProps["legendSlot"] == nil {
+		t.Fatalf("diagram props = %#v", diagramProps)
+	}
+	workspace := anyMap(got["workspace"])
+	if workspace["type"] != "TranscriptWorkspacePanel" {
+		t.Fatalf("workspace = %#v, want TranscriptWorkspacePanel", workspace)
+	}
+	workspaceProps := anyMap(workspace["props"])
+	if workspaceProps["selectedAnnotationId"] != "a1" || workspaceProps["showNotes"] != false || workspaceProps["onAnnotationSelectAction"] == nil {
+		t.Fatalf("workspace props = %#v", workspaceProps)
+	}
+}
+
 func TestWidgetV3CourseDomainViews(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()

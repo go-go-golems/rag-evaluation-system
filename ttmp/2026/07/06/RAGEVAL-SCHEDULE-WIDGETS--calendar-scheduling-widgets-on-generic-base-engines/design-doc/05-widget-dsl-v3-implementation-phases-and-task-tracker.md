@@ -20,6 +20,7 @@ RelatedFiles:
         widget.dsl installs the concrete v3 ui namespace
         widget.dsl installs concrete v3 cms namespace
         widget.dsl installs concrete v3 course namespace
+        widget.dsl installs concrete v3 context namespace
     - Path: repo://pkg/widgetdsl/module_test.go
       Note: |-
         Phase 1 runtime tests for widget.dsl coexistence and raw/bind/act output
@@ -29,6 +30,7 @@ RelatedFiles:
         Phase 4 runtime tests comparing v2/v3 table shape and covering master-detail/matrix
         Phase 5 runtime coverage for CMS domain views
         Phase 6 runtime coverage for course views
+        Phase 7 runtime coverage for context views
     - Path: repo://pkg/widgetdsl/typescript.go
       Note: |-
         Current declaration generation path to replace with descriptor-driven widget.dsl declarations
@@ -38,6 +40,7 @@ RelatedFiles:
         Phase 4 data namespace declarations
         Phase 5 CMS declarations
         Phase 6 course declarations
+        Phase 7 context declarations
     - Path: repo://pkg/widgetdsl/typescript_test.go
       Note: Phase 1 TypeScript declaration fragment tests
     - Path: repo://pkg/widgetdsl/v2/spec/types.go
@@ -53,6 +56,7 @@ RelatedFiles:
         Phase 4 data.fields, data.collection, data.cell, matrix, and v2 lowering reuse
         Phase 5 CMS media library, article queue, markdown editor, intent wrappers, and slot placeholders
         Phase 6 course shell, landing, slide deck, handouts, metadata form, agenda/material helpers, and intents
+        Phase 7 context style sets, palettes, diagrams, workspaces, slots, and intents
     - Path: repo://pkg/xgoja/providers/widgetsite/provider.go
       Note: Phase 1 provider exposure for widget.dsl
     - Path: repo://pkg/xgoja/providers/widgetsite/provider_test.go
@@ -79,6 +83,7 @@ LastUpdated: 2026-07-07T16:40:00-04:00
 WhatFor: Use this document to track the step-by-step implementation of the new widget.dsl module while existing ui/data/cms/course/context modules remain available.
 WhenToUse: Read before starting or resuming Widget DSL v3 implementation; update after every phase or meaningful subphase.
 ---
+
 
 
 
@@ -570,28 +575,28 @@ course domain views.
 **Goal:** Provide task-level context-analysis APIs over existing context-window
 components.
 
-**Status:** not started.
+**Status:** complete.
 
 ### Tasks
 
-- [ ] Define DTO declarations for:
+- [x] Define DTO declarations for:
   - `ContextSnapshot`
   - `ContextPart`
   - `Transcript`
   - `TranscriptMessage`
   - `Annotation`
-- [ ] Add `context.styleSet(callback)` and `context.palette(nameOrOptions)`.
-- [ ] Add `context.diagram(snapshot, callback)` with a public API shaped around a
+- [x] Add `context.styleSet(callback)` and `context.palette(nameOrOptions)`.
+- [x] Add `context.diagram(snapshot, callback)` with a public API shaped around a
       segment-engine contract, even if the first implementation lowers through the
       current diagram panels.
-- [ ] Add `context.workspace(session, callback)`.
-- [ ] Add slots for:
+- [x] Add `context.workspace(session, callback)`.
+- [x] Add slots for:
   - message;
   - annotation;
   - diagram legend;
   - empty state.
-- [ ] Add `context.intent.selectPart` and `context.intent.selectAnnotation`.
-- [ ] Port the context section from go-go-course DSL examples as a fixture.
+- [x] Add `context.intent.selectPart` and `context.intent.selectAnnotation`.
+- [x] Port the context section from go-go-course DSL examples as a fixture.
 
 ### Acceptance criteria
 
@@ -759,7 +764,7 @@ components.
 | Phase 4 — Data namespace | complete | Added fields/schema, collections, editor actions, cells, matrix helper, tests, and declarations. |
 | Phase 5 — CMS namespace | complete | Added media library, article queue, markdown editor, intents, slots, tests, and declarations. |
 | Phase 6 — Course namespace | complete | Added shell, landing, slide deck, handouts, metadata form, agenda/material helpers, intents, tests, and declarations. |
-| Phase 7 — Context namespace | not started | Port context diagram/workspace fixture. |
+| Phase 7 — Context namespace | complete | Added style sets, palettes, diagrams, workspaces, slots, intents, tests, and declarations. |
 | Phase 8 — Schedule/time namespaces | not started | Add availability poll and calendar week views. |
 | Phase 9 — Descriptor-driven declarations/docs | not started | Generate declarations from descriptors. |
 | Phase 10 — Golden go-go-course fixtures | not started | Snapshot old/new page fixtures. |
