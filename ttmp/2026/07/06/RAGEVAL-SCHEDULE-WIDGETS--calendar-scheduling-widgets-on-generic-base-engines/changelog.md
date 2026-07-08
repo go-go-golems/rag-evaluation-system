@@ -456,3 +456,13 @@ Completed Widget DSL v3 Phase 10: runnable example scripts, renderer CLI, golden
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/testdata/v3/examples — Runnable Phase 10 widget.dsl example scripts
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3_examples_test.go — Golden example stability tests
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/01-implementation-diary.md — Diary Step 23 records Phase 10
+
+## 2026-07-08
+
+Committed Widget DSL v3 Phase 10 golden examples in 07beb87fcb8d6af03a6da55c137e3aa4c416942d; pre-commit ran Biome, broader Go tests, and lint successfully.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/testdata/v3/examples — Committed example scripts
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/testdata/v3/golden — Committed golden snapshots
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/01-implementation-diary.md — Step 23 commit reference

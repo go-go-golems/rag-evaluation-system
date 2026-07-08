@@ -1591,7 +1591,7 @@ The examples cover the intended go-go-course migration shapes: simple data table
 
 **Inferred user intent:** See concrete `widget.dsl` authoring examples and understand whether Phase 10 should be done now or whether Phase 9 needs deeper generation first.
 
-**Commit (code):** pending — Phase 10 examples and snapshots to be committed after validation and diary update.
+**Commit (code):** 07beb87fcb8d6af03a6da55c137e3aa4c416942d — "Widget DSL v3: add golden examples"
 
 ### What I did
 - Added `pkg/widgetdsl/testdata/v3/examples` with seven runnable `widget.dsl` scripts:
