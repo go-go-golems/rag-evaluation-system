@@ -1206,7 +1206,7 @@ This phase also adds a first matrix-engine helper for scheduling-style grids. It
 
 **Inferred user intent:** The user wants to continue the phased Widget DSL v3 implementation and complete the next phase as a coherent unit.
 
-**Commit (code):** pending — Phase 4 data namespace slice to be committed after validation and diary update.
+**Commit (code):** ee18d7374a995e2ec4b31714ff4034a6434dce1d — "Widget DSL v3: implement data namespace"
 
 ### What I did
 - Added `widget.data.fields(name?, callback)` with field methods: `key`, `primary`, `short`, `prose`, `count`, `status`, `date`, `currency`, `media`, and `url`.
