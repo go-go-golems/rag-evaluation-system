@@ -17,16 +17,19 @@ RelatedFiles:
       Note: |-
         Current runtime module registry and helper/recipe implementation to refactor behind widget.dsl
         Phase 2 final AccessorSpec-aligned bind namespace and data namespace installation
+        widget.dsl installs the concrete v3 ui namespace
     - Path: repo://pkg/widgetdsl/module_test.go
       Note: |-
         Phase 1 runtime tests for widget.dsl coexistence and raw/bind/act output
         Runtime coverage for slot helpers and child normalization
         Phase 2 final tests for accessors, selections, list items, actions, and validation
+        Phase 3 runtime test for UI composition without old modules
     - Path: repo://pkg/widgetdsl/typescript.go
       Note: |-
         Current declaration generation path to replace with descriptor-driven widget.dsl declarations
         Slot and SlotHelpers declarations for widget.dsl
         Phase 2 final TypeScript declarations for AccessorSpec, SelectionSpec, ListItemSpec, and DataNamespace
+        Phase 3 UINamespace, ActionsBuilder, and page/section declarations
     - Path: repo://pkg/widgetdsl/typescript_test.go
       Note: Phase 1 TypeScript declaration fragment tests
     - Path: repo://pkg/widgetdsl/v2/spec/types.go
@@ -38,6 +41,7 @@ RelatedFiles:
         Phase 2 initial page/section specs, builder callbacks, fragments, and page lowering
         Phase 2 node/source specs, v3 child normalization, slot specs/calls, and slot helpers
         Phase 2 final node validation, selection spec, list item spec, and renderable helpers
+        Phase 3 page shell/density/breadcrumbs, section actions/metrics/metadata, and UI helper namespace
     - Path: repo://pkg/xgoja/providers/widgetsite/provider.go
       Note: Phase 1 provider exposure for widget.dsl
     - Path: repo://pkg/xgoja/providers/widgetsite/provider_test.go
@@ -64,6 +68,7 @@ LastUpdated: 2026-07-07T16:40:00-04:00
 WhatFor: Use this document to track the step-by-step implementation of the new widget.dsl module while existing ui/data/cms/course/context modules remain available.
 WhenToUse: Read before starting or resuming Widget DSL v3 implementation; update after every phase or meaningful subphase.
 ---
+
 
 
 
@@ -344,12 +349,12 @@ sure the implementation starts from evidence rather than memory.
 
 **Goal:** Make `widget.dsl` useful for simple static pages and shared layout.
 
-**Status:** not started.
+**Status:** complete.
 
 ### Tasks
 
-- [ ] Implement `page(titleOrOptions, builder)` root function.
-- [ ] Implement `PageBuilder` methods:
+- [x] Implement `page(titleOrOptions, builder)` root function.
+- [x] Implement `PageBuilder` methods:
   - `.id(id)`
   - `.title(title)`
   - `.meta(key, value)`
@@ -360,7 +365,7 @@ sure the implementation starts from evidence rather than memory.
   - `.view(nodeOrView)`
   - `.toPage()`
   - `.validate()`
-- [ ] Implement `SectionBuilder` methods:
+- [x] Implement `SectionBuilder` methods:
   - `.caption(text)`
   - `.anchor(id)`
   - `.tone(tone)`
@@ -369,7 +374,7 @@ sure the implementation starts from evidence rather than memory.
   - `.view(nodeOrView)`
   - `.metric(label, value, options?)`
   - `.metadata(record)`
-- [ ] Implement generic `ui` helpers backed by current components:
+- [x] Implement generic `ui` helpers backed by current components:
   - `ui.callout`
   - `ui.stack`
   - `ui.inline`
@@ -379,7 +384,7 @@ sure the implementation starts from evidence rather than memory.
   - `ui.badge`
   - `ui.metadata`
   - `ui.form`
-- [ ] Add examples/tests for:
+- [x] Add examples/tests for:
   - smallest useful page;
   - page with actions;
   - fragments.
@@ -738,7 +743,7 @@ components.
 | Phase 0 — Baseline inventory and scaffolding | complete | Begin Phase 1 with `widget.dsl` skeleton and raw escape hatch. |
 | Phase 1 — `widget.dsl` skeleton | complete | Begin Phase 2 core builder/spec kernel. |
 | Phase 2 — Core spec kernel | complete | Page/section builders, node/source specs, slots, accessors, selection, list items, actions, and TS declarations are implemented. |
-| Phase 3 — UI namespace | not started | Implement simple page examples. |
+| Phase 3 — UI namespace | complete | Page composition, generic UI helpers, section actions/metrics/metadata, tests, and TypeScript declarations are implemented. |
 | Phase 4 — Data namespace | not started | Port data.v2 examples under `widget.dsl.data`. |
 | Phase 5 — CMS namespace | not started | Port media library section. |
 | Phase 6 — Course namespace | not started | Port course shell and handouts. |

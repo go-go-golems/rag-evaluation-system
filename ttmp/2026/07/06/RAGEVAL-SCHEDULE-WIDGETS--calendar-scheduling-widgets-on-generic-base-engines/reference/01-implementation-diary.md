@@ -1117,3 +1117,77 @@ This step also adds validation beyond page title/id checks. Page validation now 
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`
+
+## Step 17: Phase 3 — UI namespace and simple page composition
+
+Started and completed Phase 3 by turning the placeholder `widget.ui` namespace into a useful generic page-composition surface. A script can now build a simple page with `widget.page(...)`, page density and breadcrumbs, section-level actions, metrics, metadata, and common layout primitives without importing `ui.dsl`.
+
+This phase deliberately stays thin: each helper lowers to existing Widget IR component nodes. The goal is not to invent a new frontend renderer yet, but to make the v3 DSL pleasant for static/admin pages while preserving old module behavior.
+
+### Prompt Context
+
+**User prompt (verbatim):** "commit all the files. continue with phase 3"
+
+**Assistant interpretation:** First commit the entire remaining workspace state, then continue implementing Phase 3 of the Widget DSL tracker.
+
+**Inferred user intent:** The user wanted a clean checkpoint that includes previously untracked work, followed by more Widget DSL implementation progress.
+
+**Commit (code):** pending — Phase 3 UI composition slice to be committed after validation and diary update.
+
+### What I did
+- Committed all remaining workspace files in `5e563f5` before starting Phase 3, as requested.
+- Replaced the placeholder `widget.ui` object with a concrete v3 UI namespace.
+- Added UI helpers: `ui.callout`, `ui.stack`, `ui.inline`, `ui.card`, `ui.button`, `ui.caption`, `ui.badge`, `ui.metadata`, and `ui.form`.
+- Added page builder methods: `.shell(...)`, `.density(...)`, and `.breadcrumb(...)`.
+- Added section builder methods: `.actions(...)`, `.metric(...)`, and `.metadata(...)`.
+- Lowered breadcrumbs to `Breadcrumbs`, metrics to `KeyValueStrip`, metadata to `MetadataGrid`, cards/callouts to `Panel`, forms to `FormPanel`, and layout helpers to `Stack`/`Inline`.
+- Updated TypeScript declarations with `UINamespace`, `ActionsBuilder`, and the new page/section builder methods.
+- Added a runtime test that builds a page using only `widget.dsl` and verifies shell, density, breadcrumbs, actions, metric, metadata, and stacked UI helper output.
+- Marked Phase 3 complete in the tracker.
+
+### Why
+- Phase 2 made the core kernel serializable and validated. Phase 3 needed to prove that a small real page no longer needs old `ui.dsl` imports.
+- Keeping helpers as thin component lowerers lets future phases replace internals without changing the user-facing grammar.
+- Actions, metrics, and metadata are common enough in admin pages that adding them to section builders gives the DSL immediate practical value.
+
+### What worked
+- Existing component names were sufficient for the generic helpers.
+- The `propsAndChildStart` convention made helper calls consistent with raw component helpers.
+- Runtime tests show the emitted page IR remains a normal `Stack` root with standard component children.
+
+### What didn't work
+- The required “commit all files” checkpoint triggered large frontend lint output during pre-commit because the newly staged frontend files have many Biome diagnostics. Despite the diagnostics, the hook completed and the commit succeeded.
+- While editing TypeScript declaration string fragments, malformed text appeared in `typescript_test.go` again. I repaired it by cleaning the bad line and rerunning `gofmt` and tests.
+
+### What I learned
+- The v3 UI namespace is now useful enough for examples, but still intentionally raw. The next design pressure will be whether helpers like `ui.card` should remain component aliases or become semantic specs.
+- The manual TypeScript declaration slices remain the most fragile part of this implementation path.
+
+### What was tricky to build
+- Section actions needed a tiny nested builder. I added an `ActionsBuilder` with `.add`/`.button` so page authors can write `s.actions(a => a.button(...))` without passing raw arrays.
+- Page breadcrumbs needed to live outside sections but still lower into the normal root child list. I prepend a `Breadcrumbs` node before section nodes when lowering the page.
+
+### What warrants a second pair of eyes
+- Whether `ui.callout` should lower to `Panel` with `tone: "callout"` or a dedicated future component.
+- Whether `section.metric` should emit a one-item `KeyValueStrip` or accumulate metrics into a single strip when called repeatedly.
+- Whether the `shell` property belongs in page metadata or as a top-level page key long term.
+
+### What should be done in the future
+- Phase 4 should start the `widget.data` namespace on top of the completed kernel and UI primitives.
+- Add descriptor-driven declarations to reduce hand-edited DTS risk.
+- Consider a richer example script once Phase 4 data primitives are available.
+
+### Code review instructions
+- Start with `pkg/widgetdsl/v3.go` at `v3UIObject`, `v3ComponentFactory`, `v3ActionsBuilder`, and the new page/section builder methods.
+- Review `pkg/widgetdsl/module.go` to confirm `widget.dsl` installs `ui` as a concrete v3 namespace.
+- Review `TestWidgetV3UICompositionHelpersEmitPageIR` in `pkg/widgetdsl/module_test.go` for expected emitted IR.
+- Review `pkg/widgetdsl/typescript.go` and `pkg/widgetdsl/typescript_test.go` for the Phase 3 declaration surface.
+- Validate with `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`.
+
+### Technical details
+- Validation command run:
+  `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+- Final result:
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`

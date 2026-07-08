@@ -179,6 +179,63 @@ func TestWidgetV3PageBuilderEmitsPageIR(t *testing.T) {
 	}
 }
 
+func TestWidgetV3UICompositionHelpersEmitPageIR(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		const branded = p => p.density("compact").breadcrumb("Home", "/");
+		const page = widget.page("UI Page", p => p
+			.use(branded)
+			.shell({ kind: "app" })
+			.section("Overview", s => s
+				.actions(a => a.button("Refresh", widget.act.event("refresh")))
+				.caption("Built only with widget.dsl")
+				.metric("Open", 12, { tone: "good" })
+				.metadata({ Owner: "Ops", Status: "Ready" })
+				.view(widget.ui.stack({ gap: "sm" },
+					widget.ui.callout({ title: "Note" }, "Hello"),
+					widget.ui.inline(widget.ui.badge("new"), widget.ui.caption("caption")),
+					widget.ui.card({ title: "Card" }, widget.ui.button("Save", widget.act.server("save"))),
+					widget.ui.form({ title: "Form" }, widget.raw.text("Body"))
+				))
+			)
+		).toPage();
+		page;
+	`)
+	if err != nil {
+		t.Fatalf("build widget.dsl UI page: %v", err)
+	}
+	page := value.Export().(map[string]any)
+	if page["shell"].(map[string]any)["kind"] != "app" {
+		t.Fatalf("page shell = %#v", page["shell"])
+	}
+	root := page["root"].(map[string]any)
+	props := root["props"].(map[string]any)
+	if props["density"] != "compact" {
+		t.Fatalf("root props = %#v, want compact density", props)
+	}
+	rootChildren := anySlice(root["children"])
+	if rootChildren[0].(map[string]any)["type"] != "Breadcrumbs" {
+		t.Fatalf("first root child = %#v, want Breadcrumbs", rootChildren[0])
+	}
+	section := rootChildren[1].(map[string]any)
+	sectionProps := section["props"].(map[string]any)
+	if len(anySlice(sectionProps["actions"])) != 1 {
+		t.Fatalf("section actions = %#v, want one action", sectionProps["actions"])
+	}
+	children := anySlice(section["children"])
+	if len(children) != 3 {
+		t.Fatalf("section children = %#v, want metric + metadata + stack", children)
+	}
+	if children[0].(map[string]any)["type"] != "KeyValueStrip" || children[1].(map[string]any)["type"] != "MetadataGrid" || children[2].(map[string]any)["type"] != "Stack" {
+		t.Fatalf("unexpected UI composition children: %#v", children)
+	}
+}
+
 func TestWidgetV3SlotsAndChildNormalization(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()

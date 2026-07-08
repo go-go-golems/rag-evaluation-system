@@ -12,6 +12,9 @@ type v3PageSpec struct {
 	ID            string
 	Title         string
 	Meta          map[string]any
+	Shell         any
+	Density       string
+	Breadcrumbs   []map[string]any
 	Sections      []v3SectionSpec
 }
 
@@ -20,6 +23,7 @@ type v3SectionSpec struct {
 	Caption  string
 	AnchorID string
 	Tone     string
+	Actions  []any
 	Children []v3NodeSpec
 }
 
@@ -84,11 +88,71 @@ func (r *runtime) v3Page(call goja.FunctionCall) goja.Value {
 	return builder
 }
 
+func (r *runtime) v3UIObject() *goja.Object {
+	ui := r.vm.NewObject()
+	setExport(ui, "callout", r.v3ComponentFactory("Panel", map[string]any{"tone": "callout"}))
+	setExport(ui, "stack", r.v3ComponentFactory("Stack", nil))
+	setExport(ui, "inline", r.v3ComponentFactory("Inline", nil))
+	setExport(ui, "card", r.v3ComponentFactory("Panel", nil))
+	setExport(ui, "button", r.v3UIButton)
+	setExport(ui, "caption", r.v3ComponentFactory("Caption", nil))
+	setExport(ui, "badge", r.v3ComponentFactory("Tag", nil))
+	setExport(ui, "metadata", r.v3UIMetadata)
+	setExport(ui, "form", r.v3ComponentFactory("FormPanel", nil))
+	return ui
+}
+
 func (r *runtime) v3DataObject() *goja.Object {
 	data := r.vm.NewObject()
 	setExport(data, "selection", r.v3Selection)
 	setExport(data, "item", r.v3ListItem)
 	return data
+}
+
+func (r *runtime) v3ComponentFactory(componentType string, defaults map[string]any) func(goja.FunctionCall) goja.Value {
+	return func(call goja.FunctionCall) goja.Value {
+		props, childStart := propsAndChildStart(call.Arguments, 0)
+		if len(defaults) > 0 {
+			merged := map[string]any{}
+			for key, value := range defaults {
+				merged[key] = value
+			}
+			for key, value := range props {
+				merged[key] = value
+			}
+			props = merged
+		}
+		return r.vm.ToValue(r.v3BuildComponent(componentType, props, call.Arguments[childStart:]))
+	}
+}
+
+func (r *runtime) v3UIButton(label goja.Value, action goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	if action != nil && !goja.IsUndefined(action) && !goja.IsNull(action) {
+		props["action"] = action.Export()
+	}
+	return componentNode("Button", props, r.v3NodeSpecsToIR(r.v3ExportChild(label))...)
+}
+
+func (r *runtime) v3UIMetadata(record goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	props["items"] = v3MetadataItems(exportObject(record))
+	return componentNode("MetadataGrid", props)
+}
+
+func (r *runtime) v3ActionsBuilder(actions *[]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "add", func(label goja.Value, action goja.Value, options ...goja.Value) *goja.Object {
+		item := exportOptions(options)
+		item["label"] = r.v3Renderable(label)
+		if action != nil && !goja.IsUndefined(action) && !goja.IsNull(action) {
+			item["action"] = action.Export()
+		}
+		*actions = append(*actions, item)
+		return obj
+	})
+	setExport(obj, "button", obj.Get("add"))
+	return obj
 }
 
 func (r *runtime) v3Selection(modeOrOptions goja.Value, options ...goja.Value) map[string]any {
@@ -159,6 +223,22 @@ func (r *runtime) v3PageBuilder(spec *v3PageSpec) *goja.Object {
 		spec.Meta[key] = value.Export()
 		return obj
 	})
+	setExport(obj, "shell", func(shell goja.Value) *goja.Object {
+		spec.Shell = shell.Export()
+		return obj
+	})
+	setExport(obj, "density", func(density string) *goja.Object {
+		spec.Density = density
+		return obj
+	})
+	setExport(obj, "breadcrumb", func(label goja.Value, href ...string) *goja.Object {
+		item := map[string]any{"label": r.v3Renderable(label)}
+		if len(href) > 0 && strings.TrimSpace(href[0]) != "" {
+			item["href"] = href[0]
+		}
+		spec.Breadcrumbs = append(spec.Breadcrumbs, item)
+		return obj
+	})
 	setExport(obj, "use", func(fragment goja.Value) *goja.Object {
 		r.applyV3BuilderCallback(obj, fragment, "page.use")
 		return obj
@@ -223,6 +303,22 @@ func (r *runtime) v3SectionBuilder(spec *v3SectionSpec) *goja.Object {
 		}
 		nodes := r.callV3Slot(v3SlotSpec{Function: slot, Fallback: fallbackSlot}, context.Export())
 		spec.Children = append(spec.Children, nodes...)
+		return obj
+	})
+	setExport(obj, "actions", func(cb goja.Value) *goja.Object {
+		actions := r.v3ActionsBuilder(&spec.Actions)
+		r.applyV3BuilderCallback(actions, cb, "section.actions")
+		return obj
+	})
+	setExport(obj, "metric", func(label goja.Value, value goja.Value, options ...goja.Value) *goja.Object {
+		props := exportOptions(options)
+		props["label"] = r.v3Renderable(label)
+		props["value"] = r.v3Renderable(value)
+		spec.Children = append(spec.Children, v3NodeSpecFromIR(componentNode("KeyValueStrip", map[string]any{"items": []any{props}})))
+		return obj
+	})
+	setExport(obj, "metadata", func(record goja.Value) *goja.Object {
+		spec.Children = append(spec.Children, v3NodeSpecFromIR(r.v3MetadataNode(exportObject(record))))
 		return obj
 	})
 	return obj
@@ -376,18 +472,28 @@ func (r *runtime) v3Renderable(value goja.Value) any {
 }
 
 func (r *runtime) v3PageToIR(spec *v3PageSpec) map[string]any {
-	children := make([]any, 0, len(spec.Sections))
+	children := make([]any, 0, len(spec.Sections)+1)
+	if len(spec.Breadcrumbs) > 0 {
+		children = append(children, componentNode("Breadcrumbs", map[string]any{"items": spec.Breadcrumbs}))
+	}
 	for _, section := range spec.Sections {
 		children = append(children, r.v3SectionToNode(section))
+	}
+	rootProps := map[string]any{"gap": "lg"}
+	if spec.Density != "" {
+		rootProps["density"] = spec.Density
 	}
 	out := map[string]any{
 		"schemaVersion": spec.SchemaVersion,
 		"id":            spec.ID,
 		"title":         spec.Title,
-		"root":          componentNode("Stack", map[string]any{"gap": "lg"}, children...),
+		"root":          componentNode("Stack", rootProps, children...),
 	}
 	if len(spec.Meta) > 0 {
 		out["meta"] = spec.Meta
+	}
+	if spec.Shell != nil {
+		out["shell"] = spec.Shell
 	}
 	return out
 }
@@ -402,6 +508,9 @@ func (r *runtime) v3SectionToNode(spec v3SectionSpec) map[string]any {
 	}
 	if spec.Tone != "" {
 		props["tone"] = spec.Tone
+	}
+	if len(spec.Actions) > 0 {
+		props["actions"] = spec.Actions
 	}
 	return componentNode("SectionBlock", props, r.v3NodeSpecsToIR(spec.Children)...)
 }
@@ -545,6 +654,18 @@ func v3NodeValidationIssues(node v3NodeSpec, path string) []map[string]any {
 		issues = append(issues, v3NodeValidationIssues(v3NodeSpecFromIR(childNode), childPath)...)
 	}
 	return issues
+}
+
+func (r *runtime) v3MetadataNode(record map[string]any) map[string]any {
+	return componentNode("MetadataGrid", map[string]any{"items": v3MetadataItems(record)})
+}
+
+func v3MetadataItems(record map[string]any) []any {
+	items := make([]any, 0, len(record))
+	for key, value := range record {
+		items = append(items, map[string]any{"key": key, "label": key, "value": value})
+	}
+	return items
 }
 
 func v3ValidationIssue(code string, path string, message string) map[string]any {
