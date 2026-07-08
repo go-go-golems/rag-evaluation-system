@@ -290,3 +290,16 @@ Committed Widget DSL v3 Phase 2 slot/node kernel in f6aa36fdb3d5a7788072599803ac
 
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3.go — Committed slot and node kernel
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/01-implementation-diary.md — Step 15 commit reference
+
+## 2026-07-08
+
+Finished Widget DSL v3 Phase 2: AccessorSpec-aligned bind helpers, selection/list-item specs, action confirm/payload passthrough, recursive node validation, final TS declarations, tracker completion, and tests.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/module.go — AccessorSpec bind helpers and v3 data namespace installation
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/module_test.go — Final Phase 2 runtime coverage
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/typescript.go — Final Phase 2 declaration surface
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3.go — Selection/list item specs and node validation
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/design-doc/05-widget-dsl-v3-implementation-phases-and-task-tracker.md — Phase 2 marked complete
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/01-implementation-diary.md — Diary Step 16 records Phase 2 completion

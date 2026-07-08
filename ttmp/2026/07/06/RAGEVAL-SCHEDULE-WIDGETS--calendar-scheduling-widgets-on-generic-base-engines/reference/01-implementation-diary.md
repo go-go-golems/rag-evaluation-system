@@ -1040,3 +1040,80 @@ This step also adds the first author-time slot path. A section can now call `.sl
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`
+
+## Step 16: Finish Phase 2 — accessors, selection, list items, action payloads, and validation
+
+Closed out the remaining Phase 2 core-kernel tasks. The v3 `bind` namespace now emits a single AccessorSpec-shaped dialect instead of creating another field/path/template mini-language, and the `data` namespace has the first shared selection and list-item primitives that future domain widgets can reuse.
+
+This step also adds validation beyond page title/id checks. Page validation now walks sections and child nodes so malformed component, element, or text nodes produce actionable validation issues before `toPage()` emits IR.
+
+### Prompt Context
+
+**User prompt (verbatim):** "do all of phase 2."
+
+**Assistant interpretation:** Complete every unchecked Phase 2 task in the tracker, including AccessorSpec alignment, selection/list-item primitives, action payload binding behavior, validation, docs, tests, and commits.
+
+**Inferred user intent:** The user wants Phase 2 fully finished rather than continued in incremental partial slices.
+
+**Commit (code):** pending — final Phase 2 completion slice to be committed after validation and diary update.
+
+### What I did
+- Changed `bind.field`, `bind.path`, `bind.map`, `bind.template`, and `bind.context` to emit `kind: "accessor"` specs with explicit `mode` values.
+- Kept `bind.const` as the non-accessor constant binding shape.
+- Added `widget.data.selection(...)` for shared `SelectionSpec` values with `single` and `multi` modes.
+- Added `widget.data.item(id, label, options?)` for an initial shared `ListItemSpec` shape.
+- Installed the concrete v3 `data` namespace instead of a placeholder object.
+- Added node validation for text, element, and component nodes, including recursive child-node validation.
+- Updated TypeScript declarations for `AccessorSpec`, `ConstBindingSpec`, `BindingSpec`, `SelectionSpec`, `ListItemSpec`, and `DataNamespace`.
+- Added runtime tests covering accessor output, const binding output, selection specs, list item specs, action confirm/payload passthrough, and invalid node validation.
+- Marked Phase 2 complete in the implementation tracker.
+
+### Why
+- The decomposition review explicitly warned against introducing a fifth accessor dialect. Aligning `bind.*` with `AccessorSpec` now keeps future data, schedule, and context APIs on a shared shape.
+- Selection and list-item specs are needed before Phase 3/4 domain APIs so those APIs do not recreate per-widget `selectedX` fields and nearly-identical item structs.
+- Node validation is the safety net that makes `validate()` useful before broader domain builders start producing nested nodes.
+
+### What worked
+- Existing action helpers already preserve arbitrary option properties, so `confirm` and `payload` bindings lower through without special action-specific code.
+- The v3 `data` namespace could be installed in parallel without touching old `data.dsl` or `data.v2.dsl`.
+- Recursive validation fit naturally on top of `v3NodeSpec` and existing `widgetNodeFromAny` helpers.
+
+### What didn't work
+- While editing the TypeScript declaration string slice, I again introduced malformed Go text into `typescript.go` and `typescript_test.go`, including a bad `"},{` sequence and leftover tool-call text. `gofmt` caught this with errors such as:
+  `pkg/widgetdsl/typescript.go:149:93: missing ',' before newline in composite literal`
+  `pkg/widgetdsl/typescript.go:214:170: illegal character U+00AB '«'`
+- I fixed this by rewriting the whole `widgetV3TypeScriptLines()` block and rewriting the affected TypeScript declaration test cleanly.
+
+### What I learned
+- The current manual TypeScript declaration approach is now visibly brittle; Phase 9 descriptor generation should not be postponed too long.
+- Accessor alignment is a behavior-changing API detail for `widget.dsl`, but safe because `widget.dsl` is still the new parallel API.
+- Action payload support does not need a new runtime action type yet; preserving binding specs inside the existing action option map is enough for Phase 2.
+
+### What was tricky to build
+- `bind.context("row.id")` needs to remain recognizable as a context accessor while still fitting the shared `AccessorSpec` shape. I represented it as `kind: "accessor", mode: "context", path: "row.id"` so consumers can distinguish it from plain row/path access.
+- Validation needs to reject malformed nodes without overfitting to frontend component props. I kept the checks structural: text nodes need `text`, elements need `tag`, components need `type`, and children must be widget nodes.
+
+### What warrants a second pair of eyes
+- Whether `AccessorSpec.mode` should use `"map"` or `"mapField"`; the current output uses `mode: "map"` plus `mapField` to preserve readability.
+- Whether `data.item` should expose typed `icon`, `badge`, and `disabled` builder methods instead of accepting them through the open options object.
+- Whether validation should be warnings rather than errors for some malformed child shapes while the DSL is still evolving.
+
+### What should be done in the future
+- Phase 3 should build useful `widget.ui` primitives on top of this kernel instead of adding more raw component escapes.
+- Add frontend-side `resolveAccessor`, `SelectionSpec`, and `ListItemSpec` consumers when the IR cleanup reaches the React adapters.
+- Replace hand-written declaration strings with descriptor-generated declarations in Phase 9.
+
+### Code review instructions
+- Start with `pkg/widgetdsl/module.go` to see `bind` and `widget.data` installation.
+- Review `pkg/widgetdsl/v3.go` for `v3AccessorSpec`, `v3Selection`, `v3ListItem`, and node validation.
+- Review `TestWidgetV3AccessorsSelectionsItemsActionsAndValidation` in `pkg/widgetdsl/module_test.go` for expected runtime output.
+- Review `pkg/widgetdsl/typescript.go` and `pkg/widgetdsl/typescript_test.go` for the final Phase 2 declaration surface.
+- Validate with `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`.
+
+### Technical details
+- Validation command run:
+  `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+- Final result:
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`

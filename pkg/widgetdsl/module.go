@@ -283,7 +283,8 @@ func (r *runtime) installWidgetV3(exports *goja.Object) {
 	setExport(exports, "raw", r.v3RawObject())
 	setExport(exports, "act", r.actionObject())
 	setExport(exports, "bind", r.bindingObject())
-	for _, name := range []string{"ui", "data", "cms", "course", "context", "schedule", "time", "style"} {
+	setExport(exports, "data", r.v3DataObject())
+	for _, name := range []string{"ui", "cms", "course", "context", "schedule", "time", "style"} {
 		setExport(exports, name, r.vm.NewObject())
 	}
 }
@@ -291,19 +292,19 @@ func (r *runtime) installWidgetV3(exports *goja.Object) {
 func (r *runtime) bindingObject() *goja.Object {
 	bind := r.vm.NewObject()
 	setExport(bind, "field", func(path string) map[string]any {
-		return map[string]any{"kind": "field", "path": path}
+		return v3AccessorSpec("field", "field", path)
 	})
 	setExport(bind, "path", func(path string) map[string]any {
-		return map[string]any{"kind": "path", "path": path}
+		return v3AccessorSpec("path", "path", path)
 	})
 	setExport(bind, "map", func(field string) map[string]any {
-		return map[string]any{"kind": "map", "field": field}
+		return v3AccessorSpec("map", "mapField", field)
 	})
 	setExport(bind, "template", func(template string) map[string]any {
-		return map[string]any{"kind": "template", "template": template}
+		return v3AccessorSpec("template", "template", template)
 	})
 	setExport(bind, "context", func(path string) map[string]any {
-		return map[string]any{"kind": "context", "path": path}
+		return v3AccessorSpec("context", "path", path)
 	})
 	setExport(bind, "const", func(value goja.Value) map[string]any {
 		return map[string]any{"kind": "const", "value": value.Export()}

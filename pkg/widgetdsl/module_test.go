@@ -87,13 +87,15 @@ func TestWidgetV3ModuleExportsRootNamespacesAndKeepsOldModulesAvailable(t *testi
 			node,
 			binding: widget.bind.field("title"),
 			action: widget.act.server("save", { payload: { id: 1 } }),
+			dataSelection: typeof widget.data.selection,
+			dataItem: typeof widget.data.item,
 		});
 	`)
 	if err != nil {
 		t.Fatalf("require widget.dsl: %v", err)
 	}
 	got := value.Export().(map[string]any)
-	wantFunctions := []string{"legacyPanel", "rawComponent", "rawText", "actServer", "bindField", "pageFn"}
+	wantFunctions := []string{"legacyPanel", "rawComponent", "rawText", "actServer", "bindField", "pageFn", "dataSelection", "dataItem"}
 	for _, name := range wantFunctions {
 		if got[name] != "function" {
 			t.Fatalf("%s export = %#v, want function (all: %#v)", name, got[name], got)
@@ -110,7 +112,7 @@ func TestWidgetV3ModuleExportsRootNamespacesAndKeepsOldModulesAvailable(t *testi
 		t.Fatalf("raw.component emitted %#v", node)
 	}
 	binding := got["binding"].(map[string]any)
-	if binding["kind"] != "field" || binding["path"] != "title" {
+	if binding["kind"] != "accessor" || binding["mode"] != "field" || binding["field"] != "title" {
 		t.Fatalf("bind.field emitted %#v", binding)
 	}
 	action := got["action"].(map[string]any)
@@ -227,6 +229,80 @@ func TestWidgetV3SlotsAndChildNormalization(t *testing.T) {
 	fallbackCaption := children[3].(map[string]any)
 	if fallbackCaption["type"] != "Caption" {
 		t.Fatalf("fallback child = %#v, want Caption", fallbackCaption)
+	}
+}
+
+func TestWidgetV3AccessorsSelectionsItemsActionsAndValidation(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		const invalid = widget.page("Invalid", p => p.section("Broken", s => s.view({ kind: "component", props: {} })));
+		({
+			issues: invalid.validate(),
+			field: widget.bind.field("title"),
+			path: widget.bind.path("author.name"),
+			map: widget.bind.map("cells"),
+			template: widget.bind.template("${first} ${last}"),
+			context: widget.bind.context("row.id"),
+			constant: widget.bind.const(7),
+			selection: widget.data.selection({ mode: "multi", keyField: "id", selected: ["a", "b"] }),
+			singleSelection: widget.data.selection("single", { keyField: "id", selected: "a" }),
+			item: widget.data.item("home", "Home", { href: "/", badge: "New", action: widget.act.navigate("/") }),
+			action: widget.act.server("save", {
+				confirm: "Save row?",
+				payload: { id: widget.bind.context("row.id"), fixed: widget.bind.const(7) },
+			}),
+		});
+	`)
+	if err != nil {
+		t.Fatalf("build widget.dsl core specs: %v", err)
+	}
+	got := value.Export().(map[string]any)
+	issues := anySlice(got["issues"])
+	if len(issues) != 1 {
+		t.Fatalf("validation issues = %#v, want one component type issue", issues)
+	}
+	issue := issues[0].(map[string]any)
+	if issue["code"] != "component_type_required" {
+		t.Fatalf("validation issue = %#v, want component_type_required", issue)
+	}
+	field := got["field"].(map[string]any)
+	if field["kind"] != "accessor" || field["mode"] != "field" || field["field"] != "title" {
+		t.Fatalf("field accessor = %#v", field)
+	}
+	path := got["path"].(map[string]any)
+	if path["kind"] != "accessor" || path["mode"] != "path" || path["path"] != "author.name" {
+		t.Fatalf("path accessor = %#v", path)
+	}
+	mapAccessor := got["map"].(map[string]any)
+	if mapAccessor["kind"] != "accessor" || mapAccessor["mode"] != "map" || mapAccessor["mapField"] != "cells" {
+		t.Fatalf("map accessor = %#v", mapAccessor)
+	}
+	constant := got["constant"].(map[string]any)
+	if constant["kind"] != "const" || constant["value"] != int64(7) {
+		t.Fatalf("const binding = %#v", constant)
+	}
+	selection := got["selection"].(map[string]any)
+	if selection["kind"] != "selection" || selection["mode"] != "multi" || selection["keyField"] != "id" {
+		t.Fatalf("selection = %#v", selection)
+	}
+	singleSelection := got["singleSelection"].(map[string]any)
+	if singleSelection["kind"] != "selection" || singleSelection["mode"] != "single" || singleSelection["selected"] != "a" {
+		t.Fatalf("single selection = %#v", singleSelection)
+	}
+	item := got["item"].(map[string]any)
+	if item["kind"] != "listItem" || item["id"] != "home" || item["href"] != "/" {
+		t.Fatalf("list item = %#v", item)
+	}
+	action := got["action"].(map[string]any)
+	payload := action["payload"].(map[string]any)
+	payloadID := payload["id"].(map[string]any)
+	if action["kind"] != "server" || action["confirm"] != "Save row?" || payloadID["kind"] != "accessor" || payloadID["mode"] != "context" {
+		t.Fatalf("action with payload bindings = %#v", action)
 	}
 }
 

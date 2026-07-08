@@ -40,6 +40,21 @@ type v3SlotSpec struct {
 	Fallback goja.Value
 }
 
+type v3SelectionSpec struct {
+	Mode     string
+	KeyField string
+	Selected any
+}
+
+type v3ListItemSpec struct {
+	ID       string
+	Label    any
+	Icon     any
+	Badge    any
+	Disabled bool
+	Extra    map[string]any
+}
+
 func (r *runtime) v3Page(call goja.FunctionCall) goja.Value {
 	if len(call.Arguments) == 0 {
 		panic(r.vm.NewGoError(fmt.Errorf("widget.dsl page(titleOrOptions, configure?) requires a title string or options object")))
@@ -67,6 +82,60 @@ func (r *runtime) v3Page(call goja.FunctionCall) goja.Value {
 		r.applyV3BuilderCallback(builder, call.Arguments[1], "page")
 	}
 	return builder
+}
+
+func (r *runtime) v3DataObject() *goja.Object {
+	data := r.vm.NewObject()
+	setExport(data, "selection", r.v3Selection)
+	setExport(data, "item", r.v3ListItem)
+	return data
+}
+
+func (r *runtime) v3Selection(modeOrOptions goja.Value, options ...goja.Value) map[string]any {
+	spec := v3SelectionSpec{Mode: "single"}
+	if isPlainObject(modeOrOptions) {
+		opts := exportObject(modeOrOptions)
+		spec.Mode = stringFromMap(opts, "mode", spec.Mode)
+		spec.KeyField = stringFromMap(opts, "keyField", spec.KeyField)
+		spec.Selected = opts["selected"]
+	} else if modeOrOptions != nil && !goja.IsUndefined(modeOrOptions) && !goja.IsNull(modeOrOptions) {
+		spec.Mode = strings.TrimSpace(modeOrOptions.String())
+		opts := exportOptions(options)
+		spec.KeyField = stringFromMap(opts, "keyField", spec.KeyField)
+		spec.Selected = opts["selected"]
+	}
+	if spec.Mode != "single" && spec.Mode != "multi" {
+		panic(r.vm.NewGoError(fmt.Errorf("widget.dsl data.selection mode must be single or multi")))
+	}
+	out := map[string]any{"kind": "selection", "mode": spec.Mode}
+	if spec.KeyField != "" {
+		out["keyField"] = spec.KeyField
+	}
+	if spec.Selected != nil {
+		out["selected"] = spec.Selected
+	}
+	return out
+}
+
+func (r *runtime) v3ListItem(id string, label goja.Value, options ...goja.Value) map[string]any {
+	if strings.TrimSpace(id) == "" {
+		panic(r.vm.NewGoError(fmt.Errorf("widget.dsl data.item id must not be empty")))
+	}
+	spec := v3ListItemSpec{ID: id, Label: r.v3Renderable(label), Extra: exportOptions(options)}
+	out := map[string]any{"kind": "listItem", "id": spec.ID, "label": spec.Label}
+	for key, value := range spec.Extra {
+		out[key] = value
+	}
+	if spec.Icon != nil {
+		out["icon"] = spec.Icon
+	}
+	if spec.Badge != nil {
+		out["badge"] = spec.Badge
+	}
+	if spec.Disabled {
+		out["disabled"] = true
+	}
+	return out
 }
 
 func (r *runtime) v3PageBuilder(spec *v3PageSpec) *goja.Object {
@@ -292,6 +361,10 @@ func (r *runtime) v3RenderableTitle(value goja.Value) any {
 	if _, ok := value.Export().(string); ok {
 		return value.String()
 	}
+	return r.v3Renderable(value)
+}
+
+func (r *runtime) v3Renderable(value goja.Value) any {
 	nodes := r.v3ExportChild(value)
 	if len(nodes) == 0 {
 		return nil
@@ -427,12 +500,63 @@ func isV3EmptySlotResult(value goja.Value) bool {
 func v3PageValidationIssues(spec *v3PageSpec) []map[string]any {
 	issues := []map[string]any{}
 	if strings.TrimSpace(spec.ID) == "" {
-		issues = append(issues, map[string]any{"severity": "error", "code": "page_id_required", "path": "page.id", "message": "page id is required"})
+		issues = append(issues, v3ValidationIssue("page_id_required", "page.id", "page id is required"))
 	}
 	if strings.TrimSpace(spec.Title) == "" {
-		issues = append(issues, map[string]any{"severity": "error", "code": "page_title_required", "path": "page.title", "message": "page title is required"})
+		issues = append(issues, v3ValidationIssue("page_title_required", "page.title", "page title is required"))
+	}
+	for sectionIndex, section := range spec.Sections {
+		sectionPath := fmt.Sprintf("page.sections[%d]", sectionIndex)
+		if section.Title == nil {
+			issues = append(issues, v3ValidationIssue("section_title_required", sectionPath+".title", "section title is required"))
+		}
+		for childIndex, child := range section.Children {
+			issues = append(issues, v3NodeValidationIssues(child, fmt.Sprintf("%s.children[%d]", sectionPath, childIndex))...)
+		}
 	}
 	return issues
+}
+
+func v3NodeValidationIssues(node v3NodeSpec, path string) []map[string]any {
+	issues := []map[string]any{}
+	switch node.Kind {
+	case "text":
+		if _, ok := node.IR["text"]; !ok {
+			issues = append(issues, v3ValidationIssue("text_value_required", path+".text", "text node requires a text value"))
+		}
+	case "element":
+		if strings.TrimSpace(stringFromMap(node.IR, "tag", "")) == "" {
+			issues = append(issues, v3ValidationIssue("element_tag_required", path+".tag", "element node requires a tag"))
+		}
+	case "component":
+		if strings.TrimSpace(stringFromMap(node.IR, "type", "")) == "" {
+			issues = append(issues, v3ValidationIssue("component_type_required", path+".type", "component node requires a type"))
+		}
+	default:
+		issues = append(issues, v3ValidationIssue("node_kind_invalid", path+".kind", "node kind must be text, element, or component"))
+	}
+	for childIndex, child := range anySlice(node.IR["children"]) {
+		childPath := fmt.Sprintf("%s.children[%d]", path, childIndex)
+		childNode, ok := widgetNodeFromAny(child)
+		if !ok {
+			issues = append(issues, v3ValidationIssue("node_child_invalid", childPath, "node child must be a widget node"))
+			continue
+		}
+		issues = append(issues, v3NodeValidationIssues(v3NodeSpecFromIR(childNode), childPath)...)
+	}
+	return issues
+}
+
+func v3ValidationIssue(code string, path string, message string) map[string]any {
+	return map[string]any{"severity": "error", "code": code, "path": path, "message": message}
+}
+
+func v3AccessorSpec(mode string, valueKey string, value string) map[string]any {
+	out := map[string]any{"kind": "accessor", "mode": mode}
+	if strings.TrimSpace(value) != "" {
+		out[valueKey] = value
+	}
+	return out
 }
 
 func slugID(s string) string {

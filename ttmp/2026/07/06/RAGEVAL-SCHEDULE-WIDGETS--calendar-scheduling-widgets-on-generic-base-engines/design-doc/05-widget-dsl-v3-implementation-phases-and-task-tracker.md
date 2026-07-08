@@ -14,15 +14,19 @@ Intent: long-term
 Owners: []
 RelatedFiles:
     - Path: repo://pkg/widgetdsl/module.go
-      Note: Current runtime module registry and helper/recipe implementation to refactor behind widget.dsl
+      Note: |-
+        Current runtime module registry and helper/recipe implementation to refactor behind widget.dsl
+        Phase 2 final AccessorSpec-aligned bind namespace and data namespace installation
     - Path: repo://pkg/widgetdsl/module_test.go
       Note: |-
         Phase 1 runtime tests for widget.dsl coexistence and raw/bind/act output
         Runtime coverage for slot helpers and child normalization
+        Phase 2 final tests for accessors, selections, list items, actions, and validation
     - Path: repo://pkg/widgetdsl/typescript.go
       Note: |-
         Current declaration generation path to replace with descriptor-driven widget.dsl declarations
         Slot and SlotHelpers declarations for widget.dsl
+        Phase 2 final TypeScript declarations for AccessorSpec, SelectionSpec, ListItemSpec, and DataNamespace
     - Path: repo://pkg/widgetdsl/typescript_test.go
       Note: Phase 1 TypeScript declaration fragment tests
     - Path: repo://pkg/widgetdsl/v2/spec/types.go
@@ -33,6 +37,7 @@ RelatedFiles:
       Note: |-
         Phase 2 initial page/section specs, builder callbacks, fragments, and page lowering
         Phase 2 node/source specs, v3 child normalization, slot specs/calls, and slot helpers
+        Phase 2 final node validation, selection spec, list item spec, and renderable helpers
     - Path: repo://pkg/xgoja/providers/widgetsite/provider.go
       Note: Phase 1 provider exposure for widget.dsl
     - Path: repo://pkg/xgoja/providers/widgetsite/provider_test.go
@@ -59,6 +64,7 @@ LastUpdated: 2026-07-07T16:40:00-04:00
 WhatFor: Use this document to track the step-by-step implementation of the new widget.dsl module while existing ui/data/cms/course/context modules remain available.
 WhenToUse: Read before starting or resuming Widget DSL v3 implementation; update after every phase or meaningful subphase.
 ---
+
 
 
 
@@ -249,7 +255,7 @@ sure the implementation starts from evidence rather than memory.
 
 **Goal:** Build the reusable kernel once before adding domain-specific APIs.
 
-**Status:** in progress.
+**Status:** complete.
 
 ### Tasks
 
@@ -263,7 +269,7 @@ sure the implementation starts from evidence rather than memory.
   - `WidgetV3SourceSpan` (currently `v3SourceSpan`)
 - [x] Implement first lowerers from page/section specs to current Widget IR map shape.
 - [x] Add validation helpers for required page ID/title invariants.
-- [ ] Add root/node validation rules beyond kind recognition.
+- [x] Add root/node validation rules beyond kind recognition.
 
 #### Builder callback machinery
 
@@ -294,15 +300,15 @@ sure the implementation starts from evidence rather than memory.
 
 - [x] Add `bind.field`, `bind.path`, `bind.map`, `bind.template`, `bind.context`,
       and `bind.const`.
-- [ ] Align `bind.*` with the decomposition review's `AccessorSpec` direction so v3
+- [x] Align `bind.*` with the decomposition review's `AccessorSpec` direction so v3
       does not create a fifth value-accessor dialect.
-- [ ] Add initial `data.selection` / shared `SelectionSpec` shape for single and
+- [x] Add initial `data.selection` / shared `SelectionSpec` shape for single and
       multi selection instead of per-widget `selectedX` fields.
-- [ ] Add an initial `ListItemSpec` shape for navigation/list/option item APIs.
+- [x] Add an initial `ListItemSpec` shape for navigation/list/option item APIs.
 - [x] Add `act.server`, `act.navigate`, `act.download`, `act.event`, `act.copy`.
-- [ ] Ensure action `confirm` and payload bindings lower to the existing
+- [x] Ensure action `confirm` and payload bindings lower to the existing
       `ActionSpec` shape.
-- [ ] Keep room for future `ctx.actionHandler`/`ctx.renderFields` frontend helpers;
+- [x] Keep room for future `ctx.actionHandler`/`ctx.renderFields` frontend helpers;
       v3 lowerers should not depend on copy-pasted adapter boilerplate becoming
       permanent.
 
@@ -731,7 +737,7 @@ components.
 |---|---|---|
 | Phase 0 — Baseline inventory and scaffolding | complete | Begin Phase 1 with `widget.dsl` skeleton and raw escape hatch. |
 | Phase 1 — `widget.dsl` skeleton | complete | Begin Phase 2 core builder/spec kernel. |
-| Phase 2 — Core spec kernel | in progress | Continue with explicit node/source specs plus slot helper/call machinery. |
+| Phase 2 — Core spec kernel | complete | Page/section builders, node/source specs, slots, accessors, selection, list items, actions, and TS declarations are implemented. |
 | Phase 3 — UI namespace | not started | Implement simple page examples. |
 | Phase 4 — Data namespace | not started | Port data.v2 examples under `widget.dsl.data`. |
 | Phase 5 — CMS namespace | not started | Port media library section. |
