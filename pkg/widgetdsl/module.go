@@ -280,21 +280,12 @@ func (r *runtime) install(exports *goja.Object, spec moduleSpec) {
 
 func (r *runtime) installWidgetV3(exports *goja.Object) {
 	setExport(exports, "page", r.v3Page)
-	setExport(exports, "raw", r.rawObject())
+	setExport(exports, "raw", r.v3RawObject())
 	setExport(exports, "act", r.actionObject())
 	setExport(exports, "bind", r.bindingObject())
 	for _, name := range []string{"ui", "data", "cms", "course", "context", "schedule", "time", "style"} {
 		setExport(exports, name, r.vm.NewObject())
 	}
-}
-
-func (r *runtime) rawObject() *goja.Object {
-	raw := r.vm.NewObject()
-	setExport(raw, "text", r.text)
-	setExport(raw, "element", r.element)
-	setExport(raw, "component", r.component)
-	setExport(raw, "fragment", r.fragment)
-	return raw
 }
 
 func (r *runtime) bindingObject() *goja.Object {
@@ -388,8 +379,10 @@ func (r *runtime) actionObject() *goja.Object {
 		mergeOptions(out, exportOptions(options))
 		return out
 	})
-	setExport(action, "copy", func(value string) map[string]any {
-		return map[string]any{"kind": "copy", "value": value}
+	setExport(action, "copy", func(value string, options ...goja.Value) map[string]any {
+		out := map[string]any{"kind": "copy", "value": value}
+		mergeOptions(out, exportOptions(options))
+		return out
 	})
 	return action
 }

@@ -20,7 +20,24 @@ type v3SectionSpec struct {
 	Caption  string
 	AnchorID string
 	Tone     string
-	Children []any
+	Children []v3NodeSpec
+}
+
+type v3NodeSpec struct {
+	Kind   string
+	IR     map[string]any
+	Source *v3SourceSpan
+}
+
+type v3SourceSpan struct {
+	File   string
+	Line   int
+	Column int
+}
+
+type v3SlotSpec struct {
+	Function goja.Value
+	Fallback goja.Value
 }
 
 func (r *runtime) v3Page(call goja.FunctionCall) goja.Value {
@@ -87,7 +104,7 @@ func (r *runtime) v3PageBuilder(spec *v3PageSpec) *goja.Object {
 		return obj
 	})
 	setExport(obj, "view", func(value goja.Value) *goja.Object {
-		section := v3SectionSpec{Title: "Content", Children: r.exportChild(value)}
+		section := v3SectionSpec{Title: "Content", Children: r.v3ExportChild(value)}
 		spec.Sections = append(spec.Sections, section)
 		return obj
 	})
@@ -123,11 +140,20 @@ func (r *runtime) v3SectionBuilder(spec *v3SectionSpec) *goja.Object {
 		return obj
 	})
 	setExport(obj, "text", func(value goja.Value) *goja.Object {
-		spec.Children = append(spec.Children, r.text(value))
+		spec.Children = append(spec.Children, r.v3TextNode(value))
 		return obj
 	})
 	setExport(obj, "view", func(value goja.Value) *goja.Object {
-		spec.Children = append(spec.Children, r.exportChild(value)...)
+		spec.Children = append(spec.Children, r.v3ExportChild(value)...)
+		return obj
+	})
+	setExport(obj, "slot", func(context goja.Value, slot goja.Value, fallback ...goja.Value) *goja.Object {
+		var fallbackSlot goja.Value
+		if len(fallback) > 0 {
+			fallbackSlot = fallback[0]
+		}
+		nodes := r.callV3Slot(v3SlotSpec{Function: slot, Fallback: fallbackSlot}, context.Export())
+		spec.Children = append(spec.Children, nodes...)
 		return obj
 	})
 	return obj
@@ -146,14 +172,134 @@ func (r *runtime) applyV3BuilderCallback(builder *goja.Object, cb goja.Value, na
 	}
 }
 
+func (r *runtime) callV3Slot(slot v3SlotSpec, ctx any) []v3NodeSpec {
+	return r.callV3SlotFunction(slot.Function, ctx, func(any) []v3NodeSpec {
+		return r.callV3SlotFunction(slot.Fallback, ctx, nil)
+	})
+}
+
+func (r *runtime) callV3SlotFunction(slot goja.Value, ctx any, fallback func(any) []v3NodeSpec) []v3NodeSpec {
+	if slot == nil || goja.IsUndefined(slot) || goja.IsNull(slot) {
+		if fallback == nil {
+			return nil
+		}
+		return fallback(ctx)
+	}
+	fn, ok := goja.AssertFunction(slot)
+	if !ok {
+		panic(r.vm.NewGoError(fmt.Errorf("widget.dsl slot must be a function")))
+	}
+	value, err := fn(goja.Undefined(), r.vm.ToValue(ctx), r.v3SlotHelpers())
+	if err != nil {
+		panic(err)
+	}
+	if isV3EmptySlotResult(value) && fallback != nil {
+		return fallback(ctx)
+	}
+	return r.v3ExportChild(value)
+}
+
+func (r *runtime) v3SlotHelpers() *goja.Object {
+	h := r.vm.NewObject()
+	setExport(h, "text", func(value goja.Value) map[string]any {
+		return r.v3TextNode(value).toIR()
+	})
+	setExport(h, "caption", func(value goja.Value, options ...goja.Value) map[string]any {
+		props := exportOptions(options)
+		return componentNode("Caption", props, r.v3NodeSpecsToIR(r.v3ExportChild(value))...)
+	})
+	setExport(h, "strong", func(call goja.FunctionCall) goja.Value {
+		return r.vm.ToValue(r.v3BuildElement("strong", map[string]any{}, call.Arguments))
+	})
+	setExport(h, "stack", func(call goja.FunctionCall) goja.Value {
+		props, childStart := propsAndChildStart(call.Arguments, 0)
+		return r.vm.ToValue(r.v3BuildComponent("Stack", props, call.Arguments[childStart:]))
+	})
+	setExport(h, "inline", func(call goja.FunctionCall) goja.Value {
+		props, childStart := propsAndChildStart(call.Arguments, 0)
+		return r.vm.ToValue(r.v3BuildComponent("Inline", props, call.Arguments[childStart:]))
+	})
+	setExport(h, "card", func(call goja.FunctionCall) goja.Value {
+		props, childStart := propsAndChildStart(call.Arguments, 0)
+		return r.vm.ToValue(r.v3BuildComponent("Panel", props, call.Arguments[childStart:]))
+	})
+	setExport(h, "button", func(label goja.Value, action goja.Value, options ...goja.Value) map[string]any {
+		props := exportOptions(options)
+		if action != nil && !goja.IsUndefined(action) && !goja.IsNull(action) {
+			props["action"] = action.Export()
+		}
+		return componentNode("Button", props, r.v3NodeSpecsToIR(r.v3ExportChild(label))...)
+	})
+	setExport(h, "badge", func(value goja.Value, options ...goja.Value) map[string]any {
+		props := exportOptions(options)
+		return componentNode("Tag", props, r.v3NodeSpecsToIR(r.v3ExportChild(value))...)
+	})
+	setExport(h, "raw", r.v3RawObject())
+	return h
+}
+
+func (r *runtime) v3RawObject() *goja.Object {
+	raw := r.vm.NewObject()
+	setExport(raw, "text", func(value goja.Value) map[string]any {
+		return r.v3TextNode(value).toIR()
+	})
+	setExport(raw, "element", r.v3Element)
+	setExport(raw, "component", r.v3Component)
+	setExport(raw, "fragment", r.v3Fragment)
+	return raw
+}
+
+func (r *runtime) v3Element(call goja.FunctionCall) goja.Value {
+	if len(call.Arguments) == 0 {
+		panic(r.vm.NewGoError(fmt.Errorf("widget DSL element(tag, attrs?, ...children) requires a tag")))
+	}
+	tag := strings.TrimSpace(call.Arguments[0].String())
+	if tag == "" {
+		panic(r.vm.NewGoError(fmt.Errorf("widget DSL element tag must not be empty")))
+	}
+	attrs := map[string]any{}
+	childStart := 1
+	if len(call.Arguments) > 1 && isPlainObject(call.Arguments[1]) && !looksLikeWidgetNodeExport(call.Arguments[1]) {
+		attrs = exportObject(call.Arguments[1])
+		childStart = 2
+	}
+	return r.vm.ToValue(r.v3BuildElement(tag, attrs, call.Arguments[childStart:]))
+}
+
+func (r *runtime) v3Component(call goja.FunctionCall) goja.Value {
+	if len(call.Arguments) == 0 {
+		panic(r.vm.NewGoError(fmt.Errorf("widget DSL component(type, props?, ...children) requires a type")))
+	}
+	componentType := strings.TrimSpace(call.Arguments[0].String())
+	if componentType == "" {
+		panic(r.vm.NewGoError(fmt.Errorf("widget DSL component type must not be empty")))
+	}
+	props, childStart := propsAndChildStart(call.Arguments, 1)
+	return r.vm.ToValue(r.v3BuildComponent(componentType, props, call.Arguments[childStart:]))
+}
+
+func (r *runtime) v3Fragment(call goja.FunctionCall) goja.Value {
+	return r.vm.ToValue(r.v3NodeSpecsToIR(r.v3ExportChildren(call.Arguments)))
+}
+
 func (r *runtime) v3RenderableTitle(value goja.Value) any {
 	if value == nil || goja.IsUndefined(value) || goja.IsNull(value) {
+		return "Section"
+	}
+	if exported, ok := value.Export().(bool); ok && !exported {
 		return "Section"
 	}
 	if _, ok := value.Export().(string); ok {
 		return value.String()
 	}
-	return r.exportRenderable(value)
+	nodes := r.v3ExportChild(value)
+	if len(nodes) == 0 {
+		return nil
+	}
+	if len(nodes) == 1 {
+		return nodes[0].toIR()
+	}
+	return r.v3NodeSpecsToIR(nodes)
 }
 
 func (r *runtime) v3PageToIR(spec *v3PageSpec) map[string]any {
@@ -184,7 +330,98 @@ func (r *runtime) v3SectionToNode(spec v3SectionSpec) map[string]any {
 	if spec.Tone != "" {
 		props["tone"] = spec.Tone
 	}
-	return componentNode("SectionBlock", props, spec.Children...)
+	return componentNode("SectionBlock", props, r.v3NodeSpecsToIR(spec.Children)...)
+}
+
+func (r *runtime) v3ExportChildren(values []goja.Value) []v3NodeSpec {
+	out := []v3NodeSpec{}
+	for _, value := range values {
+		out = append(out, r.v3ExportChild(value)...)
+	}
+	return out
+}
+
+func (r *runtime) v3ExportChild(value goja.Value) []v3NodeSpec {
+	if value == nil || goja.IsUndefined(value) || goja.IsNull(value) {
+		return nil
+	}
+	if exported, ok := value.Export().(bool); ok && !exported {
+		return nil
+	}
+	if isArrayLike(value) {
+		obj := value.ToObject(r.vm)
+		length := int(obj.Get("length").ToInteger())
+		out := []v3NodeSpec{}
+		for i := 0; i < length; i++ {
+			out = append(out, r.v3ExportChild(obj.Get(fmt.Sprintf("%d", i)))...)
+		}
+		return out
+	}
+	if isWidgetNode(r.vm, value) {
+		return []v3NodeSpec{v3NodeSpecFromIR(value.Export().(map[string]any))}
+	}
+	return []v3NodeSpec{r.v3TextNode(value)}
+}
+
+func (r *runtime) v3TextNode(value goja.Value) v3NodeSpec {
+	return v3NodeSpecFromIR(map[string]any{"kind": "text", "text": stringifyValue(value)})
+}
+
+func (r *runtime) v3BuildElement(tag string, attrs map[string]any, childValues []goja.Value) map[string]any {
+	out := map[string]any{"kind": "element", "tag": tag}
+	if len(attrs) > 0 {
+		out["attrs"] = attrs
+	}
+	children := r.v3NodeSpecsToIR(r.v3ExportChildren(childValues))
+	if len(children) > 0 {
+		out["children"] = children
+	}
+	return out
+}
+
+func (r *runtime) v3BuildComponent(componentType string, props map[string]any, childValues []goja.Value) map[string]any {
+	out := map[string]any{"kind": "component", "type": componentType}
+	if len(props) > 0 {
+		out["props"] = props
+	}
+	children := r.v3NodeSpecsToIR(r.v3ExportChildren(childValues))
+	if len(children) > 0 {
+		out["children"] = children
+	}
+	return out
+}
+
+func (r *runtime) v3NodeSpecsToIR(nodes []v3NodeSpec) []any {
+	out := make([]any, 0, len(nodes))
+	for _, node := range nodes {
+		out = append(out, node.toIR())
+	}
+	return out
+}
+
+func v3NodeSpecFromIR(ir map[string]any) v3NodeSpec {
+	return v3NodeSpec{Kind: stringFromMap(ir, "kind", ""), IR: ir}
+}
+
+func (n v3NodeSpec) toIR() map[string]any {
+	out := map[string]any{}
+	for k, v := range n.IR {
+		out[k] = v
+	}
+	if n.Source != nil {
+		out["source"] = map[string]any{"file": n.Source.File, "line": n.Source.Line, "column": n.Source.Column}
+	}
+	return out
+}
+
+func isV3EmptySlotResult(value goja.Value) bool {
+	if value == nil || goja.IsUndefined(value) || goja.IsNull(value) {
+		return true
+	}
+	if exported, ok := value.Export().(bool); ok && !exported {
+		return true
+	}
+	return false
 }
 
 func v3PageValidationIssues(spec *v3PageSpec) []map[string]any {

@@ -964,3 +964,79 @@ This is the first slice where `widget.dsl` begins to look like the intended v3 g
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`
+
+## Step 15: Phase 2 continues — node specs, v3 child normalization, and slot helpers
+
+Extended the Phase 2 kernel from page/section builders into the first reusable child and slot layer. The important shift is that v3 sections no longer store arbitrary child maps directly; they now store explicit `v3NodeSpec` values that can later carry source spans, validation metadata, and descriptor-driven type information.
+
+This step also adds the first author-time slot path. A section can now call `.slot(context, slot, fallback)`, and the slot receives a stable helper object `h` with small rendering helpers such as `h.text`, `h.caption`, `h.strong`, `h.stack`, `h.button`, `h.badge`, and `h.raw`.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue"
+
+**Assistant interpretation:** Keep implementing the next coherent Phase 2 slice, validate it, update the tracker/diary, and prepare a focused commit.
+
+**Inferred user intent:** The user wants implementation momentum while preserving the established diary and commit discipline.
+
+**Commit (code):** pending — Phase 2 slot/child-normalization slice to be committed after validation and diary update.
+
+### What I did
+- Added `v3NodeSpec`, `v3SourceSpan`, and `v3SlotSpec` internal representations in `pkg/widgetdsl/v3.go`.
+- Changed v3 section children from raw `[]any` to `[]v3NodeSpec`.
+- Added v3-specific child normalization that flattens arrays and drops `null`, `undefined`, and `false`.
+- Added v3-specific raw helpers (`widget.raw.text`, `raw.element`, `raw.component`, `raw.fragment`) so `widget.dsl` uses the v3 child-normalization rules without changing legacy module helpers.
+- Added `callV3Slot` / `callV3SlotFunction` and `SectionBuilder.slot(context, slot, fallback)`.
+- Added `v3SlotHelpers()` with initial helper object `h`: `text`, `caption`, `strong`, `stack`, `inline`, `card`, `button`, `badge`, and `raw`.
+- Updated TypeScript declarations with `Slot<TContext>` and `SlotHelpers`.
+- Added runtime test coverage for slot invocation, fallback invocation, helper-produced nodes, and false/null/undefined child dropping.
+- Updated the Phase 2 tracker to mark node/source specs, child normalization, slot representation, slot calls, slot helpers, bind helpers, act helpers, and TS slot types as done.
+
+### Why
+- Slots are the main composition boundary for later domain views. Adding the generic slot call path now reduces risk before `data`, `cms`, `course`, `context`, `schedule`, and `time` add their own slot contexts.
+- V3 child normalization should be stricter than legacy helpers: `false` should behave like React conditional rendering and disappear rather than becoming a text node.
+- Keeping v3 raw helpers separate avoids silently changing behavior in the older modules.
+
+### What worked
+- The section-level slot API was enough to exercise the core mechanics without inventing a full domain view yet.
+- Slot fallback behavior is straightforward: missing/null slot or empty slot result delegates to the fallback slot when present.
+- The existing Widget IR shape still works as the lowering target; helper nodes lower to normal `text`, `element`, and `component` maps.
+
+### What didn't work
+- The first implementation of `v3Fragment` returned `[]any` with the signature `func(goja.FunctionCall) []any`. Goja treated it as a normal callable that needed its first JavaScript argument converted into `goja.FunctionCall`, so the test failed with:
+  `TypeError: could not convert function call parameter 0: could not convert B to goja.FunctionCall at github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl.(*runtime).v3Fragment-fm (native)`
+- I fixed this by changing `v3Fragment` to return `goja.Value`, matching the Goja function-call signature pattern used by `v3Element` and `v3Component`.
+
+### What I learned
+- Goja's native function adapter is picky about `goja.FunctionCall`: using that parameter shape is safest when the function returns `goja.Value`.
+- Separating v3 raw helpers from legacy top-level helpers was useful immediately because it let the new DSL drop `false` without affecting older modules.
+- The slot helper object should stay intentionally small until domain views reveal which helpers are actually common.
+
+### What was tricky to build
+- The fallback slot path has two meanings of “empty”: the slot can be absent, or it can return `undefined`, `null`, or `false`. I treated both as fallback-worthy because this mirrors conditional slot rendering and lets users write concise slots.
+- `h.stack` and similar helpers accept either props-first or children-first arguments. Reusing `propsAndChildStart` kept that consistent with existing raw component behavior.
+
+### What warrants a second pair of eyes
+- Whether `SectionBuilder.slot(context, slot, fallback)` should remain as a public primitive or become an internal helper used only by domain builders.
+- Whether `h.card` should lower to `Panel`, `Card`, or a new generic component once the frontend component vocabulary is cleaned up.
+- Whether empty slot results should always invoke fallback, or whether an explicit “render nothing” sentinel is needed later.
+
+### What should be done in the future
+- Add actual root/node validation rules now that `v3NodeSpec` exists.
+- Align `bind.*` to the final shared `AccessorSpec` shape.
+- Add shared `SelectionSpec` and `ListItemSpec` before starting the data namespace.
+
+### Code review instructions
+- Start in `pkg/widgetdsl/v3.go` at the new `v3NodeSpec`, `v3SlotSpec`, `callV3Slot`, and `v3SlotHelpers` definitions.
+- Review `installWidgetV3` in `pkg/widgetdsl/module.go` to confirm only `widget.dsl` uses `v3RawObject()`.
+- Review `TestWidgetV3SlotsAndChildNormalization` in `pkg/widgetdsl/module_test.go` for the expected slot and child-normalization behavior.
+- Review `pkg/widgetdsl/typescript.go` and `pkg/widgetdsl/typescript_test.go` for the slot-facing declaration surface.
+- Validate with `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`.
+
+### Technical details
+- Validation command run:
+  `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+- Final result:
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`

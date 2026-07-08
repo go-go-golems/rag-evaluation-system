@@ -177,6 +177,59 @@ func TestWidgetV3PageBuilderEmitsPageIR(t *testing.T) {
 	}
 }
 
+func TestWidgetV3SlotsAndChildNormalization(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		const fallback = (ctx, h) => h.caption("fallback: " + ctx.label);
+		const page = widget.page("Slots", p => p.section("Slot section", s => s
+			.view(["A", null, undefined, false, widget.raw.fragment("B", false)])
+			.slot({ label: "primary" }, (ctx, h) => h.stack(
+				{ gap: "sm" },
+				h.strong(ctx.label),
+				false,
+				h.badge("ready", { tone: "success" })
+			), fallback)
+			.slot({ label: "fallback" }, null, fallback)
+		)).toPage();
+		page;
+	`)
+	if err != nil {
+		t.Fatalf("build widget.dsl page with slots: %v", err)
+	}
+	page := value.Export().(map[string]any)
+	root := page["root"].(map[string]any)
+	section := anySlice(root["children"])[0].(map[string]any)
+	children := anySlice(section["children"])
+	if len(children) != 4 {
+		t.Fatalf("section children = %#v, want A, B, slot stack, fallback caption", children)
+	}
+	first := children[0].(map[string]any)
+	if first["kind"] != "text" || first["text"] != "A" {
+		t.Fatalf("first normalized child = %#v, want text A", first)
+	}
+	second := children[1].(map[string]any)
+	if second["kind"] != "text" || second["text"] != "B" {
+		t.Fatalf("second normalized child = %#v, want text B", second)
+	}
+	stack := children[2].(map[string]any)
+	if stack["type"] != "Stack" {
+		t.Fatalf("slot stack child = %#v, want Stack", stack)
+	}
+	stackChildren := anySlice(stack["children"])
+	if len(stackChildren) != 2 {
+		t.Fatalf("slot stack children = %#v, want strong + badge", stackChildren)
+	}
+	fallbackCaption := children[3].(map[string]any)
+	if fallbackCaption["type"] != "Caption" {
+		t.Fatalf("fallback child = %#v, want Caption", fallbackCaption)
+	}
+}
+
 func TestOldBucketModulesAreAbsent(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()

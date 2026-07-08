@@ -16,9 +16,13 @@ RelatedFiles:
     - Path: repo://pkg/widgetdsl/module.go
       Note: Current runtime module registry and helper/recipe implementation to refactor behind widget.dsl
     - Path: repo://pkg/widgetdsl/module_test.go
-      Note: Phase 1 runtime tests for widget.dsl coexistence and raw/bind/act output
+      Note: |-
+        Phase 1 runtime tests for widget.dsl coexistence and raw/bind/act output
+        Runtime coverage for slot helpers and child normalization
     - Path: repo://pkg/widgetdsl/typescript.go
-      Note: Current declaration generation path to replace with descriptor-driven widget.dsl declarations
+      Note: |-
+        Current declaration generation path to replace with descriptor-driven widget.dsl declarations
+        Slot and SlotHelpers declarations for widget.dsl
     - Path: repo://pkg/widgetdsl/typescript_test.go
       Note: Phase 1 TypeScript declaration fragment tests
     - Path: repo://pkg/widgetdsl/v2/spec/types.go
@@ -26,7 +30,9 @@ RelatedFiles:
     - Path: repo://pkg/widgetdsl/v2_builders.go
       Note: Existing typed builder callback implementation to reuse for data namespace
     - Path: repo://pkg/widgetdsl/v3.go
-      Note: Phase 2 initial page/section specs, builder callbacks, fragments, and page lowering
+      Note: |-
+        Phase 2 initial page/section specs, builder callbacks, fragments, and page lowering
+        Phase 2 node/source specs, v3 child normalization, slot specs/calls, and slot helpers
     - Path: repo://pkg/xgoja/providers/widgetsite/provider.go
       Note: Phase 1 provider exposure for widget.dsl
     - Path: repo://pkg/xgoja/providers/widgetsite/provider_test.go
@@ -53,6 +59,7 @@ LastUpdated: 2026-07-07T16:40:00-04:00
 WhatFor: Use this document to track the step-by-step implementation of the new widget.dsl module while existing ui/data/cms/course/context modules remain available.
 WhenToUse: Read before starting or resuming Widget DSL v3 implementation; update after every phase or meaningful subphase.
 ---
+
 
 
 
@@ -251,12 +258,12 @@ sure the implementation starts from evidence rather than memory.
 - [x] Define initial Go internal representations for:
   - `WidgetV3PageSpec` (currently `v3PageSpec`)
   - `WidgetV3SectionSpec` (currently `v3SectionSpec`)
-- [ ] Define explicit internal representations for:
-  - `WidgetV3NodeSpec`
-  - `WidgetV3SourceSpan`
+- [x] Define explicit internal representations for:
+  - `WidgetV3NodeSpec` (currently `v3NodeSpec`)
+  - `WidgetV3SourceSpan` (currently `v3SourceSpan`)
 - [x] Implement first lowerers from page/section specs to current Widget IR map shape.
 - [x] Add validation helpers for required page ID/title invariants.
-- [ ] Add root/node validation once explicit `WidgetV3NodeSpec` exists.
+- [ ] Add root/node validation rules beyond kind recognition.
 
 #### Builder callback machinery
 
@@ -268,11 +275,11 @@ sure the implementation starts from evidence rather than memory.
 
 #### Child and slot machinery
 
-- [ ] Add child normalization that flattens arrays and drops `null`, `undefined`,
+- [x] Add child normalization that flattens arrays and drops `null`, `undefined`,
       and `false`.
-- [ ] Add `SlotSpec` representation.
-- [ ] Add `callSlot(slot, context, fallback)` helper.
-- [ ] Add stable slot helper object `h` with initial helpers:
+- [x] Add `SlotSpec` representation (currently `v3SlotSpec`).
+- [x] Add `callSlot(slot, context, fallback)` helper (currently `callV3Slot`).
+- [x] Add stable slot helper object `h` with initial helpers:
   - `text`
   - `caption`
   - `strong`
@@ -285,14 +292,14 @@ sure the implementation starts from evidence rather than memory.
 
 #### Bindings, accessors, selection, items, and actions
 
-- [ ] Add `bind.field`, `bind.path`, `bind.map`, `bind.template`, `bind.context`,
+- [x] Add `bind.field`, `bind.path`, `bind.map`, `bind.template`, `bind.context`,
       and `bind.const`.
 - [ ] Align `bind.*` with the decomposition review's `AccessorSpec` direction so v3
       does not create a fifth value-accessor dialect.
 - [ ] Add initial `data.selection` / shared `SelectionSpec` shape for single and
       multi selection instead of per-widget `selectedX` fields.
 - [ ] Add an initial `ListItemSpec` shape for navigation/list/option item APIs.
-- [ ] Add `act.server`, `act.navigate`, `act.download`, `act.event`, `act.copy`.
+- [x] Add `act.server`, `act.navigate`, `act.download`, `act.event`, `act.copy`.
 - [ ] Ensure action `confirm` and payload bindings lower to the existing
       `ActionSpec` shape.
 - [ ] Keep room for future `ctx.actionHandler`/`ctx.renderFields` frontend helpers;
@@ -310,7 +317,7 @@ sure the implementation starts from evidence rather than memory.
   - `ActionSpec`
   - `PageBuilder`
   - `SectionBuilder`
-- [ ] Add remaining core types:
+- [x] Add remaining core types:
   - `Slot<TContext>`
   - `SlotHelpers`
 - [x] Add declaration tests for the initial core API.
