@@ -1,0 +1,76 @@
+.root {
+	max-width: 100%;
+	overflow: auto;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+}
+
+.table {
+	border-collapse: collapse;
+	width: max-content;
+	min-width: 100%;
+}
+
+.stickyHead th {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+.colHeadCell,
+.rowHeadCell,
+.corner {
+	background: var(--mac-surface-2);
+	border-bottom: 1px solid var(--mac-border);
+	border-right: 1px solid var(--mac-border-subtle);
+	padding: 6px 10px;
+	text-align: left;
+	font: var(--rag-font-role-compact);
+	color: var(--mac-text);
+	white-space: nowrap;
+	vertical-align: bottom;
+}
+
+.rowHeadCell {
+	position: sticky;
+	left: 0;
+	z-index: 1;
+	font: var(--rag-font-role-compact);
+	vertical-align: middle;
+}
+
+.corner {
+	z-index: 2;
+}
+
+.cell {
+	border-bottom: 1px solid var(--mac-border-subtle);
+	border-right: 1px solid var(--mac-border-subtle);
+	padding: 4px;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.cell[data-selected] {
+	outline: 2px solid var(--mac-accent);
+	outline-offset: -2px;
+}
+
+tbody tr[data-editable] {
+	background: var(--mac-stripe);
+}
+
+tbody tr[data-editable] .rowHeadCell {
+	background: var(--mac-stripe);
+	color: var(--mac-accent);
+}
+
+.foot .rowHeadCell,
+.footCell {
+	border-top: 1px solid var(--mac-border);
+	background: var(--mac-surface-2);
+	padding: 5px 8px;
+	text-align: center;
+	font: var(--rag-font-role-metric);
+	color: var(--mac-text);
+}

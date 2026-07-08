@@ -1,0 +1,95 @@
+.root {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	min-width: 0;
+}
+
+.track {
+	position: relative;
+	display: flex;
+	width: 100%;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+	overflow: hidden;
+}
+
+.sm .track {
+	height: 8px;
+}
+
+.md .track {
+	height: 12px;
+}
+
+.lg .track {
+	height: 18px;
+}
+
+.segment {
+	display: block;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-right: 1px solid var(--mac-border-subtle);
+	background: var(--ctx-fill, var(--mac-surface-2));
+}
+
+.segment:last-child {
+	border-right: 0;
+}
+
+button.segment {
+	cursor: pointer;
+}
+
+button.segment:hover {
+	outline: 1px solid var(--mac-accent);
+	outline-offset: -2px;
+}
+
+.marker {
+	position: absolute;
+	top: -2px;
+	bottom: -2px;
+	width: 0;
+	border-left: 2px solid var(--ctx-fill, var(--mac-accent));
+	pointer-events: none;
+}
+
+.markerLabel {
+	position: absolute;
+	top: -1.4em;
+	left: 3px;
+	white-space: nowrap;
+	font: var(--rag-font-role-metadata);
+	color: var(--mac-text);
+}
+
+.counts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	font: var(--rag-font-role-metadata);
+	color: var(--mac-text-dim);
+}
+
+.count {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.swatch {
+	display: inline-block;
+	width: 9px;
+	height: 9px;
+	border: 1px solid var(--ctx-line, var(--mac-border));
+	background: var(--ctx-fill, var(--mac-surface-2));
+}
+
+.countValue {
+	color: var(--mac-text);
+	font: var(--rag-font-role-metric);
+}

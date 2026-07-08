@@ -18,7 +18,7 @@ export default defineConfig({
 		lib: {
 			entry: {
 				index: "src/index.ts",
-				ir: "src/widgets/ir.ts",
+				ir: "src/widgets/ir/index.ts",
 				"app/index": "src/app/index.ts",
 			},
 			formats: ["es"],

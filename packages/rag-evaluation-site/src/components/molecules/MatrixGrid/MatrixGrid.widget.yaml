@@ -1,0 +1,23 @@
+schemaVersion: widget-manifest/v1
+type: MatrixGrid
+module: data.dsl
+helper: matrixGrid
+props: MatrixGridWidgetProps
+adapter:
+  path: ./MatrixGrid.widget.tsx
+  export: matrixGridWidget
+reactComponent: MatrixGrid
+children: false
+slots:
+  - columns.header
+  - cornerCell
+  - cell.cycle.glyphs
+  - cells
+actions:
+  - onCellAction
+status: proposed
+docs: >
+  Generic rows x columns grid engine. Resolves a value at (row, col) via an
+  accessor spec and renders each cell from a serializable cell spec (CycleCell or
+  a DataTable-style CellSpec), or from an explicit `cells` node matrix. Domain
+  presets such as availabilityMatrix configure it with scheduling semantics.
