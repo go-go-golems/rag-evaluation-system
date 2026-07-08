@@ -822,3 +822,65 @@ The important behavior is coexistence. `require("widget.dsl")` now succeeds, and
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`
+
+## Step 13: Fold widget-decomposition review constraints into the v3 plan
+
+Reviewed the sibling `RAGEVAL-WIDGET-DECOMPOSITION` design docs against the Widget DSL v3 tracker and updated the tracker to make those review findings explicit implementation constraints. This was a planning correction rather than runtime work: the Phase 1 skeleton remains valid, but Phase 2 and later phases must avoid creating new ad-hoc DSL shapes that repeat the IR cleanup problems the decomposition review identified.
+
+The main influence is that the DSL cannot be designed in isolation from the IR cleanup. `widget.dsl` should be the authoring surface for the same engine/contract/preset decomposition, shared specs, manifest/descriptor source-of-truth, and opaque spec typing proposed by the decomposition ticket.
+
+### Prompt Context
+
+**User prompt (verbatim):** "did you take the review of the IR widget / cleanup / context diagram stuff in @rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-WIDGET-DECOMPOSITION--widget-library-decomposition-base-engines-contracts-and-dsl-ergonomics/ design-docs? how does that influence your plan and design"
+
+**Assistant interpretation:** Check whether the current Widget DSL v3 plan incorporated the sibling widget-decomposition review, especially IR cleanup and context diagram decomposition, and explain how those findings should shape the v3 design.
+
+**Inferred user intent:** The user wants to ensure the new DSL plan does not become another isolated authoring layer that ignores known IR/widget cleanup and duplicated-engine findings.
+
+**Commit (code):** N/A — planning/documentation update only.
+
+### What I did
+- Re-read the decomposition ticket design-doc headings and relevant sections from `design-doc/01` and `design-doc/03`.
+- Updated `design-doc/05-widget-dsl-v3-implementation-phases-and-task-tracker.md` with an explicit “Inputs from the widget-decomposition review” section.
+- Updated Phase 2 tasks to align `bind.*` with a shared `AccessorSpec`, add selection/list spec tasks, and avoid duplicating adapter boilerplate assumptions.
+- Updated Phase 7 to say `context.diagram` should be shaped around a future segment-engine contract, even if the first implementation bridges through current panels.
+- Updated Phase 9 to include branded/opaque TypeScript types as part of descriptor-generated declarations.
+- Related the tracker to the decomposition ticket’s `design-doc/01` and `design-doc/03`.
+
+### Why
+- The decomposition review found duplicated context diagram engines, ad-hoc accessor/selection/list specs, adapter boilerplate, manifest drift, and weak/opaque typing gaps.
+- A new DSL that ignores those findings would risk adding a cleaner-looking API on top of the same fragmented IR model.
+- The tracker should make these constraints visible before Phase 2 starts.
+
+### What worked
+- The v3 plan already matched several decomposition conclusions: engine/contract/preset, descriptors, TypeScript-first examples, and Go-backed builders.
+- The plan needed only targeted corrections, not a full rewrite.
+
+### What didn't work
+- The initial tracker did not explicitly name `AccessorSpec`, `SelectionSpec`, `ListItemSpec`, the context segment engine, or branded/opaque spec types. Those were implied by the broader design docs but not enforceable as phase tasks.
+
+### What I learned
+- The highest-risk place for v3 is Phase 2: if `bind`, selection, and list specs are designed casually, v3 can accidentally create another dialect instead of unifying the existing ones.
+- The context namespace should be intentionally future-proofed for a segment engine rather than exposing five current diagram panel shapes as permanent public API.
+
+### What was tricky to build
+- The decomposition review includes frontend refactors that are larger than the DSL itself. The tracker needed to reflect them without blocking all DSL progress. The compromise is to shape public v3 APIs around the future cleaned-up contracts while allowing first implementations to lower through current components where necessary.
+
+### What warrants a second pair of eyes
+- Whether `AccessorSpec`, `SelectionSpec`, and `ListItemSpec` should be implemented in frontend IR before or during Phase 2 of `widget.dsl`.
+- Whether branded/opaque types belong in Phase 2 immediately or Phase 9 with descriptor generation.
+- Whether context segment-engine extraction should become a prerequisite for `context.diagram`, or whether a bridge lowerer is acceptable for the first v3 fixture.
+
+### What should be done in the future
+- Before coding Phase 2, decide the exact shared `AccessorSpec`/`BindingSpec` shape and document how it maps to current `ActionSpec` payload interpolation and cell/template resolution.
+- Keep the context public API engine-neutral even if current lowering uses `ContextDiagramPanel`.
+- Add descriptor/manifest checks before v3 grows many namespace methods.
+
+### Code review instructions
+- Review the new “Inputs from the widget-decomposition review” section in `design-doc/05`.
+- Check Phase 2, Phase 7, and Phase 9 tasks for the added constraints.
+- Compare against `RAGEVAL-WIDGET-DECOMPOSITION/design-doc/01` Parts 2–6 and `design-doc/03` Part 8.
+
+### Technical details
+- No code was changed in this step.
+- Validation command: `docmgr doctor --ticket RAGEVAL-SCHEDULE-WIDGETS --stale-after 30`.

@@ -33,6 +33,10 @@ RelatedFiles:
       Note: Phase 0 current export inventory output
     - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/scripts/01-widget-dsl-export-inventory.py
       Note: Phase 0 current export inventory generator
+    - Path: repo://ttmp/2026/07/06/RAGEVAL-WIDGET-DECOMPOSITION--widget-library-decomposition-base-engines-contracts-and-dsl-ergonomics/design-doc/01-widget-library-decomposition-analysis-and-design.md
+      Note: Engine/contract/preset, IR cleanup, manifest single-source, and context segment-engine review inputs for v3 plan
+    - Path: repo://ttmp/2026/07/06/RAGEVAL-WIDGET-DECOMPOSITION--widget-library-decomposition-base-engines-contracts-and-dsl-ergonomics/design-doc/03-the-widget-dsl-by-example-typescript-usage-go-counterparts-and-the-case-for-opaque-types.md
+      Note: Opaque/branded TypeScript and Go boundary-brand guidance for v3 declarations/runtime hardening
     - Path: ws://go-go-course/cmd/go-go-course/lib/pages/admin-course-cms.js
       Note: Complex consumer fixture target for CMS/course/data integration
     - Path: ws://go-go-course/cmd/go-go-course/lib/pages/common.js
@@ -47,6 +51,7 @@ LastUpdated: 2026-07-07T16:40:00-04:00
 WhatFor: Use this document to track the step-by-step implementation of the new widget.dsl module while existing ui/data/cms/course/context modules remain available.
 WhenToUse: Read before starting or resuming Widget DSL v3 implementation; update after every phase or meaningful subphase.
 ---
+
 
 
 
@@ -117,6 +122,33 @@ pnpm --dir packages/rag-evaluation-site build
 docmgr validate frontmatter --doc <doc>
 docmgr doctor --ticket RAGEVAL-SCHEDULE-WIDGETS --stale-after 30
 ```
+
+### Inputs from the widget-decomposition review
+
+The v3 plan is explicitly influenced by `RAGEVAL-WIDGET-DECOMPOSITION`, especially
+`design-doc/01-widget-library-decomposition-analysis-and-design.md` and
+`design-doc/03-the-widget-dsl-by-example-typescript-usage-go-counterparts-and-the-case-for-opaque-types.md`.
+Those documents add four constraints to the implementation plan:
+
+1. **Engine + contract + preset is the architecture rule.** Domain v3 APIs should
+   lower into generic engines with stable contracts, not directly perpetuate every
+   current organism/panel as a public concept.
+2. **Specs must be unified before they multiply.** V3 `bind`/selection/list/action
+   APIs should align with the proposed shared `AccessorSpec`, `SelectionSpec`, and
+   `ListItemSpec` direction instead of introducing another set of ad-hoc shapes.
+3. **Context diagrams need a segment-engine target.** The `context` namespace should
+   expose `context.diagram`/`context.workspace` over a future `SegmentEngine` style
+   contract. Until the frontend engine exists, lowering through current panels is an
+   implementation bridge, not the public model.
+4. **Descriptor/manifests and opaque types are not optional polish.** Runtime exports,
+   TypeScript declarations, and docs should converge on descriptors; longer term,
+   branded/opaque TS types and Go boundary brands should prevent hand-rolled specs
+   from being accepted as cells/actions/bindings/nodes.
+
+These constraints affect ordering: Phase 2 should define shared spec shapes carefully;
+Phase 7 should avoid baking five context-diagram panel names into the public API; and
+Phase 9 should generate declarations/docs from descriptors rather than hand-maintain
+another mirror.
 
 ---
 
@@ -246,13 +278,21 @@ sure the implementation starts from evidence rather than memory.
   - `badge`
   - `raw`
 
-#### Bindings and actions
+#### Bindings, accessors, selection, items, and actions
 
 - [ ] Add `bind.field`, `bind.path`, `bind.map`, `bind.template`, `bind.context`,
       and `bind.const`.
+- [ ] Align `bind.*` with the decomposition review's `AccessorSpec` direction so v3
+      does not create a fifth value-accessor dialect.
+- [ ] Add initial `data.selection` / shared `SelectionSpec` shape for single and
+      multi selection instead of per-widget `selectedX` fields.
+- [ ] Add an initial `ListItemSpec` shape for navigation/list/option item APIs.
 - [ ] Add `act.server`, `act.navigate`, `act.download`, `act.event`, `act.copy`.
 - [ ] Ensure action `confirm` and payload bindings lower to the existing
       `ActionSpec` shape.
+- [ ] Keep room for future `ctx.actionHandler`/`ctx.renderFields` frontend helpers;
+      v3 lowerers should not depend on copy-pasted adapter boilerplate becoming
+      permanent.
 
 #### TypeScript declarations
 
@@ -503,7 +543,9 @@ components.
   - `TranscriptMessage`
   - `Annotation`
 - [ ] Add `context.styleSet(callback)` and `context.palette(nameOrOptions)`.
-- [ ] Add `context.diagram(snapshot, callback)`.
+- [ ] Add `context.diagram(snapshot, callback)` with a public API shaped around a
+      segment-engine contract, even if the first implementation lowers through the
+      current diagram panels.
 - [ ] Add `context.workspace(session, callback)`.
 - [ ] Add slots for:
   - message;
@@ -574,6 +616,8 @@ components.
 - [ ] Introduce namespace/view/builder descriptors as the source of truth.
 - [ ] Generate `widget.dsl` TypeScript declarations from descriptors.
 - [ ] Include slot context interfaces in generated declarations.
+- [ ] Add branded/opaque TypeScript types for `WidgetNodeSpec`, `ActionSpec`,
+      `BindingSpec`, cell specs, style specs, and field specs where practical.
 - [ ] Include DTO interfaces or importable DTO declaration modules.
 - [ ] Add declaration fixture tests for:
   - simple page;
