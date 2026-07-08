@@ -21,6 +21,10 @@ RelatedFiles:
       Note: Existing Go spec model informing the v3 backing specs
     - Path: repo://pkg/widgetdsl/v2_builders.go
       Note: Existing typed builder callback implementation to reuse for data namespace
+    - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/04-widget-dsl-current-export-inventory.md
+      Note: Phase 0 current export inventory output
+    - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/scripts/01-widget-dsl-export-inventory.py
+      Note: Phase 0 current export inventory generator
     - Path: ws://go-go-course/cmd/go-go-course/lib/pages/admin-course-cms.js
       Note: Complex consumer fixture target for CMS/course/data integration
     - Path: ws://go-go-course/cmd/go-go-course/lib/pages/common.js
@@ -35,6 +39,7 @@ LastUpdated: 2026-07-07T16:40:00-04:00
 WhatFor: Use this document to track the step-by-step implementation of the new widget.dsl module while existing ui/data/cms/course/context modules remain available.
 WhenToUse: Read before starting or resuming Widget DSL v3 implementation; update after every phase or meaningful subphase.
 ---
+
 
 
 # Widget DSL v3 Implementation Phases and Task Tracker
@@ -111,24 +116,24 @@ docmgr doctor --ticket RAGEVAL-SCHEDULE-WIDGETS --stale-after 30
 **Goal:** Establish the exact current surface, add the tracking artifacts, and make
 sure the implementation starts from evidence rather than memory.
 
-**Status:** in progress.
+**Status:** complete.
 
 ### Tasks
 
 - [x] Create this phase/task tracker document.
-- [ ] Append a diary entry recording the start of Widget DSL v3 implementation.
-- [ ] Relate this tracker to current runtime, TypeScript, v2 spec, and go-go-course
+- [x] Append a diary entry recording the start of Widget DSL v3 implementation.
+- [x] Relate this tracker to current runtime, TypeScript, v2 spec, and go-go-course
       consumer files.
-- [ ] Generate an inventory of current module exports from `moduleSpecs`:
+- [x] Generate an inventory of current module exports from `moduleSpecs`:
   - module name;
   - helper name;
   - component type;
   - recipe name;
   - special objects (`action`, `cell`, context style helpers);
   - whether each helper is generic, engine-level, or domain-level.
-- [ ] Store the inventory as `ttmp/.../scripts/01-widget-dsl-export-inventory.*` or
+- [x] Store the inventory as `ttmp/.../scripts/01-widget-dsl-export-inventory.*` and
       `reference/04-widget-dsl-current-export-inventory.md`.
-- [ ] Identify the first go-go-course fixture to port. Default choice:
+- [x] Identify the first go-go-course fixture to port. Default choice:
       `cmd/go-go-course/lib/pages/dsl-examples.js`, because it exercises all public
       module families.
 
@@ -657,7 +662,7 @@ components.
 
 | Phase | Status | Next concrete action |
 |---|---|---|
-| Phase 0 — Baseline inventory and scaffolding | in progress | Append diary entry and commit tracker setup. |
+| Phase 0 — Baseline inventory and scaffolding | complete | Begin Phase 1 with `widget.dsl` skeleton and raw escape hatch. |
 | Phase 1 — `widget.dsl` skeleton | not started | Add root module and raw escape hatch. |
 | Phase 2 — Core spec kernel | not started | Add page/node specs, builder callbacks, fragments, slots, bind/act. |
 | Phase 3 — UI namespace | not started | Implement simple page examples. |

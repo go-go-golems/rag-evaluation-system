@@ -675,3 +675,70 @@ The key decision in this step is to implement the new design in parallel as `wid
 - Phase 0 is planning/inventory only.
 - Phase 1 is the first runtime code phase: add `widget.dsl` in parallel and prove old modules still load.
 - The commit protocol requires staging specific files because the working tree contains many unrelated untracked files.
+
+## Step 11: Phase 0 export inventory
+
+Completed the Phase 0 inventory slice by generating a current export map for the existing split Widget DSL modules. This is the bridge between the redesign and implementation: it names what old capabilities exist today, classifies helpers as generic foundation helpers, engine helpers, domain helpers, or domain-exported generic aliases, and makes the first v3 port target explicit.
+
+No runtime behavior changed. The only executable artifact is a small ticket-local inventory generator so the current export table can be refreshed as the old modules evolve.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 10)
+
+**Assistant interpretation:** Continue from the tracker by executing Phase 0: produce a precise current DSL surface inventory before starting runtime changes.
+
+**Inferred user intent:** The user wants implementation to proceed step by step with exact progress tracking, not jump straight into code without a baseline.
+
+**Commit (code):** pending — documentation/script-only Phase 0 slice, to be committed after validation.
+
+### What I did
+- Added `scripts/01-widget-dsl-export-inventory.py` under the ticket workspace.
+- Generated `reference/04-widget-dsl-current-export-inventory.md` from `pkg/widgetdsl/module.go`.
+- Inventoried helper counts, recipes, component type mappings, and helper classifications for `ui.dsl`, `data.dsl`, `context_window.dsl`, `course.dsl`, `cms.dsl`, and noted `data.v2.dsl` as separately installed typed builders.
+- Updated `design-doc/05-widget-dsl-v3-implementation-phases-and-task-tracker.md` to mark Phase 0 complete.
+- Checked docmgr task `p4o2`.
+
+### Why
+- A clean redesign still needs to preserve current capability. The inventory shows what capability exists without forcing v3 to preserve current names.
+- Classification helps decide whether a helper should become `widget.dsl.ui`, a typed engine builder, a domain view, or an implementation detail.
+- The generator avoids stale hand-written lists if the current module maps change before v3 lands.
+
+### What worked
+- The helper maps and module specs in `module.go` are simple enough for a lightweight script to parse reliably for planning purposes.
+- The inventory confirms the main design hypothesis: generic UI helpers are mixed into domain modules as aliases, while domain recipes and engine helpers need a cleaner v3 home.
+
+### What didn't work
+- My first run of the script used the wrong repository-root parent count and failed with:
+  `FileNotFoundError: [Errno 2] No such file or directory: '/home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/pkg/widgetdsl/module.go'`
+- I fixed it by changing the script root from `parents[7]` to `parents[6]`.
+
+### What I learned
+- Current `ui.dsl` has 41 helper-map helpers; `cms.dsl` and `course.dsl` still export generic aliases that v3 should centralize under `ui`.
+- `context_window.dsl` contains both real engines (`contextTreemap`, `contextStripDiagram`, etc.) and task-level panels (`transcriptWorkspacePanel`), which supports the v3 split between engine helpers and domain views.
+- `data.v2.dsl` remains the strongest implementation precedent for typed builders, but the public v3 namespace should be `widget.dsl.data`.
+
+### What was tricky to build
+- The generator needed to be useful without becoming a fragile Go parser. I kept it deliberately narrow: parse simple map literals and recipe arrays, then apply a small hand-maintained classification table.
+- Classification is partly subjective. For example, `contextUploadDropArea` is domain-exported today but semantically generic enough to become a `ui` upload helper in v3. The inventory labels current state and v3 implications rather than claiming final truth.
+
+### What warrants a second pair of eyes
+- Helper classification, especially context-window engines vs domain panels.
+- Whether `uploadDropArea` should be treated as purely generic `ui` in v3 or remain available through context/CMS convenience builders.
+- Whether the Phase 1 skeleton should include descriptor structs immediately or defer descriptors until Phase 2.
+
+### What should be done in the future
+- Start Phase 1 by adding `widget.dsl` as a parallel module skeleton.
+- Keep `dsl-examples.js` as the first real fixture target.
+- Use the inventory as a checklist when deciding which old capabilities need v3 equivalents.
+
+### Code review instructions
+- Review `scripts/01-widget-dsl-export-inventory.py` first; confirm it only reads `pkg/widgetdsl/module.go` and writes the ticket reference doc.
+- Review `reference/04-widget-dsl-current-export-inventory.md` for generated output and classification sanity.
+- Review `design-doc/05-widget-dsl-v3-implementation-phases-and-task-tracker.md` to confirm Phase 0 status is now complete.
+- Validate with `python3 ttmp/.../scripts/01-widget-dsl-export-inventory.py` and `docmgr doctor --ticket RAGEVAL-SCHEDULE-WIDGETS --stale-after 30`.
+
+### Technical details
+- The script uses `Path(__file__).resolve().parents[6]` to find the repository root from the ticket script directory.
+- It parses `map[string]string` helper maps and `recipes: []string{...}` arrays from `module.go`.
+- It writes a full Markdown reference document with docmgr frontmatter.
