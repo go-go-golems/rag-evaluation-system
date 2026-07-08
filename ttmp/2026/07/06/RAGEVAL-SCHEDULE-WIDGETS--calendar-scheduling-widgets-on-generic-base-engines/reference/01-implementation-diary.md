@@ -622,6 +622,8 @@ The key decision in this step is to implement the new design in parallel as `wid
 
 **Inferred user intent:** The user wants the broad DSL redesign converted from architectural prose into an executable project plan with progress tracking, validation gates, and disciplined implementation hygiene.
 
+**Commit (docs):** c99b32d33af17cd9aa86ff38cd999ff1aeb57533 — "Docs: record scheduling DSL design plan"
+
 **Commit (code):** N/A — planning/documentation step; no runtime code changed.
 
 ### What I did
