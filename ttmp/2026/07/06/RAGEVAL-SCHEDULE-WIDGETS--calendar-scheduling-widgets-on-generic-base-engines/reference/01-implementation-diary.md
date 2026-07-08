@@ -1286,7 +1286,7 @@ The implementation also adds CMS intent wrappers. These wrappers let examples ex
 
 **Inferred user intent:** Continue completing Widget DSL v3 phases in order, using the existing tracker as the source of truth.
 
-**Commit (code):** pending — Phase 5 CMS namespace slice to be committed after validation and diary update.
+**Commit (code):** df1975484c1508cf8152e217957cff4b78fd8d35 — "Widget DSL v3: implement CMS namespace"
 
 ### What I did
 - Added concrete `widget.cms` namespace installation.
