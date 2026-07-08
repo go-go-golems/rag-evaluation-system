@@ -1435,7 +1435,7 @@ The namespace also adds context intent wrappers for selecting parts and annotati
 
 **Inferred user intent:** Continue the sequential Widget DSL v3 implementation after Phase 6.
 
-**Commit (code):** pending — Phase 7 context namespace slice to be committed after validation and diary update.
+**Commit (code):** 48683f4f1d5b349efdb3c963edf96b0591e0e02f — "Widget DSL v3: implement context namespace"
 
 ### What I did
 - Added concrete `widget.context` namespace installation.
