@@ -1654,3 +1654,93 @@ The examples cover the intended go-go-course migration shapes: simple data table
   `go run ./cmd/widgetdsl-v3-examples --out pkg/widgetdsl/testdata/v3/golden`
 - Validation command:
   `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+
+## Step 24: xgoja preview hardening, browser fixes, and Storybook regression coverage
+
+Extended Phase 10 from browser-free golden examples into a browsable xgoja preview gallery and then used Playwright/manual review feedback to harden the examples and renderer contracts. This step fixed several "looks fine in JSON, broken in the browser" issues: stale/missing registry coverage, overflowing top navigation, `[object Object]` URLs, missing labels/text, empty matrix cells, empty slide diagrams, and incomplete fixture data.
+
+After the preview fixes were stable, added Storybook regression stories that recreate the exact failure shapes so future UI changes can be checked without needing to run the xgoja gallery. The new stories cover tab-like navigation, handout document switching, transcript text/annotation rendering, section action rendering, labeled metrics, matrix value cells, speaker-slide context visuals, and long AppNav overflow.
+
+### Prompt Context
+
+**User prompt (verbatim):** "for all these adaptations you had to do, can you create corresponding storybook stories (and more if you need to / want to)"
+
+**Assistant interpretation:** Add Storybook stories for the browser regressions and example adaptations found while reviewing the xgoja `widget.dsl` v3 gallery, including extra stories where useful.
+
+**Inferred user intent:** Make the visual/interactive regressions reproducible in Storybook so they are easier to review and harder to reintroduce than ad-hoc localhost testing.
+
+**Commit (code):** 071dbb09961afc9309670899884c9f00a04d76e1 — "Widget DSL v3: add preview gallery"
+
+**Commit (code):** 57b701d62f8f3df40d1baf62e92ccdf2e5295b5b — "Widget DSL v3: add regression stories"
+
+### What I did
+- Added `cmd/widgetdsl-v3-preview` and `examples/xgoja-widgetdsl-v3` so the committed v3 examples can be served through the real React WidgetRenderer SPA.
+- Expanded the v3 example suite to 40 pages and regenerated golden snapshots.
+- Fixed renderer/example issues found through browser review:
+  - AppNav now horizontally scrolls instead of expanding document width.
+  - `CourseStudioShell` and `HandoutDocumentShell` action contexts now include object-shaped aliases (`item.id`, `document.id`) as well as scalar IDs.
+  - Course URL intents now render accessor values as URL templates such as `?item=${item.id}` instead of `[object Object]`.
+  - Section actions lower to an `Inline` of `Button` widgets instead of raw action objects.
+  - Matrix columns use `header`, and the matrix example uses `{ kind: "value" }` cells so resolved values render.
+  - Section metrics include both `key` and `label`, fixing unlabeled `KeyValueStrip` terms.
+  - Transcript fixtures use the component contract field names (`text`, `targetMessageId`, `styleKey`, etc.).
+  - CMS media assets include required `mime`, `filename`, and size data.
+  - Slide examples now include real context-window parts instead of empty diagrams.
+- Added `packages/rag-evaluation-site/src/widgets/WidgetRenderer.v3-regressions.stories.tsx` with focused regression stories for the fixed cases.
+- Added `OverflowManyItems` to `AppNav.stories.tsx` for the long top-navigation case.
+- Validated with Go tests, TypeScript typecheck, Storybook build, xgoja rebuild/restart, and Playwright all-page checks.
+
+### Why
+- Golden Widget IR proves the DSL executes, but it does not prove the React adapters render meaningful labels, text, actions, or interactive state.
+- The user's localhost review found issues that accessibility snapshots and shallow page-load checks did not catch. Storybook coverage gives those cases a durable review surface.
+- The preview gallery is the closest approximation to how `widget.dsl` pages will be consumed by xgoja hosts, so it should catch integration failures before migration work begins.
+
+### What worked
+- Playwright all-page validation returned `[]` after the fixes and now checks for registered roots, unknown widgets, inline errors, console errors, and `[object Object]` text/URLs.
+- `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1` passed.
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `pnpm --dir packages/rag-evaluation-site build-storybook` passed.
+- The xgoja preview server remained healthy on `127.0.0.1:8098` after rebuilds.
+
+### What didn't work
+- Initial Playwright validation was too shallow: pages could return 200 and still show blank roots, unknown widgets, empty cells, or meaningless `[object Object]` labels.
+- `BoardEngine` initially appeared unregistered because the xgoja preview was serving a stale SPA bundle; rebuilding the frontend app and xgoja binary fixed it.
+- Example scripts with JS template placeholders in plain strings triggered Biome warnings; the commit still passed because these are deliberate runtime interpolation templates for the Widget action layer.
+- The existing `HandoutDocumentShell.widget.tsx` already used non-null assertions in action dispatch branches, and the added contexts inherited that lint warning style; the pre-commit hook reports warnings but does not fail.
+
+### What I learned
+- Browser review needs semantic checks, not only load checks. The validation script now treats `[object Object]` as a failure because it repeatedly surfaced broken action/renderable contracts.
+- Widget action contexts should expose both scalar convenience fields and object aliases when DSL authors naturally write `widget.bind.context("item.id")` or `widget.bind.context("document.id")`.
+- Storybook regression stories are a better fit than trying to make every xgoja example interactive inside one huge page; each failure mode can be isolated to a small IR fixture.
+
+### What was tricky to build
+- URL templating had two different layers: Go DSL intent construction and frontend action interpolation. The root cause of `[object Object]` was that the Go helper concatenated `goja.Value.String()` for accessor objects. The fix was to convert accessor values into frontend interpolation templates (for example `${item.id}`) and make the React action context supply matching object aliases.
+- Section actions were stored as a list of action descriptors, but the React `SectionBlock` expects renderable React content. Lowering actions into an `Inline` node containing `Button` nodes preserves the authoring API while matching the renderer contract.
+- Matrix cells were empty because the v3 helper emitted `label` for columns and a data-table-style field cell looking for `row.value`; the React matrix adapter expects `header` and can render the resolved `(row, col)` value only when `cell.kind === "value"`.
+
+### What warrants a second pair of eyes
+- The deliberate Biome warnings around template-placeholder strings in examples and non-null assertions in existing widget adapters: decide whether to add local lint exceptions, refactor adapters to bind action values into constants, or leave warnings as acceptable.
+- Whether Storybook should import/run the actual JS examples in the future rather than hand-assembling focused IR fixtures.
+- Whether the xgoja preview should grow automated Playwright tests committed to the repo instead of keeping the current ad-hoc `.playwright-mcp` script outside version control.
+
+### What should be done in the future
+- Add Phase 11 migration/provider docs that reference the xgoja example app and the new Storybook regression stories.
+- Consider a small CI smoke target that builds the xgoja example app and requests `/api/widget/pages/index` plus a few known-problem pages.
+- Decide if the `widget.dsl` examples should use a formal query-state helper for pages like handouts, course shell, and slide navigation.
+
+### Code review instructions
+- Start with the new regression stories in `packages/rag-evaluation-site/src/widgets/WidgetRenderer.v3-regressions.stories.tsx` and `AppNav.stories.tsx`.
+- Review runtime fixes in `pkg/widgetdsl/v3.go`, `HandoutDocumentShell.widget.tsx`, and `CourseStudioShell.widget.tsx`.
+- Review xgoja integration in `examples/xgoja-widgetdsl-v3/jsverbs/server.js` and `examples/xgoja-widgetdsl-v3/xgoja.yaml`.
+- Validate with:
+  - `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+  - `pnpm --dir packages/rag-evaluation-site typecheck`
+  - `pnpm --dir packages/rag-evaluation-site build-storybook`
+  - `xgoja build -f examples/xgoja-widgetdsl-v3/xgoja.yaml --output examples/xgoja-widgetdsl-v3/dist/widgetdsl-v3-examples`
+  - Playwright all-page validation against `http://127.0.0.1:8098/pages/index`.
+
+### Technical details
+- Preview run command:
+  `examples/xgoja-widgetdsl-v3/dist/widgetdsl-v3-examples serve site start --http-listen 127.0.0.1:8098`
+- The committed xgoja app evaluates each example script and, when present, calls `renderPage(query)` with the request query string before returning Widget IR.
+- The generated binary under `examples/xgoja-widgetdsl-v3/dist/` is intentionally ignored in `.gitignore`.
