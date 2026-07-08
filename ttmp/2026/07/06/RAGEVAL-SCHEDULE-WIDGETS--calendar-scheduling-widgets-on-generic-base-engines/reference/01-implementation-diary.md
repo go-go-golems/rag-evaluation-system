@@ -979,7 +979,7 @@ This step also adds the first author-time slot path. A section can now call `.sl
 
 **Inferred user intent:** The user wants implementation momentum while preserving the established diary and commit discipline.
 
-**Commit (code):** pending — Phase 2 slot/child-normalization slice to be committed after validation and diary update.
+**Commit (code):** f6aa36fdb3d5a7788072599803acea6e0216a328 — "Widget DSL v3: add slot and node kernel"
 
 ### What I did
 - Added `v3NodeSpec`, `v3SourceSpan`, and `v3SlotSpec` internal representations in `pkg/widgetdsl/v3.go`.
