@@ -759,7 +759,7 @@ The important behavior is coexistence. `require("widget.dsl")` now succeeds, and
 
 **Inferred user intent:** The user wants the redesign to become executable incrementally, with commits at safe boundaries and a detailed diary of what changed and what failed.
 
-**Commit (code):** pending — Phase 1 code slice to be committed after this diary update.
+**Commit (code):** c5b50e83fb528d13128b7b062237a9b6c9fcdbf7 — "Widget DSL v3: add module skeleton"
 
 ### What I did
 - Added `WidgetV3ModuleName = "widget.dsl"` and registered a new module spec.
