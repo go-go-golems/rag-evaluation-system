@@ -466,3 +466,14 @@ Committed Widget DSL v3 Phase 10 golden examples in 07beb87fcb8d6af03a6da55c137e
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/testdata/v3/examples — Committed example scripts
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/testdata/v3/golden — Committed golden snapshots
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/01-implementation-diary.md — Step 23 commit reference
+
+## 2026-07-08
+
+Widget DSL v3 preview gallery hardened, browser regressions fixed, and Storybook regression stories added (commits 071dbb0, 57b701d, a926537).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/examples/xgoja-widgetdsl-v3/jsverbs/server.js — xgoja preview gallery server
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/WidgetRenderer.v3-regressions.stories.tsx — New regression story suite
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3.go — Runtime lowering fixes
+

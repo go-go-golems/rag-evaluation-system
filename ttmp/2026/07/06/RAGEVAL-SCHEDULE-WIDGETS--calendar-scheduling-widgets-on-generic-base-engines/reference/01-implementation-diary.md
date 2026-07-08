@@ -13,8 +13,12 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: repo://examples/xgoja-widgetdsl-v3/jsverbs/server.js
+      Note: xgoja preview gallery server renders v3 examples with query state (commit 071dbb0)
     - Path: repo://packages/rag-evaluation-site/src/components/atoms/DateTile/DateTile.module.css
       Note: sm-size overflow fix (weekday hidden, per-size day scaling)
+    - Path: repo://packages/rag-evaluation-site/src/components/molecules/AppNav/AppNav.stories.tsx
+      Note: Long-navigation overflow regression story (commit 57b701d)
     - Path: repo://packages/rag-evaluation-site/src/components/molecules/MatrixGrid/MatrixGrid.tsx
       Note: Flagship grid engine + MatrixCellPayload (relaxed generic bound)
     - Path: repo://packages/rag-evaluation-site/src/components/molecules/MonthGrid/MonthGrid.tsx
@@ -23,6 +27,8 @@ RelatedFiles:
       Note: Week/day calendar engine + packColumn lane packing + TimeGridBlockPayload contract
     - Path: repo://packages/rag-evaluation-site/src/components/organisms/BookingPagePanel/BookingPagePanel.tsx
       Note: 1:1 booking organism (SplitPane MonthGrid + slot tiles)
+    - Path: repo://packages/rag-evaluation-site/src/components/organisms/HandoutDocumentShell/HandoutDocumentShell.widget.tsx
+      Note: Document action context aliases for handout tab switching (commit 57b701d)
     - Path: repo://packages/rag-evaluation-site/src/components/organisms/MeetingPollPanel/MeetingPollPanel.tsx
       Note: First Doodle organism — participant poll screen composed from base engines
     - Path: repo://packages/rag-evaluation-site/src/components/organisms/PollResultsPanel/PollResultsPanel.tsx
@@ -31,6 +37,8 @@ RelatedFiles:
       Note: Scheduling domain DTOs (pure data, mirrors src/context)
     - Path: repo://packages/rag-evaluation-site/src/widgets/WidgetRenderer.scheduling.stories.tsx
       Note: IR renderer stories proving the poll renders from serialized nodes
+    - Path: repo://packages/rag-evaluation-site/src/widgets/WidgetRenderer.v3-regressions.stories.tsx
+      Note: Storybook regression stories for v3 browser fixes (commit 57b701d)
     - Path: repo://packages/rag-evaluation-site/src/widgets/ir/index.ts
       Note: |-
         ir.ts split into core/actions/cells/engines/props modules
@@ -41,12 +49,15 @@ RelatedFiles:
         pollResults/monthCalendar/weekCalendar presets
     - Path: repo://packages/rag-evaluation-site/src/widgets/styleBy.ts
       Note: resolveStyleByVars — StyleBySpec consumption (value->styleKey->style)
+    - Path: repo://pkg/widgetdsl/v3.go
+      Note: URL template, section actions, matrix column/header, metric label fixes (commits 071dbb0,57b701d)
 ExternalSources: []
 Summary: ""
 LastUpdated: 2026-07-06T18:48:57.302545525-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
