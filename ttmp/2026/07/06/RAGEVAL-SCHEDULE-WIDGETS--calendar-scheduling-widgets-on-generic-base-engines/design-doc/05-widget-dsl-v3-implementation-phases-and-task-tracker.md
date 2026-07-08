@@ -21,6 +21,7 @@ RelatedFiles:
         widget.dsl installs concrete v3 cms namespace
         widget.dsl installs concrete v3 course namespace
         widget.dsl installs concrete v3 context namespace
+        widget.dsl installs concrete schedule/time namespaces
     - Path: repo://pkg/widgetdsl/module_test.go
       Note: |-
         Phase 1 runtime tests for widget.dsl coexistence and raw/bind/act output
@@ -31,6 +32,7 @@ RelatedFiles:
         Phase 5 runtime coverage for CMS domain views
         Phase 6 runtime coverage for course views
         Phase 7 runtime coverage for context views
+        Phase 8 schedule/time runtime tests
     - Path: repo://pkg/widgetdsl/typescript.go
       Note: |-
         Current declaration generation path to replace with descriptor-driven widget.dsl declarations
@@ -41,6 +43,9 @@ RelatedFiles:
         Phase 5 CMS declarations
         Phase 6 course declarations
         Phase 7 context declarations
+        Phase 8 declarations and Phase 9 descriptor-backed namespace exports
+    - Path: repo://pkg/widgetdsl/typescript_fixture_test.go
+      Note: Phase 9 widget.dsl TypeScript fixture examples
     - Path: repo://pkg/widgetdsl/typescript_test.go
       Note: Phase 1 TypeScript declaration fragment tests
     - Path: repo://pkg/widgetdsl/v2/spec/types.go
@@ -57,12 +62,19 @@ RelatedFiles:
         Phase 5 CMS media library, article queue, markdown editor, intent wrappers, and slot placeholders
         Phase 6 course shell, landing, slide deck, handouts, metadata form, agenda/material helpers, and intents
         Phase 7 context style sets, palettes, diagrams, workspaces, slots, and intents
+        Phase 8 schedule/time runtime namespaces
+    - Path: repo://pkg/widgetdsl/v3_descriptors.go
+      Note: Phase 9 namespace/view descriptor inventory
+    - Path: repo://pkg/widgetdsl/v3_descriptors_test.go
+      Note: Phase 9 descriptor tests
     - Path: repo://pkg/xgoja/providers/widgetsite/provider.go
       Note: Phase 1 provider exposure for widget.dsl
     - Path: repo://pkg/xgoja/providers/widgetsite/provider_test.go
       Note: Phase 1 provider tests for widget.dsl
     - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/04-widget-dsl-current-export-inventory.md
       Note: Phase 0 current export inventory output
+    - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/05-widget-dsl-v3-api-reference.md
+      Note: Generated-style API reference from descriptors
     - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/scripts/01-widget-dsl-export-inventory.py
       Note: Phase 0 current export inventory generator
     - Path: repo://ttmp/2026/07/06/RAGEVAL-WIDGET-DECOMPOSITION--widget-library-decomposition-base-engines-contracts-and-dsl-ergonomics/design-doc/01-widget-library-decomposition-analysis-and-design.md
@@ -83,6 +95,7 @@ LastUpdated: 2026-07-07T16:40:00-04:00
 WhatFor: Use this document to track the step-by-step implementation of the new widget.dsl module while existing ui/data/cms/course/context modules remain available.
 WhenToUse: Read before starting or resuming Widget DSL v3 implementation; update after every phase or meaningful subphase.
 ---
+
 
 
 
@@ -614,27 +627,27 @@ components.
 
 **Goal:** Bring the scheduling/calendar work into the same v3 grammar.
 
-**Status:** not started.
+**Status:** complete.
 
 ### Tasks
 
-- [ ] Define DTO declarations for:
+- [x] Define DTO declarations for:
   - `AvailabilityPoll`
   - `AvailabilityResponse`
   - `PollOption`
   - `PollTally`
   - `CalendarEvent`
   - `TimeRange`
-- [ ] Add `schedule.availabilityPoll(poll, callback)`.
-- [ ] Add `schedule.pollSummary(poll, tallies, callback)`.
-- [ ] Add `schedule.bookingPicker(availability, callback)` if underlying frontend
+- [x] Add `schedule.availabilityPoll(poll, callback)`.
+- [x] Add `schedule.pollSummary(poll, tallies, callback)`.
+- [x] Add `schedule.bookingPicker(availability, callback)` if underlying frontend
       behavior is ready.
-- [ ] Add `schedule.intent.toggleAvailability` and `schedule.intent.submitResponse`.
-- [ ] Add `time.month(eventsOrMarkers, callback)`.
-- [ ] Add `time.week(events, callback)`.
-- [ ] Add `time.range.week`, `time.format`, `time.formatRange`, and `time.slotLabel`.
-- [ ] Add `time.intent.selectDay` and `time.intent.selectEvent`.
-- [ ] Ensure `TimeGrid.allDay` is not exposed until the frontend contract is fixed.
+- [x] Add `schedule.intent.toggleAvailability` and `schedule.intent.submitResponse`.
+- [x] Add `time.month(eventsOrMarkers, callback)`.
+- [x] Add `time.week(events, callback)`.
+- [x] Add `time.range.week`, `time.format`, `time.formatRange`, and `time.slotLabel`.
+- [x] Add `time.intent.selectDay` and `time.intent.selectEvent`.
+- [x] Ensure `TimeGrid.allDay` is not exposed until the frontend contract is fixed.
 
 ### Acceptance criteria
 
@@ -652,24 +665,24 @@ components.
 
 **Goal:** Prevent runtime/declaration/doc drift.
 
-**Status:** not started.
+**Status:** complete.
 
 ### Tasks
 
-- [ ] Introduce namespace/view/builder descriptors as the source of truth.
-- [ ] Generate `widget.dsl` TypeScript declarations from descriptors.
-- [ ] Include slot context interfaces in generated declarations.
-- [ ] Add branded/opaque TypeScript types for `WidgetNodeSpec`, `ActionSpec`,
+- [x] Introduce namespace/view/builder descriptors as the source of truth.
+- [x] Generate `widget.dsl` TypeScript declarations from descriptors.
+- [x] Include slot context interfaces in generated declarations.
+- [x] Add branded/opaque TypeScript types for `WidgetNodeSpec`, `ActionSpec`,
       `BindingSpec`, cell specs, style specs, and field specs where practical.
-- [ ] Include DTO interfaces or importable DTO declaration modules.
-- [ ] Add declaration fixture tests for:
+- [x] Include DTO interfaces or importable DTO declaration modules.
+- [x] Add declaration fixture tests for:
   - simple page;
   - data collection;
   - CMS media library;
   - course shell/handouts;
   - context workspace;
   - schedule poll/time week.
-- [ ] Generate or write a `widget.dsl` API reference doc.
+- [x] Generate or write a `widget.dsl` API reference doc.
 
 ### Acceptance criteria
 
@@ -765,7 +778,7 @@ components.
 | Phase 5 — CMS namespace | complete | Added media library, article queue, markdown editor, intents, slots, tests, and declarations. |
 | Phase 6 — Course namespace | complete | Added shell, landing, slide deck, handouts, metadata form, agenda/material helpers, intents, tests, and declarations. |
 | Phase 7 — Context namespace | complete | Added style sets, palettes, diagrams, workspaces, slots, intents, tests, and declarations. |
-| Phase 8 — Schedule/time namespaces | not started | Add availability poll and calendar week views. |
-| Phase 9 — Descriptor-driven declarations/docs | not started | Generate declarations from descriptors. |
+| Phase 8 — Schedule/time namespaces | complete | Added schedule polls, booking picker, time month/week helpers, intents, declarations, and tests. |
+| Phase 9 — Descriptor-driven declarations/docs | complete | Added descriptor inventory, generated namespace exports/API reference, TS fixtures, and descriptor tests. |
 | Phase 10 — Golden go-go-course fixtures | not started | Snapshot old/new page fixtures. |
 | Phase 11 — Integration/cutover guidance | not started | Document provider and migration workflow. |

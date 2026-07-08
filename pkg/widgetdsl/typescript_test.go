@@ -69,8 +69,12 @@ func TestWidgetV3TypeScriptModuleDeclaresRootNamespaces(t *testing.T) {
 		"diagram(snapshot: ContextSnapshot, configure?: Fragment<ContextDiagramBuilder>): WidgetNodeSpec;",
 		"workspace(session: Transcript, configure?: Fragment<ContextWorkspaceBuilder>): WidgetNodeSpec;",
 		"export const context: ContextNamespace;",
-		"export const schedule: Record<string, any>;",
-		"export const time: Record<string, any>;",
+		"export interface ScheduleNamespace",
+		"availabilityPoll(poll: AvailabilityPoll, configure?: Fragment<SchedulePollBuilder>): WidgetNodeSpec;",
+		"export interface TimeNamespace",
+		"week(events: CalendarEvent[], configure?: Fragment<TimeWeekBuilder>): WidgetNodeSpec;",
+		"export const schedule: ScheduleNamespace;",
+		"export const time: TimeNamespace;",
 		"export const style: Record<string, any>;",
 	}
 	for _, fragment := range wantFragments {

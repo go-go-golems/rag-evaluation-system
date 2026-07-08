@@ -290,6 +290,95 @@ func TestWidgetV3SlotsAndChildNormalization(t *testing.T) {
 	}
 }
 
+func TestWidgetV3ScheduleAndTimeViews(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		const poll = {
+			title: "Team sync availability",
+			options: [
+				{ id: "mon-9", label: "Mon 09:00", startISO: "2026-07-06T09:00:00Z", endISO: "2026-07-06T09:30:00Z" },
+				{ id: "mon-10", label: "Mon 10:00", startISO: "2026-07-06T10:00:00Z", endISO: "2026-07-06T10:30:00Z" },
+			],
+			responses: [
+				{ id: "ana", name: "Ana", availability: { "mon-9": "available", "mon-10": "maybe" } },
+			],
+		};
+		const editablePoll = widget.schedule.availabilityPoll(poll, p => p
+			.editableRow("ana")
+			.selectedCell("ana", "mon-9")
+			.onToggle(widget.schedule.intent.toggleAvailability(widget.bind.context("row.id"), widget.bind.context("column.id"), widget.bind.context("nextValue")))
+		);
+		const readOnlyPoll = widget.schedule.availabilityPoll(poll, p => p
+			.onToggle(widget.schedule.intent.toggleAvailability("ana", "mon-9", "available"))
+			.readOnly()
+		);
+		const summary = widget.schedule.pollSummary(poll, [{ id: "available", label: "Available", counts: { "mon-9": 1, "mon-10": 0 } }]);
+		const booking = widget.schedule.bookingPicker({
+			title: "Book room",
+			resources: [{ id: "room-a", label: "Room A", availability: { "mon-9": "available" } }],
+			slots: poll.options,
+		}, b => b.onToggle(widget.schedule.intent.toggleAvailability("room-a", "mon-9", "selected")));
+		const range = widget.time.range.week("2026-07-08");
+		const month = widget.time.month([{ id: "ev1", title: "Launch", startISO: "2026-07-08T09:00:00Z", endISO: "2026-07-08T10:00:00Z", styleKey: "busy" }], m => m
+			.selected("2026-07-08")
+			.onSelect(widget.time.intent.selectDay(widget.bind.context("dayISO")))
+		);
+		const week = widget.time.week([
+			{ id: "ev1", title: "Launch", startISO: "2026-07-08T09:00:00Z", endISO: "2026-07-08T10:00:00Z", styleKey: "busy", allDay: true },
+		], w => w
+			.range(range)
+			.hours(7, 19)
+			.selected("ev1")
+			.onSelect(widget.time.intent.selectEvent(widget.bind.context("block.id")))
+		);
+		({ editablePoll, readOnlyPoll, summary, booking, range, month, week, slot: widget.time.slotLabel("2026-07-08T09:00:00Z", "2026-07-08T10:00:00Z") });
+	`)
+	if err != nil {
+		t.Fatalf("build widget.dsl schedule/time views: %v", err)
+	}
+	got := value.Export().(map[string]any)
+	editable := anyMap(got["editablePoll"])
+	if editable["type"] != "MatrixGrid" {
+		t.Fatalf("editable poll = %#v, want MatrixGrid", editable)
+	}
+	editableProps := anyMap(editable["props"])
+	if editableProps["onCellAction"] == nil || editableProps["editableRowKey"] != "ana" || len(anySlice(editableProps["columns"])) != 2 {
+		t.Fatalf("editable poll props = %#v", editableProps)
+	}
+	readOnlyProps := anyMap(anyMap(got["readOnlyPoll"])["props"])
+	if readOnlyProps["onCellAction"] != nil || readOnlyProps["editableRowKey"] != nil {
+		t.Fatalf("read-only poll leaked edit props = %#v", readOnlyProps)
+	}
+	if anyMap(got["summary"])["type"] != "MatrixGrid" || anyMap(got["booking"])["type"] != "MatrixGrid" {
+		t.Fatalf("summary/booking = %#v / %#v", got["summary"], got["booking"])
+	}
+	rangeSpec := anyMap(got["range"])
+	if rangeSpec["startISO"] != "2026-07-06" || rangeSpec["endISO"] != "2026-07-12" {
+		t.Fatalf("range = %#v", rangeSpec)
+	}
+	monthProps := anyMap(anyMap(got["month"])["props"])
+	if anyMap(monthProps["markers"])["2026-07-08"] == nil || monthProps["onDaySelectAction"] == nil {
+		t.Fatalf("month props = %#v", monthProps)
+	}
+	week := anyMap(got["week"])
+	if week["type"] != "TimeGrid" {
+		t.Fatalf("week = %#v, want TimeGrid", week)
+	}
+	weekProps := anyMap(week["props"])
+	blocks := anySlice(weekProps["blocks"])
+	if weekProps["onBlockSelectAction"] == nil || len(blocks) != 1 || anyMap(blocks[0])["allDay"] != nil {
+		t.Fatalf("week props = %#v", weekProps)
+	}
+	if got["slot"] != "09:00–10:00" {
+		t.Fatalf("slot label = %#v", got["slot"])
+	}
+}
+
 func TestWidgetV3ContextDomainViews(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()

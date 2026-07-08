@@ -3,6 +3,7 @@ package widgetdsl
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/dop251/goja"
 	v2spec "github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec"
@@ -87,6 +88,368 @@ func (r *runtime) v3Page(call goja.FunctionCall) goja.Value {
 		r.applyV3BuilderCallback(builder, call.Arguments[1], "page")
 	}
 	return builder
+}
+
+func (r *runtime) v3ScheduleObject() *goja.Object {
+	schedule := r.vm.NewObject()
+	setExport(schedule, "availabilityPoll", r.v3ScheduleAvailabilityPoll)
+	setExport(schedule, "pollSummary", r.v3SchedulePollSummary)
+	setExport(schedule, "bookingPicker", r.v3ScheduleBookingPicker)
+	setExport(schedule, "intent", r.v3ScheduleIntentObject())
+	return schedule
+}
+
+func (r *runtime) v3ScheduleIntentObject() *goja.Object {
+	intent := r.vm.NewObject()
+	setExport(intent, "toggleAvailability", func(rowID goja.Value, optionID goja.Value, value ...goja.Value) map[string]any {
+		payload := map[string]any{"responseId": rowID.Export(), "optionId": optionID.Export()}
+		if len(value) > 0 {
+			payload["value"] = value[0].Export()
+		}
+		return map[string]any{"kind": "event", "event": "schedule.availability.toggle", "payload": payload}
+	})
+	setExport(intent, "submitResponse", func(response goja.Value) map[string]any {
+		return map[string]any{"kind": "event", "event": "schedule.availability.submit", "payload": map[string]any{"response": response.Export()}}
+	})
+	return intent
+}
+
+func (r *runtime) v3ScheduleAvailabilityPoll(poll goja.Value, cb ...goja.Value) map[string]any {
+	p := exportObject(poll)
+	props := map[string]any{
+		"rows":         anySlice(valueOrDefault(p["responses"], p["rows"])),
+		"columns":      schedulePollColumns(p),
+		"valueAt":      map[string]any{"mapField": stringFromMap(p, "valuesField", "availability")},
+		"cell":         map[string]any{"kind": "cycle", "states": []any{"available", "maybe", "unavailable"}},
+		"rowHeader":    map[string]any{"kind": "field", "field": stringFromMap(p, "rowLabelField", "name")},
+		"getRowKey":    map[string]any{"field": stringFromMap(p, "rowKeyField", "id")},
+		"stickyHeader": true,
+		"ariaLabel":    stringFromMap(p, "title", "Availability poll"),
+	}
+	copyIfPresent(props, p, "styleSet")
+	builder := r.v3SchedulePollBuilder(props)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "schedule.availabilityPoll")
+	}
+	if props["readOnly"] == true {
+		delete(props, "onCellAction")
+		delete(props, "editableRowKey")
+	}
+	delete(props, "readOnly")
+	return componentNode("MatrixGrid", props)
+}
+
+func (r *runtime) v3SchedulePollSummary(poll goja.Value, tallies goja.Value, cb ...goja.Value) map[string]any {
+	p := exportObject(poll)
+	props := map[string]any{
+		"rows":         anySlice(tallies.Export()),
+		"columns":      schedulePollColumns(p),
+		"valueAt":      map[string]any{"mapField": stringFromMap(p, "tallyField", "counts")},
+		"cell":         map[string]any{"kind": "value"},
+		"rowHeader":    map[string]any{"kind": "field", "field": stringFromMap(p, "summaryLabelField", "label")},
+		"getRowKey":    map[string]any{"field": stringFromMap(p, "summaryKeyField", "id")},
+		"stickyHeader": true,
+		"ariaLabel":    stringFromMap(p, "summaryTitle", "Availability poll summary"),
+	}
+	builder := r.v3SchedulePollBuilder(props)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "schedule.pollSummary")
+	}
+	return componentNode("MatrixGrid", props)
+}
+
+func (r *runtime) v3ScheduleBookingPicker(availability goja.Value, cb ...goja.Value) map[string]any {
+	options := exportObject(availability)
+	props := map[string]any{
+		"rows":         anySlice(valueOrDefault(options["resources"], options["rows"])),
+		"columns":      scheduleOptionColumns(anySlice(valueOrDefault(options["slots"], options["options"]))),
+		"valueAt":      map[string]any{"mapField": stringFromMap(options, "valuesField", "availability")},
+		"cell":         map[string]any{"kind": "cycle", "states": []any{"available", "selected", "unavailable"}},
+		"rowHeader":    map[string]any{"kind": "field", "field": stringFromMap(options, "rowLabelField", "label")},
+		"getRowKey":    map[string]any{"field": stringFromMap(options, "rowKeyField", "id")},
+		"stickyHeader": true,
+		"ariaLabel":    stringFromMap(options, "title", "Booking picker"),
+	}
+	builder := r.v3SchedulePollBuilder(props)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "schedule.bookingPicker")
+	}
+	return componentNode("MatrixGrid", props)
+}
+
+func (r *runtime) v3SchedulePollBuilder(props map[string]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
+	setExport(obj, "readOnly", func(readOnly ...bool) *goja.Object { props["readOnly"] = len(readOnly) == 0 || readOnly[0]; return obj })
+	setExport(obj, "editableRow", func(rowKey string) *goja.Object { props["editableRowKey"] = rowKey; return obj })
+	setExport(obj, "selectedCell", func(rowKey string, colID string) *goja.Object {
+		props["selectedCell"] = map[string]any{"rowKey": rowKey, "colId": colID}
+		return obj
+	})
+	setExport(obj, "onToggle", func(action goja.Value) *goja.Object { props["onCellAction"] = action.Export(); return obj })
+	setExport(obj, "ariaLabel", func(label string) *goja.Object { props["ariaLabel"] = label; return obj })
+	return obj
+}
+
+func schedulePollColumns(poll map[string]any) []any {
+	return scheduleOptionColumns(anySlice(valueOrDefault(poll["options"], poll["columns"])))
+}
+
+func scheduleOptionColumns(options []any) []any {
+	columns := []any{}
+	for _, raw := range options {
+		option, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		id := stringFromMap(option, "id", stringFromMap(option, "dateISO", stringFromMap(option, "startISO", "")))
+		if id == "" {
+			continue
+		}
+		header := valueOrDefault(option["label"], valueOrDefault(option["title"], id))
+		columns = append(columns, map[string]any{"id": id, "header": header, "meta": option})
+	}
+	return columns
+}
+
+func (r *runtime) v3TimeObject() *goja.Object {
+	timeObj := r.vm.NewObject()
+	setExport(timeObj, "month", r.v3TimeMonth)
+	setExport(timeObj, "week", r.v3TimeWeek)
+	setExport(timeObj, "format", v3TimeFormat)
+	setExport(timeObj, "formatRange", v3TimeFormatRange)
+	setExport(timeObj, "slotLabel", v3TimeSlotLabel)
+	setExport(timeObj, "range", r.v3TimeRangeObject())
+	setExport(timeObj, "intent", r.v3TimeIntentObject())
+	return timeObj
+}
+
+func (r *runtime) v3TimeRangeObject() *goja.Object {
+	rangeObj := r.vm.NewObject()
+	setExport(rangeObj, "week", v3TimeRangeWeek)
+	return rangeObj
+}
+
+func (r *runtime) v3TimeIntentObject() *goja.Object {
+	intent := r.vm.NewObject()
+	setExport(intent, "selectDay", func(dayISO goja.Value) map[string]any {
+		return map[string]any{"kind": "event", "event": "time.day.select", "payload": map[string]any{"dayISO": dayISO.Export()}}
+	})
+	setExport(intent, "selectEvent", func(eventID goja.Value) map[string]any {
+		return map[string]any{"kind": "event", "event": "time.event.select", "payload": map[string]any{"eventId": eventID.Export()}}
+	})
+	return intent
+}
+
+func (r *runtime) v3TimeMonth(eventsOrMarkers goja.Value, cb ...goja.Value) map[string]any {
+	input := eventsOrMarkers.Export()
+	props := map[string]any{"monthISO": currentMonthISO(), "markers": map[string]any{}, "showHeader": true}
+	if options, ok := input.(map[string]any); ok {
+		props["monthISO"] = stringFromMap(options, "monthISO", stringFromMap(options, "month", currentMonthISO()))
+		if markers := options["markers"]; markers != nil {
+			props["markers"] = markers
+		} else {
+			props["markers"] = monthMarkersFromEvents(anySlice(options["events"]))
+		}
+		copyIfPresent(props, options, "styleSet")
+		copyIfPresent(props, options, "selectedDateISO")
+		copyIfPresent(props, options, "todayISO")
+		copyIfPresent(props, options, "minDateISO")
+		copyIfPresent(props, options, "maxDateISO")
+		copyIfPresent(props, options, "weekStartsOn")
+	} else {
+		props["markers"] = monthMarkersFromEvents(anySlice(input))
+	}
+	builder := r.v3TimeMonthBuilder(props)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "time.month")
+	}
+	return componentNode("MonthGrid", props)
+}
+
+func (r *runtime) v3TimeMonthBuilder(props map[string]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
+	setExport(obj, "selected", func(dayISO string) *goja.Object { props["selectedDateISO"] = dayISO; return obj })
+	setExport(obj, "today", func(dayISO string) *goja.Object { props["todayISO"] = dayISO; return obj })
+	setExport(obj, "weekStartsOn", func(day int) *goja.Object { props["weekStartsOn"] = day; return obj })
+	setExport(obj, "onSelect", func(action goja.Value) *goja.Object { props["onDaySelectAction"] = action.Export(); return obj })
+	return obj
+}
+
+func (r *runtime) v3TimeWeek(events goja.Value, cb ...goja.Value) map[string]any {
+	items := anySlice(events.Export())
+	props := map[string]any{
+		"days":      weekDaysFromEvents(items),
+		"blocks":    timeBlocksFromEvents(items),
+		"styleSet":  r.v3ContextStyleSet(),
+		"hourStart": 8,
+		"hourEnd":   18,
+	}
+	builder := r.v3TimeWeekBuilder(props)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "time.week")
+	}
+	return componentNode("TimeGrid", props)
+}
+
+func (r *runtime) v3TimeWeekBuilder(props map[string]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
+	setExport(obj, "range", func(rangeSpec goja.Value) *goja.Object {
+		props["days"] = weekDaysFromRange(exportObject(rangeSpec))
+		return obj
+	})
+	setExport(obj, "hours", func(start int, end int) *goja.Object { props["hourStart"] = start; props["hourEnd"] = end; return obj })
+	setExport(obj, "hourHeight", func(height int) *goja.Object { props["hourHeight"] = height; return obj })
+	setExport(obj, "now", func(nowISO string) *goja.Object { props["nowISO"] = nowISO; return obj })
+	setExport(obj, "selected", func(id string) *goja.Object { props["selectedBlockId"] = id; return obj })
+	setExport(obj, "onSelect", func(action goja.Value) *goja.Object { props["onBlockSelectAction"] = action.Export(); return obj })
+	setExport(obj, "onSlotCreate", func(action goja.Value) *goja.Object { props["onSlotCreateAction"] = action.Export(); return obj })
+	return obj
+}
+
+func monthMarkersFromEvents(events []any) map[string]any {
+	markers := map[string]any{}
+	for _, raw := range events {
+		event, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		day := eventDayISO(event)
+		if day == "" {
+			continue
+		}
+		marker := map[string]any{"count": 1, "label": valueOrDefault(event["label"], event["title"]), "styleKey": stringFromMap(event, "styleKey", "event")}
+		if existing, ok := markers[day].(map[string]any); ok {
+			if count, ok := existing["count"].(int); ok {
+				existing["count"] = count + 1
+			} else {
+				existing["count"] = numberFromMap(existing, "count", 1) + 1
+			}
+			markers[day] = existing
+		} else {
+			markers[day] = marker
+		}
+	}
+	return markers
+}
+
+func timeBlocksFromEvents(events []any) []any {
+	blocks := []any{}
+	for _, raw := range events {
+		event, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		start := stringFromMap(event, "startISO", stringFromMap(event, "start", ""))
+		end := stringFromMap(event, "endISO", stringFromMap(event, "end", ""))
+		if start == "" || end == "" {
+			continue
+		}
+		block := map[string]any{
+			"id":       stringFromMap(event, "id", start),
+			"dayISO":   eventDayISO(event),
+			"startISO": start,
+			"endISO":   end,
+			"styleKey": stringFromMap(event, "styleKey", "event"),
+			"label":    valueOrDefault(event["label"], valueOrDefault(event["title"], stringFromMap(event, "id", "Event"))),
+		}
+		if meta, ok := event["meta"].(map[string]any); ok {
+			block["meta"] = meta
+		}
+		// Deliberately omit allDay until the frontend contract is fixed.
+		blocks = append(blocks, block)
+	}
+	return blocks
+}
+
+func weekDaysFromEvents(events []any) []any {
+	if len(events) == 0 {
+		return weekDays(time.Now())
+	}
+	for _, raw := range events {
+		if event, ok := raw.(map[string]any); ok {
+			if parsed, ok := parseISODateLike(eventDayISO(event)); ok {
+				return weekDays(parsed)
+			}
+		}
+	}
+	return weekDays(time.Now())
+}
+
+func weekDaysFromRange(rangeSpec map[string]any) []any {
+	if start, ok := parseISODateLike(stringFromMap(rangeSpec, "startISO", stringFromMap(rangeSpec, "start", ""))); ok {
+		return weekDays(start)
+	}
+	return weekDays(time.Now())
+}
+
+func weekDays(anchor time.Time) []any {
+	start := anchor
+	for start.Weekday() != time.Monday {
+		start = start.AddDate(0, 0, -1)
+	}
+	days := []any{}
+	for i := 0; i < 7; i++ {
+		days = append(days, start.AddDate(0, 0, i).Format("2006-01-02"))
+	}
+	return days
+}
+
+func eventDayISO(event map[string]any) string {
+	if day := stringFromMap(event, "dayISO", stringFromMap(event, "dateISO", "")); day != "" {
+		return day
+	}
+	start := stringFromMap(event, "startISO", stringFromMap(event, "start", ""))
+	if len(start) >= 10 {
+		return start[:10]
+	}
+	return ""
+}
+
+func currentMonthISO() string { return time.Now().Format("2006-01") }
+
+func v3TimeRangeWeek(anchorISO ...string) map[string]any {
+	anchor := time.Now()
+	if len(anchorISO) > 0 {
+		if parsed, ok := parseISODateLike(anchorISO[0]); ok {
+			anchor = parsed
+		}
+	}
+	days := weekDays(anchor)
+	return map[string]any{"kind": "week", "startISO": days[0], "endISO": days[6], "days": days}
+}
+
+func v3TimeFormat(iso string, layout ...string) string {
+	parsed, ok := parseISODateLike(iso)
+	if !ok {
+		return iso
+	}
+	if len(layout) > 0 && layout[0] != "" {
+		return parsed.Format(layout[0])
+	}
+	return parsed.Format("Jan 2, 2006")
+}
+
+func v3TimeFormatRange(startISO string, endISO string, layout ...string) string {
+	return v3TimeFormat(startISO, layout...) + " – " + v3TimeFormat(endISO, layout...)
+}
+
+func v3TimeSlotLabel(startISO string, endISO string) string {
+	return v3TimeFormat(startISO, "15:04") + "–" + v3TimeFormat(endISO, "15:04")
+}
+
+func parseISODateLike(value string) (time.Time, bool) {
+	if value == "" {
+		return time.Time{}, false
+	}
+	for _, layout := range []string{time.RFC3339, "2006-01-02T15:04", "2006-01-02"} {
+		if parsed, err := time.Parse(layout, value); err == nil {
+			return parsed, true
+		}
+	}
+	return time.Time{}, false
 }
 
 func (r *runtime) v3ContextObject() *goja.Object {

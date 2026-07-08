@@ -135,7 +135,7 @@ func TypeScriptModule(moduleName string) *spec.Module {
 }
 
 func widgetV3TypeScriptLines() []string {
-	return []string{
+	lines := []string{
 		"export type JsonPrimitive = string | number | boolean | null;",
 		"export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };",
 		"export interface WidgetNodeSpec { kind: string; [key: string]: any; }",
@@ -332,6 +332,20 @@ func widgetV3TypeScriptLines() []string {
 		"markdownEditor(body: string, configure?: Fragment<CmsMarkdownEditorBuilder>): WidgetNodeSpec;",
 		"intent: CmsIntentNamespace;",
 		"}",
+		"export interface PollOption { id: string; label?: WidgetChild; startISO?: string; endISO?: string; dateISO?: string; [key: string]: any; }",
+		"export interface AvailabilityResponse { id: string; name?: string; availability?: Record<string, JsonValue>; [key: string]: any; }",
+		"export interface AvailabilityPoll { title?: string; options?: PollOption[]; responses?: AvailabilityResponse[]; [key: string]: any; }",
+		"export interface PollTally { id: string; label?: string; counts?: Record<string, number>; [key: string]: any; }",
+		"export interface TimeRange { startISO: string; endISO: string; [key: string]: any; }",
+		"export interface CalendarEvent { id: string; title?: WidgetChild; label?: WidgetChild; dayISO?: string; dateISO?: string; startISO: string; endISO: string; styleKey?: string; meta?: Record<string, any>; [key: string]: any; }",
+		"export interface SchedulePollBuilder { styleSet(styleSet: Record<string, any>): this; readOnly(readOnly?: boolean): this; editableRow(rowKey: string): this; selectedCell(rowKey: string, colId: string): this; onToggle(action: ActionSpec): this; ariaLabel(label: string): this; }",
+		"export interface ScheduleIntentNamespace { toggleAvailability(rowId: any, optionId: any, value?: any): ActionSpec; submitResponse(response: any): ActionSpec; }",
+		"export interface ScheduleNamespace { availabilityPoll(poll: AvailabilityPoll, configure?: Fragment<SchedulePollBuilder>): WidgetNodeSpec; pollSummary(poll: AvailabilityPoll, tallies: PollTally[], configure?: Fragment<SchedulePollBuilder>): WidgetNodeSpec; bookingPicker(availability: Record<string, any>, configure?: Fragment<SchedulePollBuilder>): WidgetNodeSpec; intent: ScheduleIntentNamespace; }",
+		"export interface TimeMonthBuilder { styleSet(styleSet: Record<string, any>): this; selected(dayISO: string): this; today(dayISO: string): this; weekStartsOn(day: 0 | 1): this; onSelect(action: ActionSpec): this; }",
+		"export interface TimeWeekBuilder { styleSet(styleSet: Record<string, any>): this; range(range: TimeRange): this; hours(start: number, end: number): this; hourHeight(height: number): this; now(nowISO: string): this; selected(id: string): this; onSelect(action: ActionSpec): this; onSlotCreate(action: ActionSpec): this; }",
+		"export interface TimeIntentNamespace { selectDay(dayISO: any): ActionSpec; selectEvent(eventId: any): ActionSpec; }",
+		"export interface TimeRangeNamespace { week(anchorISO?: string): TimeRange & { kind: 'week'; days: string[] }; }",
+		"export interface TimeNamespace { month(eventsOrMarkers: CalendarEvent[] | Record<string, any>, configure?: Fragment<TimeMonthBuilder>): WidgetNodeSpec; week(events: CalendarEvent[], configure?: Fragment<TimeWeekBuilder>): WidgetNodeSpec; format(iso: string, layout?: string): string; formatRange(startISO: string, endISO: string, layout?: string): string; slotLabel(startISO: string, endISO: string): string; range: TimeRangeNamespace; intent: TimeIntentNamespace; }",
 		"export interface UINamespace {",
 		"callout(options?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
 		"stack(options?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
@@ -374,18 +388,9 @@ func widgetV3TypeScriptLines() []string {
 		"metadata(record: Record<string, JsonValue>): this;",
 		"}",
 		"export function page(titleOrOptions: string | Record<string, any>, configure?: Fragment<PageBuilder>): PageBuilder;",
-		"export const raw: RawNamespace;",
-		"export const act: ActionNamespace;",
-		"export const bind: BindingNamespace;",
-		"export const ui: UINamespace;",
-		"export const data: DataNamespace;",
-		"export const cms: CmsNamespace;",
-		"export const course: CourseNamespace;",
-		"export const context: ContextNamespace;",
-		"export const schedule: Record<string, any>;",
-		"export const time: Record<string, any>;",
-		"export const style: Record<string, any>;",
 	}
+	lines = append(lines, widgetV3DescriptorTypeScriptLines()...)
+	return lines
 }
 
 func dataV2TypeScriptLines() []string {

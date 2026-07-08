@@ -421,3 +421,16 @@ Committed Widget DSL v3 Phase 7 context namespace in 48683f4f1d5b349efdb3c963edf
 
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3.go — Committed Phase 7 context namespace
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/01-implementation-diary.md — Step 21 commit reference
+
+## 2026-07-08
+
+Completed Widget DSL v3 Phases 8 and 9: schedule/time namespace helpers, schedule/time declarations and tests, descriptor-backed namespace exports, descriptor tests, TypeScript fixture examples, and API reference doc.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/module_test.go — Phase 8 runtime tests
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/typescript_fixture_test.go — Phase 9 TypeScript fixture examples
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3.go — Phase 8 schedule/time runtime implementation
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3_descriptors.go — Phase 9 descriptor inventory
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/01-implementation-diary.md — Diary Step 22 records Phases 8 and 9
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/05-widget-dsl-v3-api-reference.md — Generated-style API reference

@@ -1494,3 +1494,85 @@ The namespace also adds context intent wrappers for selecting parts and annotati
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`
+
+## Step 22: Phases 8 and 9 — schedule/time views plus descriptor-backed declarations
+
+Implemented Phase 8 by replacing placeholder `widget.schedule` and `widget.time` exports with concrete namespace objects. The schedule namespace now exposes availability poll, poll summary, booking picker, and schedule intents; the time namespace exposes month/week views, week ranges, formatting helpers, slot labels, and day/event intents.
+
+Implemented Phase 9 as a first descriptor-backed declaration/documentation pass. The new descriptor inventory records public namespace exports and schedule/time view signatures, generates `export const ...` declaration lines, drives descriptor tests, and backs a generated-style API reference document for the ticket.
+
+### Prompt Context
+
+**User prompt (verbatim):** "phase 8 + 9"
+
+**Assistant interpretation:** Complete both remaining Widget DSL v3 phases requested: schedule/time namespace helpers and descriptor-driven declaration/docs work.
+
+**Inferred user intent:** Continue the sequential v3 implementation and address the declaration drift problem while adding scheduling/calendar APIs.
+
+**Commit (code):** pending — Phases 8 and 9 slice to be committed after validation and diary update.
+
+### What I did
+- Added concrete `widget.schedule` namespace installation.
+- Added `schedule.availabilityPoll`, `schedule.pollSummary`, and `schedule.bookingPicker`, all lowering to `MatrixGrid`.
+- Added `schedule.intent.toggleAvailability` and `schedule.intent.submitResponse`.
+- Added read-only poll behavior that removes cell action/editable props after builder configuration.
+- Added concrete `widget.time` namespace installation.
+- Added `time.month` lowering to `MonthGrid` with event-to-marker aggregation.
+- Added `time.week` lowering to `TimeGrid` with event-to-block conversion.
+- Deliberately omitted `allDay` from emitted `TimeGrid` blocks even when events include it.
+- Added `time.range.week`, `time.format`, `time.formatRange`, and `time.slotLabel`.
+- Added `time.intent.selectDay` and `time.intent.selectEvent`.
+- Added TypeScript DTOs and builder declarations for schedule/time.
+- Added `pkg/widgetdsl/v3_descriptors.go` with descriptor inventory for public v3 namespaces and schedule/time views.
+- Changed v3 TypeScript namespace export declarations to be generated from descriptors.
+- Added descriptor tests and a widget v3 TypeScript fixture covering simple page, data collection, CMS media library, course shell/handouts, context workspace, schedule poll, and time week.
+- Added `reference/05-widget-dsl-v3-api-reference.md` as the descriptor-backed API reference document.
+- Marked Phases 8 and 9 complete in the tracker.
+
+### Why
+- Phase 8 brings the original scheduling/calendar motivation into the same v3 grammar as CMS/course/context.
+- MatrixGrid and TimeGrid already carry the right frontend contracts; the v3 layer hides engine-level prop names and normalizes user-facing poll/event DTOs.
+- Phase 9 reduces the recurring declaration drift risk by introducing an explicit descriptor inventory and tests around it.
+
+### What worked
+- Schedule poll and summary views could lower cleanly to `MatrixGrid` by converting poll options into matrix columns.
+- Week events could lower cleanly to `TimeGrid` by deriving `dayISO`, blocks, and week ranges.
+- The read-only poll test verifies that an author can call `.onToggle(...)` before `.readOnly()` and still not leak edit actions into the final IR.
+- The descriptor tests verify that namespace exports and descriptor view signatures are present in DTS output and API reference markdown.
+
+### What didn't work
+- Phase 9 is an incremental descriptor foundation, not a full runtime/export code generator. It generates namespace export declaration lines and API reference content, but most interface bodies are still hand-written until a deeper descriptor schema exists.
+
+### What I learned
+- `TimeGrid.allDay` can be safely avoided in the v3 lowering by constructing blocks explicitly instead of forwarding event records wholesale.
+- Descriptor generation should probably grow in the next slice from namespace exports into builder methods and runtime installers; this step creates the inventory and tests needed for that transition.
+
+### What was tricky to build
+- Availability polls need to support editable and read-only authoring with the same builder. The implementation resolves this by letting the builder collect actions first, then stripping `onCellAction` and `editableRowKey` when `readOnly` is true.
+- Date helpers must accept both date-only and RFC3339-ish values because examples mix `2026-07-08`, `2026-07-08T09:00`, and `2026-07-08T09:00:00Z`.
+- Month markers need to aggregate multiple events per day without requiring callers to provide the lower-level marker map.
+
+### What warrants a second pair of eyes
+- Whether `bookingPicker` should remain exposed now as a MatrixGrid-based helper or be deferred until richer frontend booking behavior exists.
+- Whether the schedule event names (`schedule.availability.toggle`, `schedule.availability.submit`) match the desired host action contract.
+- Whether the descriptor scope in Phase 9 is sufficient for now or should immediately be expanded to generate full namespace interfaces and runtime installer wiring.
+
+### What should be done in the future
+- Expand descriptors to cover every method, builder method, DTO, runtime factory, and generated markdown row.
+- Consider generating the full `widget.dsl` DTS from descriptors rather than only namespace exports / API inventory.
+- Continue to Phase 10 golden go-go-course fixture ports.
+
+### Code review instructions
+- Start in `pkg/widgetdsl/v3.go` at `v3ScheduleObject` and `v3TimeObject`.
+- Review `TestWidgetV3ScheduleAndTimeViews` in `pkg/widgetdsl/module_test.go` for Phase 8 behavior.
+- Review `pkg/widgetdsl/v3_descriptors.go` and `v3_descriptors_test.go` for Phase 9 descriptor coverage.
+- Review `pkg/widgetdsl/typescript_fixture_test.go` for the widget v3 declaration fixture.
+- Validate with `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`.
+
+### Technical details
+- Validation command run:
+  `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+- Final result:
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`
