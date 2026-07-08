@@ -75,7 +75,7 @@ func TestWidgetV3ModuleExportsRootNamespacesAndKeepsOldModulesAvailable(t *testi
 			rawText: typeof widget.raw.text,
 			actServer: typeof widget.act.server,
 			bindField: typeof widget.bind.field,
-			pageNamespace: typeof widget.page,
+			pageFn: typeof widget.page,
 			uiNamespace: typeof widget.ui,
 			dataNamespace: typeof widget.data,
 			cmsNamespace: typeof widget.cms,
@@ -93,13 +93,13 @@ func TestWidgetV3ModuleExportsRootNamespacesAndKeepsOldModulesAvailable(t *testi
 		t.Fatalf("require widget.dsl: %v", err)
 	}
 	got := value.Export().(map[string]any)
-	wantFunctions := []string{"legacyPanel", "rawComponent", "rawText", "actServer", "bindField"}
+	wantFunctions := []string{"legacyPanel", "rawComponent", "rawText", "actServer", "bindField", "pageFn"}
 	for _, name := range wantFunctions {
 		if got[name] != "function" {
 			t.Fatalf("%s export = %#v, want function (all: %#v)", name, got[name], got)
 		}
 	}
-	wantObjects := []string{"pageNamespace", "uiNamespace", "dataNamespace", "cmsNamespace", "courseNamespace", "contextNamespace", "scheduleNamespace", "timeNamespace", "styleNamespace"}
+	wantObjects := []string{"uiNamespace", "dataNamespace", "cmsNamespace", "courseNamespace", "contextNamespace", "scheduleNamespace", "timeNamespace", "styleNamespace"}
 	for _, name := range wantObjects {
 		if got[name] != "object" {
 			t.Fatalf("%s export = %#v, want object (all: %#v)", name, got[name], got)
@@ -116,6 +116,64 @@ func TestWidgetV3ModuleExportsRootNamespacesAndKeepsOldModulesAvailable(t *testi
 	action := got["action"].(map[string]any)
 	if action["kind"] != "server" || action["name"] != "save" {
 		t.Fatalf("act.server emitted %#v", action)
+	}
+}
+
+func TestWidgetV3PageBuilderEmitsPageIR(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		const quiet = s => s.tone("quiet");
+		const builder = widget.page("Hello V3", p => p
+			.id("hello-v3")
+			.meta("source", "test")
+			.use(p => p.title("Hello Widget V3"))
+			.section("Intro", s => s
+				.use(quiet)
+				.caption("Builder callbacks lower to serializable Widget IR.")
+				.anchor("intro")
+				.text("Hello")
+				.view(widget.raw.component("Caption", { tone: "muted" }, "World"))));
+		({ issues: builder.validate(), page: builder.toPage() });
+	`)
+	if err != nil {
+		t.Fatalf("build widget.dsl page: %v", err)
+	}
+	got := value.Export().(map[string]any)
+	if issueCount := exportedSliceLen(got["issues"]); issueCount != 0 {
+		t.Fatalf("unexpected validation issues: %#v", got["issues"])
+	}
+	page := got["page"].(map[string]any)
+	if page["id"] != "hello-v3" || page["title"] != "Hello Widget V3" {
+		t.Fatalf("unexpected page identity: %#v", page)
+	}
+	meta := page["meta"].(map[string]any)
+	if meta["source"] != "test" {
+		t.Fatalf("unexpected page meta: %#v", meta)
+	}
+	root := page["root"].(map[string]any)
+	if root["type"] != "Stack" {
+		t.Fatalf("unexpected root: %#v", root)
+	}
+	children := root["children"].([]any)
+	if len(children) != 1 {
+		t.Fatalf("root children = %#v, want one section", children)
+	}
+	section := children[0].(map[string]any)
+	if section["type"] != "SectionBlock" {
+		t.Fatalf("unexpected section: %#v", section)
+	}
+	props := section["props"].(map[string]any)
+	if props["label"] != "Intro" || props["caption"] != "Builder callbacks lower to serializable Widget IR." || props["anchorId"] != "intro" || props["tone"] != "quiet" {
+		t.Fatalf("unexpected section props: %#v", props)
+	}
+	sectionChildren := section["children"].([]any)
+	if len(sectionChildren) != 2 {
+		t.Fatalf("section children = %#v, want text + caption", sectionChildren)
 	}
 }
 
@@ -354,6 +412,17 @@ func TestEngineRegistrarRegistersSplitModulesOnly(t *testing.T) {
 	}
 	if got["widget"] != true || got["rag"] != false {
 		t.Fatalf("widget.dsl should be present and rag.dsl should be absent from engine registrar, got %#v", got)
+	}
+}
+
+func exportedSliceLen(value any) int {
+	switch v := value.(type) {
+	case []any:
+		return len(v)
+	case []map[string]any:
+		return len(v)
+	default:
+		return -1
 	}
 }
 

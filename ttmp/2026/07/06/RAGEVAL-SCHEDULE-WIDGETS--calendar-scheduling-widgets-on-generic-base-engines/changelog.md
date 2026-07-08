@@ -246,3 +246,16 @@ Updated Widget DSL v3 tracker to explicitly incorporate RAGEVAL-WIDGET-DECOMPOSI
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/design-doc/05-widget-dsl-v3-implementation-phases-and-task-tracker.md — Updated with decomposition review constraints
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/01-implementation-diary.md — Diary Step 13 records the planning correction
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-WIDGET-DECOMPOSITION--widget-library-decomposition-base-engines-contracts-and-dsl-ergonomics/design-doc/01-widget-library-decomposition-analysis-and-design.md — Review input for v3 constraints
+
+## 2026-07-08
+
+Started Widget DSL v3 Phase 2: added page/section builder kernel, builder callbacks, .use fragments, page validation/lowering, TypeScript declarations, runtime tests, and tracker/diary updates.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/module.go — widget.dsl now installs page function
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/module_test.go — Page builder runtime test
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/typescript.go — Page/section declaration updates
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3.go — Initial v3 page/section builder kernel
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/design-doc/05-widget-dsl-v3-implementation-phases-and-task-tracker.md — Phase 2 marked in progress with completed subtasks
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/01-implementation-diary.md — Diary Step 14 records Phase 2 start

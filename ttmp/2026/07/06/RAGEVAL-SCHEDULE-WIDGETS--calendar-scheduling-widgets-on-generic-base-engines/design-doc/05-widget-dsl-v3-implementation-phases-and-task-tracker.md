@@ -25,6 +25,8 @@ RelatedFiles:
       Note: Existing Go spec model informing the v3 backing specs
     - Path: repo://pkg/widgetdsl/v2_builders.go
       Note: Existing typed builder callback implementation to reuse for data namespace
+    - Path: repo://pkg/widgetdsl/v3.go
+      Note: Phase 2 initial page/section specs, builder callbacks, fragments, and page lowering
     - Path: repo://pkg/xgoja/providers/widgetsite/provider.go
       Note: Phase 1 provider exposure for widget.dsl
     - Path: repo://pkg/xgoja/providers/widgetsite/provider_test.go
@@ -51,6 +53,7 @@ LastUpdated: 2026-07-07T16:40:00-04:00
 WhatFor: Use this document to track the step-by-step implementation of the new widget.dsl module while existing ui/data/cms/course/context modules remain available.
 WhenToUse: Read before starting or resuming Widget DSL v3 implementation; update after every phase or meaningful subphase.
 ---
+
 
 
 
@@ -239,27 +242,29 @@ sure the implementation starts from evidence rather than memory.
 
 **Goal:** Build the reusable kernel once before adding domain-specific APIs.
 
-**Status:** not started.
+**Status:** in progress.
 
 ### Tasks
 
 #### Page and node specs
 
-- [ ] Define Go structs or internal representations for:
-  - `WidgetV3PageSpec`
+- [x] Define initial Go internal representations for:
+  - `WidgetV3PageSpec` (currently `v3PageSpec`)
+  - `WidgetV3SectionSpec` (currently `v3SectionSpec`)
+- [ ] Define explicit internal representations for:
   - `WidgetV3NodeSpec`
-  - `WidgetV3SectionSpec`
   - `WidgetV3SourceSpan`
-- [ ] Implement lowerers from specs to current Widget IR map shape.
-- [ ] Add validation helpers for required page ID/title/root invariants.
+- [x] Implement first lowerers from page/section specs to current Widget IR map shape.
+- [x] Add validation helpers for required page ID/title invariants.
+- [ ] Add root/node validation once explicit `WidgetV3NodeSpec` exists.
 
 #### Builder callback machinery
 
-- [ ] Add shared `applyBuilderCallback(builder, cb)` helper modeled after
+- [x] Add shared `applyV3BuilderCallback(builder, cb)` helper modeled after
       `researchctl` and `codesign`.
-- [ ] Add `.use(fragment)` convention to page/section builders.
-- [ ] Ensure fragments can return the builder or `undefined`.
-- [ ] Ensure non-function fragment errors are clear and include the builder name.
+- [x] Add `.use(fragment)` convention to page/section builders.
+- [x] Ensure fragments can return the builder or `undefined`.
+- [x] Ensure non-function fragment errors are clear and include the builder name.
 
 #### Child and slot machinery
 
@@ -296,16 +301,19 @@ sure the implementation starts from evidence rather than memory.
 
 #### TypeScript declarations
 
-- [ ] Add core types:
+- [x] Add initial core types:
   - `JsonValue`
   - `WidgetNodeSpec`
   - `WidgetPageSpec`
   - `Fragment<TBuilder>`
-  - `Slot<TContext>`
   - `BindingSpec`
   - `ActionSpec`
+  - `PageBuilder`
+  - `SectionBuilder`
+- [ ] Add remaining core types:
+  - `Slot<TContext>`
   - `SlotHelpers`
-- [ ] Add declaration tests for the core API.
+- [x] Add declaration tests for the initial core API.
 
 ### Acceptance criteria
 
@@ -716,7 +724,7 @@ components.
 |---|---|---|
 | Phase 0 — Baseline inventory and scaffolding | complete | Begin Phase 1 with `widget.dsl` skeleton and raw escape hatch. |
 | Phase 1 — `widget.dsl` skeleton | complete | Begin Phase 2 core builder/spec kernel. |
-| Phase 2 — Core spec kernel | not started | Add page/node specs, builder callbacks, fragments, slots, bind/act. |
+| Phase 2 — Core spec kernel | in progress | Continue with explicit node/source specs plus slot helper/call machinery. |
 | Phase 3 — UI namespace | not started | Implement simple page examples. |
 | Phase 4 — Data namespace | not started | Port data.v2 examples under `widget.dsl.data`. |
 | Phase 5 — CMS namespace | not started | Port media library section. |

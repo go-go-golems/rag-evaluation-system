@@ -884,3 +884,83 @@ The main influence is that the DSL cannot be designed in isolation from the IR c
 ### Technical details
 - No code was changed in this step.
 - Validation command: `docmgr doctor --ticket RAGEVAL-SCHEDULE-WIDGETS --stale-after 30`.
+
+## Step 14: Phase 2 starts — page and section builder kernel
+
+Started Phase 2 by replacing the `widget.dsl` `page` placeholder with the first real builder-backed API. The new API is still intentionally small, but it proves the core pattern: a Go-backed page spec, a scoped JavaScript builder lambda, `.use(fragment)` reuse, section builders, validation, and lowering to ordinary Widget IR.
+
+This is the first slice where `widget.dsl` begins to look like the intended v3 grammar. A script can now call `widget.page("Hello", p => p.section(...)).toPage()` and receive a serializable page with a `Stack` root and `SectionBlock` children.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue, commit at appropriate intervals, keeping a detailed diary."
+
+**Assistant interpretation:** Continue implementing the Widget DSL v3 plan in small validated slices, update the diary with successes/failures, and commit at coherent boundaries.
+
+**Inferred user intent:** The user wants forward implementation progress, not just planning, with enough diary detail to resume or review safely.
+
+**Commit (code):** pending — Phase 2 initial builder-kernel slice to be committed after validation and diary update.
+
+### What I did
+- Added `pkg/widgetdsl/v3.go` with initial `v3PageSpec` and `v3SectionSpec` backing structs.
+- Implemented `widget.page(titleOrOptions, configure?)` as a builder constructor.
+- Added `PageBuilder` methods: `id`, `title`, `meta`, `use`, `section`, `view`, `validate`, and `toPage`.
+- Added `SectionBuilder` methods: `caption`, `anchor`, `tone`, `use`, `text`, and `view`.
+- Added `applyV3BuilderCallback`, modeled after the researchctl/codesign builder callback pattern.
+- Lowered page specs to current Widget IR: `Stack` root containing `SectionBlock` nodes.
+- Updated `widget.dsl` TypeScript declarations with `PageBuilder`, `SectionBuilder`, `ValidationIssue`, and the `page(...)` function.
+- Added runtime tests for page builder callbacks, `.use(fragment)`, validation, metadata, section props, and child lowering.
+- Updated the phase tracker to mark the completed Phase 2 subtasks and leave node/source/slot work open.
+
+### Why
+- Phase 1 proved module registration. Phase 2 needs to prove the authoring model.
+- Page/section builders are the smallest useful place to validate builder lambdas and fragments before adding domain namespaces.
+- Lowering to existing `Stack` and `SectionBlock` components keeps the browser unchanged.
+
+### What worked
+- The builder callback pattern maps cleanly into Goja: create a Go spec, create a builder object that mutates it, call the JavaScript function, then validate/lower.
+- `.use(fragment)` is trivial once callbacks are centralized.
+- Existing child normalization (`exportChild`) already flattens arrays and accepts text/component nodes, so the first section builder could reuse it.
+
+### What didn't work
+- I initially corrupted `pkg/widgetdsl/typescript.go` and `pkg/widgetdsl/typescript_test.go` while editing declaration fragments. The compiler surfaced this immediately with many syntax errors, including:
+  `pkg/widgetdsl/typescript_test.go:27:43: expected ';', found ']'`
+  `pkg/widgetdsl/typescript_test.go:27:290: illegal character U+00AB '«'`
+- I fixed this by rewriting the affected `widgetV3TypeScriptLines()` block and then rewriting `typescript_test.go` cleanly.
+- The first page-builder test also failed because `builder.validate()` exported an empty `[]map[string]any`, not `[]any`:
+  `panic: interface conversion: interface {} is []map[string]interface {}, not []interface {}`
+- I fixed the test with a small `exportedSliceLen` helper that accepts either representation.
+
+### What I learned
+- Editing generated-declaration string slices is error-prone; this reinforces the need for descriptor-driven TypeScript generation in Phase 9.
+- Tests that inspect Goja exports should avoid assuming whether empty slices export as `[]any` or a more specific typed slice.
+- It is better for `widget.page` to be a function now, even though Phase 1 originally exported it as a placeholder object. This matches the clean design examples.
+
+### What was tricky to build
+- The runtime now has two page concepts: old `ui.dsl page(options)` returns a page immediately, while v3 `widget.page(...)` returns a builder with `toPage()`. Keeping them separate avoids breaking old modules but requires tests to be explicit about which module they require.
+- Section titles can be strings or renderable nodes. I added a small `v3RenderableTitle` helper so the public API can support both without committing to final SlotHelpers yet.
+
+### What warrants a second pair of eyes
+- Whether `widget.page(...).toPage()` should be the long-term terminal form or whether `page(...)` should return the page directly in common cases.
+- Whether `tone` belongs on a generic section builder or should be delayed until style tokens are unified.
+- Whether the initial slug generation for page IDs is sufficient or should be replaced by a shared slug helper.
+
+### What should be done in the future
+- Continue Phase 2 with explicit `WidgetV3NodeSpec` and `SourceSpan` backing types.
+- Add real slot machinery: `Slot<TContext>`, `SlotHelpers`, `callSlot`, and validation of slot return values.
+- Decide exact shared `AccessorSpec`/`BindingSpec` shape before expanding `bind` further.
+
+### Code review instructions
+- Start with `pkg/widgetdsl/v3.go` and read the flow: `v3Page` → `v3PageBuilder` → `v3SectionBuilder` → `v3PageToIR`.
+- Review `pkg/widgetdsl/module.go` to see `widget.dsl` now installs `page` as a function.
+- Review `pkg/widgetdsl/module_test.go` for the page-builder runtime test.
+- Review `pkg/widgetdsl/typescript.go` and `pkg/widgetdsl/typescript_test.go` for declaration updates.
+- Validate with `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`.
+
+### Technical details
+- Validation command run:
+  `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+- Final result:
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`
