@@ -434,3 +434,13 @@ Completed Widget DSL v3 Phases 8 and 9: schedule/time namespace helpers, schedul
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3_descriptors.go — Phase 9 descriptor inventory
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/01-implementation-diary.md — Diary Step 22 records Phases 8 and 9
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/05-widget-dsl-v3-api-reference.md — Generated-style API reference
+
+## 2026-07-08
+
+Committed Widget DSL v3 Phases 8 and 9 in 0e5c85d68137036d1c2f2a07eaaa733e3c30b1f0; pre-commit ran Go tests and lint successfully.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3.go — Committed Phase 8 schedule/time runtime helpers
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3_descriptors.go — Committed Phase 9 descriptor inventory
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/01-implementation-diary.md — Step 22 commit reference

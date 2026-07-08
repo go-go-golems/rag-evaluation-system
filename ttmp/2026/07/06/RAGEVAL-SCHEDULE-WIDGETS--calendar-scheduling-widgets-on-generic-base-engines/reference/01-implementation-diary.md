@@ -1509,7 +1509,7 @@ Implemented Phase 9 as a first descriptor-backed declaration/documentation pass.
 
 **Inferred user intent:** Continue the sequential v3 implementation and address the declaration drift problem while adding scheduling/calendar APIs.
 
-**Commit (code):** pending — Phases 8 and 9 slice to be committed after validation and diary update.
+**Commit (code):** 0e5c85d68137036d1c2f2a07eaaa733e3c30b1f0 — "Widget DSL v3: implement schedule time and descriptors"
 
 ### What I did
 - Added concrete `widget.schedule` namespace installation.
