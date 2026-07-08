@@ -1271,3 +1271,77 @@ This phase also adds a first matrix-engine helper for scheduling-style grids. It
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
   `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`
+
+## Step 19: Phase 5 — CMS domain views
+
+Implemented Phase 5 by replacing the placeholder `widget.cms` namespace with first-class CMS domain helpers. The new APIs cover the three current CMS view families: media libraries, article queues, and markdown editing, all lowering to existing renderer components so no React work is required for this phase.
+
+The implementation also adds CMS intent wrappers. These wrappers let examples express product actions such as selecting an asset, uploading assets, creating an article, publishing, archiving, and previewing without spelling the lower-level event/server/navigate action names at call sites.
+
+### Prompt Context
+
+**User prompt (verbatim):** "phase 5"
+
+**Assistant interpretation:** Implement Phase 5 from the tracker as a coherent slice with CMS builders, intent helpers, declarations, tests, documentation, and commits.
+
+**Inferred user intent:** Continue completing Widget DSL v3 phases in order, using the existing tracker as the source of truth.
+
+**Commit (code):** pending — Phase 5 CMS namespace slice to be committed after validation and diary update.
+
+### What I did
+- Added concrete `widget.cms` namespace installation.
+- Added `cms.mediaLibrary(assets, callback)` lowering to `MediaLibraryPanel`.
+- Added media library builder methods for selection, selected IDs, query, kind filter, pagination, empty message, accepted MIME types, asset/details/toolbar slots, and select/open/upload actions.
+- Added `cms.articleQueue(articles, callback)` lowering to `ArticleListPanel`.
+- Added article queue builder methods for selected article, status/query/page/empty state, row/rowActions/filter slots, and select/create/row/publish/archive/preview actions.
+- Added `cms.markdownEditor(body, callback)` lowering to `MarkdownEditor`.
+- Added `cms.intent.*` wrappers for common asset/article actions.
+- Added TypeScript DTOs and builder declarations: `CmsAsset`, `CmsArticleSummary`, `CmsUploadState`, `CmsMediaLibraryBuilder`, `CmsArticleQueueBuilder`, `CmsMarkdownEditorBuilder`, `CmsIntentNamespace`, and `CmsNamespace`.
+- Added runtime coverage proving the three CMS views emit the expected current component nodes.
+- Marked Phase 5 complete in the tracker.
+
+### Why
+- CMS pages are a good next domain because they exercise slots, actions, filters, pagination, and form-like editing while still lowering to existing components.
+- Intent wrappers are needed to keep examples product-facing rather than leaking adapter prop names such as `onAssetSelectAction`.
+- Using existing `MediaLibraryPanel`, `ArticleListPanel`, and `MarkdownEditor` keeps this phase focused on DSL shape.
+
+### What worked
+- The existing recipe prop names mapped directly to v3 builder methods.
+- Current component-node IR can carry extra slot placeholders without renderer changes; existing stories should ignore unknown props.
+- The same `widget.act` action maps are adequate for intent wrappers and direct builder actions.
+
+### What didn't work
+- Slot support remains a placeholder for CMS component customization because current React components do not consume serialized slot specs yet.
+- Manual TypeScript declaration editing again required careful cleanup after an accidental malformed test fragment.
+
+### What I learned
+- Domain APIs can now be added with little core work: most effort is naming builder methods and deciding which props remain open options.
+- The slot story needs a frontend consumption plan before slots become visually meaningful in CMS views.
+
+### What was tricky to build
+- Intent wrappers need to hide engine-level names while still returning plain serializable actions. I used stable event/server/navigate names under `cms.intent` and let builders copy them into existing `...Action` props.
+- Toolbar slots are invoked immediately into serializable nodes, while asset/detail slots are stored as placeholders because their runtime contexts are supplied by the frontend component.
+
+### What warrants a second pair of eyes
+- Whether CMS slot placeholders should be omitted until frontend consumption exists, or kept as documented no-op extension points.
+- Whether markdown editor should lower to `MarkdownEditor` alone or a `FormPanel` wrapping it.
+- Whether intent event/server names should be centralized in descriptors in Phase 9.
+
+### What should be done in the future
+- Add frontend support for consuming serialized slots where useful.
+- Port a real admin-course media-library fixture as a separate example if more coverage is desired.
+- Continue with Phase 6 course domain views.
+
+### Code review instructions
+- Start in `pkg/widgetdsl/v3.go` at `v3CMSObject`, `v3CMSMediaLibrary`, `v3CMSArticleQueue`, `v3CMSMarkdownEditor`, and `v3CMSIntentObject`.
+- Review `TestWidgetV3CMSDomainViews` in `pkg/widgetdsl/module_test.go`.
+- Review `pkg/widgetdsl/typescript.go` and `pkg/widgetdsl/typescript_test.go` for CMS declarations.
+- Validate with `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`.
+
+### Technical details
+- Validation command run:
+  `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+- Final result:
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`

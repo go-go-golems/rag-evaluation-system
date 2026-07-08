@@ -89,6 +89,126 @@ func (r *runtime) v3Page(call goja.FunctionCall) goja.Value {
 	return builder
 }
 
+func (r *runtime) v3CMSObject() *goja.Object {
+	cms := r.vm.NewObject()
+	setExport(cms, "mediaLibrary", r.v3CMSMediaLibrary)
+	setExport(cms, "articleQueue", r.v3CMSArticleQueue)
+	setExport(cms, "markdownEditor", r.v3CMSMarkdownEditor)
+	setExport(cms, "intent", r.v3CMSIntentObject())
+	return cms
+}
+
+func (r *runtime) v3CMSIntentObject() *goja.Object {
+	intent := r.vm.NewObject()
+	setExport(intent, "selectAsset", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "event", "event": "cms.asset.select", "payload": map[string]any{"assetId": id.Export()}}
+	})
+	setExport(intent, "openAsset", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "event", "event": "cms.asset.open", "payload": map[string]any{"assetId": id.Export()}}
+	})
+	setExport(intent, "uploadAssets", func() map[string]any { return map[string]any{"kind": "server", "name": "cms.assets.upload"} })
+	setExport(intent, "selectArticle", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "event", "event": "cms.article.select", "payload": map[string]any{"articleId": id.Export()}}
+	})
+	setExport(intent, "createArticle", func() map[string]any { return map[string]any{"kind": "event", "event": "cms.article.create"} })
+	setExport(intent, "publishArticle", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "server", "name": "cms.article.publish", "payload": map[string]any{"articleId": id.Export()}}
+	})
+	setExport(intent, "archiveArticle", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "server", "name": "cms.article.archive", "payload": map[string]any{"articleId": id.Export()}}
+	})
+	setExport(intent, "previewArticle", func(id goja.Value) map[string]any {
+		return map[string]any{"kind": "navigate", "to": "?article=" + id.String() + "&preview=1"}
+	})
+	return intent
+}
+
+func (r *runtime) v3CMSMediaLibrary(assets goja.Value, cb ...goja.Value) map[string]any {
+	props := map[string]any{"assets": anySlice(assets.Export())}
+	builder := r.v3CMSMediaLibraryBuilder(props)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "cms.mediaLibrary")
+	}
+	return componentNode("MediaLibraryPanel", props)
+}
+
+func (r *runtime) v3CMSMediaLibraryBuilder(props map[string]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "selection", func(mode string) *goja.Object { props["selectionMode"] = mode; return obj })
+	setExport(obj, "selected", func(ids goja.Value) *goja.Object { props["selectedAssetIds"] = anySlice(ids.Export()); return obj })
+	setExport(obj, "query", func(value string) *goja.Object { props["query"] = value; return obj })
+	setExport(obj, "kindFilter", func(value string) *goja.Object { props["kindFilter"] = value; return obj })
+	setExport(obj, "page", func(page int, pageCount int) *goja.Object {
+		props["page"] = page
+		props["pageCount"] = pageCount
+		return obj
+	})
+	setExport(obj, "empty", func(message string) *goja.Object { props["emptyMessage"] = message; return obj })
+	setExport(obj, "accept", func(mimeList goja.Value) *goja.Object { props["accept"] = anySlice(mimeList.Export()); return obj })
+	setExport(obj, "asset", func(slot goja.Value) *goja.Object { props["assetSlot"] = r.v3SlotRef(slot); return obj })
+	setExport(obj, "details", func(slot goja.Value) *goja.Object { props["detailsSlot"] = r.v3SlotRef(slot); return obj })
+	setExport(obj, "toolbar", func(cb goja.Value) *goja.Object {
+		props["toolbar"] = r.callV3Slot(v3SlotSpec{Function: cb}, props)
+		return obj
+	})
+	setExport(obj, "onSelect", func(action goja.Value) *goja.Object { props["onAssetSelectAction"] = action.Export(); return obj })
+	setExport(obj, "onOpen", func(action goja.Value) *goja.Object { props["onAssetOpenAction"] = action.Export(); return obj })
+	setExport(obj, "onUpload", func(action goja.Value) *goja.Object { props["onFilesSelectedAction"] = action.Export(); return obj })
+	return obj
+}
+
+func (r *runtime) v3CMSArticleQueue(articles goja.Value, cb ...goja.Value) map[string]any {
+	props := map[string]any{"articles": anySlice(articles.Export())}
+	builder := r.v3CMSArticleQueueBuilder(props)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "cms.articleQueue")
+	}
+	return componentNode("ArticleListPanel", props)
+}
+
+func (r *runtime) v3CMSArticleQueueBuilder(props map[string]any) *goja.Object {
+	obj := r.vm.NewObject()
+	setExport(obj, "selected", func(id string) *goja.Object { props["selectedArticleId"] = id; return obj })
+	setExport(obj, "status", func(status string) *goja.Object { props["statusFilter"] = status; return obj })
+	setExport(obj, "query", func(query string) *goja.Object { props["query"] = query; return obj })
+	setExport(obj, "page", func(page int, pageCount int) *goja.Object {
+		props["page"] = page
+		props["pageCount"] = pageCount
+		return obj
+	})
+	setExport(obj, "empty", func(message string) *goja.Object { props["emptyMessage"] = message; return obj })
+	setExport(obj, "row", func(slot goja.Value) *goja.Object { props["rowSlot"] = r.v3SlotRef(slot); return obj })
+	setExport(obj, "rowActions", func(slot goja.Value) *goja.Object { props["rowActionsSlot"] = r.v3SlotRef(slot); return obj })
+	setExport(obj, "filters", func(slot goja.Value) *goja.Object { props["filtersSlot"] = r.v3SlotRef(slot); return obj })
+	setExport(obj, "onSelect", func(action goja.Value) *goja.Object { props["onArticleSelectAction"] = action.Export(); return obj })
+	setExport(obj, "onCreate", func(action goja.Value) *goja.Object { props["onCreateAction"] = action.Export(); return obj })
+	setExport(obj, "onRowAction", func(action goja.Value) *goja.Object { props["onRowActionAction"] = action.Export(); return obj })
+	setExport(obj, "onPublish", func(action goja.Value) *goja.Object { props["onPublishAction"] = action.Export(); return obj })
+	setExport(obj, "onArchive", func(action goja.Value) *goja.Object { props["onArchiveAction"] = action.Export(); return obj })
+	setExport(obj, "onPreview", func(action goja.Value) *goja.Object { props["onPreviewAction"] = action.Export(); return obj })
+	return obj
+}
+
+func (r *runtime) v3CMSMarkdownEditor(body goja.Value, cb ...goja.Value) map[string]any {
+	props := map[string]any{"value": body.Export()}
+	if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
+		builder := r.vm.NewObject()
+		setExport(builder, "title", func(title string) *goja.Object { props["title"] = title; return builder })
+		setExport(builder, "placeholder", func(placeholder string) *goja.Object { props["placeholder"] = placeholder; return builder })
+		setExport(builder, "onChange", func(action goja.Value) *goja.Object { props["onChangeAction"] = action.Export(); return builder })
+		setExport(builder, "onSubmit", func(action goja.Value) *goja.Object { props["onSubmitAction"] = action.Export(); return builder })
+		r.applyV3BuilderCallback(builder, cb[0], "cms.markdownEditor")
+	}
+	return componentNode("MarkdownEditor", props)
+}
+
+func (r *runtime) v3SlotRef(slot goja.Value) map[string]any {
+	if slot == nil || goja.IsUndefined(slot) || goja.IsNull(slot) {
+		return nil
+	}
+	return map[string]any{"kind": "slot", "registered": true}
+}
+
 func (r *runtime) v3UIObject() *goja.Object {
 	ui := r.vm.NewObject()
 	setExport(ui, "callout", r.v3ComponentFactory("Panel", map[string]any{"tone": "callout"}))

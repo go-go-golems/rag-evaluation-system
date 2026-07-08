@@ -18,6 +18,7 @@ RelatedFiles:
         Current runtime module registry and helper/recipe implementation to refactor behind widget.dsl
         Phase 2 final AccessorSpec-aligned bind namespace and data namespace installation
         widget.dsl installs the concrete v3 ui namespace
+        widget.dsl installs concrete v3 cms namespace
     - Path: repo://pkg/widgetdsl/module_test.go
       Note: |-
         Phase 1 runtime tests for widget.dsl coexistence and raw/bind/act output
@@ -25,6 +26,7 @@ RelatedFiles:
         Phase 2 final tests for accessors, selections, list items, actions, and validation
         Phase 3 runtime test for UI composition without old modules
         Phase 4 runtime tests comparing v2/v3 table shape and covering master-detail/matrix
+        Phase 5 runtime coverage for CMS domain views
     - Path: repo://pkg/widgetdsl/typescript.go
       Note: |-
         Current declaration generation path to replace with descriptor-driven widget.dsl declarations
@@ -32,6 +34,7 @@ RelatedFiles:
         Phase 2 final TypeScript declarations for AccessorSpec, SelectionSpec, ListItemSpec, and DataNamespace
         Phase 3 UINamespace, ActionsBuilder, and page/section declarations
         Phase 4 data namespace declarations
+        Phase 5 CMS declarations
     - Path: repo://pkg/widgetdsl/typescript_test.go
       Note: Phase 1 TypeScript declaration fragment tests
     - Path: repo://pkg/widgetdsl/v2/spec/types.go
@@ -45,6 +48,7 @@ RelatedFiles:
         Phase 2 final node validation, selection spec, list item spec, and renderable helpers
         Phase 3 page shell/density/breadcrumbs, section actions/metrics/metadata, and UI helper namespace
         Phase 4 data.fields, data.collection, data.cell, matrix, and v2 lowering reuse
+        Phase 5 CMS media library, article queue, markdown editor, intent wrappers, and slot placeholders
     - Path: repo://pkg/xgoja/providers/widgetsite/provider.go
       Note: Phase 1 provider exposure for widget.dsl
     - Path: repo://pkg/xgoja/providers/widgetsite/provider_test.go
@@ -71,6 +75,7 @@ LastUpdated: 2026-07-07T16:40:00-04:00
 WhatFor: Use this document to track the step-by-step implementation of the new widget.dsl module while existing ui/data/cms/course/context modules remain available.
 WhenToUse: Read before starting or resuming Widget DSL v3 implementation; update after every phase or meaningful subphase.
 ---
+
 
 
 
@@ -470,16 +475,16 @@ v2 spec/lowering foundation.
 
 **Goal:** Port current CMS authoring patterns to typed domain views.
 
-**Status:** not started.
+**Status:** complete.
 
 ### Tasks
 
-- [ ] Define DTO declarations for:
+- [x] Define DTO declarations for:
   - `CmsAsset`
   - `CmsArticleSummary`
   - `CmsUploadState`
-- [ ] Add `cms.mediaLibrary(assets, callback)` over `MediaLibraryPanel`.
-- [ ] Add media library builder methods:
+- [x] Add `cms.mediaLibrary(assets, callback)` over `MediaLibraryPanel`.
+- [x] Add media library builder methods:
   - `.selection(mode)`
   - `.selected(ids)`
   - `.query(value)`
@@ -493,13 +498,13 @@ v2 spec/lowering foundation.
   - `.onSelect(action)`
   - `.onOpen(action)`
   - `.onUpload(action)`
-- [ ] Add `cms.articleQueue(articles, callback)` over `ArticleListPanel`.
-- [ ] Add article queue slots/actions for article row, row actions, filters,
+- [x] Add `cms.articleQueue(articles, callback)` over `ArticleListPanel`.
+- [x] Add article queue slots/actions for article row, row actions, filters,
       create/publish/archive/preview.
-- [ ] Add `cms.markdownEditor(body, callback)` over current markdown editor/form
+- [x] Add `cms.markdownEditor(body, callback)` over current markdown editor/form
       components.
-- [ ] Add `cms.intent.*` wrappers.
-- [ ] Port the media-library section from `go-go-course` admin page as a fixture.
+- [x] Add `cms.intent.*` wrappers.
+- [x] Port the media-library section from `go-go-course` admin page as a fixture.
 
 ### Acceptance criteria
 
@@ -747,7 +752,7 @@ components.
 | Phase 2 — Core spec kernel | complete | Page/section builders, node/source specs, slots, accessors, selection, list items, actions, and TS declarations are implemented. |
 | Phase 3 — UI namespace | complete | Page composition, generic UI helpers, section actions/metrics/metadata, tests, and TypeScript declarations are implemented. |
 | Phase 4 — Data namespace | complete | Added fields/schema, collections, editor actions, cells, matrix helper, tests, and declarations. |
-| Phase 5 — CMS namespace | not started | Port media library section. |
+| Phase 5 — CMS namespace | complete | Added media library, article queue, markdown editor, intents, slots, tests, and declarations. |
 | Phase 6 — Course namespace | not started | Port course shell and handouts. |
 | Phase 7 — Context namespace | not started | Port context diagram/workspace fixture. |
 | Phase 8 — Schedule/time namespaces | not started | Add availability poll and calendar week views. |

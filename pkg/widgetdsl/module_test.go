@@ -290,6 +290,85 @@ func TestWidgetV3SlotsAndChildNormalization(t *testing.T) {
 	}
 }
 
+func TestWidgetV3CMSDomainViews(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		const assets = [{ id: "a", kind: "image", title: "Hero", filename: "hero.png", tags: [] }];
+		const articles = [{ id: "p", title: "Post", status: "draft", tags: [] }];
+		const media = widget.cms.mediaLibrary(assets, m => m
+			.selection("multi")
+			.selected(["a"])
+			.query("hero")
+			.kindFilter("image")
+			.page(2, 4)
+			.empty("No assets")
+			.accept(["image/png"])
+			.asset((asset, h) => h.card({ title: asset.title }))
+			.details((asset, h) => h.caption(asset.filename))
+			.toolbar((ctx, h) => h.button("Upload", widget.cms.intent.uploadAssets()))
+			.onSelect(widget.cms.intent.selectAsset(widget.bind.context("asset.id")))
+			.onOpen(widget.cms.intent.openAsset(widget.bind.context("asset.id")))
+			.onUpload(widget.cms.intent.uploadAssets())
+		);
+		const queue = widget.cms.articleQueue(articles, q => q
+			.selected("p")
+			.status("draft")
+			.query("post")
+			.page(1, 3)
+			.empty("No posts")
+			.row((article, h) => h.caption(article.title))
+			.rowActions((article, h) => h.button("Publish", widget.cms.intent.publishArticle(article.id)))
+			.filters((ctx, h) => h.inline("Filters"))
+			.onSelect(widget.cms.intent.selectArticle(widget.bind.context("article.id")))
+			.onCreate(widget.cms.intent.createArticle())
+			.onRowAction(widget.cms.intent.previewArticle(widget.bind.context("article.id")))
+			.onPublish(widget.cms.intent.publishArticle(widget.bind.context("article.id")))
+			.onArchive(widget.cms.intent.archiveArticle(widget.bind.context("article.id")))
+			.onPreview(widget.cms.intent.previewArticle(widget.bind.context("article.id")))
+		);
+		const editor = widget.cms.markdownEditor("# Draft", e => e
+			.title("Body")
+			.placeholder("Write...")
+			.onChange(widget.act.event("body-change"))
+			.onSubmit(widget.act.server("save-body"))
+		);
+		({ media, queue, editor });
+	`)
+	if err != nil {
+		t.Fatalf("build widget.dsl cms views: %v", err)
+	}
+	got := value.Export().(map[string]any)
+	media := anyMap(got["media"])
+	if media["type"] != "MediaLibraryPanel" {
+		t.Fatalf("media = %#v, want MediaLibraryPanel", media)
+	}
+	mediaProps := anyMap(media["props"])
+	if mediaProps["selectionMode"] != "multi" || mediaProps["query"] != "hero" || mediaProps["onFilesSelectedAction"] == nil {
+		t.Fatalf("media props = %#v", mediaProps)
+	}
+	queue := anyMap(got["queue"])
+	if queue["type"] != "ArticleListPanel" {
+		t.Fatalf("queue = %#v, want ArticleListPanel", queue)
+	}
+	queueProps := anyMap(queue["props"])
+	if queueProps["selectedArticleId"] != "p" || queueProps["statusFilter"] != "draft" || queueProps["onCreateAction"] == nil {
+		t.Fatalf("queue props = %#v", queueProps)
+	}
+	editor := anyMap(got["editor"])
+	if editor["type"] != "MarkdownEditor" {
+		t.Fatalf("editor = %#v, want MarkdownEditor", editor)
+	}
+	editorProps := anyMap(editor["props"])
+	if editorProps["value"] != "# Draft" || editorProps["title"] != "Body" || editorProps["onSubmitAction"] == nil {
+		t.Fatalf("editor props = %#v", editorProps)
+	}
+}
+
 func TestWidgetV3DataCollectionMatchesDataV2TableShape(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
