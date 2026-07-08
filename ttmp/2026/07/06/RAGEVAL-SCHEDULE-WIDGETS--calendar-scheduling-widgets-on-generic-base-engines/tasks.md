@@ -14,7 +14,7 @@
 - [ ] Prototype shared widgetdsl composition kernel: builder callbacks, .use fragments, slot invocation, child normalization, and view descriptors <!-- t:beer -->
 - [ ] Add builder-lambda domain views for cms.mediaLibrary/articleQueue, course.studio/slideDeck/handout, and context.workspace/diagram over existing panel components <!-- t:ld3w -->
 - [x] V3 Phase 0: finish baseline export inventory, diary setup, and tracker commit <!-- t:p4o2 -->
-- [ ] V3 Phase 1: add parallel widget.dsl root module skeleton and raw escape hatch <!-- t:emfh -->
+- [x] V3 Phase 1: add parallel widget.dsl root module skeleton and raw escape hatch <!-- t:emfh -->
 - [ ] V3 Phase 2: implement shared page/spec builder kernel with fragments, slots, bind, and act <!-- t:19l1 -->
 - [ ] V3 Phase 3: implement widget.dsl ui/page composition namespace <!-- t:2zep -->
 - [ ] V3 Phase 4: implement widget.dsl data namespace over existing v2 specs and MatrixGrid engine <!-- t:fvsy -->

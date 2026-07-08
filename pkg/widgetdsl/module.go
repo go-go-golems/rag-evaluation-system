@@ -15,6 +15,7 @@ const (
 	UIModuleName            = "ui.dsl"
 	DataModuleName          = "data.dsl"
 	DataV2ModuleName        = "data.v2.dsl"
+	WidgetV3ModuleName      = "widget.dsl"
 	ContextWindowModuleName = "context_window.dsl"
 	CourseModuleName        = "course.dsl"
 	CmsModuleName           = "cms.dsl"
@@ -159,6 +160,10 @@ var moduleSpecs = []moduleSpec{
 		doc:  "data.v2.dsl provides the hard-cutover typed/fluent collection builder experiment.",
 	},
 	{
+		name: WidgetV3ModuleName,
+		doc:  "widget.dsl provides the parallel clean Widget DSL v3 root namespace.",
+	},
+	{
 		name:    ContextWindowModuleName,
 		helpers: contextWindowHelpers,
 		action:  true,
@@ -234,6 +239,10 @@ type runtime struct {
 }
 
 func (r *runtime) install(exports *goja.Object, spec moduleSpec) {
+	if spec.name == WidgetV3ModuleName {
+		r.installWidgetV3(exports)
+		return
+	}
 	setExport(exports, "text", r.text)
 	setExport(exports, "element", r.element)
 	setExport(exports, "component", r.component)
@@ -267,6 +276,47 @@ func (r *runtime) install(exports *goja.Object, spec moduleSpec) {
 	if len(spec.recipes) > 0 {
 		setExport(exports, "recipes", r.recipesObject(spec.recipes))
 	}
+}
+
+func (r *runtime) installWidgetV3(exports *goja.Object) {
+	setExport(exports, "raw", r.rawObject())
+	setExport(exports, "act", r.actionObject())
+	setExport(exports, "bind", r.bindingObject())
+	for _, name := range []string{"page", "ui", "data", "cms", "course", "context", "schedule", "time", "style"} {
+		setExport(exports, name, r.vm.NewObject())
+	}
+}
+
+func (r *runtime) rawObject() *goja.Object {
+	raw := r.vm.NewObject()
+	setExport(raw, "text", r.text)
+	setExport(raw, "element", r.element)
+	setExport(raw, "component", r.component)
+	setExport(raw, "fragment", r.fragment)
+	return raw
+}
+
+func (r *runtime) bindingObject() *goja.Object {
+	bind := r.vm.NewObject()
+	setExport(bind, "field", func(path string) map[string]any {
+		return map[string]any{"kind": "field", "path": path}
+	})
+	setExport(bind, "path", func(path string) map[string]any {
+		return map[string]any{"kind": "path", "path": path}
+	})
+	setExport(bind, "map", func(field string) map[string]any {
+		return map[string]any{"kind": "map", "field": field}
+	})
+	setExport(bind, "template", func(template string) map[string]any {
+		return map[string]any{"kind": "template", "template": template}
+	})
+	setExport(bind, "context", func(path string) map[string]any {
+		return map[string]any{"kind": "context", "path": path}
+	})
+	setExport(bind, "const", func(value goja.Value) map[string]any {
+		return map[string]any{"kind": "const", "value": value.Export()}
+	})
+	return bind
 }
 
 func (r *runtime) cellObject() *goja.Object {

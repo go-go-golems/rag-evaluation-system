@@ -59,6 +59,66 @@ func TestSplitModulesExportExpectedHelpersAndOmitCrossDomainHelpers(t *testing.T
 	}
 }
 
+func TestWidgetV3ModuleExportsRootNamespacesAndKeepsOldModulesAvailable(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		const ui = require("ui.dsl");
+		const node = widget.raw.component("Panel", { title: "V3" }, widget.raw.text("Hello"));
+		({
+			legacyPanel: typeof ui.panel,
+			rawComponent: typeof widget.raw.component,
+			rawText: typeof widget.raw.text,
+			actServer: typeof widget.act.server,
+			bindField: typeof widget.bind.field,
+			pageNamespace: typeof widget.page,
+			uiNamespace: typeof widget.ui,
+			dataNamespace: typeof widget.data,
+			cmsNamespace: typeof widget.cms,
+			courseNamespace: typeof widget.course,
+			contextNamespace: typeof widget.context,
+			scheduleNamespace: typeof widget.schedule,
+			timeNamespace: typeof widget.time,
+			styleNamespace: typeof widget.style,
+			node,
+			binding: widget.bind.field("title"),
+			action: widget.act.server("save", { payload: { id: 1 } }),
+		});
+	`)
+	if err != nil {
+		t.Fatalf("require widget.dsl: %v", err)
+	}
+	got := value.Export().(map[string]any)
+	wantFunctions := []string{"legacyPanel", "rawComponent", "rawText", "actServer", "bindField"}
+	for _, name := range wantFunctions {
+		if got[name] != "function" {
+			t.Fatalf("%s export = %#v, want function (all: %#v)", name, got[name], got)
+		}
+	}
+	wantObjects := []string{"pageNamespace", "uiNamespace", "dataNamespace", "cmsNamespace", "courseNamespace", "contextNamespace", "scheduleNamespace", "timeNamespace", "styleNamespace"}
+	for _, name := range wantObjects {
+		if got[name] != "object" {
+			t.Fatalf("%s export = %#v, want object (all: %#v)", name, got[name], got)
+		}
+	}
+	node := got["node"].(map[string]any)
+	if node["kind"] != "component" || node["type"] != "Panel" {
+		t.Fatalf("raw.component emitted %#v", node)
+	}
+	binding := got["binding"].(map[string]any)
+	if binding["kind"] != "field" || binding["path"] != "title" {
+		t.Fatalf("bind.field emitted %#v", binding)
+	}
+	action := got["action"].(map[string]any)
+	if action["kind"] != "server" || action["name"] != "save" {
+		t.Fatalf("act.server emitted %#v", action)
+	}
+}
+
 func TestOldBucketModulesAreAbsent(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
@@ -69,14 +129,14 @@ func TestOldBucketModulesAreAbsent(t *testing.T) {
 		function canRequire(name) {
 			try { require(name); return true; } catch (error) { return false; }
 		}
-		({ widget: canRequire("widget.dsl"), rag: canRequire("rag.dsl") });
+		({ rag: canRequire("rag.dsl") });
 	`)
 	if err != nil {
 		t.Fatalf("check old modules: %v", err)
 	}
 	got := value.Export().(map[string]any)
-	if got["widget"] != false || got["rag"] != false {
-		t.Fatalf("old bucket modules should be absent, got %#v", got)
+	if got["rag"] != false {
+		t.Fatalf("old bucket module rag.dsl should be absent, got %#v", got)
 	}
 }
 
@@ -292,8 +352,8 @@ func TestEngineRegistrarRegistersSplitModulesOnly(t *testing.T) {
 			t.Fatalf("%s export = %#v, want function (all: %#v)", name, got[name], got)
 		}
 	}
-	if got["widget"] != false || got["rag"] != false {
-		t.Fatalf("old bucket modules should be absent from engine registrar, got %#v", got)
+	if got["widget"] != true || got["rag"] != false {
+		t.Fatalf("widget.dsl should be present and rag.dsl should be absent from engine registrar, got %#v", got)
 	}
 }
 

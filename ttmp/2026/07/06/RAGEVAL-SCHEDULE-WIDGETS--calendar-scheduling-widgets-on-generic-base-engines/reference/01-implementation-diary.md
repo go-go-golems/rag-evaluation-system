@@ -744,3 +744,81 @@ No runtime behavior changed. The only executable artifact is a small ticket-loca
 - The script uses `Path(__file__).resolve().parents[6]` to find the repository root from the ticket script directory.
 - It parses `map[string]string` helper maps and `recipes: []string{...}` arrays from `module.go`.
 - It writes a full Markdown reference document with docmgr frontmatter.
+
+## Step 12: Phase 1 parallel `widget.dsl` skeleton
+
+Implemented the first runtime slice of Widget DSL v3: a new `widget.dsl` module that exists beside the current split modules. This is deliberately small. It does not implement the final builder API yet; it proves the module can be registered, selected by the xgoja provider, required in Goja, and used for the initial explicit raw escape hatch plus shared `act` and `bind` namespaces.
+
+The important behavior is coexistence. `require("widget.dsl")` now succeeds, and `require("ui.dsl")`, `require("data.dsl")`, and the other current modules still work. This lets v3 grow through fixtures without breaking existing scripts.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 10)
+
+**Assistant interpretation:** Continue step-by-step implementation after planning and Phase 0 inventory, starting with the smallest code slice: the parallel `widget.dsl` module skeleton.
+
+**Inferred user intent:** The user wants the redesign to become executable incrementally, with commits at safe boundaries and a detailed diary of what changed and what failed.
+
+**Commit (code):** pending — Phase 1 code slice to be committed after this diary update.
+
+### What I did
+- Added `WidgetV3ModuleName = "widget.dsl"` and registered a new module spec.
+- Added a special install path for `widget.dsl` that exports root namespaces: `raw`, `act`, `bind`, `page`, `ui`, `data`, `cms`, `course`, `context`, `schedule`, `time`, and `style`.
+- Implemented `raw.text`, `raw.element`, `raw.component`, and `raw.fragment` using the existing low-level constructors.
+- Reused the existing action helper object as `widget.act`.
+- Added an initial binding helper object as `widget.bind` with `field`, `path`, `map`, `template`, `context`, and `const` constructors.
+- Added a TypeScript declaration stub for `widget.dsl` root namespaces.
+- Exposed `widget.dsl` from the `rag-widget-site` xgoja provider.
+- Added tests for runtime export shape, raw component output, binding/action output, TypeScript declaration fragments, and provider exposure.
+- Updated the Phase 1 tracker status to complete.
+
+### Why
+- The full redesign needs a safe parallel entry point before any builder or domain work can land.
+- `raw.component` gives v3 an immediate escape hatch and a simple testable output path.
+- `act` and `bind` establish the two serializable helper namespaces that later builder phases will reuse.
+
+### What worked
+- The existing `moduleSpecs` registration loop made adding a new module straightforward.
+- The existing low-level constructors and `actionObject` could be reused directly.
+- Provider registration followed the same pattern as the current split modules.
+- Targeted tests passed after updating old assumptions that `widget.dsl` was absent.
+
+### What didn't work
+- The first test run failed because an existing test still expected `widget.dsl` to be absent from the engine registrar:
+  `--- FAIL: TestEngineRegistrarRegistersSplitModulesOnly`
+  `old bucket modules should be absent from engine registrar, got map[string]interface {}{..., "widget":true}`
+- This was a correct failure: `widget.dsl` is no longer an old bucket module; it is the new parallel v3 module. I updated the test expectation to require `widget.dsl` and still reject `rag.dsl`.
+
+### What I learned
+- The old test name and assertion encoded the historical decision that `widget.dsl` should not exist. Phase 1 intentionally supersedes that decision while preserving the absence of `rag.dsl`.
+- It is useful to make `widget.dsl` special-cased in `install` for now. Later phases can replace the manual namespace setup with descriptor-driven installation.
+- The first TypeScript declaration can be a stub for namespace shape; precise builders belong in later phases.
+
+### What was tricky to build
+- `widget.dsl` uses a different shape from the old split modules: old modules export helper functions at the top level, while v3 exports namespaces. The runtime install path therefore needed to branch early instead of flowing through the existing helper-map installation path.
+- The `bind.const` helper uses a property name that is a JavaScript keyword. It is valid as an object property and can be called as `bind.const(...)`, but it warrants attention in TypeScript fixture tests later.
+
+### What warrants a second pair of eyes
+- Whether `raw` should expose `element` and `fragment` long-term or whether those should move to `ui` once the UI namespace exists.
+- Whether `bind.path` and `bind.context` should both use `path`, or whether `bind.field` should keep `field` for closer compatibility with current IR accessors.
+- Whether the v3 TypeScript stub should remain hand-written until Phase 9 or move to descriptors earlier.
+
+### What should be done in the future
+- Start Phase 2 by adding real page/node specs, builder callback helpers, `.use(fragment)`, and slot invocation.
+- Add TypeScript fixture compilation for `widget.dsl` once builder APIs exist.
+- Keep old modules working until v3 fixtures cover real go-go-course pages.
+
+### Code review instructions
+- Start with `pkg/widgetdsl/module.go`: review `WidgetV3ModuleName`, `installWidgetV3`, `rawObject`, and `bindingObject`.
+- Then review `pkg/widgetdsl/module_test.go` for coexistence expectations.
+- Review `pkg/widgetdsl/typescript.go` and `pkg/widgetdsl/typescript_test.go` for the initial declaration stub.
+- Review `pkg/xgoja/providers/widgetsite/provider.go` and provider tests for xgoja exposure.
+- Validate with `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`.
+
+### Technical details
+- Validation command run:
+  `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+- Final result:
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec`
+  `ok github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite`

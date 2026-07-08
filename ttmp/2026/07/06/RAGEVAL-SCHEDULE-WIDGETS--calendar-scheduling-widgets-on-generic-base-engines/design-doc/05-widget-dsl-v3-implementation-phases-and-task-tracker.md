@@ -15,12 +15,20 @@ Owners: []
 RelatedFiles:
     - Path: repo://pkg/widgetdsl/module.go
       Note: Current runtime module registry and helper/recipe implementation to refactor behind widget.dsl
+    - Path: repo://pkg/widgetdsl/module_test.go
+      Note: Phase 1 runtime tests for widget.dsl coexistence and raw/bind/act output
     - Path: repo://pkg/widgetdsl/typescript.go
       Note: Current declaration generation path to replace with descriptor-driven widget.dsl declarations
+    - Path: repo://pkg/widgetdsl/typescript_test.go
+      Note: Phase 1 TypeScript declaration fragment tests
     - Path: repo://pkg/widgetdsl/v2/spec/types.go
       Note: Existing Go spec model informing the v3 backing specs
     - Path: repo://pkg/widgetdsl/v2_builders.go
       Note: Existing typed builder callback implementation to reuse for data namespace
+    - Path: repo://pkg/xgoja/providers/widgetsite/provider.go
+      Note: Phase 1 provider exposure for widget.dsl
+    - Path: repo://pkg/xgoja/providers/widgetsite/provider_test.go
+      Note: Phase 1 provider tests for widget.dsl
     - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/04-widget-dsl-current-export-inventory.md
       Note: Phase 0 current export inventory output
     - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/scripts/01-widget-dsl-export-inventory.py
@@ -39,6 +47,7 @@ LastUpdated: 2026-07-07T16:40:00-04:00
 WhatFor: Use this document to track the step-by-step implementation of the new widget.dsl module while existing ui/data/cms/course/context modules remain available.
 WhenToUse: Read before starting or resuming Widget DSL v3 implementation; update after every phase or meaningful subphase.
 ---
+
 
 
 
@@ -154,13 +163,13 @@ sure the implementation starts from evidence rather than memory.
 
 **Goal:** Add a new module without changing old modules or old script behavior.
 
-**Status:** not started.
+**Status:** complete.
 
 ### Tasks
 
-- [ ] Add `WidgetV3ModuleName = "widget.dsl"` or equivalent module constant.
-- [ ] Register a new native module spec for `widget.dsl`.
-- [ ] Export root namespace objects:
+- [x] Add `WidgetV3ModuleName = "widget.dsl"` or equivalent module constant.
+- [x] Register a new native module spec for `widget.dsl`.
+- [x] Export root namespace objects:
   - `page`
   - `ui`
   - `data`
@@ -173,14 +182,13 @@ sure the implementation starts from evidence rather than memory.
   - `act`
   - `style`
   - `raw`
-- [ ] Implement `raw.component(type, props?, children?)` as the explicit escape
+- [x] Implement `raw.component(type, props?, children?)` as the explicit escape
       hatch over the existing `buildComponent` logic.
-- [ ] Export `raw.text`, `raw.element`, and `raw.fragment` or decide that `ui.text`
-      and `ui.fragment` are enough.
-- [ ] Add a runtime test proving `require("widget.dsl")` works and old modules still
+- [x] Export `raw.text`, `raw.element`, and `raw.fragment` on the `raw` namespace.
+- [x] Add a runtime test proving `require("widget.dsl")` works and old modules still
       load.
-- [ ] Add a TypeScript declaration stub for `widget.dsl`.
-- [ ] Add provider exposure if module selection is explicit in the xgoja provider.
+- [x] Add a TypeScript declaration stub for `widget.dsl`.
+- [x] Add provider exposure because module selection is explicit in the xgoja provider.
 
 ### Acceptance criteria
 
@@ -663,7 +671,7 @@ components.
 | Phase | Status | Next concrete action |
 |---|---|---|
 | Phase 0 — Baseline inventory and scaffolding | complete | Begin Phase 1 with `widget.dsl` skeleton and raw escape hatch. |
-| Phase 1 — `widget.dsl` skeleton | not started | Add root module and raw escape hatch. |
+| Phase 1 — `widget.dsl` skeleton | complete | Begin Phase 2 core builder/spec kernel. |
 | Phase 2 — Core spec kernel | not started | Add page/node specs, builder callbacks, fragments, slots, bind/act. |
 | Phase 3 — UI namespace | not started | Implement simple page examples. |
 | Phase 4 — Data namespace | not started | Port data.v2 examples under `widget.dsl.data`. |

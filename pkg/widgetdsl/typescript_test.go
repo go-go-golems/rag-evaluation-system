@@ -5,6 +5,39 @@ import (
 	"testing"
 )
 
+func TestWidgetV3TypeScriptModuleDeclaresRootNamespaces(t *testing.T) {
+	mod := TypeScriptModule(WidgetV3ModuleName)
+	if mod == nil {
+		t.Fatalf("TypeScriptModule(%q) returned nil", WidgetV3ModuleName)
+	}
+	dts := strings.Join(mod.RawDTS, "\n")
+	wantFragments := []string{
+		"export interface RawNamespace",
+		"component(type: string",
+		"export interface ActionNamespace",
+		"server(name: string",
+		"export interface BindingNamespace",
+		"field(path: string): BindingSpec;",
+		"export const raw: RawNamespace;",
+		"export const act: ActionNamespace;",
+		"export const bind: BindingNamespace;",
+		"export const page: Record<string, any>;",
+		"export const ui: Record<string, any>;",
+		"export const data: Record<string, any>;",
+		"export const cms: Record<string, any>;",
+		"export const course: Record<string, any>;",
+		"export const context: Record<string, any>;",
+		"export const schedule: Record<string, any>;",
+		"export const time: Record<string, any>;",
+		"export const style: Record<string, any>;",
+	}
+	for _, fragment := range wantFragments {
+		if !strings.Contains(dts, fragment) {
+			t.Fatalf("widget.dsl DTS missing %q\n--- DTS ---\n%s", fragment, dts)
+		}
+	}
+}
+
 func TestDataV2TypeScriptModuleDeclaresTypedFluentBuilders(t *testing.T) {
 	mod := TypeScriptModule(DataV2ModuleName)
 	if mod == nil {

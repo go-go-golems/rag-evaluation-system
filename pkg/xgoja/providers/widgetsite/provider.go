@@ -41,6 +41,13 @@ func Register(registry *providerapi.ProviderRegistry) error {
 			NewModuleFactory: loader(widgetdsl.DataV2ModuleName),
 		},
 		providerapi.Module{
+			Name:             widgetdsl.WidgetV3ModuleName,
+			DefaultAs:        widgetdsl.WidgetV3ModuleName,
+			Description:      "Parallel clean Widget DSL v3 root namespace.",
+			TypeScript:       widgetdsl.TypeScriptModule(widgetdsl.WidgetV3ModuleName),
+			NewModuleFactory: loader(widgetdsl.WidgetV3ModuleName),
+		},
+		providerapi.Module{
 			Name:             widgetdsl.ContextWindowModuleName,
 			DefaultAs:        widgetdsl.ContextWindowModuleName,
 			Description:      "Context-window, transcript, annotation, and anchored-comment Widget IR helpers.",

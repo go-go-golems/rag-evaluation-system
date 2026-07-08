@@ -78,6 +78,9 @@ func TypeScriptModule(moduleName string) *spec.Module {
 	if moduleSpec.name == DataV2ModuleName {
 		lines = append(lines, dataV2TypeScriptLines()...)
 	}
+	if moduleSpec.name == WidgetV3ModuleName {
+		lines = widgetV3TypeScriptLines()
+	}
 	if moduleSpec.name == DataModuleName {
 		lines = append(lines,
 			"export interface FieldSpec { role: string; [key: string]: any; }",
@@ -128,6 +131,52 @@ func TypeScriptModule(moduleName string) *spec.Module {
 		Name:        moduleSpec.name,
 		Description: moduleSpec.doc,
 		RawDTS:      lines,
+	}
+}
+
+func widgetV3TypeScriptLines() []string {
+	return []string{
+		"export type JsonPrimitive = string | number | boolean | null;",
+		"export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };",
+		"export interface WidgetNodeSpec { kind: string; [key: string]: any; }",
+		"export interface WidgetPageSpec { schemaVersion?: string; id?: string; title?: string; root?: WidgetNodeSpec; [key: string]: any; }",
+		"export interface ActionSpec { kind: string; [key: string]: any; }",
+		"export interface BindingSpec { kind: string; [key: string]: any; }",
+		"export type WidgetChild = WidgetNodeSpec | string | number | boolean | null | undefined;",
+		"export type Fragment<TBuilder> = (builder: TBuilder) => void | TBuilder;",
+		"export interface RawNamespace {",
+		"text(value: any): WidgetNodeSpec;",
+		"element(tag: string, attrs?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
+		"component(type: string, props?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
+		"fragment(...children: WidgetChild[]): WidgetNodeSpec[];",
+		"}",
+		"export interface ActionNamespace {",
+		"server(name: string, options?: Record<string, any>): ActionSpec;",
+		"navigate(to: string, options?: Record<string, any>): ActionSpec;",
+		"download(to: string, options?: Record<string, any>): ActionSpec;",
+		"event(name: string, options?: Record<string, any>): ActionSpec;",
+		"copy(value: string, options?: Record<string, any>): ActionSpec;",
+		"}",
+		"export interface BindingNamespace {",
+		"field(path: string): BindingSpec;",
+		"path(path: string): BindingSpec;",
+		"map(field: string): BindingSpec;",
+		"template(template: string): BindingSpec;",
+		"context(path: string): BindingSpec;",
+		"const(value: JsonValue): BindingSpec;",
+		"}",
+		"export const raw: RawNamespace;",
+		"export const act: ActionNamespace;",
+		"export const bind: BindingNamespace;",
+		"export const page: Record<string, any>;",
+		"export const ui: Record<string, any>;",
+		"export const data: Record<string, any>;",
+		"export const cms: Record<string, any>;",
+		"export const course: Record<string, any>;",
+		"export const context: Record<string, any>;",
+		"export const schedule: Record<string, any>;",
+		"export const time: Record<string, any>;",
+		"export const style: Record<string, any>;",
 	}
 }
 
