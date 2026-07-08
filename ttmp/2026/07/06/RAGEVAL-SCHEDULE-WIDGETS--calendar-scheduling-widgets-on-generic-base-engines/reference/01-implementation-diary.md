@@ -1360,7 +1360,7 @@ The phase also adds course intent wrappers so scripts can request navigation, ha
 
 **Inferred user intent:** Continue the sequential Widget DSL v3 implementation after Phase 5.
 
-**Commit (code):** pending — Phase 6 course namespace slice to be committed after validation and diary update.
+**Commit (code):** e13eccf8041f6d74ff7a5eabb273057c38d650df — "Widget DSL v3: implement course namespace"
 
 ### What I did
 - Added concrete `widget.course` namespace installation.
