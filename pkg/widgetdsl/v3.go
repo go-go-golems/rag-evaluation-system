@@ -302,6 +302,10 @@ func (r *runtime) v3TimeWeekBuilder(props map[string]any) *goja.Object {
 	})
 	setExport(obj, "hours", func(start int, end int) *goja.Object { props["hourStart"] = start; props["hourEnd"] = end; return obj })
 	setExport(obj, "hourHeight", func(height int) *goja.Object { props["hourHeight"] = height; return obj })
+	setExport(obj, "viewportHeight", func(height int) *goja.Object {
+		props["style"] = map[string]any{"maxHeight": fmt.Sprintf("%dpx", height)}
+		return obj
+	})
 	setExport(obj, "now", func(nowISO string) *goja.Object { props["nowISO"] = nowISO; return obj })
 	setExport(obj, "selected", func(id string) *goja.Object { props["selectedBlockId"] = id; return obj })
 	setExport(obj, "onSelect", func(action goja.Value) *goja.Object { props["onBlockSelectAction"] = action.Export(); return obj })
@@ -885,6 +889,7 @@ func (r *runtime) v3UIObject() *goja.Object {
 	setExport(ui, "callout", r.v3ComponentFactory("Panel", map[string]any{"tone": "callout"}))
 	setExport(ui, "stack", r.v3ComponentFactory("Stack", nil))
 	setExport(ui, "inline", r.v3ComponentFactory("Inline", nil))
+	setExport(ui, "splitPane", r.v3UISplitPane)
 	setExport(ui, "card", r.v3ComponentFactory("Panel", nil))
 	setExport(ui, "button", r.v3UIButton)
 	setExport(ui, "caption", r.v3ComponentFactory("Caption", nil))
@@ -939,6 +944,13 @@ func (r *runtime) v3UIButton(label goja.Value, action goja.Value, options ...goj
 		props["action"] = action.Export()
 	}
 	return componentNode("Button", props, r.v3NodeSpecsToIR(r.v3ExportChild(label))...)
+}
+
+func (r *runtime) v3UISplitPane(left goja.Value, right goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	props["left"] = r.v3Renderable(left)
+	props["right"] = r.v3Renderable(right)
+	return componentNode("SplitPane", props)
 }
 
 func (r *runtime) v3UIFormRow(label goja.Value, control goja.Value, options ...goja.Value) map[string]any {

@@ -16,12 +16,21 @@ RelatedFiles:
         ported Doodle pages from legacy split modules to widget.dsl v3
         uses typed ui and schedule DSL helpers without raw escape hatches
         Added calendar visualization over Doodle poll slots and votes
+        Small jsverb entrypoint after module split
+    - Path: repo://examples/xgoja/doodle-site/verbs/lib/calendar.js
+      Note: Calendar marker/detail/selection module
+    - Path: repo://examples/xgoja/doodle-site/verbs/lib/pages.js
+      Note: Doodle Widget DSL page composition module
+    - Path: repo://examples/xgoja/doodle-site/verbs/lib/store.js
+      Note: SQLite schema, seed, query, and mutation module
     - Path: repo://examples/xgoja/doodle-site/xgoja.v2.yaml
       Note: selected widget.dsl instead of ui.dsl/data.dsl
     - Path: repo://pkg/widgetdsl/typescript.go
       Note: declared new v3 UI wrappers
     - Path: repo://pkg/widgetdsl/v3.go
-      Note: added typed v3 UI wrappers used by Doodle
+      Note: |-
+        added typed v3 UI wrappers used by Doodle
+        Typed splitPane and TimeGrid viewport DSL helpers
     - Path: repo://ttmp/2026/07/09/DOODLE-WIDGETDSL-V3--port-doodle-scheduling-example-to-widget-dsl-v3/tasks.md
       Note: completed Doodle v3 port checklist
 ExternalSources: []
@@ -30,6 +39,7 @@ LastUpdated: 2026-07-09T00:00:00Z
 WhatFor: Record implementation steps, validation, failures, and review instructions for the Doodle v3 port.
 WhenToUse: Read before editing examples/xgoja/doodle-site.
 ---
+
 
 
 
@@ -302,3 +312,91 @@ The calendar blocks include the participant names grouped by vote value, so the 
 ### Technical details
 - Calendar event style keys are chosen from availability counts: `focus` when at least one yes exists, `personal` when only maybe exists, and `meeting` otherwise.
 - Slot labels are parsed with the poll creation year as fallback for month/day labels.
+
+## Step 5: Refactor Doodle modules and tighten calendar UX
+
+The calendar visualization exposed two issues in the first implementation. The month calendar was too cramped because full participant strings were passed as marker labels, and the page source had grown too large for easy review. I changed the month data to compact markers only, moved details into a right-hand column, added day/slot selection through URL-backed navigation, and split the Doodle jsverb into smaller CommonJS modules.
+
+The split keeps the jsverb entrypoint small: `doodle.js` now wires modules and HTTP routes, `store.js` owns SQLite access, `pages.js` owns page composition, `calendar.js` owns slot parsing and calendar view models, and `widget-helpers.js` owns local v3 helper aliases.
+
+### Prompt Context
+
+**User prompt (verbatim):** "the view for /tmp/pi-clipboard-682eb06d-a7d2-41e7-822b-4f598bc1ba1b.png is way too cramped, and shuld in fact not allow passing strings through the API but only \"markers\", is that makes sense. Look at the image with the read tool: /tmp/pi-clipboard-07438e5a-06cd-499c-9494-cc8f2ecaf9c9.png
+
+What we could do is maybe, when you select the day, then on a right hand column it shows the details of the day.
+
+Can you do side by side horizontal columns with you widget.dsl primitives?"
+
+**Assistant interpretation:** Fix the cramped calendar month view by using marker-only month cells and show selected-day details beside the month calendar, using Widget DSL layout primitives.
+
+**Inferred user intent:** Keep the calendar demo readable and prove that `widget.dsl` can express a two-column detail layout.
+
+**Commit (code):** N/A — pending commit.
+
+### What I did
+- Added `widget.ui.splitPane(left, right, options)` to `widget.dsl` v3.
+- Added `viewportHeight(height)` to the `widget.time.week(...)` builder and passed style through the TimeGrid widget adapter so the week view can scroll inside a bounded viewport.
+- Changed Doodle month rendering to pass `markers` only, not event strings, into `widget.time.month(...)`.
+- Added selected-day state via `?day=YYYY-MM-DD` and selected-slot state via `?slot=slot-id`.
+- Added a right-hand details pane beside the month view with participant names grouped by yes/maybe/no.
+- Made TimeGrid block clicks navigate to `?slot=...`, which selects the corresponding week block and focuses the month/detail view on that block's day.
+- Split `verbs/doodle.js` into:
+  - `verbs/doodle.js`
+  - `verbs/lib/store.js`
+  - `verbs/lib/pages.js`
+  - `verbs/lib/calendar.js`
+  - `verbs/lib/widget-helpers.js`
+
+### Why
+- Month cells should stay compact. The month widget should receive marker data, while detailed text belongs outside the month grid.
+- The Doodle source had become a mixed file containing schema, routes, page composition, calendar parsing, and widget helper aliases. Splitting by responsibility makes future edits safer.
+- The week view needed a bounded viewport so users can scroll across the full 8:00-22:00 range.
+
+### What worked
+- `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1` passed.
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- Migration checker still reports no legacy imports and no raw escape hatches.
+- `cd examples/xgoja/doodle-site && make build` passed.
+- API smoke for `/api/widget/pages/poll?poll=1&slot=slot-3` confirmed `SplitPane`, selected `MonthGrid`, selected `TimeGrid`, and bounded TimeGrid style output.
+- Browser smoke loaded `/pages/poll?poll=1&slot=slot-3` with no console warnings or errors.
+
+### What didn't work
+- TypeScript declaration editing initially missed commas in generated declaration string slices. `go test` caught the Go syntax error, and I fixed the missing commas before continuing.
+
+### What I learned
+- jsverbs supports relative CommonJS `require(...)`, so Doodle can be split into local modules without changing the xgoja source spec.
+- `SplitPane` was already registered in the React widget registry, but v3 lacked a typed helper. Adding `widget.ui.splitPane` was the missing DSL surface.
+- TimeGrid accepted a `style` prop at the IR level but its widget adapter was not passing it through. Passing `style` through made a DSL-level viewport helper possible.
+
+### What was tricky to build
+- The month and week widgets have different selection contexts. Month clicks provide `dateISO`, while TimeGrid block clicks provide `blockId`. I kept the page stateless by encoding both selections in URL query parameters and deriving the selected day from the selected block when present.
+- The month widget should not receive long participant strings as marker labels. The solution was to emit only `{ count, styleKey }` markers and render participant details in the side pane.
+
+### What warrants a second pair of eyes
+- Whether `widget.time.week(...).viewportHeight(...)` should set `maxHeight` directly or expose a more general scroll-region/layout helper.
+- Whether `widget.ui.splitPane` should accept a richer ratio set for application pages.
+- Whether Doodle should store structured slot timestamps instead of parsing labels once the demo becomes more than an example.
+
+### What should be done in the future
+- Add a small fixture/golden for `widget.ui.splitPane`.
+- Add a small fixture/golden for `widget.time.week(...).viewportHeight(...)`.
+- Consider promoting calendar slot parsing into a reusable helper only if another app needs the same free-form label behavior.
+
+### Code review instructions
+- Start at `examples/xgoja/doodle-site/verbs/doodle.js` to see the new entrypoint.
+- Review `examples/xgoja/doodle-site/verbs/lib/store.js` for persistence boundaries.
+- Review `examples/xgoja/doodle-site/verbs/lib/pages.js` for page composition and schedule view models.
+- Review `examples/xgoja/doodle-site/verbs/lib/calendar.js` for marker-only month data and selection behavior.
+- Review `pkg/widgetdsl/v3.go` for `ui.splitPane` and `time.week().viewportHeight`.
+- Validate with:
+  - `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+  - `pnpm --dir packages/rag-evaluation-site typecheck`
+  - `go run ./cmd/widgetdsl-migration-checker -- examples/xgoja/doodle-site/verbs examples/xgoja/doodle-site/xgoja.v2.yaml`
+  - `cd examples/xgoja/doodle-site && make build`
+  - load `/pages/poll?poll=1&slot=slot-3`.
+
+### Technical details
+- Month selection uses `act.navigate('/pages/poll?poll=<id>&day=$dateISO')`.
+- Week block selection uses `act.navigate('/pages/poll?poll=<id>&slot=$blockId')`.
+- If `slot` is present, it wins over `day` and determines the selected day.
+- Month markers are now compact objects: `{ count, styleKey }`.

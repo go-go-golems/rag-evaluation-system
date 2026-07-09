@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { TimeGridWidgetProps } from "../../../widgets/ir";
 import { defineWidget } from "../../../widgets/registry";
 import { TimeGrid } from "./TimeGrid";
@@ -8,6 +9,7 @@ export const timeGridWidget = defineWidget<TimeGridWidgetProps>({
 	render: (props, _children, ctx) => (
 		<TimeGrid
 			className={props.className}
+			style={props.style as CSSProperties | undefined}
 			days={props.days.map((d) =>
 				typeof d === "string"
 					? d

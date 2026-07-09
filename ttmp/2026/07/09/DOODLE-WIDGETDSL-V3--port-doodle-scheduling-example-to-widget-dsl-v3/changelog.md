@@ -33,3 +33,15 @@ Add calendar-widget visualization to the Doodle poll page so parseable offered s
 
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/examples/xgoja/doodle-site/verbs/doodle.js — Builds calendar events from poll options and votes for MonthGrid/TimeGrid rendering
 
+
+## 2026-07-09
+
+Refactor Doodle jsverb into store/page/calendar/helper modules and improve calendar UX with marker-only month data, split-pane day details, selected day/slot navigation, and a scrollable week viewport.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/examples/xgoja/doodle-site/verbs/doodle.js — Now a small entrypoint that wires modules and HTTP routes
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/examples/xgoja/doodle-site/verbs/lib/calendar.js — Owns slot parsing, calendar markers, selected-day details, and calendar widget composition
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/examples/xgoja/doodle-site/verbs/lib/pages.js — Owns page composition and poll view models
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3.go — Adds splitPane and week viewport-height DSL helpers
+
