@@ -2087,3 +2087,83 @@ This is a host-level cutover step, not a full page-by-page source rewrite. It re
   - `go-go-course-admin-cms-widgetdsl-v3.png`
   - `go-go-course-dsl-master-detail-widgetdsl-v3.png`
 - Accurate post-port checker result: one `raw-component-escape-hatch` finding in `cmd/go-go-course/lib/widget-dsl-v3-adapter.js`, zero `legacy-module-import` findings.
+
+## Step 29: Fix go-go-course course-shell navigation and validate uploaded session pages
+
+Fixed the left course-shell navigation regression in the `go-go-course` widget.dsl v3 adapter. The old `course.dsl.recipes.courseStudio(...)` API accepted `onNavigate`, while the React `CourseStudioShell` widget contract expects `onNavigateAction`; the adapter was passing the old prop through unchanged, so sidebar buttons rendered but had no dispatch handler.
+
+After mapping `onNavigate` to `onNavigateAction`, I validated the logged-in/admin path and uploaded a real Pi session file from `~/.pi/agent/sessions` through the browser. The session upload populated the Analyze Session section, and sidebar navigation to the generated transcript/visualization routes now works.
+
+### Prompt Context
+
+**User prompt (verbatim):** "also login as \"admin_manuel\" and then you can see the visualize session part, and you can upload a pi session from ~/.pi/agent/sessions to test the session parts when you fixed the navigation"
+
+**Assistant interpretation:** After fixing the left navigation, log in as `admin_manuel`, upload a real Pi agent session, and verify the session transcript/visualize pages through the shell navigation.
+
+**Inferred user intent:** Validate the migration on the authenticated/session workflow, not only static course pages.
+
+**Commit (code):** f342c69b4d0ced750a9ff856b64f33a04cd34293 — "go-go-course: map course shell navigation action"
+
+### What I did
+- Updated `go-go-course/cmd/go-go-course/lib/widget-dsl-v3-adapter.js` to normalize `CourseStudioShell` props:
+  - `onNavigate` → `onNavigateAction`
+- Regenerated the xgoja embedded JS copy.
+- Logged in through `/pages/settings` as `admin_manuel`.
+- Uploaded a copied Pi session JSONL through `/pages/upload`.
+- Verified sidebar navigation to:
+  - `Slides`
+  - `Handouts`
+  - `DSL examples`
+  - `Settings`
+  - `Upload your session`
+  - `Browse sessions`
+  - generated `Visualize session`
+  - generated `Session Transcript`
+  - `Course CMS`
+  - `Course files`
+- Captured/read screenshots for the uploaded session transcript and visualization pages.
+
+### Why
+- The previous validation checked page loads but did not click the shell sidebar buttons.
+- The user's report identified the exact missed behavior: rendered nav items without working navigation.
+- The uploaded session flow exercises dynamic session IDs and the Analyze Session nav group, which are the most important real-host routes.
+
+### What worked
+- Sidebar button click on `Slides` now changes `/pages/index` to `/pages/slides`.
+- Full sidebar navigation check returned `ok: true` for all tested entries, including dynamic session routes.
+- Uploading a real Pi session succeeded and showed `uploaded by admin_manuel` in the transcript metadata.
+- Browser console check reported no errors or warnings.
+- `GOWORK=off go test ./cmd/go-go-course ./cmd/go-go-course/hotreload-host ./cmd/go-go-course/internal/xgojaruntime` passed.
+- `make build` passed.
+- `selected-modules` still shows only `rag-widget-site.widget.dsl` for the widget provider.
+
+### What didn't work
+- The first browser smoke missed this because it only loaded pages and checked for render-error markers; it did not assert that shell navigation buttons changed URLs.
+- File upload from the original `~/.pi/agent/sessions/...` path was denied by the Playwright sandbox, so I copied the JSONL into `.playwright-mcp/uploads/pi-session.jsonl` and uploaded from there.
+
+### What I learned
+- Legacy `course.dsl` used `onNavigate`; current React widget contracts use `onNavigateAction`. The adapter needs to normalize old prop names anywhere it bridges old recipe APIs to v3/runtime Widget IR.
+- Dynamic session routes are the right regression test for this host because they prove both action context interpolation and remembered-session navigation.
+
+### What was tricky to build
+- `CourseStudioShell` is special-cased by the app shell renderer when it is the root shell, so a prop mismatch silently disables navigation rather than rendering an obvious unknown widget or console error.
+- Browser upload validation required using the Playwright-allowed working-directory file roots instead of the original home-directory session path.
+
+### What warrants a second pair of eyes
+- Search for other legacy prop names in the adapter that may need normalization to current widget contracts.
+- Consider adding a committed Playwright test that clicks sidebar buttons instead of only checking page loads.
+
+### What should be done in the future
+- Add a go-go-course smoke test for shell navigation and uploaded-session routes.
+- Eventually remove this compatibility adapter by rewriting page modules directly to `widget.dsl` v3 APIs.
+
+### Code review instructions
+- Review `normalizeCourseStudioProps(...)` in `go-go-course/cmd/go-go-course/lib/widget-dsl-v3-adapter.js`.
+- Check the generated embedded copy under `internal/xgojaruntime/xgoja_embed/.../lib/widget-dsl-v3-adapter.js` matches.
+- Validate manually with sidebar clicks after uploading a session.
+
+### Technical details
+- Uploaded source copied to `.playwright-mcp/uploads/pi-session.jsonl` from a Pi session under `~/.pi/agent/sessions`.
+- Generated session routes tested:
+  - `/pages/session-visualize--sess-mrcwhphn-tll9jl`
+  - `/pages/session-transcript--sess-mrcwhphn-tll9jl`

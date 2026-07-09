@@ -521,3 +521,13 @@ Ported real go-go-course xgoja host to select widget.dsl, added local v3-backed 
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/../go-go-course/cmd/go-go-course/server.js — Host module import cutover
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/../go-go-course/cmd/go-go-course/xgoja.package.yaml — Runtime module selection
 
+
+## 2026-07-08
+
+Fixed go-go-course CourseStudioShell sidebar navigation after widget.dsl v3 port and validated admin/session upload transcript+visualize flow (go-go-course commit f342c69).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/../go-go-course/cmd/go-go-course/internal/xgojaruntime/xgoja_embed/jsverbs/minitrace_viz_site/lib/widget-dsl-v3-adapter.js — Regenerated embedded adapter
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/../go-go-course/cmd/go-go-course/lib/widget-dsl-v3-adapter.js — Maps legacy onNavigate to current onNavigateAction
+
