@@ -13,6 +13,8 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: repo://cmd/widgetdsl-migration-checker/main.go
+      Note: CLI wrapper for migration checker (commit 5872998)
     - Path: repo://examples/xgoja-widgetdsl-v3/jsverbs/server.js
       Note: xgoja preview gallery server renders v3 examples with query state (commit 071dbb0)
     - Path: repo://examples/xgoja-widgetdsl-v3/xgoja.yaml
@@ -51,20 +53,24 @@ RelatedFiles:
         pollResults/monthCalendar/weekCalendar presets
     - Path: repo://packages/rag-evaluation-site/src/widgets/styleBy.ts
       Note: resolveStyleByVars — StyleBySpec consumption (value->styleKey->style)
+    - Path: repo://pkg/widgetdsl/migrationcheck/checker.go
+      Note: Go tree-sitter migration checker implementation (commit 5872998)
+    - Path: repo://pkg/widgetdsl/migrationcheck/checker_test.go
+      Note: Unit tests for parser-backed findings (commit 5872998)
     - Path: repo://pkg/widgetdsl/v3.go
       Note: URL template, section actions, matrix column/header, metric label fixes (commits 071dbb0,57b701d)
     - Path: repo://pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md
       Note: Provider getting-started doc updated for widget.dsl v3 (commit e7c28b7)
     - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/06-widget-dsl-v3-integration-and-migration-guide.md
       Note: Phase 11 migration guide (commit e7c28b7)
-    - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/scripts/02-report-legacy-widget-dsl-usage.py
-      Note: Legacy usage checker for migration gates (commit e7c28b7)
 ExternalSources: []
 Summary: ""
 LastUpdated: 2026-07-06T18:48:57.302545525-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
+
 
 
 
@@ -1851,3 +1857,78 @@ I also added a small migration checker so module-selection decisions can be base
 - The checker recognizes static `require("module")`, `from "module"`, and dynamic `import("module")` for legacy modules.
 - Legacy modules currently scanned: `ui.dsl`, `data.dsl`, `data.v2.dsl`, `context_window.dsl`, `course.dsl`, and `cms.dsl`.
 - `--fail-on-findings` exits non-zero and is intended for future migration gates after a host claims v3-only status.
+
+## Step 26: Port migration checker from Python to Go/tree-sitter
+
+Replaced the ad-hoc Python migration checker with a Go implementation that uses the same tree-sitter JavaScript/TypeScript parsing stack already used in `go-go-goja`. The new checker lives in the repository as a normal Go command and reusable package, so it can participate in Go tests, linting, and future CI gates.
+
+The behavior stays intentionally close to the first checker: report legacy split-module imports separately from `raw.component` escape hatches. The difference is that findings now come from parsed AST nodes (`import_statement`, `export_statement`, and `call_expression`) rather than regular expressions over raw source text.
+
+### Prompt Context
+
+**User prompt (verbatim):** "can you write the checker in go, using the treesitter and other parser tools we have in go-go-goja/ itself?"
+
+**Assistant interpretation:** Replace the Python migration checker with a Go/tree-sitter implementation aligned with the parser approach used in go-go-goja.
+
+**Inferred user intent:** Make the checker more robust, idiomatic for this workspace, and suitable for future CI/tooling integration.
+
+**Commit (code):** 58729980ebac3f14d63ee316a7d7667c479c9567 — "Widget DSL v3: port migration checker to Go"
+
+### What I did
+- Added `pkg/widgetdsl/migrationcheck` with a tree-sitter based scanner.
+- Added `cmd/widgetdsl-migration-checker` CLI with:
+  - human-readable output;
+  - `--json`;
+  - `--fail-on-findings`;
+  - `--root`;
+  - path discovery defaults.
+- Added unit tests for import/export/require/dynamic-import detection, raw component detection, and ignored build directories.
+- Removed the old Python checker script.
+- Updated the v3 migration guide and xgoja preview README to use `go run ./cmd/widgetdsl-migration-checker -- ...`.
+
+### Why
+- Parser-backed detection is less fragile than regular expressions and matches how `go-go-goja/pkg/xgoja/sourcegraph/imports.go` and `pkg/jsverbs/scan.go` inspect JavaScript.
+- A Go package can be tested and reused later if the checker becomes a CI gate or is embedded in another command.
+- Keeping the checker in the main Go module makes it easier to use existing tree-sitter dependencies already present in the workspace.
+
+### What worked
+- `go test ./pkg/widgetdsl/migrationcheck ./cmd/widgetdsl-migration-checker -count=1` passed during development.
+- Full pre-commit Go tests and lint passed.
+- Manual checker run preserved the previous expected result: 11 raw-component findings in v3 examples and no legacy split-module imports for the preview app.
+
+### What didn't work
+- The old Python script path was already mentioned in prior diary/changelog history. I removed the script and updated active docs, but historical entries still mention it as part of Step 25 chronology.
+
+### What I learned
+- `go-go-goja` already has the exact parser patterns needed here: choose JS/TS/TSX grammar by extension, walk named nodes, inspect `source` fields for ESM imports/exports, and inspect call-expression function/argument fields for CommonJS and dynamic imports.
+- Treating raw component calls as findings rather than failures is still the right split; v3 examples intentionally include some escape hatches while they should not include legacy module imports.
+
+### What was tricky to build
+- Tree-sitter node field names vary by construct, but the import use case is small enough to keep explicit: `source` for import/export and `function`/`arguments` for calls.
+- The CLI needs stable relative paths for readable output, so the package accepts a root and normalizes displayed paths with `filepath.Rel`.
+- The default path discovery now checks both in-repo and sibling `go-go-course` locations because this workspace keeps `go-go-course` beside `rag-evaluation-system`.
+
+### What warrants a second pair of eyes
+- Whether raw component matching should eventually understand aliases, e.g. `const raw = widget.raw; raw.component(...)`, or whether direct-call detection is enough.
+- Whether parse-error reporting should become explicit. The current scanner follows go-go-goja-style traversal and reports what it can from the CST.
+- Whether the command should be integrated into Makefile/CI once a host declares itself v3-only.
+
+### What should be done in the future
+- Run `go run ./cmd/widgetdsl-migration-checker -- ../go-go-course/cmd/go-go-course` before changing go-go-course xgoja module selections.
+- Add host-specific allowlists if some raw component escape hatches become accepted long-term exceptions.
+
+### Code review instructions
+- Start in `pkg/widgetdsl/migrationcheck/checker.go`; review `ScanFile`, `languageForPath`, and the call/import node handling.
+- Review CLI behavior in `cmd/widgetdsl-migration-checker/main.go`.
+- Review tests in `pkg/widgetdsl/migrationcheck/checker_test.go`.
+- Validate with:
+  - `go test ./pkg/widgetdsl/... ./cmd/widgetdsl-migration-checker ./pkg/xgoja/providers/widgetsite/... -count=1`
+  - `go run ./cmd/widgetdsl-migration-checker -- pkg/widgetdsl/testdata/v3/examples examples/xgoja-widgetdsl-v3/jsverbs`
+
+### Technical details
+- Parser dependencies:
+  - `github.com/tree-sitter/go-tree-sitter`
+  - `github.com/tree-sitter/tree-sitter-javascript/bindings/go`
+  - `github.com/tree-sitter/tree-sitter-typescript/bindings/go`
+- Detected legacy modules: `ui.dsl`, `data.dsl`, `data.v2.dsl`, `context_window.dsl`, `course.dsl`, and `cms.dsl`.
+- Detected raw escape hatches: direct calls to `raw.component(...)` and `widget.raw.component(...)`.

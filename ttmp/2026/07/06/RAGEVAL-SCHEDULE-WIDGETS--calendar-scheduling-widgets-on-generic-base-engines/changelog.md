@@ -488,3 +488,14 @@ Phase 11 complete: documented widget.dsl v3 provider integration, migration/cuto
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/06-widget-dsl-v3-integration-and-migration-guide.md — Migration guide
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/scripts/02-report-legacy-widget-dsl-usage.py — Migration checker
 
+
+## 2026-07-08
+
+Replaced Python migration checker with Go/tree-sitter CLI and reusable scanner package (commit 5872998).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/cmd/widgetdsl-migration-checker/main.go — CLI entrypoint
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/migrationcheck/checker.go — Parser-backed scanner
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/migrationcheck/checker_test.go — Scanner tests
+
