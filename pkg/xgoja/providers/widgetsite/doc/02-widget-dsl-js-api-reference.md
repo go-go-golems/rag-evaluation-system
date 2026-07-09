@@ -1,7 +1,7 @@
 ---
 Title: "Widget DSL JavaScript API Reference"
 Slug: widget-dsl-js-api-reference
-Short: "Reference for split Widget DSL modules, helpers, recipes, actions, and table cell specifications."
+Short: "Reference for Widget DSL modules, helpers, recipes, actions, and table cell specifications."
 Topics:
 - xgoja
 - widget-dsl
@@ -16,10 +16,13 @@ SectionType: Reference
 
 This reference documents the JavaScript API exposed by the `rag-widget-site` provider. The API creates JSON-compatible Widget IR consumed by the React WidgetRenderer.
 
+For new code, prefer the parallel `widget.dsl` v3 module. The split module reference below remains useful for existing scripts during migration. The v3 namespace inventory is generated in the ticket API reference at `reference/05-widget-dsl-v3-api-reference.md`.
+
 ## Module names
 
 | Module | Purpose |
 | --- | --- |
+| `widget.dsl` | Preferred v3 module with `raw`, `act`, `bind`, `ui`, `data`, `cms`, `course`, `context`, `schedule`, and `time` namespaces. |
 | `ui.dsl` | Generic page, layout, primitive, foundation, and UI recipe helpers. |
 | `data.dsl` | Legacy/current data-display widgets, `cell.*` helpers, and v1 data recipes. |
 | `data.v2.dsl` | Experimental hard-cutover typed/fluent builders for schemas, tables, selectable tables, master-detail editors, and row actions. |
@@ -27,7 +30,13 @@ This reference documents the JavaScript API exposed by the `rag-widget-site` pro
 | `course.dsl` | Course, lesson, slide, handout, and course-studio helpers. |
 | `cms.dsl` | Media, asset, and article-management helpers. |
 
-There is no compatibility bucket module. Import the domain modules explicitly:
+There is no compatibility bucket module. New v3 pages use one import:
+
+```js
+const widget = require("widget.dsl")
+```
+
+Legacy split-module pages import the domains they use explicitly:
 
 ```js
 const ui = require("ui.dsl")

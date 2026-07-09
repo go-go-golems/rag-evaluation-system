@@ -754,16 +754,16 @@ components.
 
 **Goal:** Decide how hosts adopt `widget.dsl` while old modules remain available.
 
-**Status:** not started.
+**Status:** complete.
 
 ### Tasks
 
-- [ ] Update xgoja provider docs to explain parallel module availability.
-- [ ] Add example xgoja config selecting `widget.dsl`.
-- [ ] Add a migration guide from old module imports to `widget.dsl` namespaces.
-- [ ] Add a lint/check script that can report legacy module usage in first-party
+- [x] Update xgoja provider docs to explain parallel module availability.
+- [x] Add example xgoja config selecting `widget.dsl`.
+- [x] Add a migration guide from old module imports to `widget.dsl` namespaces.
+- [x] Add a lint/check script that can report legacy module usage in first-party
       scripts.
-- [ ] Decide whether old modules remain indefinitely or become deprecated after v3
+- [x] Decide whether old modules remain indefinitely or become deprecated after v3
       fixtures cover first-party pages.
 
 ### Acceptance criteria
@@ -793,4 +793,4 @@ components.
 | Phase 8 — Schedule/time namespaces | complete | Added schedule polls, booking picker, time month/week helpers, intents, declarations, and tests. |
 | Phase 9 — Descriptor-driven declarations/docs | complete | Added descriptor inventory, generated namespace exports/API reference, TS fixtures, and descriptor tests. |
 | Phase 10 — Golden go-go-course fixtures | complete | Added runnable widget.dsl v3 examples, renderer CLI, golden snapshots, and stability tests. |
-| Phase 11 — Integration/cutover guidance | not started | Document provider and migration workflow. |
+| Phase 11 — Integration/cutover guidance | complete | Provider docs, xgoja example config, migration guide, and legacy-usage checker are in place. |

@@ -19,40 +19,54 @@ The split Widget DSL modules create Widget IR only. They do not render HTML and 
 
 ## Runtime model
 
-1. JavaScript imports one or more domain modules such as `ui.dsl`, `data.dsl`, `context_window.dsl`, and `course.dsl`.
+1. JavaScript imports `widget.dsl` for new pages, or one or more legacy split modules such as `ui.dsl`, `data.dsl`, `context_window.dsl`, and `course.dsl` while existing pages are being migrated.
 2. API routes return Widget IR page JSON from `/api/widget/pages/{id}`.
 3. The React SPA fetches those pages and renders them through the registry-backed WidgetRenderer.
 4. Actions are dispatched to browser events, navigation, copy behavior, or `/api/widget/actions/{name}` depending on action kind.
 
 ## Build spec module selection
 
-Select only the modules your scripts need:
+Select only the modules your scripts need. A new v3 app usually selects `widget.dsl` as the only module from `rag-widget-site`:
 
 ```yaml
-packages:
+providers:
   - id: rag-widget-site
     import: github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite
+    register: Register
 
-modules:
-  - package: rag-widget-site
-    name: ui.dsl
-    as: ui.dsl
-  - package: rag-widget-site
-    name: data.dsl
-    as: data.dsl
+runtime:
+  modules:
+    - provider: rag-widget-site
+      name: widget.dsl
+      as: widget.dsl
 ```
 
-A course/context app can also select:
+A migration app can temporarily select `widget.dsl` beside the legacy split modules:
 
 ```yaml
-modules:
-  - package: rag-widget-site
-    name: context_window.dsl
-    as: context_window.dsl
-  - package: rag-widget-site
-    name: course.dsl
-    as: course.dsl
+runtime:
+  modules:
+    - provider: rag-widget-site
+      name: widget.dsl
+      as: widget.dsl
+    - provider: rag-widget-site
+      name: ui.dsl
+      as: ui.dsl
+    - provider: rag-widget-site
+      name: data.dsl
+      as: data.dsl
+    - provider: rag-widget-site
+      name: context_window.dsl
+      as: context_window.dsl
+    - provider: rag-widget-site
+      name: course.dsl
+      as: course.dsl
+    - provider: rag-widget-site
+      name: cms.dsl
+      as: cms.dsl
 ```
+
+Remove legacy module entries once the host scripts no longer import them.
 
 ## Serve embedded SPA assets from a Go host
 
@@ -78,7 +92,7 @@ __verb__("demo", { name: "demo", output: "text", short: "Serve a WidgetRenderer 
 function demo() {
   const express = require("express")
   const assets = require("fs:assets")
-  const ui = require("ui.dsl")
+  const widget = require("widget.dsl")
 
   const app = express.app()
   app.spaFromAssetsModule("/", assets, "/app/public", {
@@ -87,14 +101,13 @@ function demo() {
 
   app.get("/healthz", (_req, res) => res.json({ ok: true }))
   app.get("/api/widget/pages/demo", (_req, res) => {
-    res.json(ui.page({
-      id: "demo",
-      title: "Demo",
-      root: ui.panel({ title: "Demo" },
-        ui.caption({ tone: "muted" }, "Rendered by React"),
-        ui.button({ variant: "primary" }, "Refresh")
+    res.json(widget.page("Demo", (p) =>
+      p.id("demo").section("Demo", (s) =>
+        s.caption("Rendered by React").view(
+          widget.ui.button("Refresh", widget.act.event("refresh"), { variant: "primary" })
+        )
       )
-    }))
+    ))
   })
 }
 ```
@@ -103,37 +116,38 @@ The `excludePrefixes` option is important when mounting the SPA at `/`; otherwis
 
 ## Data/context/course APIs
 
-Use multiple modules when an endpoint needs multiple domains:
+In v3, use one module and compose across namespaces:
 
 ```js
-const ui = require("ui.dsl")
-const data = require("data.dsl")
-const contextWindow = require("context_window.dsl")
-const course = require("course.dsl")
+const widget = require("widget.dsl")
 
 app.get("/api/widget/pages/course", (_req, res) => {
-  res.json(ui.page({
-    id: "course",
-    title: "Course",
-    sections: [
-      contextWindow.recipes.contextDiagram({ snapshot, view: "budget" }),
-      course.recipes.courseStudio({
-        sections,
-        activeItemId: "slides",
-        main: course.recipes.courseSlide({ slide, snapshot, index: 0, total: 1 })
-      }),
-      ui.panel({ title: "Rows" }, data.dataTable({ rows, getRowKey: "id", columns }))
-    ]
+  res.json(widget.page("Course", (p) => {
+    p.id("course")
+    p.section("Context", (s) =>
+      s.view(widget.context.diagram(snapshot, (d) => d.view("budget")))
+    )
+    p.section("Studio", (s) =>
+      s.view(widget.course.shell({ title: "Course", sections }, (shell) =>
+        shell.active("slides").main(widget.course.slideDeck({ slides, snapshot, index: 0 }))
+      ))
+    )
+    p.section("Rows", (s) =>
+      s.view(widget.data.collection("rows", rows, (c) => c.schema(schema).table()).toNode())
+    )
   }))
 })
 ```
+
+Legacy endpoints can keep importing `ui.dsl`, `data.dsl`, `context_window.dsl`, `course.dsl`, and `cms.dsl` until they are ported.
 
 ## Troubleshooting
 
 | Problem | Cause | Solution |
 | --- | --- | --- |
-| `Cannot find module "ui.dsl"` | The module was not selected in the xgoja build spec. | Add a `modules:` entry for package `rag-widget-site`, name `ui.dsl`, alias `ui.dsl`. |
-| `Cannot find module "data.dsl"` | The endpoint imports the data module but the build spec did not select it. | Add `data.dsl` to the selected modules. |
+| `Cannot find module "widget.dsl"` | The v3 module was not selected in the xgoja build spec. | Add a runtime module entry for package/provider `rag-widget-site`, name `widget.dsl`, alias `widget.dsl`. |
+| `Cannot find module "ui.dsl"` | A legacy endpoint imports the split UI module but the build spec did not select it. | Keep `ui.dsl` selected while migrating, or port the endpoint to `widget.dsl`. |
+| `Cannot find module "data.dsl"` | A legacy endpoint imports the data module but the build spec did not select it. | Keep `data.dsl` selected while migrating, or port the endpoint to `widget.data`. |
 | Browser routes such as `/pages/demo` return `404`. | Static files are served without SPA fallback. | Use `defaultspa.Handler()` in a Go host, or `app.spaFromAssetsModule(...)` in an xgoja host. |
 | API routes return `index.html`. | The root SPA static handler is catching `/api/...`. | Add `/api` to `excludePrefixes` or register API routes before the SPA fallback. |
 | The npm package works in React but the xgoja binary has no UI. | DSL modules only create Widget IR; they do not include browser assets. | Bundle the default SPA assets or build a host frontend that imports `RagEvaluationSiteApp`. |
