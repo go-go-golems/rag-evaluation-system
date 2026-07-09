@@ -67,12 +67,21 @@ RelatedFiles:
       Note: Provider getting-started doc updated for widget.dsl v3 (commit e7c28b7)
     - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/06-widget-dsl-v3-integration-and-migration-guide.md
       Note: Phase 11 migration guide (commit e7c28b7)
+    - Path: ws://go-go-course/cmd/go-go-course/internal/xgojaruntime/xgoja_runtime.gen.go
+      Note: Regenerated xgoja runtime after widget.dsl module selection (commit b89148f)
+    - Path: ws://go-go-course/cmd/go-go-course/lib/widget-dsl-v3-adapter.js
+      Note: Local widget.dsl-backed adapter for existing page modules (commit b89148f)
+    - Path: ws://go-go-course/cmd/go-go-course/server.js
+      Note: Real go-go-course host now imports widget.dsl and local adapter (commit b89148f)
+    - Path: ws://go-go-course/cmd/go-go-course/xgoja.package.yaml
+      Note: Runtime package now selects widget.dsl from rag-widget-site (commit b89148f)
 ExternalSources: []
 Summary: ""
 LastUpdated: 2026-07-06T18:48:57.302545525-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -1999,3 +2008,82 @@ The checker now skips those generated/staging directories during directory walks
 
 ### Technical details
 - Accurate current go-go-course result: 5 legacy imports in `cmd/go-go-course/server.js` (`ui.dsl`, `data.v2.dsl`, `context_window.dsl`, `course.dsl`, `cms.dsl`).
+
+## Step 28: Port go-go-course host module selection to widget.dsl v3
+
+Migrated the real `go-go-course/cmd/go-go-course` xgoja host so it selects `widget.dsl` from `rag-widget-site` instead of selecting the legacy split modules directly. The page modules still use their existing injected `ui`, `dataV2`, `contextWindow`, `courseDsl`, and `cmsDsl` names, but those names now come from a local adapter backed by `widget.dsl` v3 and `widget.raw.component(...)`.
+
+This is a host-level cutover step, not a full page-by-page source rewrite. It removes runtime dependency on `ui.dsl`, `data.v2.dsl`, `context_window.dsl`, `course.dsl`, and `cms.dsl`, regenerates the embedded xgoja runtime, and verifies the pages through API and browser checks. The remaining raw-component finding is concentrated in the adapter and is an explicit follow-up target for deeper native v3 page rewrites.
+
+### Prompt Context
+
+**User prompt (verbatim):** "port them, verify with playwright (you can read screenshots with read-tool)"
+
+**Assistant interpretation:** Port the go-go-course legacy module imports/runtime selection to `widget.dsl`, then validate the running site with Playwright and screenshots.
+
+**Inferred user intent:** Make the real go-go-course host use the new v3 module path, not just the example gallery, and prove the UI still renders.
+
+**Commit (code):** b89148f84bd6c0d222fc4481e87a40feb96718bb — "go-go-course: use widget DSL v3 runtime module"
+
+### What I did
+- In `go-go-course/cmd/go-go-course/server.js`, replaced direct legacy module imports with:
+  - `const widget = require("widget.dsl")`
+  - `createWidgetDslV3Adapters(widget)`.
+- Added `go-go-course/cmd/go-go-course/lib/widget-dsl-v3-adapter.js` to provide the existing injected page-module API names from `widget.dsl`.
+- Updated `go-go-course/cmd/go-go-course/xgoja.yaml` and `xgoja.package.yaml` to select only `widget.dsl` from `rag-widget-site`.
+- Ran `make generate-package` to refresh `internal/xgojaruntime` and embedded JS sources.
+- Built the app and verified `selected-modules` shows `rag-widget-site.widget.dsl` only for widget modules.
+- Verified all known Widget page API routes return HTTP 200.
+- Verified browser rendering with Playwright across the page set and captured/read screenshots for admin CMS and DSL master-detail pages.
+
+### Why
+- The migration checker showed the real host still depended on legacy modules through `server.js` injection.
+- Removing those runtime module selections is the concrete proof that a production-ish host can run on `widget.dsl` v3.
+- A local adapter keeps the migration bounded and avoids touching all course page modules at once.
+
+### What worked
+- `go run ./cmd/widgetdsl-migration-checker --root ../go-go-course -- ../go-go-course/cmd/go-go-course` now reports no legacy split-module imports; it only reports the adapter's central raw-component escape hatch.
+- `GOWORK=off go test ./cmd/go-go-course ./cmd/go-go-course/hotreload-host ./cmd/go-go-course/internal/xgojaruntime` passed.
+- `make build` in `go-go-course/cmd/go-go-course` passed.
+- API smoke check passed for: `index`, `course`, `upload`, `sessions`, `settings`, `admin-course-cms`, `admin-course-material`, `admin-handout-editor`, all DSL example pages, `slides`, `present-slide`, `handouts`, `print-handout`, `transcript`, and `visualize`.
+- Playwright all-page browser check found no HTTP failures, no console errors, no `[object Object]`, and no unknown-widget/render-error markers.
+
+### What didn't work
+- Initial whole-directory scans counted generated `.xgoja` and `internal/xgojaruntime` copies; Step 27 fixed the checker to skip those.
+- The first adapter pass missed old `data.v2.dsl` editor-builder methods like `selectUrl(...)`, which caused `dsl-examples-master-detail` and `dsl-examples-actions` to return `500 Object has no member 'selectUrl'`. Wrapping the edit builder fixed those pages.
+- The generated runtime had to be refreshed before the hotreload host saw the adapter updates reliably.
+
+### What I learned
+- `go-go-course` uses `cmd/go-go-course/server.js` and `lib/**` as the real authoring sources; `.xgoja/jsverbs` is generated staging.
+- The v3 data collection builder is close enough to back the old `data.v2.dsl` collection API, but old editor callbacks need adapter methods for selection helpers.
+- The `go-go-course run server.js --http-listen ...` documentation is stale for this binary; the hotreload host was the reliable validation entrypoint in this session.
+
+### What was tricky to build
+- The adapter must avoid leaking JS helper methods into Widget IR. Action `.confirm(...)` is implemented as a non-enumerable method that replaces itself with an enumerable string value only after being called.
+- Goja-backed builder objects did not accept arbitrary JS method assignment reliably, so the data collection adapter now returns a pure JS wrapper around the v3 builder instead of monkey-patching the Goja object.
+- The local adapter centralizes `widget.raw.component(...)`; this is intentionally a transitional bridge and not a claim that every page has been rewritten into idiomatic native v3 builder syntax.
+
+### What warrants a second pair of eyes
+- The adapter is deliberately broad. Review whether any prop shape differs subtly from the old split modules, especially CMS/course admin forms and upload actions.
+- The `paletteStyleSet` adapter is a compact approximation rather than the Go-side palette color mixer; check visual parity for context diagrams if exact palette colors matter.
+- The stale command documentation around `run server.js --http-listen` may need a separate go-go-course docs fix.
+
+### What should be done in the future
+- Rewrite high-value page modules (`lib/pages/dsl-examples.js`, `admin-course-cms.js`, `handouts.js`, `slides.js`) to native `widget.dsl` names and remove the local adapter.
+- Add a host-specific Playwright smoke script for go-go-course so this migration is checked in CI.
+- Add an allowlist/annotation mechanism for the migration checker if the central adapter raw escape hatch remains intentionally long-lived.
+
+### Code review instructions
+- Start with `go-go-course/cmd/go-go-course/server.js` and `lib/widget-dsl-v3-adapter.js`.
+- Review `xgoja.package.yaml` and generated `internal/xgojaruntime/xgoja_runtime.gen.go` to confirm only `widget.dsl` is selected from `rag-widget-site`.
+- Validate with:
+  - `cd rag-evaluation-system && go run ./cmd/widgetdsl-migration-checker --root ../go-go-course -- ../go-go-course/cmd/go-go-course`
+  - `cd go-go-course && GOWORK=off go test ./cmd/go-go-course ./cmd/go-go-course/hotreload-host ./cmd/go-go-course/internal/xgojaruntime`
+  - `cd go-go-course/cmd/go-go-course && make build`
+  - Run hotreload host on `127.0.0.1:8787` and Playwright-smoke the page set.
+
+### Technical details
+- Representative screenshots read during validation:
+  - `go-go-course-admin-cms-widgetdsl-v3.png`
+  - `go-go-course-dsl-master-detail-widgetdsl-v3.png`
+- Accurate post-port checker result: one `raw-component-escape-hatch` finding in `cmd/go-go-course/lib/widget-dsl-v3-adapter.js`, zero `legacy-module-import` findings.

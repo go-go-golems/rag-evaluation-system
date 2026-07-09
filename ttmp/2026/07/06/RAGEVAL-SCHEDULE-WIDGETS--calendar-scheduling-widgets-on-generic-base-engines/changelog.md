@@ -510,3 +510,14 @@ Updated Go migration checker to skip generated xgoja staging/embed directories a
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/migrationcheck/checker_test.go — Generated-directory skip coverage
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/06-widget-dsl-v3-integration-and-migration-guide.md — Updated checker command guidance
 
+
+## 2026-07-08
+
+Ported real go-go-course xgoja host to select widget.dsl, added local v3-backed adapter, regenerated runtime, and validated API/browser rendering (go-go-course commit b89148f).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/../go-go-course/cmd/go-go-course/lib/widget-dsl-v3-adapter.js — Adapter bridge
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/../go-go-course/cmd/go-go-course/server.js — Host module import cutover
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/../go-go-course/cmd/go-go-course/xgoja.package.yaml — Runtime module selection
+
