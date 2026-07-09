@@ -178,9 +178,13 @@ Prefer builder callbacks, fragments, typed helpers, and namespace-level intents.
 
 ## Migration workflow
 
-1. **Inventory imports.** Run the migration checker against the host scripts.
+1. **Inventory imports.** Run the migration checker against the host scripts. Directory walks skip generated/staging outputs such as `.xgoja`, `internal/xgojaruntime`, `xgoja_embed`, `dist`, and `node_modules`.
    ```bash
    go run ./cmd/widgetdsl-migration-checker -- path/to/scripts
+   ```
+   For `go-go-course`, this means you can scan the real authoring directory without counting generated xgoja copies:
+   ```bash
+   go run ./cmd/widgetdsl-migration-checker --root ../go-go-course -- ../go-go-course/cmd/go-go-course
    ```
 2. **Add `widget.dsl` beside old modules.** Do not remove old module entries yet.
 3. **Port one route/page at a time.** Keep route IDs and page IDs stable.

@@ -31,6 +31,7 @@ var sourceSuffixes = map[string]bool{
 var ignoredDirs = map[string]bool{
 	".git": true, "node_modules": true, "dist": true, "app-dist": true,
 	"storybook-static": true, "coverage": true, ".next": true, ".turbo": true,
+	".xgoja": true, "xgojaruntime": true, "xgoja_embed": true,
 }
 
 // Finding is one parser-backed migration finding.
@@ -50,12 +51,21 @@ type Options struct {
 
 // DefaultPaths returns known first-party widget source locations when they exist.
 func DefaultPaths(root string) []string {
-	candidates := []string{
-		filepath.Join(root, "go-go-course", "cmd", "go-go-course", "lib", "pages"),
-		filepath.Join(root, "..", "go-go-course", "cmd", "go-go-course", "lib", "pages"),
+	courseSources := func(base string) []string {
+		return []string{
+			filepath.Join(base, "cmd", "go-go-course", "server.js"),
+			filepath.Join(base, "cmd", "go-go-course", "site.js"),
+			filepath.Join(base, "cmd", "go-go-course", "session-verbs.js"),
+			filepath.Join(base, "cmd", "go-go-course", "lib"),
+		}
+	}
+	candidates := []string{}
+	candidates = append(candidates, courseSources(filepath.Join(root, "go-go-course"))...)
+	candidates = append(candidates, courseSources(filepath.Join(root, "..", "go-go-course"))...)
+	candidates = append(candidates,
 		filepath.Join(root, "pkg", "widgetdsl", "testdata", "v3", "examples"),
 		filepath.Join(root, "examples"),
-	}
+	)
 	ret := []string{}
 	seen := map[string]bool{}
 	for _, candidate := range candidates {

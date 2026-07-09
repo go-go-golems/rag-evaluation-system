@@ -43,21 +43,29 @@ raw.component("FieldRenderer", {});
 	}
 }
 
-func TestScanPathsSkipsBuildDirectories(t *testing.T) {
+func TestScanPathsSkipsBuildAndGeneratedDirectories(t *testing.T) {
 	dir := t.TempDir()
 	goodDir := filepath.Join(dir, "src")
-	ignoredDir := filepath.Join(dir, "node_modules")
+	ignoredDirs := []string{
+		filepath.Join(dir, "node_modules"),
+		filepath.Join(dir, ".xgoja", "jsverbs"),
+		filepath.Join(dir, "internal", "xgojaruntime", "xgoja_embed", "jsverbs"),
+	}
 	if err := os.MkdirAll(goodDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(ignoredDir, 0o755); err != nil {
-		t.Fatal(err)
+	for _, ignoredDir := range ignoredDirs {
+		if err := os.MkdirAll(ignoredDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
 	}
 	if err := os.WriteFile(filepath.Join(goodDir, "page.js"), []byte(`const widget = require("widget.dsl");`), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(ignoredDir, "old.js"), []byte(`const ui = require("ui.dsl");`), 0o644); err != nil {
-		t.Fatal(err)
+	for _, ignoredDir := range ignoredDirs {
+		if err := os.WriteFile(filepath.Join(ignoredDir, "old.js"), []byte(`const ui = require("ui.dsl");`), 0o644); err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	findings, err := ScanPaths(Options{Root: dir, Paths: []string{dir}})

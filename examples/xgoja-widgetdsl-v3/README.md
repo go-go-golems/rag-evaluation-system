@@ -51,6 +51,9 @@ pnpm --dir packages/rag-evaluation-site typecheck
 pnpm --dir packages/rag-evaluation-site build-storybook
 go run ./cmd/widgetdsl-migration-checker -- \
   pkg/widgetdsl/testdata/v3/examples examples/xgoja-widgetdsl-v3/jsverbs
+
+go run ./cmd/widgetdsl-migration-checker --root ../go-go-course -- \
+  ../go-go-course/cmd/go-go-course
 ```
 
 The migration checker should report no legacy split-module imports for this app. It may report deliberate `widget.raw.component(...)` examples; treat those as follow-up candidates for future v3 helper coverage.
