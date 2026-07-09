@@ -15,6 +15,7 @@ RelatedFiles:
       Note: |-
         ported Doodle pages from legacy split modules to widget.dsl v3
         uses typed ui and schedule DSL helpers without raw escape hatches
+        Added calendar visualization over Doodle poll slots and votes
     - Path: repo://examples/xgoja/doodle-site/xgoja.v2.yaml
       Note: selected widget.dsl instead of ui.dsl/data.dsl
     - Path: repo://pkg/widgetdsl/typescript.go
@@ -29,6 +30,7 @@ LastUpdated: 2026-07-09T00:00:00Z
 WhatFor: Record implementation steps, validation, failures, and review instructions for the Doodle v3 port.
 WhenToUse: Read before editing examples/xgoja/doodle-site.
 ---
+
 
 
 
@@ -232,3 +234,71 @@ The Doodle example now demonstrates the intended new surface more clearly: `widg
 ### Technical details
 - Checker result after this step: zero findings.
 - Doodle uses native form POST for writes; schedule widgets are read-only render views in this example.
+
+## Step 4: Add calendar widgets to the Doodle poll page
+
+Extended the Doodle poll page so it demonstrates the calendar/time side of `widget.dsl` v3 in addition to the schedule availability matrix. The page now derives calendar events from offered poll slots and renders them through `widget.time.month(...)` and `widget.time.week(...)` when slot labels can be parsed as dates and times.
+
+The calendar blocks include the participant names grouped by vote value, so the week view shows both the offered time and who answered yes, maybe, or no. This keeps SQLite storage unchanged while adding a second visualization over the same poll data.
+
+### Prompt Context
+
+**User prompt (verbatim):** "ok, let's visualize the offered times and who signaled availability using the calendar widgets as well, to demonstrate their use"
+
+**Assistant interpretation:** Add a Doodle poll-page section that uses calendar widgets to show parseable offered slots and participant availability.
+
+**Inferred user intent:** Make Doodle demonstrate both schedule availability widgets and calendar/time widgets in one real app.
+
+**Commit (code):** N/A — pending commit.
+
+### What I did
+- Added slot-label parsing for labels like `Thu Jul 9 · 19:00` and `2026-07-09 19:00`.
+- Added `calendarEventsForPoll(...)` to convert options, participants, votes, and tallies into calendar event DTOs.
+- Added a `Calendar view` section to the poll page.
+- Rendered parseable slots through `widget.time.month(...)` and `widget.time.week(...)`.
+- Kept the existing `widget.schedule.availabilityPoll(...)`, `widget.schedule.pollSummary(...)`, and result table.
+- Rebuilt the Doodle binary.
+
+### Why
+- Doodle already demonstrated availability-oriented schedule widgets.
+- The app did not yet demonstrate the time/calendar widgets on the same real data.
+- Calendar rendering is useful only if it shows participant availability, not only empty offered slots.
+
+### What worked
+- The migration checker still reports no legacy imports and no raw escape hatches.
+- `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1` passed.
+- `cd examples/xgoja/doodle-site && make build` passed.
+- API validation confirmed the poll page now emits both `MonthGrid` and `TimeGrid` nodes.
+- The generated `TimeGrid` blocks include participant names in labels and vote groups in `meta`.
+- Browser smoke loaded `/pages/poll?poll=1` with no console warnings or errors.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- The current Doodle slot model is intentionally free-form, so calendar rendering needs a parseable-label adapter at the page boundary.
+- `widget.time.week(...)` can be demonstrated without changing persistence if the page layer derives `startISO`, `endISO`, `dayISO`, and `label` fields from existing options and votes.
+
+### What was tricky to build
+- Doodle does not store structured start/end timestamps. The solution was to keep storage unchanged and add conservative parsing for the slot formats already shown in the create-page placeholder. Unparseable labels fall back to an empty-state message rather than producing incorrect calendar events.
+- The week calendar needs a useful hour range. I derive a small range from the parsed slot hours so evening polls do not appear in a large mostly empty 8–18 grid.
+
+### What warrants a second pair of eyes
+- Whether free-form slot labels should remain acceptable for the demo, or whether Doodle should eventually store structured timestamps.
+- Whether the calendar event labels are too long when many participants respond.
+
+### What should be done in the future
+- Consider storing optional `start_iso` / `end_iso` columns if Doodle becomes more than a demo.
+- Consider adding a dedicated compact event detail renderer if participant lists become large.
+
+### Code review instructions
+- Start in `examples/xgoja/doodle-site/verbs/doodle.js` at `parseSlotLabel`, `calendarEventsForPoll`, and the `Calendar view` section inside `pollPage`.
+- Validate with:
+  - `go run ./cmd/widgetdsl-migration-checker -- examples/xgoja/doodle-site/verbs examples/xgoja/doodle-site/xgoja.v2.yaml`
+  - `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+  - `cd examples/xgoja/doodle-site && make build`
+  - load `/pages/poll?poll=1` and confirm the Calendar view renders without console errors.
+
+### Technical details
+- Calendar event style keys are chosen from availability counts: `focus` when at least one yes exists, `personal` when only maybe exists, and `meeting` otherwise.
+- Slot labels are parsed with the poll creation year as fallback for month/day labels.
