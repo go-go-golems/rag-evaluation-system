@@ -9,14 +9,21 @@ Owners: []
 RelatedFiles:
     - Path: repo://packages/rag-evaluation-site/src/widgets/presets/crm.ts
       Note: Current CRM behavior investigated
+    - Path: repo://pkg/widgetdsl/testdata/v3/examples/41-crm-workshop-pipeline.js
+      Note: CRM fluent API golden fixture
+    - Path: repo://pkg/widgetdsl/testdata/v3/golden/41-crm-workshop-pipeline.json
+      Note: Expected CRM Widget IR
     - Path: repo://pkg/widgetdsl/v3.go
       Note: Current builder patterns investigated
+    - Path: repo://pkg/widgetdsl/v3_crm.go
+      Note: CRM namespace implementation (commit 196cb20800c7d3893daffe6aca37fa9682e0a251)
 ExternalSources: []
 Summary: ""
 LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 # Diary
@@ -85,3 +92,67 @@ Ten implement it step by step, committing at appropriate intervals, keeping a de
 - Ticket ID: `RAGEVAL-WORKSHOP-CRM-IMPLEMENTATION`.
 - Primary guide: `design-doc/01-intern-guide-workshop-crm-widget-dsl-vertical-slice.md`.
 - First code target: add `setExport(exports, "crm", r.v3CRMObject())` in `pkg/widgetdsl/module.go`.
+
+## Step 2: Implement the `widget.crm` v3 namespace
+
+This step added the first executable CRM DSL surface. `widget.crm` is now installed alongside `ui`, `data`, `time`, and `schedule`; its helpers emit existing CRM Widget IR types instead of using raw component escape hatches. The first vertical slice covers pipeline definitions and boards, typed field schemas and field lists, activity feeds, task lists, metrics, funnel segments, and standard server/navigation action contracts.
+
+The API uses opaque Goja builders only where definitions require validation and ordered mutation. `crm.fields(...)` and `crm.pipeline(...)` carry private Go references, expose chainable methods, and produce serializable snapshots through `build()`. Deals, activities, tasks, and record values remain ordinary JavaScript data supplied by the host application.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 1)
+
+**Assistant interpretation:** Implement the planned workshop CRM in committed, validated steps after documenting it.
+
+**Inferred user intent:** Give the workshop CRM a real, idiomatic `widget.dsl` authoring surface before building a host application around it.
+
+**Commit (code):** `196cb20800c7d3893daffe6aca37fa9682e0a251` — "Widget DSL: add CRM namespace"
+
+### What I did
+- Added `widget.crm` to `installWidgetV3` in `pkg/widgetdsl/module.go`.
+- Added `pkg/widgetdsl/v3_crm.go` with CRM opaque builders, view helpers, and intent helpers.
+- Added CRM declarations to `pkg/widgetdsl/typescript.go`.
+- Added CRM namespace metadata to `pkg/widgetdsl/v3_descriptors.go` so generated API reference inventory includes it.
+- Added `41-crm-workshop-pipeline.js` and its JSON golden fixture.
+- Ran Go format, Widget DSL golden tests, package tests, and frontend typecheck.
+
+### Why
+- JavaScript authors need semantic CRM APIs that preserve the existing React/IR contracts.
+- Pipeline and field definitions have rules that belong in Go-side builders; ordinary CRM data must remain host/persistence-owned JSON.
+
+### What worked
+- `go test ./pkg/widgetdsl/... -count=1` passed before commit.
+- `go test ./pkg/widgetdsl -run TestWidgetV3GoldenExamplesRenderStableIR -count=1` passed before commit.
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed before commit.
+- The pre-commit Go test and Go lint steps passed.
+
+### What didn't work
+- The pre-commit Biome lint inspected the new JavaScript golden fixture and warned about literal action templates such as `"${dealId}"` with `lint/suspicious/noTemplateCurlyInString`; this is expected DSL action-template syntax but Biome cannot infer it.
+- The same hook transiently reported `pkg/widgetdsl/testdata/v3/golden/41-crm-workshop-pipeline.json:1:1 parse ... found the end of the file`, while the committed golden file is populated (`4706` bytes) and the normal Widget DSL golden test passes. This needs follow-up if the fixture lint scope remains enabled.
+
+### What I learned
+- The descriptor inventory in `v3_descriptors.go` is the source for exported namespace declarations and API-reference generation; adding runtime exports alone is incomplete.
+- Existing CRM adapter action contexts use `cardId`, `from`, `to`, `beforeId`, `key`, and `value`; CRM intent helpers must not invent incompatible names.
+
+### What was tricky to build
+- Builder values must be accepted by later helpers without exposing Go internals. `crmPipelineFromValue` and `crmFieldsFromValue` first resolve the private builder reference, then fall back to a serializable built object. This lets callers pass either a fluent builder or a stored definition snapshot.
+- Grouped CRM fields require conversion from a flat field schema to `RecordFieldList.sections`. The helper preserves first-seen group order and defaults ungrouped fields to `Details`.
+
+### What warrants a second pair of eyes
+- `v3CRMBoardProps` must stay semantically aligned with `packages/rag-evaluation-site/src/widgets/presets/crm.ts` as both construct `BoardEngine` props.
+- The current `tasksInbox` helper intentionally provides a lightweight static panel; task completion action wiring should be added with a dedicated builder/test before relying on it for write workflows.
+
+### What should be done in the future
+- Add direct unit tests for invalid empty/duplicate field and stage definitions, in addition to the end-to-end golden fixture.
+- Build the SQLite-backed `workshop-crm-site` host and validate actions in a browser.
+
+### Code review instructions
+- Start at `pkg/widgetdsl/v3_crm.go`, especially `v3CRMFieldsBuilder`, `v3CRMPipelineBuilder`, and `v3CRMPipelineBoard`.
+- Compare generated `BoardEngine` properties against `packages/rag-evaluation-site/src/widgets/presets/crm.ts`.
+- Run `go test ./pkg/widgetdsl/... -count=1` and `pnpm --dir packages/rag-evaluation-site typecheck`.
+
+### Technical details
+- New fixture: `pkg/widgetdsl/testdata/v3/examples/41-crm-workshop-pipeline.js`.
+- New golden: `pkg/widgetdsl/testdata/v3/golden/41-crm-workshop-pipeline.json`.
+- New runtime file: `pkg/widgetdsl/v3_crm.go`.
