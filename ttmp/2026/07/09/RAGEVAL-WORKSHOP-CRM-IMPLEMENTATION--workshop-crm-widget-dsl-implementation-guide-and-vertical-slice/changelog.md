@@ -24,3 +24,13 @@ Step 2: added widget.crm opaque field/pipeline builders, CRM view helpers, inten
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/typescript.go — CRM API declarations
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3_crm.go — CRM runtime implementation
 
+
+## 2026-07-09
+
+Step 3: added and browser-validated SQLite xgoja workshop CRM reference host, plus CRM palette style sets required by funnel/activity rendering (commit 0d81a70b594cfea9a1884d6cfc363c27c2fdb9d2).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/examples/xgoja/workshop-crm-site/verbs/lib/store.js — SQLite application data
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3_crm.go — CRM Widget IR palettes
+

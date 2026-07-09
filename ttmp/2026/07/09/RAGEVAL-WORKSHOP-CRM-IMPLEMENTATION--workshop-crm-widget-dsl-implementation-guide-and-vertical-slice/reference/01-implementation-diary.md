@@ -7,6 +7,12 @@ DocType: ""
 Intent: ""
 Owners: []
 RelatedFiles:
+    - Path: repo://examples/xgoja/workshop-crm-site/verbs/lib/pages.js
+      Note: CRM Widget DSL page composition
+    - Path: repo://examples/xgoja/workshop-crm-site/verbs/lib/store.js
+      Note: SQLite lead-to-workshop-run persistence
+    - Path: repo://examples/xgoja/workshop-crm-site/verbs/workshop-crm.js
+      Note: HTTP routes and xgoja host entrypoint (commit 0d81a70b594cfea9a1884d6cfc363c27c2fdb9d2)
     - Path: repo://packages/rag-evaluation-site/src/widgets/presets/crm.ts
       Note: Current CRM behavior investigated
     - Path: repo://pkg/widgetdsl/testdata/v3/examples/41-crm-workshop-pipeline.js
@@ -16,13 +22,16 @@ RelatedFiles:
     - Path: repo://pkg/widgetdsl/v3.go
       Note: Current builder patterns investigated
     - Path: repo://pkg/widgetdsl/v3_crm.go
-      Note: CRM namespace implementation (commit 196cb20800c7d3893daffe6aca37fa9682e0a251)
+      Note: |-
+        CRM namespace implementation (commit 196cb20800c7d3893daffe6aca37fa9682e0a251)
+        CRM palette IR fix required by renderer
 ExternalSources: []
 Summary: ""
 LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -156,3 +165,74 @@ The API uses opaque Goja builders only where definitions require validation and 
 - New fixture: `pkg/widgetdsl/testdata/v3/examples/41-crm-workshop-pipeline.js`.
 - New golden: `pkg/widgetdsl/testdata/v3/golden/41-crm-workshop-pipeline.json`.
 - New runtime file: `pkg/widgetdsl/v3_crm.go`.
+
+## Step 3: Build the SQLite-backed workshop CRM reference host
+
+This step turns the CRM DSL into a runnable vertical slice at `examples/xgoja/workshop-crm-site`. The host uses the Doodle xgoja pattern—one route entrypoint, a SQLite store, and widget-composition pages—but models the workshop lifecycle instead: capture a lead, inspect it in the pipeline and record view, choose a delivery slot, and create a persisted workshop run.
+
+While browser-testing the dashboard, the new funnel exposed a renderer-contract gap: `SegmentedBar` requires a `styleSet`, so rendering a `crm.funnel(...)` without one crashed in React. I fixed the CRM DSL to serialize the existing CRM stage and activity palettes as part of its generated IR, then rebuilt the fixture and the reference binary before retrying the interaction flow.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead, implement step by step, commit at appropriate intervals, keep a detailed diary as you work. (Read skills if necessary)"
+
+**Assistant interpretation:** Continue the workshop CRM plan in small validated commits and record chronological implementation evidence.
+
+**Inferred user intent:** Obtain a demonstrably working, maintainable CRM vertical slice rather than only a DSL API or design document.
+
+**Commit (code):** `0d81a70b594cfea9a1884d6cfc363c27c2fdb9d2` — "Examples: add workshop CRM vertical slice"
+
+### What I did
+- Added `examples/xgoja/workshop-crm-site/`, including its xgoja v2 manifest, Makefile, embedded SPA assets, and generated runnable binary.
+- Added `verbs/lib/store.js` with SQLite tables for organizations, contacts, deals, activities, availability options, and workshop runs plus deterministic seed data.
+- Added `verbs/lib/pages.js` for command center, pipeline, lead intake, opportunity record/activity, availability, and workshop-run pages.
+- Added form POST routes for lead creation and scheduling a selected availability option in `verbs/workshop-crm.js`.
+- Added default CRM stage/activity `styleSet` payloads in `pkg/widgetdsl/v3_crm.go`, then refreshed the CRM golden fixture.
+- Ran the raw-free migration checker, Go test suite, frontend typecheck, xgoja build, HTTP assertions, and a Playwright lead-to-run journey.
+
+### Why
+- The host proves the intended application seam: fluent DSL definitions and IR composition in JS, plain serializable data in SQLite, and existing React WidgetRenderer components in the browser.
+- Palette data is a renderer requirement, not an optional visual detail for `SegmentedBar`; emitting it from `widget.crm` prevents all hosts from rediscovering the same runtime failure.
+
+### What worked
+- `go run ./cmd/widgetdsl-migration-checker -- examples/xgoja/workshop-crm-site/verbs examples/xgoja/workshop-crm-site/xgoja.v2.yaml` reported: `No legacy Widget DSL imports or raw component escape hatches found.`
+- `go test ./pkg/widgetdsl/... -count=1` passed.
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `make -C examples/xgoja/workshop-crm-site sync-app` and `make -C examples/xgoja/workshop-crm-site build` produced `dist/workshop-crm-site`.
+- Playwright successfully created `Orbit Analytics`, navigated to its opportunity, opened availability, submitted a delivery date, and reached `/pages/runs` with no browser console errors.
+- The final `TimeGrid` API response covered `2026-09-07` through `2026-09-13` for the selected September run.
+
+### What didn't work
+- Initial xgoja build failed with `Error: parse lib/pages.js: syntax errors while collecting imports`; Biome pinpointed an invalid trailing comma/parenthesis in the fluent `opportunityPage` chain. I rewrote that function with explicit intermediate values and properly nested chained calls, after which `make ... build` passed.
+- Initial browser navigation to `/pages/index` threw `TypeError: Cannot read properties of undefined (reading 'styles')`. The cause was `crm.funnel(...)` emitting `SegmentedBar` props without its required `styleSet`. Adding CRM palette serialization fixed the crash.
+- A first workshop-run calendar render showed the current July week even for a September run. `widget.time.range.week` expects a date-like value; passing `startISO.slice(0, 10)` instead of the local timestamp made the generated `days` use the September week.
+- The staged generated SPA assets cause Biome to report thousands of diagnostics against minified CSS/JS. This is pre-existing generated-asset lint behavior (the Doodle host also commits generated assets); hooks still ran the Go tests and linters successfully. Source-specific warnings remain for the intentional `"${dealId}"` DSL template and externally invoked `site()` verb.
+
+### What I learned
+- The TypeScript `stageStyleSet` and `activityStyleSet` contracts are necessary semantic parity data for Go CRM helpers, not merely Storybook styling.
+- The xgoja SQLite file is relative to the binary process working directory. Running the binary from the repository root creates `workshop-crm.db` there; `make serve` runs from the example directory and keeps it beside the example. Operators should prefer `make -C examples/xgoja/workshop-crm-site serve`.
+
+### What was tricky to build
+- The host must not persist opaque Goja builders. `pages.js` keeps pipeline and field definitions in-memory as DSL builder values, while `store.js` returns only arrays/objects from SQLite. This preserves the intended definition/data separation.
+- Calendar range selection initially appeared correct at the event level but wrong in the rendered week header because local timestamp parsing did not satisfy the range parser. Reducing the timestamp to ISO calendar date at the caller was the smallest explicit fix.
+
+### What warrants a second pair of eyes
+- Review whether copying the CRM palette maps into Go is acceptable short-term or whether the frontend/Go contract should share a generated declarative source before more palette variants are added.
+- Review form write handling before treating this example as security guidance: it intentionally omits authentication, authorization, validation beyond required fields, and CSRF protections.
+- The reference host offers explicit forms for durable writes; the `crm.intent.moveDeal` is emitted for board parity but does not yet have a generic xgoja action dispatcher.
+
+### What should be done in the future
+- Add committed Playwright smoke scripts for this host and the existing go-go-course host.
+- Add unit coverage for duplicate/empty CRM builder definitions and a test that `crm.funnel` always serializes a usable style set.
+- Add intentional action-dispatch plumbing only after agreeing on a server-action protocol; do not make BoardEngine drag/drop mutate SQLite implicitly.
+
+### Code review instructions
+- Start with `examples/xgoja/workshop-crm-site/verbs/workshop-crm.js` to inspect route and SPA boundaries.
+- Review `verbs/lib/store.js` for persistence invariants and `verbs/lib/pages.js` for the lead-to-run composition.
+- Review `pkg/widgetdsl/v3_crm.go` palette functions against `packages/rag-evaluation-site/src/crm/palettes.ts`.
+- Validate with `make -C examples/xgoja/workshop-crm-site build`, then run `make -C examples/xgoja/workshop-crm-site serve` and visit `http://127.0.0.1:18794/pages/index`.
+
+### Technical details
+- Runtime server used for smoke validation: `127.0.0.1:18794`.
+- Key routes: `/pages/index`, `/pages/pipeline`, `/pages/lead`, `/pages/opportunity?deal=<id>`, `/pages/availability?deal=<id>`, `/pages/runs`.
+- Write routes: `POST /api/form/create-lead` and `POST /api/form/schedule-run?deal=<id>`.
