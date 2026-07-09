@@ -477,3 +477,14 @@ Widget DSL v3 preview gallery hardened, browser regressions fixed, and Storybook
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/WidgetRenderer.v3-regressions.stories.tsx — New regression story suite
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3.go — Runtime lowering fixes
 
+
+## 2026-07-08
+
+Phase 11 complete: documented widget.dsl v3 provider integration, migration/cutover workflow, and legacy usage checker (commit e7c28b7).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md — Provider docs
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/06-widget-dsl-v3-integration-and-migration-guide.md — Migration guide
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/scripts/02-report-legacy-widget-dsl-usage.py — Migration checker
+

@@ -15,6 +15,8 @@ Owners: []
 RelatedFiles:
     - Path: repo://examples/xgoja-widgetdsl-v3/jsverbs/server.js
       Note: xgoja preview gallery server renders v3 examples with query state (commit 071dbb0)
+    - Path: repo://examples/xgoja-widgetdsl-v3/xgoja.yaml
+      Note: Reference xgoja config selecting widget.dsl from rag-widget-site
     - Path: repo://packages/rag-evaluation-site/src/components/atoms/DateTile/DateTile.module.css
       Note: sm-size overflow fix (weekday hidden, per-size day scaling)
     - Path: repo://packages/rag-evaluation-site/src/components/molecules/AppNav/AppNav.stories.tsx
@@ -51,12 +53,19 @@ RelatedFiles:
       Note: resolveStyleByVars — StyleBySpec consumption (value->styleKey->style)
     - Path: repo://pkg/widgetdsl/v3.go
       Note: URL template, section actions, matrix column/header, metric label fixes (commits 071dbb0,57b701d)
+    - Path: repo://pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md
+      Note: Provider getting-started doc updated for widget.dsl v3 (commit e7c28b7)
+    - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/06-widget-dsl-v3-integration-and-migration-guide.md
+      Note: Phase 11 migration guide (commit e7c28b7)
+    - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/scripts/02-report-legacy-widget-dsl-usage.py
+      Note: Legacy usage checker for migration gates (commit e7c28b7)
 ExternalSources: []
 Summary: ""
 LastUpdated: 2026-07-06T18:48:57.302545525-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -1755,3 +1764,90 @@ After the preview fixes were stable, added Storybook regression stories that rec
   `examples/xgoja-widgetdsl-v3/dist/widgetdsl-v3-examples serve site start --http-listen 127.0.0.1:8098`
 - The committed xgoja app evaluates each example script and, when present, calls `renderPage(query)` with the request query string before returning Widget IR.
 - The generated binary under `examples/xgoja-widgetdsl-v3/dist/` is intentionally ignored in `.gitignore`.
+
+## Step 25: Phase 11 integration and migration guidance
+
+Closed the final Widget DSL v3 planning phase by documenting how xgoja hosts should adopt `widget.dsl` without breaking existing split-module pages. This step turns the preview-gallery implementation into an operational migration path: new hosts select `widget.dsl`, migration hosts may temporarily select both module families, and old modules remain supported until first-party pages are ported and validated.
+
+I also added a small migration checker so module-selection decisions can be based on source evidence instead of memory. The checker reports legacy imports and raw component escape hatches, which lets a host prove it is v3-only before removing legacy `ui.dsl`, `data.dsl`, `course.dsl`, `context_window.dsl`, or `cms.dsl` runtime entries.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead."
+
+**Assistant interpretation:** Proceed with the next stated follow-up: Phase 11 migration/provider documentation and cutover guidance for `widget.dsl` v3.
+
+**Inferred user intent:** Finish the Widget DSL v3 workstream by making adoption instructions explicit and committing the documentation/tooling needed for future migrations.
+
+**Commit (code):** e7c28b721a6d3d77eb91b503a97a68cad0e41bc2 — "Widget DSL v3: document migration path"
+
+### What I did
+- Added `reference/06-widget-dsl-v3-integration-and-migration-guide.md` with:
+  - module-family policy;
+  - new-host and migration-host xgoja runtime snippets;
+  - old-to-v3 mapping table;
+  - migration workflow;
+  - cutover/deprecation policy;
+  - validation checklist.
+- Updated embedded provider docs:
+  - `pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md`
+  - `pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md`
+  - `pkg/xgoja/providers/widgetsite/doc/03-widget-dsl-spa-bundling.md`
+- Expanded `examples/xgoja-widgetdsl-v3/README.md` so it is the reference `widget.dsl`-only xgoja host example.
+- Added `scripts/02-report-legacy-widget-dsl-usage.py` to report split-module imports and raw component escape hatches.
+- Marked Phase 11 complete in the tracker and checked the remaining v3 phase tasks in `tasks.md`.
+
+### Why
+- The implementation was usable, but hosts still needed explicit instructions for choosing modules and removing old imports safely.
+- Existing pages cannot all switch atomically, so the docs need to describe an intentional parallel-module period rather than implying a hard cutover.
+- A checker script makes the migration policy reviewable: if legacy imports remain, keep the legacy modules selected.
+
+### What worked
+- `docmgr validate frontmatter --doc .../reference/06-widget-dsl-v3-integration-and-migration-guide.md --suggest-fixes` passed.
+- `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1` passed.
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- The migration checker ran successfully against the v3 examples and xgoja preview scripts.
+
+### What didn't work
+- The migration checker intentionally reported 11 findings in the v3 examples because some examples still demonstrate `widget.raw.component(...)` escape hatches:
+  - `08-markdown-article.js`
+  - `21-crm-record-fields.js`
+  - `22-crm-field-renderers.js`
+  - `23-crm-board.js`
+  - `24-activity-feed.js`
+  - `25-ui-form.js`
+  - `26-upload-drop-area.js`
+- Those are not legacy split-module imports, but they are useful follow-up signals for future v3 helper coverage.
+
+### What I learned
+- Provider docs must distinguish two questions that are easy to conflate: which widget authoring modules a host selects, and which non-widget provider modules it needs for HTTP/assets.
+- The correct claim for the xgoja preview is not "only one runtime module"; it is "only `widget.dsl` from `rag-widget-site`" plus the required host/http/asset modules.
+- `cms.dsl` is part of the legacy split family and should be included in migration guidance alongside `ui.dsl`, `data.dsl`, `data.v2.dsl`, `context_window.dsl`, and `course.dsl`.
+
+### What was tricky to build
+- The embedded docs had many old split-module examples, and replacing all of them would have made the diff noisy and risked inventing untested snippets. I updated the module-selection, smallest-page, SPA, and migration sections while explicitly labeling the old examples as legacy-compatible.
+- The migration checker needs to be strict enough to find imports but not pretend raw component calls are automatic failures. It reports them as `raw-component-escape-hatch` so they can be reviewed separately from `legacy-module-import` findings.
+
+### What warrants a second pair of eyes
+- Whether the migration checker should eventually become a CI gate with `--fail-on-findings` for specific v3-only hosts.
+- Whether the embedded JS API reference should be split into a legacy reference and a generated v3 reference instead of hosting both concepts in one page.
+- Whether each remaining raw component example should get a dedicated v3 helper or stay as an explicit escape-hatch example.
+
+### What should be done in the future
+- Add CI smoke coverage for `examples/xgoja-widgetdsl-v3/xgoja.yaml` once xgoja builds are cheap enough for the repository pipeline.
+- Use the migration checker on real first-party go-go-course script directories before removing split modules from those host configs.
+- Convert the highest-value raw component examples into typed v3 helpers if they become common in migrated pages.
+
+### Code review instructions
+- Start with `reference/06-widget-dsl-v3-integration-and-migration-guide.md` to review the policy and migration workflow.
+- Review provider-doc edits in `pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md`, `02-widget-dsl-js-api-reference.md`, and `03-widget-dsl-spa-bundling.md`.
+- Review `scripts/02-report-legacy-widget-dsl-usage.py` for scanner scope and false-positive risk.
+- Validate with:
+  - `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+  - `pnpm --dir packages/rag-evaluation-site typecheck`
+  - `python ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/scripts/02-report-legacy-widget-dsl-usage.py pkg/widgetdsl/testdata/v3/examples examples/xgoja-widgetdsl-v3/jsverbs`
+
+### Technical details
+- The checker recognizes static `require("module")`, `from "module"`, and dynamic `import("module")` for legacy modules.
+- Legacy modules currently scanned: `ui.dsl`, `data.dsl`, `data.v2.dsl`, `context_window.dsl`, `course.dsl`, and `cms.dsl`.
+- `--fail-on-findings` exits non-zero and is intended for future migration gates after a host claims v3-only status.

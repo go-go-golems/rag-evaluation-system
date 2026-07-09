@@ -13,22 +13,31 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
-    - Path: repo://examples/xgoja-widgetdsl-v3/xgoja.yaml
-      Note: Reference xgoja build spec that selects the parallel widget.dsl module and serves the v3 example gallery.
+    - Path: repo://examples/xgoja-widgetdsl-v3/README.md
+      Note: Build and validation instructions for the v3 preview host
     - Path: repo://examples/xgoja-widgetdsl-v3/jsverbs/server.js
       Note: Query-aware preview server pattern for returning Widget IR pages from JavaScript.
+    - Path: repo://examples/xgoja-widgetdsl-v3/xgoja.yaml
+      Note: |-
+        Reference xgoja build spec that selects the parallel widget.dsl module and serves the v3 example gallery.
+        Reference widget.dsl-only rag-widget-site module selection
     - Path: repo://pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md
       Note: Embedded provider getting-started documentation updated with widget.dsl v3 guidance.
     - Path: repo://pkg/xgoja/providers/widgetsite/doc/03-widget-dsl-spa-bundling.md
-      Note: Embedded provider SPA bundling documentation updated with widget.dsl v3 module selection.
+      Note: |-
+        Embedded provider SPA bundling documentation updated with widget.dsl v3 module selection.
+        Embedded SPA bundling docs with v3 module-selection guidance
     - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/scripts/02-report-legacy-widget-dsl-usage.py
-      Note: Migration helper that reports legacy split-module imports and raw component escape hatches.
+      Note: |-
+        Migration helper that reports legacy split-module imports and raw component escape hatches.
+        Checker referenced by the migration workflow
 ExternalSources: []
 Summary: Integration and migration guide for adopting the parallel widget.dsl v3 module while keeping legacy split modules available for existing hosts.
 LastUpdated: 2026-07-08T20:20:00-04:00
 WhatFor: Use this when wiring a new xgoja host, migrating first-party pages from split modules, or deciding whether a script is ready for widget.dsl v3.
 WhenToUse: Read before changing xgoja runtime module selections or porting ui.dsl/data.dsl/context_window.dsl/course.dsl pages to widget.dsl.
 ---
+
 
 # Widget DSL v3 Integration and Migration Guide
 
