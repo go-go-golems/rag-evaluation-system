@@ -47,11 +47,20 @@
 			"types": "./app/index.d.ts",
 			"import": "./app/index.js"
 		},
+		"./scheduling": {
+			"types": "./scheduling/index.d.ts",
+			"import": "./scheduling.js"
+		},
+		"./widgets/presets": {
+			"types": "./widgets/presets/index.d.ts",
+			"import": "./widgets/presets.js"
+		},
 		"./styles.css": "./styles.css",
 		"./theme.css": "./theme.css"
 	},
 	"scripts": {
 		"typecheck": "tsc --noEmit",
+		"test:focused": "node --experimental-strip-types scripts/focused-checks.mjs",
 		"build": "rm -rf dist && tsc -p tsconfig.build.json && vite build && node scripts/copy-css.mjs && node scripts/prepare-dist.mjs",
 		"build:app": "vite build --config vite.app.config.ts",
 		"sync:defaultspa": "node scripts/sync-defaultspa.mjs",

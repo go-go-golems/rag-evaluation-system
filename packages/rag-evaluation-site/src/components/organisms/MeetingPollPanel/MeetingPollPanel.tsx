@@ -75,13 +75,23 @@ export function MeetingPollPanel({
 }: MeetingPollPanelProps) {
 	const tallyByOption = new Map((tallies ?? []).map((t) => [t.optionId, t]));
 	const total = poll.responses.length;
-	const editing = currentResponseId != null && !readOnly;
+	const canEdit = currentResponseId != null && !readOnly;
+	const editing = canEdit;
 
 	const columns: MatrixColumnSpec[] = poll.options.map((option) => ({
 		id: option.id,
 		header: columnHeader(option),
 		meta: { option },
 	}));
+
+	const handleCell = canEdit
+		? ({ rowKey, colId, value }: { rowKey: string; colId: string; value: unknown }) =>
+				onCellToggle?.({
+					responseId: rowKey,
+					optionId: colId,
+					state: value as AvailabilityState,
+				})
+		: undefined;
 
 	const deadline = poll.settings.deadlineISO ? slotDate(poll.settings.deadlineISO) : null;
 
@@ -114,7 +124,7 @@ export function MeetingPollPanel({
 							</Inline>
 						)}
 						valueAt={(row, col) => row.cells[col.id] ?? "unknown"}
-						editableRowKey={currentResponseId}
+						editableRowKey={canEdit ? currentResponseId : undefined}
 						renderCell={(p) => (
 							<CycleCell
 								value={String(p.value)}
@@ -126,13 +136,7 @@ export function MeetingPollPanel({
 								onCycle={(next) => p.onAction({ value: next })}
 							/>
 						)}
-						onCell={({ rowKey, colId, value }) =>
-							onCellToggle?.({
-								responseId: rowKey,
-								optionId: colId,
-								state: value as AvailabilityState,
-							})
-						}
+						onCell={handleCell}
 						footer={{
 							header: <Caption tone="muted">yes</Caption>,
 							render: (col) => {

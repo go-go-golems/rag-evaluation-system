@@ -120,7 +120,6 @@ export interface TimeGridBlockSpec {
 	endISO: string;
 	styleKey: string;
 	label: RenderableValue;
-	allDay?: boolean;
 	meta?: JsonObject;
 }
 

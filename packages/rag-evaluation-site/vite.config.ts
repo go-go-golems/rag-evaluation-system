@@ -19,7 +19,9 @@ export default defineConfig({
 			entry: {
 				index: "src/index.ts",
 				ir: "src/widgets/ir/index.ts",
+				scheduling: "src/scheduling/index.ts",
 				"app/index": "src/app/index.ts",
+				"widgets/presets": "src/widgets/presets/index.ts",
 			},
 			formats: ["es"],
 			cssFileName: "styles",

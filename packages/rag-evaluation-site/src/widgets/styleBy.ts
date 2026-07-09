@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { contextVisualStyleToCssVars } from "../context";
 import type { JsonObject, StyleBySpec } from "./ir";
+import { resolveStyleByStyle } from "./styleBy.logic";
 
 /**
  * Resolve a StyleBySpec to CSS variables (the defunctionalized color function):
@@ -14,12 +15,6 @@ export function resolveStyleByVars(
 	row?: JsonObject,
 ): CSSProperties | undefined {
 	if (!spec) return undefined;
-	const raw = spec.field != null && row ? row[spec.field] : value;
-	const key0 = raw == null ? "" : String(raw);
-	const key = spec.map?.[key0] ?? key0;
-	const style =
-		spec.styleSet.styles[key] ??
-		(spec.fallbackStyleKey ? spec.styleSet.styles[spec.fallbackStyleKey] : undefined) ??
-		spec.styleSet.fallbackStyle;
+	const style = resolveStyleByStyle(spec, value, row);
 	return style ? contextVisualStyleToCssVars(style) : undefined;
 }

@@ -19,15 +19,16 @@ export interface CalendarWeekPanelProps extends Omit<HTMLAttributes<HTMLDivEleme
 }
 
 function toBlocks(events: CalendarEvent[]): TimeGridBlock[] {
-	return events.map((event) => ({
-		id: event.id,
-		dayISO: event.startISO.slice(0, 10),
-		startISO: event.startISO,
-		endISO: event.endISO,
-		styleKey: event.colorKey,
-		label: event.title,
-		allDay: event.allDay,
-	}));
+	return events
+		.filter((event) => !event.allDay)
+		.map((event) => ({
+			id: event.id,
+			dayISO: event.startISO.slice(0, 10),
+			startISO: event.startISO,
+			endISO: event.endISO,
+			styleKey: event.colorKey,
+			label: event.title,
+		}));
 }
 
 export function CalendarWeekPanel({
