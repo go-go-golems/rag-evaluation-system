@@ -20,17 +20,24 @@ RelatedFiles:
     - Path: repo://examples/xgoja/doodle-site/verbs/lib/calendar.js
       Note: Calendar marker/detail/selection module
     - Path: repo://examples/xgoja/doodle-site/verbs/lib/pages.js
-      Note: Doodle Widget DSL page composition module
+      Note: |-
+        Doodle Widget DSL page composition module
+        Doodle poll page share-link usage
     - Path: repo://examples/xgoja/doodle-site/verbs/lib/store.js
       Note: SQLite schema, seed, query, and mutation module
     - Path: repo://examples/xgoja/doodle-site/xgoja.v2.yaml
       Note: selected widget.dsl instead of ui.dsl/data.dsl
+    - Path: repo://packages/rag-evaluation-site/src/components/molecules/ShareLink/ShareLink.tsx
+      Note: ShareLink design-system molecule
+    - Path: repo://packages/rag-evaluation-site/src/components/molecules/ShareLink/ShareLink.widget.tsx
+      Note: Widget IR adapter for share links
     - Path: repo://pkg/widgetdsl/typescript.go
       Note: declared new v3 UI wrappers
     - Path: repo://pkg/widgetdsl/v3.go
       Note: |-
         added typed v3 UI wrappers used by Doodle
         Typed splitPane and TimeGrid viewport DSL helpers
+        widget.ui.shareLink helper
     - Path: repo://ttmp/2026/07/09/DOODLE-WIDGETDSL-V3--port-doodle-scheduling-example-to-widget-dsl-v3/tasks.md
       Note: completed Doodle v3 port checklist
 ExternalSources: []
@@ -39,6 +46,7 @@ LastUpdated: 2026-07-09T00:00:00Z
 WhatFor: Record implementation steps, validation, failures, and review instructions for the Doodle v3 port.
 WhenToUse: Read before editing examples/xgoja/doodle-site.
 ---
+
 
 
 
@@ -400,3 +408,77 @@ Can you do side by side horizontal columns with you widget.dsl primitives?"
 - Week block selection uses `act.navigate('/pages/poll?poll=<id>&slot=$blockId')`.
 - If `slot` is present, it wins over `day` and determines the selected day.
 - Month markers are now compact objects: `{ count, styleKey }`.
+
+## Step 6: Add ShareLink design-system primitive and DSL helper
+
+The Doodle poll page still displayed the shareable URL as a plain metadata field. I replaced that with a reusable design-system molecule so share URLs have a stable visual treatment, a copy action, Storybook coverage, Widget IR support, and a typed `widget.dsl` helper.
+
+The new primitive is intentionally small. It shows a label, a code-styled URL, and an icon-only clipboard button beside the link. The React component stays presentational; the WidgetRenderer adapter wires the copy action when it is rendered from Widget IR.
+
+### Prompt Context
+
+**User prompt (verbatim):** "also in the shareable link, can you add a design system primitive + DSL + storybook stories (see @rag-evaluation-system/packages/rag-evaluation-site/GUIDELINES.md ) to do that:
+Share link
+/pages/poll?poll=1"
+
+**Assistant interpretation:** Create a reusable package component for share links, add Widget IR and `widget.dsl` support, add Storybook stories, and use it in Doodle for the poll link.
+
+**Inferred user intent:** Avoid rendering share URLs as ad-hoc metadata and promote the pattern into the design system.
+
+**Commit (code):** N/A — pending commit.
+
+### What I did
+- Read `packages/rag-evaluation-site/GUIDELINES.md` before adding the component.
+- Added `ShareLink` under `components/molecules` with `data-rag-molecule="ShareLink"`.
+- Added `ShareLink.module.css`, `index.ts`, and `ShareLink.stories.tsx`.
+- Refined the ShareLink styling so it renders inline without a panel border/background and uses a small clipboard icon next to the link.
+- Added a `ShareLink` WidgetRenderer adapter and registered it in `defaultRegistry`.
+- Added `ShareLinkWidgetProps` and the `ShareLink` widget type.
+- Added `widget.ui.shareLink(href, options?)` in `pkg/widgetdsl/v3.go` and TypeScript declarations.
+- Replaced the Doodle poll-page `Share link` metadata field with `widget.ui.shareLink(...)`.
+- Rebuilt the embedded Doodle SPA assets and binary.
+
+### Why
+- Share links are a reusable UI pattern, not a Doodle-only string field.
+- The copy behavior belongs in a stable Widget IR component so Goja/DSL authors can use it without hand-assembling buttons and code text.
+- The design-system guidelines require Storybook coverage for new public components and WidgetRenderer coverage when adding IR support.
+
+### What worked
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1` passed.
+- The migration checker still reports no legacy imports or raw escape hatches.
+- `pnpm --dir packages/rag-evaluation-site test:focused` passed.
+- `pnpm --dir packages/rag-evaluation-site build-storybook` passed.
+- `pnpm --dir packages/rag-evaluation-site build` passed.
+- `pnpm --dir packages/rag-evaluation-site build:app`, `make sync-app`, and `make build` refreshed the embedded Doodle app.
+- Browser smoke confirmed the Doodle poll page renders `[data-rag-molecule="ShareLink"]` with `/pages/poll?poll=1` and no console warnings/errors.
+
+### What didn't work
+- Editing the generated TypeScript declaration string list initially missed a comma after the new `shareLink(...)` line. `gofmt` caught the syntax error, and I fixed the string-list separators.
+
+### What I learned
+- The existing WidgetRenderer action system already had enough support for a default copy action, so the component only needed a `copyAction` prop and a widget adapter binding.
+- The embedded Doodle SPA must be rebuilt when a new frontend widget type is used; otherwise the server can emit valid IR that the old bundle cannot render.
+
+### What was tricky to build
+- The React component should not know about Widget IR actions. I kept the component API as `onCopy?: () => void`, then translated `copyAction` to `onCopy` in the widget adapter.
+- The DSL helper needs to be convenient but not hide the IR contract. It sets `href` and provides a default `{ kind: "copy", value: href }` action unless the caller passes a custom `copyAction`.
+
+### What warrants a second pair of eyes
+- Whether `ShareLink` belongs in molecules long term, or whether a narrower atom would be better if it remains only label + value + action.
+- Whether the component should include an explicit external/open action in addition to copy.
+
+### What should be done in the future
+- Add a small v3 golden fixture for `widget.ui.shareLink(...)`.
+- Consider adding copied-state feedback at the WidgetRenderer layer if copy actions need visible acknowledgement outside Storybook.
+
+### Code review instructions
+- Start with `packages/rag-evaluation-site/src/components/molecules/ShareLink/ShareLink.tsx` and its CSS/story.
+- Review `packages/rag-evaluation-site/src/components/molecules/ShareLink/ShareLink.widget.tsx` for WidgetRenderer action binding.
+- Review `pkg/widgetdsl/v3.go` for `v3UIShareLink`.
+- Review `examples/xgoja/doodle-site/verbs/lib/pages.js` to see the Doodle usage.
+- Validate with the commands listed under `What worked`.
+
+### Technical details
+- Default DSL output includes `type: "ShareLink"`, `href`, optional renderable props, and `copyAction`.
+- The Doodle API now emits a `ShareLink` node instead of a `MetadataGrid` row for the share URL.

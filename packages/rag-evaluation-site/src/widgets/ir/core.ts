@@ -75,6 +75,7 @@ export type RagWidgetType =
 	| "AnchoredCommentCard"
 	| "AnchoredCommentRail"
 	| "KeyValueStrip"
+	| "ShareLink"
 	| "CheckList"
 	| "StepList"
 	| "PersonSummary"

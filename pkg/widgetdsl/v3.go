@@ -895,6 +895,7 @@ func (r *runtime) v3UIObject() *goja.Object {
 	setExport(ui, "caption", r.v3ComponentFactory("Caption", nil))
 	setExport(ui, "badge", r.v3ComponentFactory("Tag", nil))
 	setExport(ui, "metadata", r.v3UIMetadata)
+	setExport(ui, "shareLink", r.v3UIShareLink)
 	setExport(ui, "form", r.v3ComponentFactory("FormPanel", nil))
 	setExport(ui, "formRow", r.v3UIFormRow)
 	setExport(ui, "textInput", r.v3ComponentFactory("TextInput", map[string]any{"readOnly": false}))
@@ -982,6 +983,16 @@ func (r *runtime) v3UIMetadata(record goja.Value, options ...goja.Value) map[str
 	props := exportOptions(options)
 	props["items"] = v3MetadataItems(exportObject(record))
 	return componentNode("MetadataGrid", props)
+}
+
+func (r *runtime) v3UIShareLink(href goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	url := href.String()
+	props["href"] = url
+	if _, ok := props["copyAction"]; !ok {
+		props["copyAction"] = map[string]any{"kind": "copy", "value": url}
+	}
+	return componentNode("ShareLink", props)
 }
 
 func (r *runtime) v3ActionsBuilder(actions *[]any) *goja.Object {

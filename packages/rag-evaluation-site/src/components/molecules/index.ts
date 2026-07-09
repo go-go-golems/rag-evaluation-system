@@ -34,6 +34,7 @@ export * from "./SegmentedBar";
 export * from "./StatTile";
 export * from "./PersonSummary";
 export * from "./SearchField";
+export * from "./ShareLink";
 export * from "./SidebarNav";
 export * from "./StepList";
 export * from "./TagListInput";

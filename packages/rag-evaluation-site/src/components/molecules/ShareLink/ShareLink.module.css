@@ -1,0 +1,67 @@
+.root {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	box-sizing: border-box;
+	max-width: 100%;
+	color: var(--mac-text);
+}
+
+.header {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 6px;
+	flex: 0 0 auto;
+}
+
+.body {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	min-width: 0;
+}
+
+.link {
+	min-width: 0;
+	flex: 1 1 auto;
+	color: inherit;
+	text-decoration: none;
+}
+
+.link:hover {
+	text-decoration: underline;
+	text-decoration-color: var(--mac-accent);
+}
+
+.link code,
+.link span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.copyButton.copyButton {
+	min-inline-size: 1.5rem;
+	min-block-size: 1.5rem;
+	padding: 2px;
+	border-color: transparent;
+	background: transparent;
+	color: var(--mac-text-dim);
+}
+
+.copyButton.copyButton:hover:not(:disabled) {
+	border-color: var(--mac-border);
+	background: var(--mac-surface-2);
+	color: var(--mac-text);
+}
+
+.copyButton.copyButton:active:not(:disabled) {
+	background: var(--mac-bg-dark);
+	color: var(--mac-text-inv);
+}
+
+.copyIcon {
+	display: block;
+	inline-size: 14px;
+	block-size: 14px;
+}

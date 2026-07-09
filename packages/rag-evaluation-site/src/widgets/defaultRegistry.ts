@@ -64,6 +64,7 @@ import { metadataGridWidget } from "../components/molecules/MetadataGrid/Metadat
 import { paginationWidget } from "../components/molecules/Pagination/Pagination.widget";
 import { personSummaryWidget } from "../components/molecules/PersonSummary/PersonSummary.widget";
 import { searchFieldWidget } from "../components/molecules/SearchField/SearchField.widget";
+import { shareLinkWidget } from "../components/molecules/ShareLink/ShareLink.widget";
 import { sidebarNavWidget } from "../components/molecules/SidebarNav/SidebarNav.widget";
 import { stepListWidget } from "../components/molecules/StepList/StepList.widget";
 import { transcriptMessageCardWidget } from "../components/molecules/TranscriptMessageCard/TranscriptMessageCard.widget";
@@ -109,6 +110,7 @@ export const uiWidgetRegistry = createWidgetRegistry([
 	sectionBlockWidget,
 	selectInputWidget,
 	segmentedBarWidget,
+	shareLinkWidget,
 	sidebarNavWidget,
 	sidebarShellWidget,
 	splitPaneWidget,

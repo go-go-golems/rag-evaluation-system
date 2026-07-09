@@ -356,6 +356,7 @@ func widgetV3TypeScriptLines() []string {
 		"caption(options?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
 		"badge(options?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
 		"metadata(record: Record<string, JsonValue>, options?: Record<string, any>): WidgetNodeSpec;",
+		"shareLink(href: string, options?: Record<string, any>): WidgetNodeSpec;",
 		"form(options?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
 		"formRow(label: WidgetChild, control: WidgetNodeSpec, options?: Record<string, any>): WidgetNodeSpec;",
 		"textInput(options?: Record<string, any>): WidgetNodeSpec;",

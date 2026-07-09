@@ -190,9 +190,9 @@ function createPages({ widget, store }) {
 								Location: poll.location || "—",
 								Responses: String(participants.length),
 								Slots: String(options.length),
-								"Share link": `/pages/poll?poll=${poll.id}`,
 							})
 							.caption(poll.description || "")
+							.view(widget.ui.shareLink(`/pages/poll?poll=${poll.id}`, { label: "Share link" }))
 							.view(widget.ui.button("← All polls", act.navigate("/pages/index"))),
 					)
 					.section("Availability grid", (s) =>

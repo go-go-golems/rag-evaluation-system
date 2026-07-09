@@ -270,6 +270,16 @@ export interface AnchoredCommentRailWidgetProps extends BaseWidgetProps {
 export interface KeyValueStripWidgetProps extends BaseWidgetProps {
 	items: Array<{ key: RenderableValue; value: RenderableValue }>;
 }
+export interface ShareLinkWidgetProps extends BaseWidgetProps {
+	label?: RenderableValue;
+	description?: RenderableValue;
+	href: string;
+	displayHref?: RenderableValue;
+	copyLabel?: RenderableValue;
+	copiedLabel?: RenderableValue;
+	copied?: boolean;
+	copyAction?: ActionSpec;
+}
 export interface CheckListWidgetProps extends BaseWidgetProps {
 	items: Array<{ id?: string; text: RenderableValue } | RenderableValue>;
 	marker?: RenderableValue;
@@ -642,6 +652,7 @@ export type WidgetProps =
 	| AnchoredCommentCardWidgetProps
 	| AnchoredCommentRailWidgetProps
 	| KeyValueStripWidgetProps
+	| ShareLinkWidgetProps
 	| CheckListWidgetProps
 	| StepListWidgetProps
 	| PersonSummaryWidgetProps
