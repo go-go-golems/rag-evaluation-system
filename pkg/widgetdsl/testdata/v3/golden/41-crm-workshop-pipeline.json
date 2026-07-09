@@ -64,14 +64,20 @@
 							},
 							"onCardSelectAction": {
 								"kind": "navigate",
-								"to": "/pages/opportunity?deal=${dealId}"
+								"to": "/pages/opportunity?deal=${cardId}"
 							},
 							"onMoveAction": {
 								"kind": "server",
 								"name": "crm.deal.move",
 								"payload": {
-									"dealId": "${dealId}",
-									"toStage": "${toStage}"
+									"dealId": {
+										"kind": "path",
+										"path": "cardId"
+									},
+									"toStage": {
+										"kind": "path",
+										"path": "to"
+									}
 								}
 							},
 							"selectedCardId": "deal-acme",
@@ -133,9 +139,15 @@
 								"kind": "server",
 								"name": "crm.field.update",
 								"payload": {
-									"key": "${key}",
+									"key": {
+										"kind": "path",
+										"path": "key"
+									},
 									"recordId": "deal-acme",
-									"value": "${value}"
+									"value": {
+										"kind": "path",
+										"path": "value"
+									}
 								}
 							},
 							"sections": [

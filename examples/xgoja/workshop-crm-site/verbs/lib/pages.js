@@ -114,11 +114,14 @@ function createPages({ widget, store }) {
 				.section("Workshop sales pipeline", (s) =>
 					s
 						.caption(
-							"Drag and drop emits the CRM move intent; this reference host uses explicit forms for durable writes.",
+							"Open an opportunity by selecting its card. Drag a card to persist its stage change through the CRM action route.",
 						)
 						.view(
 							widget.crm.pipelineBoard(pipeline, boardDeals(deals), (b) =>
-								b.summaries(summaries(deals)).onOpen(widget.crm.intent.openDeal("${dealId}")),
+								b
+									.summaries(summaries(deals))
+									.onMove(widget.crm.intent.moveDeal("${cardId}", "${to}"))
+									.onOpen(widget.crm.intent.openDeal("${cardId}")),
 							),
 						),
 				)

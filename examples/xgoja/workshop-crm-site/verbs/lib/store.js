@@ -135,6 +135,14 @@ function createStore(db) {
 		);
 	}
 
+	function moveDeal(dealId, toStage) {
+		const validStages = ["lead", "proposal", "won"];
+		if (!validStages.includes(toStage) || !getDeal(dealId)) return false;
+		db.exec("UPDATE deals SET stage_id = ? WHERE id = ?", toStage, dealId);
+		addActivity(dealId, "stage_change", `Moved opportunity to ${toStage}`);
+		return true;
+	}
+
 	function createAvailability(dealId) {
 		if (availabilityForDeal(dealId).length) return;
 		[
@@ -195,6 +203,7 @@ function createStore(db) {
 		activitiesForDeal,
 		availabilityForDeal,
 		createLead,
+		moveDeal,
 		createAvailability,
 		scheduleRun,
 		allRuns,

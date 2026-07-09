@@ -249,15 +249,35 @@ func (r *runtime) v3CRMIntentObject() *goja.Object {
 		return map[string]any{"kind": "navigate", "to": "/pages/opportunity?deal=" + v3URLTemplateValue(id)}
 	})
 	setExport(intent, "moveDeal", func(id, stage goja.Value) map[string]any {
-		return map[string]any{"kind": "server", "name": "crm.deal.move", "payload": map[string]any{"dealId": id.Export(), "toStage": stage.Export()}}
+		return map[string]any{"kind": "server", "name": "crm.deal.move", "payload": map[string]any{"dealId": v3CRMActionValue(id), "toStage": v3CRMActionValue(stage)}}
 	})
 	setExport(intent, "updateField", func(recordID, key, value goja.Value) map[string]any {
-		return map[string]any{"kind": "server", "name": "crm.field.update", "payload": map[string]any{"recordId": recordID.Export(), "key": key.Export(), "value": value.Export()}}
+		return map[string]any{"kind": "server", "name": "crm.field.update", "payload": map[string]any{"recordId": v3CRMActionValue(recordID), "key": v3CRMActionValue(key), "value": v3CRMActionValue(value)}}
 	})
 	setExport(intent, "completeTask", func(id goja.Value) map[string]any {
-		return map[string]any{"kind": "server", "name": "crm.task.complete", "payload": map[string]any{"taskId": id.Export()}}
+		return map[string]any{"kind": "server", "name": "crm.task.complete", "payload": map[string]any{"taskId": v3CRMActionValue(id)}}
 	})
 	return intent
+}
+
+// v3CRMActionValue converts the concise JavaScript context placeholder form
+// ("${cardId}" or "$cardId") into the typed payload contract that the React
+// action dispatcher resolves. Other values remain serializable literals.
+func v3CRMActionValue(value goja.Value) any {
+	if value == nil || goja.IsUndefined(value) || goja.IsNull(value) {
+		return nil
+	}
+	text, ok := value.Export().(string)
+	if !ok {
+		return value.Export()
+	}
+	if strings.HasPrefix(text, "${") && strings.HasSuffix(text, "}") && len(text) > 3 {
+		return map[string]any{"kind": "path", "path": text[2 : len(text)-1]}
+	}
+	if strings.HasPrefix(text, "$") && len(text) > 1 && !strings.ContainsAny(text[1:], " /?&=") {
+		return map[string]any{"kind": "path", "path": text[1:]}
+	}
+	return text
 }
 
 func (r *runtime) attachCRMRef(obj *goja.Object, ref *v3CRMRef) {

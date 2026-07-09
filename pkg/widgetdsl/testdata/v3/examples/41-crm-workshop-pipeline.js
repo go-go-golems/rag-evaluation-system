@@ -53,8 +53,8 @@ const page = widget.page("Workshop CRM pipeline", (p) =>
 							{ stageId: "won", amountTotal: 0, count: 0 },
 						])
 						.selected("deal-acme")
-						.onMove(widget.crm.intent.moveDeal("${dealId}", "${toStage}"))
-						.onOpen(widget.crm.intent.openDeal("${dealId}")),
+						.onMove(widget.crm.intent.moveDeal("${cardId}", "${to}"))
+						.onOpen(widget.crm.intent.openDeal("${cardId}")),
 				),
 			),
 		)

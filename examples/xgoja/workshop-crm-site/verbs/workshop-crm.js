@@ -79,6 +79,19 @@ function site() {
 		});
 
 	app
+		.post("/api/widget/actions/crm.deal.move")
+		.public()
+		.handle((ctx, res) => {
+			const payload = ctx.body?.payload || {};
+			const moved = store.moveDeal(Number(payload.dealId || 0), String(payload.toStage || ""));
+			res.json({
+				ok: moved,
+				refresh: moved,
+				toast: moved ? "Opportunity moved" : "Unable to move opportunity",
+			});
+		});
+
+	app
 		.post("/api/form/schedule-run")
 		.public()
 		.handle((ctx, res) => {
