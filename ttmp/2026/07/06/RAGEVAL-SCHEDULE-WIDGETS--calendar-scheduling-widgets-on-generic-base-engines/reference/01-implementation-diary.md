@@ -54,9 +54,13 @@ RelatedFiles:
     - Path: repo://packages/rag-evaluation-site/src/widgets/styleBy.ts
       Note: resolveStyleByVars — StyleBySpec consumption (value->styleKey->style)
     - Path: repo://pkg/widgetdsl/migrationcheck/checker.go
-      Note: Go tree-sitter migration checker implementation (commit 5872998)
+      Note: |-
+        Go tree-sitter migration checker implementation (commit 5872998)
+        Generated-output aware migration checker update (commit 38c829e)
     - Path: repo://pkg/widgetdsl/migrationcheck/checker_test.go
-      Note: Unit tests for parser-backed findings (commit 5872998)
+      Note: |-
+        Unit tests for parser-backed findings (commit 5872998)
+        Generated-directory skip tests (commit 38c829e)
     - Path: repo://pkg/widgetdsl/v3.go
       Note: URL template, section actions, matrix column/header, metric label fixes (commits 071dbb0,57b701d)
     - Path: repo://pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md
@@ -69,6 +73,7 @@ LastUpdated: 2026-07-06T18:48:57.302545525-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -1932,3 +1937,65 @@ The behavior stays intentionally close to the first checker: report legacy split
   - `github.com/tree-sitter/tree-sitter-typescript/bindings/go`
 - Detected legacy modules: `ui.dsl`, `data.dsl`, `data.v2.dsl`, `context_window.dsl`, `course.dsl`, and `cms.dsl`.
 - Detected raw escape hatches: direct calls to `raw.component(...)` and `widget.raw.component(...)`.
+
+## Step 27: Make migration checker generated-output aware
+
+Adjusted the Go migration checker after verifying how `go-go-course` actually lays out its xgoja sources. The real authoring files live directly under `cmd/go-go-course` (`server.js`, `site.js`, `session-verbs.js`, and `lib/**`), while `.xgoja/jsverbs` is a generated staging copy and `internal/xgojaruntime/xgoja_embed` is the embedded generated runtime copy.
+
+The checker now skips those generated/staging directories during directory walks. That lets reviewers scan the whole real host directory without triple-counting the same imports.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue"
+
+**Assistant interpretation:** Continue from the corrected go-go-course source-layout observation by improving the checker/docs so it scans real host sources accurately.
+
+**Inferred user intent:** Avoid misleading duplicate findings from generated `.xgoja` and embedded xgoja output when using the migration checker on real hosts.
+
+**Commit (code):** 38c829e — "Widget DSL v3: ignore generated migration scan paths"
+
+### What I did
+- Updated `pkg/widgetdsl/migrationcheck/checker.go` so directory walks skip:
+  - `.xgoja`
+  - `xgojaruntime`
+  - `xgoja_embed`
+  - existing build/vendor directories such as `dist`, `node_modules`, `app-dist`, and Storybook output.
+- Changed default go-go-course discovery to include the real authoring sources (`server.js`, `site.js`, `session-verbs.js`, and `lib`) instead of only `lib/pages`.
+- Expanded scanner tests to cover generated/staging xgoja directories.
+- Updated migration docs and the v3 preview README with the simpler accurate command:
+  `go run ./cmd/widgetdsl-migration-checker --root ../go-go-course -- ../go-go-course/cmd/go-go-course`.
+
+### Why
+- Scanning `cmd/go-go-course` previously counted `.xgoja` and `internal/xgojaruntime` copies, producing 15 findings instead of the 5 real source findings.
+- The checker should support the natural command a reviewer will run on a host directory without requiring them to know all generated subdirectories.
+
+### What worked
+- `go test ./pkg/widgetdsl/migrationcheck ./cmd/widgetdsl-migration-checker -count=1` passed.
+- The corrected go-go-course scan now reports exactly 5 findings, all in `cmd/go-go-course/server.js`.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- `go-go-course` treats `.xgoja/jsverbs` as generated staging for package generation, not the canonical source.
+- The generated embed copy under `internal/xgojaruntime/xgoja_embed` should also be ignored by source migration scans.
+
+### What was tricky to build
+- The checker still needs to scan legitimate `internal` directories in general, so it cannot simply ignore all `internal/**`. It now ignores the more specific `xgojaruntime` and `xgoja_embed` directory names.
+
+### What warrants a second pair of eyes
+- Whether additional generated directories from other xgoja hosts should be added to the default ignore list.
+- Whether an `--include-generated` option is worth adding later for debugging generated runtime packages.
+
+### What should be done in the future
+- Use the simplified host-directory command for go-go-course migration status checks.
+
+### Code review instructions
+- Review `ignoredDirs` and `DefaultPaths` in `pkg/widgetdsl/migrationcheck/checker.go`.
+- Review `TestScanPathsSkipsBuildAndGeneratedDirectories` in `pkg/widgetdsl/migrationcheck/checker_test.go`.
+- Validate with:
+  - `go test ./pkg/widgetdsl/migrationcheck ./cmd/widgetdsl-migration-checker -count=1`
+  - `go run ./cmd/widgetdsl-migration-checker --root ../go-go-course -- ../go-go-course/cmd/go-go-course`
+
+### Technical details
+- Accurate current go-go-course result: 5 legacy imports in `cmd/go-go-course/server.js` (`ui.dsl`, `data.v2.dsl`, `context_window.dsl`, `course.dsl`, `cms.dsl`).

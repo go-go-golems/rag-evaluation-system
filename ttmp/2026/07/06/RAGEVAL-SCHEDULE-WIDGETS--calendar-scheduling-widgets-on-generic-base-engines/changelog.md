@@ -499,3 +499,14 @@ Replaced Python migration checker with Go/tree-sitter CLI and reusable scanner p
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/migrationcheck/checker.go — Parser-backed scanner
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/migrationcheck/checker_test.go — Scanner tests
 
+
+## 2026-07-08
+
+Updated Go migration checker to skip generated xgoja staging/embed directories and scan real go-go-course host sources accurately.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/migrationcheck/checker.go — Generated directory ignores and go-go-course defaults
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/migrationcheck/checker_test.go — Generated-directory skip coverage
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/reference/06-widget-dsl-v3-integration-and-migration-guide.md — Updated checker command guidance
+
