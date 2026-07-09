@@ -891,6 +891,12 @@ func (r *runtime) v3UIObject() *goja.Object {
 	setExport(ui, "badge", r.v3ComponentFactory("Tag", nil))
 	setExport(ui, "metadata", r.v3UIMetadata)
 	setExport(ui, "form", r.v3ComponentFactory("FormPanel", nil))
+	setExport(ui, "formRow", r.v3UIFormRow)
+	setExport(ui, "textInput", r.v3ComponentFactory("TextInput", map[string]any{"readOnly": false}))
+	setExport(ui, "textareaInput", r.v3ComponentFactory("TextareaInput", map[string]any{"readOnly": false}))
+	setExport(ui, "selectInput", r.v3ComponentFactory("SelectInput", nil))
+	setExport(ui, "status", r.v3UIStatus)
+	setExport(ui, "emptyState", r.v3UIEmptyState)
 	return ui
 }
 
@@ -933,6 +939,31 @@ func (r *runtime) v3UIButton(label goja.Value, action goja.Value, options ...goj
 		props["action"] = action.Export()
 	}
 	return componentNode("Button", props, r.v3NodeSpecsToIR(r.v3ExportChild(label))...)
+}
+
+func (r *runtime) v3UIFormRow(label goja.Value, control goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	props["label"] = r.v3Renderable(label)
+	props["control"] = control.Export()
+	return componentNode("FormRow", props)
+}
+
+func (r *runtime) v3UIStatus(status goja.Value, value goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	props["status"] = status.String()
+	if _, ok := props["icon"]; !ok {
+		props["icon"] = true
+	}
+	return componentNode("StatusText", props, r.v3NodeSpecsToIR(r.v3ExportChild(value))...)
+}
+
+func (r *runtime) v3UIEmptyState(title goja.Value, description goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	props["title"] = r.v3Renderable(title)
+	if description != nil && !goja.IsUndefined(description) && !goja.IsNull(description) {
+		props["description"] = r.v3Renderable(description)
+	}
+	return componentNode("EmptyState", props)
 }
 
 func (r *runtime) v3UIMetadata(record goja.Value, options ...goja.Value) map[string]any {

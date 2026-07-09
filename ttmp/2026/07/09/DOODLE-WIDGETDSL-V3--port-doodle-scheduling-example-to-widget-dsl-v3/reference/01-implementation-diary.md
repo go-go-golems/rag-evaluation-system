@@ -3,20 +3,34 @@ Title: Implementation Diary
 Ticket: DOODLE-WIDGETDSL-V3
 Status: active
 Topics:
-    - widget-dsl
+    - ui-dsl
     - xgoja
     - sqlite
-    - doodle
+    - web
 DocType: reference
 Intent: long-term
 Owners: []
-RelatedFiles: []
+RelatedFiles:
+    - Path: repo://examples/xgoja/doodle-site/verbs/doodle.js
+      Note: |-
+        ported Doodle pages from legacy split modules to widget.dsl v3
+        uses typed ui and schedule DSL helpers without raw escape hatches
+    - Path: repo://examples/xgoja/doodle-site/xgoja.v2.yaml
+      Note: selected widget.dsl instead of ui.dsl/data.dsl
+    - Path: repo://pkg/widgetdsl/typescript.go
+      Note: declared new v3 UI wrappers
+    - Path: repo://pkg/widgetdsl/v3.go
+      Note: added typed v3 UI wrappers used by Doodle
+    - Path: repo://ttmp/2026/07/09/DOODLE-WIDGETDSL-V3--port-doodle-scheduling-example-to-widget-dsl-v3/tasks.md
+      Note: completed Doodle v3 port checklist
 ExternalSources: []
 Summary: Chronological diary for porting the Doodle scheduling example to widget.dsl v3.
-LastUpdated: 2026-07-09
+LastUpdated: 2026-07-09T00:00:00Z
 WhatFor: Record implementation steps, validation, failures, and review instructions for the Doodle v3 port.
 WhenToUse: Read before editing examples/xgoja/doodle-site.
 ---
+
+
 
 # Diary
 
@@ -68,3 +82,153 @@ Created a separate ticket for the Doodle v3 port so the product-shaped example m
 
 ### Technical details
 - Source baseline: `DOODLE-1` and `examples/xgoja/doodle-site`.
+
+## Step 2: Port Doodle from split modules to `widget.dsl` v3
+
+Ported the Doodle xgoja example so it now selects and imports only `widget.dsl` from the `rag-widget-site` provider. The SQLite schema, planned-route Express handlers, native form POST flow, and browser behavior remain the same; the page authoring layer now uses v3 page/section/action/data helpers with small raw escape hatches for form controls that do not yet have typed v3 wrappers.
+
+The browser validation covered the real flow rather than only API JSON: open the create page, create a new poll, arrive on the new poll page, submit availability, and verify that the availability grid and tallies update without console errors.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Update the doodle"
+
+**Assistant interpretation:** Work the Doodle v3 ticket by updating the existing Doodle scheduling example to use `widget.dsl` v3.
+
+**Inferred user intent:** Bring the product-shaped Doodle demo in line with the new widget DSL module policy after the hardening ticket setup.
+
+**Commit (code):** N/A — changes not committed yet.
+
+### What I did
+- Updated `examples/xgoja/doodle-site/xgoja.v2.yaml` so `rag-widget-site` selects only `widget.dsl`.
+- Rewrote `examples/xgoja/doodle-site/verbs/doodle.js` to import `const widget = require("widget.dsl")` instead of `ui.dsl` and `data.dsl`.
+- Rebuilt pages with v3 constructs:
+  - `widget.page(...)` with page metadata via builder calls;
+  - `widget.act.navigate(...)` for navigation;
+  - `widget.data.fields(...)` + `widget.data.collection(...).table().toNode()` for index, availability, and result tables;
+  - `widget.ui.form(...)`, `widget.ui.button(...)`, `widget.ui.inline(...)`, section metrics, section metadata, and captions.
+- Kept native form POST handlers and SQLite persistence unchanged.
+- Used `widget.raw.component(...)` for form rows/inputs, status text, and empty state because those controls still lack dedicated v3 typed wrappers.
+- Checked all Doodle v3 tasks.
+
+### Why
+- `DOODLE-1` proved the Doodle app as a legacy split-module example. This ticket's job is to prove the same app can run with the v3 module selection.
+- Keeping the database and HTTP flow unchanged isolates the migration to the widget authoring layer.
+
+### What worked
+- `make build` succeeded for `examples/xgoja/doodle-site`.
+- `make list-modules` shows only `rag-widget-site | widget.dsl | widget.dsl` for widget modules.
+- API smoke returned root `Stack` pages for `index`, `create`, and `poll`.
+- Browser flow succeeded:
+  - opened `/pages/create`;
+  - filled and submitted a new poll;
+  - redirected to `/pages/poll?poll=2`;
+  - submitted availability as `Rosalind`;
+  - saw the availability grid and results table update.
+- Console check after the new-server run reported no errors/warnings.
+- Response JSON did not contain `[object Object]`.
+
+### What didn't work
+- The first browser attempt hit an old Doodle server still listening on `127.0.0.1:18793` from the earlier legacy run. The new server failed with `bind: address already in use`; I killed the old process and restarted the freshly built binary before validating.
+- The migration checker reports raw-component escape hatches for `StatusText`, `EmptyState`, `FormRow`, `TextInput`, `TextareaInput`, and `SelectInput`. These are expected transitional findings, not legacy split-module imports.
+
+### What I learned
+- The Doodle app can be migrated cleanly without changing persistence or route semantics; the v3 port is mainly page-construction syntax plus table schemas.
+- The v3 `data.collection` path is a good replacement for legacy `data.dataTable` when the table schema can be declared near the page.
+- A real browser flow is still necessary because native form submit behavior is not proven by API page JSON alone.
+
+### What was tricky to build
+- The old example used `ui.formRow`, `ui.textInput`, `ui.textareaInput`, and `ui.selectInput`; v3 has `widget.ui.form` but not yet typed helpers for every form atom. I isolated those remaining gaps in tiny raw helper functions so they are easy to replace later.
+- The availability grid has dynamic columns from database rows. I built its schema dynamically with `widget.data.fields(...)`, adding one field per option, then used a v3 collection table.
+
+### What warrants a second pair of eyes
+- Whether v3 should grow typed `formRow`, `textInput`, `textareaInput`, `selectInput`, `statusText`, and `emptyState` helpers so examples like Doodle can become raw-free.
+- Whether the Doodle availability grid should switch to a typed `schedule.availabilityPoll` view after slot labels become structured date/time DTOs instead of free-form labels.
+
+### What should be done in the future
+- Add typed v3 wrappers for the remaining raw form/status/empty-state helpers if they recur in examples.
+- Optionally close `DOODLE-WIDGETDSL-V3` after review, since the checklist is complete.
+
+### Code review instructions
+- Start with `examples/xgoja/doodle-site/xgoja.v2.yaml` to verify module selection.
+- Review `examples/xgoja/doodle-site/verbs/doodle.js` helpers first, then `indexPage`, `createPage`, and `pollPage`.
+- Validate with:
+  - `go run ./cmd/widgetdsl-migration-checker -- examples/xgoja/doodle-site/verbs`
+  - `cd examples/xgoja/doodle-site && make list-modules`
+  - `cd examples/xgoja/doodle-site && make build`
+  - run `./dist/doodle-site serve doodle site --http-listen 127.0.0.1:18793` and smoke create/vote in the browser.
+
+### Technical details
+- Post-port checker result: zero `legacy-module-import` findings; six expected `raw-component-escape-hatch` findings in local raw helper functions.
+- Browser smoke used a clean `doodle.db` created after restarting the fresh binary.
+
+## Step 3: Replace raw Doodle helpers with typed v3 UI and schedule DSLs
+
+Tightened the Doodle v3 port so it no longer relies on `widget.raw.component(...)`. I added the missing typed UI wrappers to `widget.dsl` itself, then rewrote the Doodle page code to use those wrappers plus the schedule DSL's availability matrix and poll-summary components.
+
+The Doodle example now demonstrates the intended new surface more clearly: `widget.ui.formRow`, `widget.ui.textInput`, `widget.ui.textareaInput`, `widget.ui.selectInput`, `widget.ui.status`, `widget.ui.emptyState`, `widget.schedule.availabilityPoll`, and `widget.schedule.pollSummary`. The migration checker now reports zero legacy imports and zero raw escape hatches for the Doodle source.
+
+### Prompt Context
+
+**User prompt (verbatim):** "use the new DSLs and components."
+
+**Assistant interpretation:** Remove the Doodle example's remaining raw-component compatibility helpers and use the typed v3 DSL/component helpers instead.
+
+**Inferred user intent:** Make Doodle a clean, idiomatic v3 demo rather than a host that merely selects `widget.dsl` while still hand-emitting raw components.
+
+**Commit (code):** N/A — changes will amend the Doodle v3 commit.
+
+### What I did
+- Added typed v3 UI helpers in `pkg/widgetdsl/v3.go`:
+  - `ui.formRow(...)`
+  - `ui.textInput(...)`
+  - `ui.textareaInput(...)`
+  - `ui.selectInput(...)`
+  - `ui.status(...)`
+  - `ui.emptyState(...)`
+- Updated widget.dsl TypeScript declarations for the new UI helpers.
+- Replaced Doodle raw helper functions with typed `widget.ui.*` calls.
+- Replaced the hand-built availability table with `widget.schedule.availabilityPoll(...)`.
+- Added a schedule summary grid via `widget.schedule.pollSummary(...)` and kept a compact result table for score/best-slot information.
+- Rebuilt the Doodle binary and reran browser validation.
+
+### Why
+- Raw escape hatches are useful for migration but are not the desired final demo surface.
+- Doodle is now a better example for new hosts because it uses v3 UI, data, schedule, and action namespaces directly.
+
+### What worked
+- `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1` passed.
+- `cd examples/xgoja/doodle-site && make build` passed.
+- Migration checker now reports: `No legacy Widget DSL imports or raw component escape hatches found.`
+- Browser smoke passed again: create poll, submit availability, availability matrix updates, summary grid updates, score/best table updates, and no new console errors/warnings.
+
+### What didn't work
+- My first replacement still left Doodle using schedule-neutral data tables for the availability grid. I changed that to `widget.schedule.availabilityPoll(...)` and converted database votes (`yes`/`maybe`/`no`) into schedule states (`available`/`maybe`/`unavailable`) at the view boundary.
+
+### What I learned
+- `schedule.availabilityPoll` is usable even when persisted data uses product-specific values, as long as the page layer normalizes them into the schedule view contract.
+- The missing typed form/status wrappers were the real reason Doodle needed raw calls; adding those helpers made the example simpler and cleaned up the checker output.
+
+### What was tricky to build
+- Doodle stores free-form slot labels and vote values rather than structured scheduling DTOs. The solution was to keep persistence unchanged and normalize only the rendered `availabilityPoll` object: option IDs become strings, vote values become `available`/`maybe`/`unavailable`, and the native form can keep posting `yes`/`maybe`/`no`.
+
+### What warrants a second pair of eyes
+- Whether the UI helper signatures are the right long-term shape, especially `ui.status(status, value, options?)` and `ui.emptyState(title, description?, options?)`.
+- Whether `schedule.availabilityPoll` should support custom state labels/glyphs so Doodle can display `yes/no` while keeping the generic schedule contract.
+
+### What should be done in the future
+- Add runnable v3 example fixtures for the new UI helpers if they are not already covered by Doodle.
+- Consider promoting the score/best-slot result table into a schedule-specific result view.
+
+### Code review instructions
+- Start with the new `v3UIObject` exports and helper functions in `pkg/widgetdsl/v3.go`.
+- Review the Doodle `pollPage` normalization to `availabilityPoll` and `summaryTallies`.
+- Validate with:
+  - `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`
+  - `go run ./cmd/widgetdsl-migration-checker -- examples/xgoja/doodle-site/verbs examples/xgoja/doodle-site/xgoja.v2.yaml`
+  - `cd examples/xgoja/doodle-site && make build`
+  - browser smoke on `127.0.0.1:18793`.
+
+### Technical details
+- Checker result after this step: zero findings.
+- Doodle uses native form POST for writes; schedule widgets are read-only render views in this example.

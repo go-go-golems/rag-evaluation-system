@@ -4,8 +4,8 @@
 // (yes / maybe / no) per slot; a results grid tallies the best slot.
 //
 // - Data lives in SQLite (the `db` module, file-backed via xgoja.v2.yaml).
-// - Pages are Widget IR built with the rag Widget DSL (`ui.dsl` + `data.dsl`) and
-//   rendered by the React RagEvaluationSiteApp SPA.
+// - Pages are Widget IR built with `widget.dsl` v3 from the rag-widget-site
+//   provider and rendered by the React RagEvaluationSiteApp SPA.
 // - HTTP is served by the planned-route Express API:
 //     app.get(pattern).public().handle((ctx, res) => ...)
 //   Query:  ctx.request.query.<name>   Body: ctx.body.<name>   Params: ctx.params.<name>
@@ -17,7 +17,7 @@ __package__({ name: "doodle", short: "Doodle-style scheduling site" });
 __verb__("site", {
 	name: "site",
 	output: "text",
-	short: "Serve a Doodle-style scheduling site backed by SQLite and the Widget DSL",
+	short: "Serve a Doodle-style scheduling site backed by SQLite and widget.dsl v3",
 	tags: ["http", "widget", "db", "doodle"],
 });
 
@@ -25,8 +25,7 @@ function site() {
 	const express = require("express");
 	const assets = require("fs:assets");
 	const db = require("db");
-	const ui = require("ui.dsl");
-	const data = require("data.dsl");
+	const widget = require("widget.dsl");
 
 	// ---------------------------------------------------------------- schema + seed
 	db.exec(
@@ -65,15 +64,13 @@ function site() {
 			nowISO(),
 		);
 		const pollId = Number(db.query("SELECT last_insert_rowid() AS id")[0].id);
-		// Unique-ish slug from title + id (id guarantees uniqueness).
-		db.exec("UPDATE polls SET slug = ? WHERE id = ?", slugify(title) + "-" + pollId, pollId);
+		db.exec("UPDATE polls SET slug = ? WHERE id = ?", `${slugify(title)}-${pollId}`, pollId);
 		slotLabels.forEach((label, index) => {
 			db.exec("INSERT INTO options (poll_id, label, sort) VALUES (?, ?, ?)", pollId, label, index);
 		});
 		return pollId;
 	}
 
-	// Seed one example poll on first run so the site is not empty.
 	if (Number(db.query("SELECT COUNT(*) AS n FROM polls")[0].n) === 0) {
 		const seedId = createPoll(
 			"Team offsite dinner",
@@ -141,17 +138,58 @@ function site() {
 		);
 	}
 
-	// ---------------------------------------------------------------- rendering
+	// ---------------------------------------------------------------- widget.dsl helpers
+	const act = widget.act;
 	const navItems = [
-		{ id: "index", label: "All polls", action: ui.action.navigate("/pages/index") },
-		{ id: "create", label: "New poll", action: ui.action.navigate("/pages/create") },
+		{ id: "index", label: "All polls", action: act.navigate("/pages/index") },
+		{ id: "create", label: "New poll", action: act.navigate("/pages/create") },
 	];
-
-	function pageMeta(activeNavItemId) {
-		return { activeNavItemId: activeNavItemId, navItems: navItems, maxWidth: "wide" };
+	function statusText(status, text) {
+		return widget.ui.status(status, text);
 	}
 
-	const VOTE_GLYPH = { yes: "✓ yes", maybe: "~ maybe", no: "✗ no", "": "— no reply" };
+	function emptyState(title, description) {
+		return widget.ui.emptyState(title, description);
+	}
+
+	function formRow(label, control, options = {}) {
+		return widget.ui.formRow(label, control, options);
+	}
+
+	function textInput(props) {
+		return widget.ui.textInput(props);
+	}
+
+	function textareaInput(props) {
+		return widget.ui.textareaInput(props);
+	}
+
+	function selectInput(props) {
+		return widget.ui.selectInput(props);
+	}
+
+	function collectionTable(name, rows, configureFields, options = {}) {
+		const schema = widget.data.fields(name, configureFields).build();
+		return widget.data
+			.collection(name, rows, (c) => {
+				c.schema(schema)
+					.empty(options.empty || "No rows")
+					.table();
+			})
+			.toNode();
+	}
+
+	function applyPageMeta(p, id, activeNavItemId) {
+		return p
+			.id(id)
+			.meta("activeNavItemId", activeNavItemId)
+			.meta("navItems", navItems)
+			.meta("maxWidth", "wide");
+	}
+
+	function asPage(pageBuilder) {
+		return pageBuilder.toPage();
+	}
 
 	function indexPage() {
 		const polls = allPolls();
@@ -165,185 +203,140 @@ function site() {
 			created: String(p.created_at || "").slice(0, 10),
 		}));
 
-		return ui.page({
-			schemaVersion: "0.1.0",
-			id: "index",
-			title: "Doodle · scheduling polls",
-			meta: pageMeta("index"),
-			sections: [
-				ui.panel(
-					{ title: "Scheduling polls" },
-					ui.statusText({ status: "succeeded", icon: true }, polls.length + " active poll(s)"),
-					ui.caption(
-						{ tone: "muted" },
-						"Create a poll with a few time slots, share it, and let people mark their availability. Data is stored in SQLite.",
-					),
-					ui.inline(
-						{ gap: "sm", wrap: true },
-						ui.button(
-							{ variant: "primary", action: ui.action.navigate("/pages/create") },
-							"+ New poll",
-						),
-					),
-				),
-				ui.recipes.metrics({
-					items: [
-						{ label: "Polls", value: polls.length, status: "ready" },
-						{ label: "Total responses", value: totalPeople, status: "succeeded" },
-						{
-							label: "Time slots",
-							value: polls.reduce((acc, p) => acc + Number(p.slots || 0), 0),
-							status: "running",
-						},
-					],
-				}),
-				ui.panel(
-					{ title: "Polls" },
-					polls.length === 0
-						? ui.emptyState({
-								title: "No polls yet",
-								description: "Create your first scheduling poll.",
-							})
-						: data.dataTable({
-								rows: rows,
-								getRowKey: "id",
-								columns: [
-									{ id: "title", header: "Poll", cell: data.cell.field("title") },
-									{
-										id: "location",
-										header: "Where",
-										cell: data.cell.caption("location", { tone: "muted" }),
-									},
-									{ id: "slots", header: "Slots", align: "right", cell: data.cell.number("slots") },
-									{
-										id: "people",
-										header: "Responses",
-										align: "right",
-										cell: data.cell.number("people"),
-									},
-									{
-										id: "created",
-										header: "Created",
-										cell: data.cell.caption("created", { tone: "muted" }),
-									},
-								],
-							}),
-				),
-				polls.length === 0
-					? ui.panel({ title: "", density: "condensed" }, ui.caption({ tone: "muted" }, " "))
-					: ui.panel(
-							{ title: "Open a poll" },
-							ui.inline(
-								{ gap: "sm", wrap: true },
-								...rows.map((r) =>
-									ui.button(
-										{
-											variant: "secondary",
-											action: ui.action.navigate("/pages/poll?poll=" + r.id),
-										},
-										r.title + " →",
-									),
-								),
+		const table = collectionTable(
+			"polls",
+			rows,
+			(f) =>
+				f
+					.key("id", { label: "ID" })
+					.primary("title", { label: "Poll" })
+					.short("location", { label: "Where" })
+					.count("slots", { label: "Slots" })
+					.count("people", { label: "Responses" })
+					.date("created", { label: "Created" }),
+			{ empty: "No polls yet" },
+		);
+
+		return asPage(
+			widget.page("Doodle · scheduling polls", (p) => {
+				applyPageMeta(p, "index", "index")
+					.section("Scheduling polls", (s) =>
+						s
+							.view(statusText("succeeded", `${polls.length} active poll(s)`))
+							.caption(
+								"Create a poll with a few time slots, share it, and let people mark their availability. Data is stored in SQLite.",
+							)
+							.view(
+								widget.ui.button("+ New poll", act.navigate("/pages/create"), {
+									variant: "primary",
+								}),
 							),
+					)
+					.section("Metrics", (s) =>
+						s
+							.metric("Polls", String(polls.length), { status: "ready" })
+							.metric("Total responses", String(totalPeople), { status: "succeeded" })
+							.metric(
+								"Time slots",
+								String(polls.reduce((acc, poll) => acc + Number(poll.slots || 0), 0)),
+								{ status: "running" },
+							),
+					)
+					.section("Polls", (s) =>
+						s.view(
+							polls.length === 0
+								? emptyState("No polls yet", "Create your first scheduling poll.")
+								: table,
 						),
-			],
-		});
+					)
+					.section("Open a poll", (s) =>
+						s.view(
+							polls.length === 0
+								? widget.ui.caption("No poll links yet.", { tone: "muted" })
+								: widget.ui.inline(
+										{ gap: "sm", wrap: true },
+										...rows.map((r) =>
+											widget.ui.button(`${r.title} →`, act.navigate(`/pages/poll?poll=${r.id}`), {
+												variant: "secondary",
+											}),
+										),
+									),
+						),
+					);
+			}),
+		);
 	}
 
 	function createPage() {
-		return ui.page({
-			schemaVersion: "0.1.0",
-			id: "create",
-			title: "New scheduling poll",
-			meta: pageMeta("create"),
-			sections: [
-				ui.panel(
-					{ title: "Create a poll" },
-					ui.caption(
-						{ tone: "muted" },
-						"Give the event a title and list one time slot per line. Everything is stored in SQLite.",
-					),
-				),
-				ui.formPanel(
-					{
-						title: "Event details",
-						method: "post",
-						formAction: "/api/form/create-poll",
-						submitLabel: "Create poll",
-					},
-					ui.formRow({
-						label: "Title",
-						required: true,
-						control: ui.textInput({
-							name: "title",
-							placeholder: "Team offsite dinner",
-							required: true,
-							readOnly: false,
-						}),
-					}),
-					ui.formRow({
-						label: "Description",
-						control: ui.textareaInput({
-							name: "description",
-							placeholder: "Optional context for invitees",
-							rows: 2,
-							readOnly: false,
-						}),
-					}),
-					ui.formRow({
-						label: "Location",
-						control: ui.textInput({
-							name: "location",
-							placeholder: "Trattoria Luca, downtown",
-							readOnly: false,
-						}),
-					}),
-					ui.formRow({
-						label: "Time slots (one per line)",
-						required: true,
-						control: ui.textareaInput({
-							name: "slots",
-							placeholder: "Thu Jul 9 · 19:00\nFri Jul 10 · 19:00\nSat Jul 11 · 18:30",
-							rows: 5,
-							required: true,
-							readOnly: false,
-						}),
-					}),
-				),
-				ui.panel(
-					{ title: "", density: "condensed" },
-					ui.button({ action: ui.action.navigate("/pages/index") }, "← Back to all polls"),
-				),
-			],
-		});
+		const form = widget.ui.form(
+			{
+				title: "Event details",
+				method: "post",
+				formAction: "/api/form/create-poll",
+				submitLabel: "Create poll",
+			},
+			formRow(
+				"Title",
+				textInput({ name: "title", placeholder: "Team offsite dinner", required: true }),
+				{ required: true },
+			),
+			formRow(
+				"Description",
+				textareaInput({
+					name: "description",
+					placeholder: "Optional context for invitees",
+					rows: 2,
+				}),
+			),
+			formRow("Location", textInput({ name: "location", placeholder: "Trattoria Luca, downtown" })),
+			formRow(
+				"Time slots (one per line)",
+				textareaInput({
+					name: "slots",
+					placeholder: "Thu Jul 9 · 19:00\nFri Jul 10 · 19:00\nSat Jul 11 · 18:30",
+					rows: 5,
+					required: true,
+				}),
+				{ required: true },
+			),
+		);
+
+		return asPage(
+			widget.page("New scheduling poll", (p) => {
+				applyPageMeta(p, "create", "create")
+					.section("Create a poll", (s) =>
+						s.caption(
+							"Give the event a title and list one time slot per line. Everything is stored in SQLite.",
+						),
+					)
+					.section("Event details", (s) => s.view(form))
+					.section("Navigation", (s) =>
+						s.view(widget.ui.button("← Back to all polls", act.navigate("/pages/index"))),
+					);
+			}),
+		);
 	}
 
 	function pollPage(pollId) {
 		const poll = getPoll(pollId);
 		if (!poll) {
-			return ui.page({
-				schemaVersion: "0.1.0",
-				id: "poll",
-				title: "Poll not found",
-				meta: pageMeta("index"),
-				sections: [
-					ui.panel(
-						{ title: "Poll not found" },
-						ui.statusText({ status: "failed", icon: true }, "No poll with id " + pollId),
-						ui.button(
-							{ variant: "primary", action: ui.action.navigate("/pages/index") },
-							"← All polls",
+			return asPage(
+				widget.page("Poll not found", (p) => {
+					applyPageMeta(p, "poll", "index").section("Poll not found", (s) =>
+						s.view(statusText("failed", `No poll with id ${pollId}`)).view(
+							widget.ui.button("← All polls", act.navigate("/pages/index"), {
+								variant: "primary",
+							}),
 						),
-					),
-				],
-			});
+					);
+				}),
+			);
 		}
 
 		const options = pollOptions(pollId);
 		const participants = pollParticipants(pollId);
 		const votes = pollVotes(pollId);
 
-		// index votes: voteMap[participantId][optionId] = value
 		const voteMap = {};
 		votes.forEach((v) => {
 			const pid = v.participant_id;
@@ -351,25 +344,30 @@ function site() {
 			voteMap[pid][v.option_id] = v.value;
 		});
 
-		// Availability grid: one row per participant, one column per option.
-		const gridColumns = [{ id: "name", header: "Who", cell: data.cell.field("name") }];
-		options.forEach((opt) => {
-			gridColumns.push({
-				id: "opt_" + opt.id,
-				header: opt.label,
-				cell: data.cell.field("opt_" + opt.id),
-			});
-		});
-		const gridRows = participants.map((pt) => {
-			const row = { id: pt.id, name: pt.name };
-			options.forEach((opt) => {
-				const value = (voteMap[pt.id] && voteMap[pt.id][opt.id]) || "";
-				row["opt_" + opt.id] = VOTE_GLYPH[value] || VOTE_GLYPH[""];
-			});
-			return row;
-		});
+		function availabilityValue(value) {
+			if (value === "yes") return "available";
+			if (value === "no") return "unavailable";
+			if (value === "maybe") return "maybe";
+			return "unknown";
+		}
 
-		// Tally per option and pick the best slot (yes = 2 pts, maybe = 1 pt).
+		const availabilityPoll = {
+			title: poll.title,
+			options: options.map((opt) => ({ id: String(opt.id), label: opt.label })),
+			responses: participants.map((pt) => {
+				const availability = {};
+				options.forEach((opt) => {
+					availability[String(opt.id)] = availabilityValue(
+						(voteMap[pt.id] && voteMap[pt.id][opt.id]) || "",
+					);
+				});
+				return { id: String(pt.id), name: pt.name, availability };
+			}),
+		};
+		const availabilityGrid = widget.schedule.availabilityPoll(availabilityPoll, (b) =>
+			b.readOnly(),
+		);
+
 		const tally = options.map((opt) => {
 			let yes = 0;
 			let maybe = 0;
@@ -380,7 +378,7 @@ function site() {
 				else if (value === "maybe") maybe += 1;
 				else if (value === "no") no += 1;
 			});
-			return { option: opt, yes: yes, maybe: maybe, no: no, score: yes * 2 + maybe };
+			return { option: opt, yes, maybe, no, score: yes * 2 + maybe };
 		});
 		let bestScore = -1;
 		tally.forEach((t) => {
@@ -394,28 +392,48 @@ function site() {
 			no: t.no,
 			score: t.score,
 			verdict: t.score === bestScore && bestScore > 0 ? "succeeded" : "pending",
-			verdictText: t.score === bestScore && bestScore > 0 ? "★ best slot" : " ",
 		}));
+		const resultsTable = collectionTable("results", resultRows, (f) =>
+			f
+				.key("id", { label: "ID" })
+				.primary("label", { label: "Time slot" })
+				.count("score", { label: "Score" })
+				.status("verdict", { label: "Best" }),
+		);
+		const summaryTallies = [
+			{
+				id: "available",
+				label: "Available",
+				counts: Object.fromEntries(tally.map((t) => [String(t.option.id), t.yes])),
+			},
+			{
+				id: "maybe",
+				label: "Maybe",
+				counts: Object.fromEntries(tally.map((t) => [String(t.option.id), t.maybe])),
+			},
+			{
+				id: "unavailable",
+				label: "Unavailable",
+				counts: Object.fromEntries(tally.map((t) => [String(t.option.id), t.no])),
+			},
+		];
+		const summaryGrid = widget.schedule.pollSummary(availabilityPoll, summaryTallies);
 
-		// "Add your availability" form: name + one select per option.
 		const formChildren = [
-			ui.formRow({
-				label: "Your name",
-				required: true,
-				control: ui.textInput({
-					name: "name",
-					placeholder: "e.g. Katherine",
+			formRow(
+				"Your name",
+				textInput({ name: "name", placeholder: "e.g. Katherine", required: true }),
+				{
 					required: true,
-					readOnly: false,
-				}),
-			}),
+				},
+			),
 		];
 		options.forEach((opt) => {
 			formChildren.push(
-				ui.formRow({
-					label: opt.label,
-					control: ui.selectInput({
-						name: "opt_" + opt.id,
+				formRow(
+					opt.label,
+					selectInput({
+						name: `opt_${opt.id}`,
 						defaultValue: "maybe",
 						options: [
 							{ value: "yes", label: "✓ Yes" },
@@ -423,71 +441,44 @@ function site() {
 							{ value: "no", label: "✗ No" },
 						],
 					}),
-				}),
+				),
 			);
 		});
+		const availabilityForm = widget.ui.form(
+			{
+				title: "Add your availability",
+				method: "post",
+				formAction: `/api/form/cast-vote?poll=${poll.id}`,
+				submitLabel: "Submit availability",
+			},
+			...formChildren,
+		);
 
-		return ui.page({
-			schemaVersion: "0.1.0",
-			id: "poll",
-			title: poll.title,
-			meta: pageMeta("index"),
-			sections: [
-				ui.panel(
-					{ title: poll.title },
-					ui.metadataGrid({
-						density: "compact",
-						items: [
-							{ key: "Location", value: poll.location || "—" },
-							{ key: "Responses", value: String(participants.length) },
-							{ key: "Slots", value: String(options.length) },
-							{
-								key: "Share link",
-								value: "/pages/poll?poll=" + poll.id,
-								copyValue: "/pages/poll?poll=" + poll.id,
-							},
-						],
-					}),
-					poll.description
-						? ui.caption({ tone: "muted" }, poll.description)
-						: ui.caption({ tone: "muted" }, ""),
-					ui.button({ action: ui.action.navigate("/pages/index") }, "← All polls"),
-				),
-				ui.panel(
-					{ title: "Availability grid" },
-					participants.length === 0
-						? ui.emptyState({
-								title: "No responses yet",
-								description: "Be the first to add your availability below.",
+		return asPage(
+			widget.page(poll.title, (p) => {
+				applyPageMeta(p, "poll", "index")
+					.section(poll.title, (s) =>
+						s
+							.metadata({
+								Location: poll.location || "—",
+								Responses: String(participants.length),
+								Slots: String(options.length),
+								"Share link": `/pages/poll?poll=${poll.id}`,
 							})
-						: data.dataTable({ rows: gridRows, getRowKey: "id", columns: gridColumns }),
-				),
-				ui.panel(
-					{ title: "Results by slot" },
-					data.dataTable({
-						rows: resultRows,
-						getRowKey: "id",
-						columns: [
-							{ id: "label", header: "Time slot", cell: data.cell.field("label") },
-							{ id: "yes", header: "Yes", align: "right", cell: data.cell.number("yes") },
-							{ id: "maybe", header: "Maybe", align: "right", cell: data.cell.number("maybe") },
-							{ id: "no", header: "No", align: "right", cell: data.cell.number("no") },
-							{ id: "score", header: "Score", align: "right", cell: data.cell.number("score") },
-							{ id: "verdict", header: "", cell: data.cell.status("verdict", { icon: true }) },
-						],
-					}),
-				),
-				ui.formPanel(
-					{
-						title: "Add your availability",
-						method: "post",
-						formAction: "/api/form/cast-vote?poll=" + poll.id,
-						submitLabel: "Submit availability",
-					},
-					...formChildren,
-				),
-			],
-		});
+							.caption(poll.description || "")
+							.view(widget.ui.button("← All polls", act.navigate("/pages/index"))),
+					)
+					.section("Availability grid", (s) =>
+						s.view(
+							participants.length === 0
+								? emptyState("No responses yet", "Be the first to add your availability below.")
+								: availabilityGrid,
+						),
+					)
+					.section("Results by slot", (s) => s.view(summaryGrid).view(resultsTable))
+					.section("Add your availability", (s) => s.view(availabilityForm));
+			}),
+		);
 	}
 
 	// ---------------------------------------------------------------- HTTP wiring
@@ -517,11 +508,10 @@ function site() {
 		.get("/api/widget/pages/poll")
 		.public()
 		.handle((ctx, res) => {
-			const pollId = Number((ctx.request && ctx.request.query && ctx.request.query.poll) || 0);
+			const pollId = Number(ctx.request?.query?.poll || 0);
 			res.json(pollPage(pollId));
 		});
 
-	// Native form POST handlers (application/x-www-form-urlencoded -> ctx.body).
 	app
 		.post("/api/form/create-poll")
 		.public()
@@ -541,7 +531,7 @@ function site() {
 				String(body.location || "").trim(),
 				slots,
 			);
-			res.redirect(303, "/pages/poll?poll=" + pollId);
+			res.redirect(303, `/pages/poll?poll=${pollId}`);
 		});
 
 	app
@@ -549,11 +539,11 @@ function site() {
 		.public()
 		.handle((ctx, res) => {
 			const body = ctx.body || {};
-			const pollId = Number((ctx.request && ctx.request.query && ctx.request.query.poll) || 0);
+			const pollId = Number(ctx.request?.query?.poll || 0);
 			const poll = getPoll(pollId);
 			const name = String(body.name || "").trim();
 			if (!poll || !name) {
-				return res.redirect(303, "/pages/poll?poll=" + pollId);
+				return res.redirect(303, `/pages/poll?poll=${pollId}`);
 			}
 			db.exec(
 				"INSERT INTO participants (poll_id, name, created_at) VALUES (?, ?, ?)",
@@ -563,8 +553,9 @@ function site() {
 			);
 			const participantId = Number(db.query("SELECT last_insert_rowid() AS id")[0].id);
 			pollOptions(pollId).forEach((opt) => {
-				const raw = body["opt_" + opt.id];
-				const value = raw === "yes" || raw === "no" || raw === "maybe" ? raw : "no";
+				const rawValue = body[`opt_${opt.id}`];
+				const value =
+					rawValue === "yes" || rawValue === "no" || rawValue === "maybe" ? rawValue : "no";
 				db.exec(
 					"INSERT INTO votes (participant_id, option_id, value) VALUES (?, ?, ?)",
 					participantId,
@@ -572,6 +563,6 @@ function site() {
 					value,
 				);
 			});
-			res.redirect(303, "/pages/poll?poll=" + pollId);
+			res.redirect(303, `/pages/poll?poll=${pollId}`);
 		});
 }

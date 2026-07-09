@@ -3,10 +3,10 @@ Title: Port Doodle scheduling example to widget.dsl v3
 Ticket: DOODLE-WIDGETDSL-V3
 Status: active
 Topics:
-    - widget-dsl
+    - ui-dsl
     - xgoja
     - sqlite
-    - doodle
+    - web
 DocType: index
 Intent: long-term
 Owners: []

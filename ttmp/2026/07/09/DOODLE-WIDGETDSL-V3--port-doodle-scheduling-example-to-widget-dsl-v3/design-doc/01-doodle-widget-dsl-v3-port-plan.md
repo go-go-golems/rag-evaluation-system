@@ -3,10 +3,10 @@ Title: Doodle widget.dsl v3 Port Plan
 Ticket: DOODLE-WIDGETDSL-V3
 Status: active
 Topics:
-    - widget-dsl
+    - ui-dsl
     - xgoja
     - sqlite
-    - doodle
+    - web
 DocType: design-doc
 Intent: short-term
 Owners: []

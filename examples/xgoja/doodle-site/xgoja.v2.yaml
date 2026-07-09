@@ -41,11 +41,8 @@ runtime:
             driverName: sqlite3
             dataSourceName: 'file:doodle.db?_foreign_keys=on'
         - provider: rag-widget-site
-          name: ui.dsl
-          as: ui.dsl
-        - provider: rag-widget-site
-          name: data.dsl
-          as: data.dsl
+          name: widget.dsl
+          as: widget.dsl
 sources:
     - id: local-verbs
       kind: jsverbs
