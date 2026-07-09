@@ -1,0 +1,222 @@
+{
+	"id": "workshop-crm-pipeline",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"ariaLabel": "AI engineering workshops",
+							"card": {
+								"accentField": "status",
+								"meta": {
+									"fallback": "unassigned",
+									"field": "ownerId",
+									"kind": "field"
+								},
+								"subtitle": {
+									"fallback": "—",
+									"field": "amount",
+									"format": "integer",
+									"kind": "number"
+								},
+								"title": {
+									"field": "title",
+									"kind": "field"
+								}
+							},
+							"cards": [
+								{
+									"amount": 18000,
+									"fields": {
+										"amount": 18000,
+										"buyerEmail": "maya@acme.example",
+										"organization": "Acme Robotics"
+									},
+									"id": "deal-acme",
+									"ownerId": "manuel",
+									"stageId": "proposal",
+									"status": "open",
+									"title": "Acme Robotics workshop"
+								}
+							],
+							"columnField": "stageId",
+							"columns": [
+								{
+									"accent": "lead",
+									"header": "New lead · 6000 · 1",
+									"id": "lead"
+								},
+								{
+									"accent": "proposal",
+									"header": "Proposal · 18000 · 1",
+									"id": "proposal"
+								},
+								{
+									"accent": "won",
+									"header": "Won / scheduled · 0 · 0",
+									"id": "won"
+								}
+							],
+							"getCardId": {
+								"field": "id"
+							},
+							"onCardSelectAction": {
+								"kind": "navigate",
+								"to": "/pages/opportunity?deal=${dealId}"
+							},
+							"onMoveAction": {
+								"kind": "server",
+								"name": "crm.deal.move",
+								"payload": {
+									"dealId": "${dealId}",
+									"toStage": "${toStage}"
+								}
+							},
+							"selectedCardId": "deal-acme"
+						},
+						"type": "BoardEngine"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Pipeline",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"mode": "edit",
+							"onFieldChangeAction": {
+								"kind": "server",
+								"name": "crm.field.update",
+								"payload": {
+									"key": "${key}",
+									"recordId": "deal-acme",
+									"value": "${value}"
+								}
+							},
+							"sections": [
+								{
+									"fields": [
+										{
+											"group": "Customer",
+											"key": "organization",
+											"label": "Organization",
+											"type": "text"
+										},
+										{
+											"group": "Customer",
+											"key": "buyerEmail",
+											"label": "Buyer email",
+											"type": "email"
+										}
+									],
+									"label": "Customer"
+								},
+								{
+									"fields": [
+										{
+											"group": "Commercial",
+											"key": "amount",
+											"label": "Expected value",
+											"type": "currency",
+											"unit": "USD"
+										}
+									],
+									"label": "Commercial"
+								},
+								{
+									"fields": [
+										{
+											"group": "Workshop",
+											"key": "format",
+											"label": "Format",
+											"options": [
+												{
+													"colorKey": "onsite",
+													"label": "2-day onsite",
+													"value": "onsite-2d"
+												}
+											],
+											"type": "select"
+										}
+									],
+									"label": "Workshop"
+								}
+							],
+							"values": {
+								"amount": 18000,
+								"buyerEmail": "maya@acme.example",
+								"organization": "Acme Robotics"
+							}
+						},
+						"type": "RecordFieldList"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Opportunity",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"activities": [
+								{
+									"actor": {
+										"id": "manuel",
+										"name": "Manuel"
+									},
+									"atISO": "2026-07-09T10:00:00Z",
+									"id": "activity-1",
+									"kind": "email",
+									"title": "Sent draft agenda"
+								}
+							],
+							"glyphs": {
+								"call": "☎",
+								"email": "✉",
+								"field_change": "•",
+								"meeting": "◎",
+								"note": "📝",
+								"stage_change": "→",
+								"task": "□"
+							},
+							"groupByDay": true
+						},
+						"type": "ActivityFeed"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Activity",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Workshop CRM pipeline"
+}

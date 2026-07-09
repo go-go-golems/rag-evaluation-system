@@ -27,6 +27,13 @@ var widgetV3NamespaceDescriptors = []v3NamespaceDescriptor{
 	{ExportName: "bind", TypeName: "BindingNamespace", Description: "Accessor and constant binding builders.", RuntimeFactory: "bindingObject"},
 	{ExportName: "ui", TypeName: "UINamespace", Description: "Generic composition widgets.", RuntimeFactory: "v3UIObject"},
 	{ExportName: "data", TypeName: "DataNamespace", Description: "Schema, collection, matrix, selection, cell, and item helpers.", RuntimeFactory: "v3DataObject"},
+	{ExportName: "crm", TypeName: "CrmNamespace", Description: "CRM field schemas, pipelines, records, activities, tasks, and actions.", RuntimeFactory: "v3CRMObject",
+		Views: []v3ViewDescriptor{
+			{Name: "pipelineBoard", Signature: "pipelineBoard(pipeline: Record<string, any>, deals: Record<string, any>[], configure?: Fragment<CrmPipelineBoardBuilder>): WidgetNodeSpec", Component: "BoardEngine", Description: "Render an opportunity pipeline board."},
+			{Name: "recordFields", Signature: "recordFields(values: Record<string, JsonValue>, fields: Record<string, any>, configure?: Fragment<CrmRecordFieldsBuilder>): WidgetNodeSpec", Component: "RecordFieldList", Description: "Render typed CRM fields."},
+			{Name: "activityFeed", Signature: "activityFeed(activities: Record<string, any>[], configure?: Fragment<CrmActivityFeedBuilder>): WidgetNodeSpec", Component: "ActivityFeed", Description: "Render a CRM activity timeline."},
+		},
+	},
 	{ExportName: "cms", TypeName: "CmsNamespace", Description: "CMS media, queue, and markdown editor helpers.", RuntimeFactory: "v3CMSObject"},
 	{ExportName: "course", TypeName: "CourseNamespace", Description: "Course shell, landing, slide, handout, metadata, agenda, and material helpers.", RuntimeFactory: "v3CourseObject"},
 	{ExportName: "context", TypeName: "ContextNamespace", Description: "Context style, diagram, transcript workspace, and intent helpers.", RuntimeFactory: "v3ContextObject"},
