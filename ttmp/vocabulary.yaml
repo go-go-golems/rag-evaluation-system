@@ -121,6 +121,14 @@ topics:
       description: Fluent builder pattern DSLs (method chaining, typed terminals, .build())
     - slug: typescript
       description: TypeScript declaration generation and compile-time types (tsgen/spec)
+    - slug: calendar
+      description: Calendar and time-based UI design
+    - slug: crm
+      description: Customer relationship management domain and widgets
+    - slug: widget-dsl
+      description: Widget DSL authoring and helper APIs
+    - slug: workshops
+      description: Workshop planning, sales, and delivery workflows
 docTypes:
     - slug: design-doc
       description: Structured rationale and architecture notes
