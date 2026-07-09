@@ -8,11 +8,17 @@ Intent: ""
 Owners: []
 RelatedFiles:
     - Path: repo://examples/xgoja/workshop-crm-site/verbs/lib/pages.js
-      Note: CRM Widget DSL page composition
+      Note: |-
+        CRM Widget DSL page composition
+        Board click and drag intent wiring
     - Path: repo://examples/xgoja/workshop-crm-site/verbs/lib/store.js
-      Note: SQLite lead-to-workshop-run persistence
+      Note: |-
+        SQLite lead-to-workshop-run persistence
+        Durable pipeline stage mutation
     - Path: repo://examples/xgoja/workshop-crm-site/verbs/workshop-crm.js
-      Note: HTTP routes and xgoja host entrypoint (commit 0d81a70b594cfea9a1884d6cfc363c27c2fdb9d2)
+      Note: |-
+        HTTP routes and xgoja host entrypoint (commit 0d81a70b594cfea9a1884d6cfc363c27c2fdb9d2)
+        CRM action HTTP route
     - Path: repo://packages/rag-evaluation-site/src/widgets/presets/crm.ts
       Note: Current CRM behavior investigated
     - Path: repo://pkg/widgetdsl/testdata/v3/examples/41-crm-workshop-pipeline.js
@@ -25,12 +31,14 @@ RelatedFiles:
       Note: |-
         CRM namespace implementation (commit 196cb20800c7d3893daffe6aca37fa9682e0a251)
         CRM palette IR fix required by renderer
+        Typed CRM action payload interpolation (commit 9b70f4af07fb89c2ef536348e02b0adbbdd5e478)
 ExternalSources: []
 Summary: ""
 LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -236,3 +244,70 @@ While browser-testing the dashboard, the new funnel exposed a renderer-contract 
 - Runtime server used for smoke validation: `127.0.0.1:18794`.
 - Key routes: `/pages/index`, `/pages/pipeline`, `/pages/lead`, `/pages/opportunity?deal=<id>`, `/pages/availability?deal=<id>`, `/pages/runs`.
 - Write routes: `POST /api/form/create-lead` and `POST /api/form/schedule-run?deal=<id>`.
+
+## Step 4: Repair pipeline card open and drag/drop actions
+
+User validation found two broken pipeline interactions: selecting a board card did not open its opportunity, and dragging a card did not persist its stage. I traced both from the browser-rendered `BoardEngine` props through the React action dispatcher to the xgoja host. They were separate integration mistakes rather than a BoardEngine rendering failure.
+
+The repaired flow now uses the renderer’s real interaction context (`cardId` and `to`), translates concise DSL placeholders into typed `{ kind: "path" }` payload entries, and handles `POST /api/widget/actions/crm.deal.move` in the reference host. A successful move updates SQLite, records an activity, returns `{ refresh: true }`, and causes the rendered pipeline to reload.
+
+### Prompt Context
+
+**User prompt (verbatim):** "- clicking on opportunities here: http://127.0.0.1:18794/pages/pipeline fails
+- drag / dropping the card fails as well."
+
+**Assistant interpretation:** Diagnose and repair the two non-working BoardEngine interactions in the running workshop CRM host.
+
+**Inferred user intent:** Make the pipeline behave as an actual CRM control surface, not a read-only visual demonstration.
+
+**Commit (code):** `9b70f4af07fb89c2ef536348e02b0adbbdd5e478` — "CRM: wire pipeline card interactions"
+
+### What I did
+- Inspected the live `/api/widget/pages/pipeline` BoardEngine props and React `BoardEngine.widget.tsx` action context.
+- Changed the host from invalid `${dealId}` / `${toStage}` references to actual BoardEngine context paths `${cardId}` / `${to}`.
+- Added `onMove(widget.crm.intent.moveDeal(...))` to the pipeline page.
+- Changed CRM intent placeholders into typed `path` template parts so React resolves payload values before posting the server action.
+- Added SQLite `moveDeal` persistence and activity logging plus the `POST /api/widget/actions/crm.deal.move` route.
+- Updated the CRM fluent fixture/golden and rebuilt the embedded host binary.
+
+### Why
+- `BoardEngine` dispatches `{ cardId, from, to, beforeId }`; `dealId` and `toStage` were never present in the interaction context.
+- Server action payload strings are literals unless represented as template parts, so a literal `${cardId}` cannot mutate the intended record.
+
+### What worked
+- Clicking the Foo opportunity card navigated to `/pages/opportunity?deal=2` in Playwright.
+- Dragging the Foo card to the Scheduled drop target posted successfully to `/api/widget/actions/crm.deal.move` and refreshed the page.
+- The post-move page and API showed `stageId: "won"` and the Scheduled column count/value changed to `1` / `18000`.
+- Browser console had zero errors after both checks.
+- Widget DSL tests, migration checker, xgoja rebuild, and pre-commit Go tests/linters passed.
+
+### What didn't work
+- Initial emitted navigation action was `"/pages/opportunity?deal=${dealId}"`, but the BoardEngine context supplies `cardId`; interpolation therefore produced an empty/incorrect target.
+- Initial page did not install `onMove` at all, and the proposed CRM intent serialized placeholder strings as literals. The browser had no action route capable of updating SQLite.
+- Biome continues to warn that intentional DSL placeholder strings such as `"${cardId}"` look like accidental template strings; this is documented DSL syntax. The xgoja external `site()` verb also remains intentionally reported as unused.
+
+### What I learned
+- Domain intent helpers must encode frontend action contracts, not merely use names that sound correct. The BoardEngine contract is authoritative.
+- A `refresh: true` server-action result is sufficient for the existing WidgetRenderer to re-fetch the current page after a durable mutation.
+
+### What was tricky to build
+- There are two interpolation layers with different representations: navigate URLs interpolate strings directly, whereas server action payloads only resolve typed template parts. `v3CRMActionValue` bridges the ergonomic DSL placeholder input to the typed payload contract without changing literal values.
+
+### What warrants a second pair of eyes
+- `v3CRMActionValue` deliberately recognizes only a string that is entirely one `$path` or `${path}` token. Review any future need for mixed literal/path payload strings separately instead of broadening it accidentally.
+- The example route permits any valid stage transition. A production system should enforce allowed transitions and authorization in the application layer.
+
+### What should be done in the future
+- Add a committed Playwright regression test that clicks a pipeline card and drags it between columns.
+- Define an explicit server-action registry if more CRM actions are added; the example currently demonstrates one focused route.
+
+### Code review instructions
+- Start with `packages/rag-evaluation-site/src/components/molecules/BoardEngine/BoardEngine.widget.tsx` to verify supplied context names.
+- Review `pkg/widgetdsl/v3_crm.go:v3CRMActionValue` and the `crm.intent` methods.
+- Review `examples/xgoja/workshop-crm-site/verbs/workshop-crm.js` plus `store.js:moveDeal`.
+- Run `make -C examples/xgoja/workshop-crm-site build`, serve it, then click a card and drag it to another pipeline column.
+
+### Technical details
+- Card select context: `{ cardId, componentType: "BoardEngine" }`.
+- Move context: `{ cardId, from, to, beforeId, componentType: "BoardEngine" }`.
+- Durable endpoint: `POST /api/widget/actions/crm.deal.move` with resolved `{ dealId, toStage }` payload.

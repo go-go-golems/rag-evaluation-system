@@ -34,3 +34,13 @@ Step 3: added and browser-validated SQLite xgoja workshop CRM reference host, pl
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/examples/xgoja/workshop-crm-site/verbs/lib/store.js — SQLite application data
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3_crm.go — CRM Widget IR palettes
 
+
+## 2026-07-09
+
+Step 4: fixed pipeline card opening and durable drag/drop stage changes using BoardEngine cardId/to context and a CRM action route (commit 9b70f4af07fb89c2ef536348e02b0adbbdd5e478).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/examples/xgoja/workshop-crm-site/verbs/workshop-crm.js — Stage-move endpoint
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3_crm.go — CRM action payload contract
+
