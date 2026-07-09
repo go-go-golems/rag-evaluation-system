@@ -49,7 +49,7 @@ Open <http://127.0.0.1:8098/pages/index>.
 go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1
 pnpm --dir packages/rag-evaluation-site typecheck
 pnpm --dir packages/rag-evaluation-site build-storybook
-python ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/scripts/02-report-legacy-widget-dsl-usage.py \
+go run ./cmd/widgetdsl-migration-checker -- \
   pkg/widgetdsl/testdata/v3/examples examples/xgoja-widgetdsl-v3/jsverbs
 ```
 

@@ -27,10 +27,10 @@ RelatedFiles:
       Note: |-
         Embedded provider SPA bundling documentation updated with widget.dsl v3 module selection.
         Embedded SPA bundling docs with v3 module-selection guidance
-    - Path: repo://ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/scripts/02-report-legacy-widget-dsl-usage.py
-      Note: |-
-        Migration helper that reports legacy split-module imports and raw component escape hatches.
-        Checker referenced by the migration workflow
+    - Path: repo://cmd/widgetdsl-migration-checker/main.go
+      Note: Go CLI for parser-backed migration checks over JavaScript/TypeScript sources.
+    - Path: repo://pkg/widgetdsl/migrationcheck/checker.go
+      Note: Tree-sitter scanner for legacy split-module imports and raw component escape hatches.
 ExternalSources: []
 Summary: Integration and migration guide for adopting the parallel widget.dsl v3 module while keeping legacy split modules available for existing hosts.
 LastUpdated: 2026-07-08T20:20:00-04:00
@@ -175,7 +175,7 @@ Prefer builder callbacks, fragments, typed helpers, and namespace-level intents.
 
 1. **Inventory imports.** Run the migration checker against the host scripts.
    ```bash
-   python ttmp/2026/07/06/RAGEVAL-SCHEDULE-WIDGETS--calendar-scheduling-widgets-on-generic-base-engines/scripts/02-report-legacy-widget-dsl-usage.py path/to/scripts
+   go run ./cmd/widgetdsl-migration-checker -- path/to/scripts
    ```
 2. **Add `widget.dsl` beside old modules.** Do not remove old module entries yet.
 3. **Port one route/page at a time.** Keep route IDs and page IDs stable.
