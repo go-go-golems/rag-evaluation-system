@@ -189,7 +189,7 @@ func (r *runtime) v3CRMRecordFieldsBuilder(props map[string]any) *goja.Object {
 }
 
 func (r *runtime) v3CRMActivityFeed(activities goja.Value, cb ...goja.Value) map[string]any {
-	props := map[string]any{"activities": anySlice(activities.Export()), "glyphs": map[string]any{"note": "📝", "email": "✉", "call": "☎", "meeting": "◎", "task": "□", "stage_change": "→", "field_change": "•"}, "groupByDay": true}
+	props := map[string]any{"activities": anySlice(activities.Export()), "styleSet": v3CRMActivityStyleSet(), "glyphs": map[string]any{"note": "📝", "email": "✉", "call": "☎", "meeting": "◎", "task": "□", "stage_change": "→", "field_change": "•"}, "groupByDay": true}
 	obj := r.vm.NewObject()
 	setExport(obj, "groupByDay", func(value bool) *goja.Object { props["groupByDay"] = value; return obj })
 	setExport(obj, "onOpen", func(action goja.Value) *goja.Object { props["onOpenAction"] = action.Export(); return obj })
@@ -237,6 +237,7 @@ func (r *runtime) v3CRMFunnel(pipelineValue, summariesValue goja.Value, options 
 	}
 	props := exportOptions(options)
 	props["segments"] = segments
+	props["styleSet"] = v3CRMStageStyleSet()
 	props["showCounts"] = true
 	props["size"] = "lg"
 	return componentNode("SegmentedBar", props)
@@ -344,7 +345,28 @@ func v3CRMBoardProps(pipeline map[string]any, cards, summaries []any) map[string
 		}
 		columns = append(columns, map[string]any{"id": stage["id"], "header": label, "accent": stage["colorKey"]})
 	}
-	return map[string]any{"ariaLabel": pipeline["name"], "columns": columns, "cards": cards, "columnField": "stageId", "getCardId": map[string]any{"field": "id"}, "card": map[string]any{"title": map[string]any{"kind": "field", "field": "title"}, "subtitle": map[string]any{"kind": "number", "field": "amount", "format": "integer", "fallback": "—"}, "meta": map[string]any{"kind": "field", "field": "ownerId", "fallback": "unassigned"}, "accentField": "status"}}
+	return map[string]any{"ariaLabel": pipeline["name"], "columns": columns, "cards": cards, "columnField": "stageId", "getCardId": map[string]any{"field": "id"}, "styleSet": v3CRMStageStyleSet(), "card": map[string]any{"title": map[string]any{"kind": "field", "field": "title"}, "subtitle": map[string]any{"kind": "number", "field": "amount", "format": "integer", "fallback": "—"}, "meta": map[string]any{"kind": "field", "field": "ownerId", "fallback": "unassigned"}, "accentField": "status"}}
+}
+
+func v3CRMStageStyleSet() map[string]any {
+	return map[string]any{"id": "crm-stages", "styles": map[string]any{
+		"lead":        map[string]any{"fill": "color-mix(in srgb, var(--mac-text-dim) 20%, var(--mac-surface))", "line": "var(--mac-text-dim)", "labelColor": "var(--mac-text)"},
+		"qualified":   map[string]any{"fill": "color-mix(in srgb, var(--mac-accent) 22%, var(--mac-surface))", "line": "var(--mac-accent)", "labelColor": "var(--mac-text)"},
+		"proposal":    map[string]any{"fill": "color-mix(in srgb, var(--mac-amber) 26%, var(--mac-surface))", "line": "var(--mac-amber)", "labelColor": "var(--mac-text)"},
+		"negotiation": map[string]any{"fill": "color-mix(in srgb, var(--mac-accent-2) 24%, var(--mac-surface))", "line": "var(--mac-accent-2)", "labelColor": "var(--mac-text)"},
+		"won":         map[string]any{"fill": "color-mix(in srgb, var(--mac-green) 26%, var(--mac-surface))", "line": "var(--mac-green)", "labelColor": "var(--mac-text)"},
+		"lost":        map[string]any{"fill": "color-mix(in srgb, var(--mac-accent-2) 30%, var(--mac-surface))", "line": "var(--mac-accent-2)", "labelColor": "var(--mac-text)"},
+	}}
+}
+
+func v3CRMActivityStyleSet() map[string]any {
+	return map[string]any{"id": "crm-activities", "styles": map[string]any{
+		"note":    map[string]any{"fill": "color-mix(in srgb, var(--mac-amber) 22%, var(--mac-surface))", "line": "var(--mac-amber)", "labelColor": "var(--mac-text)"},
+		"email":   map[string]any{"fill": "color-mix(in srgb, var(--mac-accent) 20%, var(--mac-surface))", "line": "var(--mac-accent)", "labelColor": "var(--mac-text)"},
+		"call":    map[string]any{"fill": "color-mix(in srgb, var(--mac-green) 22%, var(--mac-surface))", "line": "var(--mac-green)", "labelColor": "var(--mac-text)"},
+		"meeting": map[string]any{"fill": "color-mix(in srgb, var(--mac-accent) 26%, var(--mac-surface))", "line": "var(--mac-accent)", "labelColor": "var(--mac-text)"},
+		"task":    map[string]any{"fill": "color-mix(in srgb, var(--mac-text-dim) 18%, var(--mac-surface))", "line": "var(--mac-text-dim)", "labelColor": "var(--mac-text)"},
+	}}
 }
 
 func exportMap(value any) map[string]any {

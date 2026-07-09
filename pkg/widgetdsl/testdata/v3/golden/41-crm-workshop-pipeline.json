@@ -74,7 +74,42 @@
 									"toStage": "${toStage}"
 								}
 							},
-							"selectedCardId": "deal-acme"
+							"selectedCardId": "deal-acme",
+							"styleSet": {
+								"id": "crm-stages",
+								"styles": {
+									"lead": {
+										"fill": "color-mix(in srgb, var(--mac-text-dim) 20%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-text-dim)"
+									},
+									"lost": {
+										"fill": "color-mix(in srgb, var(--mac-accent-2) 30%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-accent-2)"
+									},
+									"negotiation": {
+										"fill": "color-mix(in srgb, var(--mac-accent-2) 24%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-accent-2)"
+									},
+									"proposal": {
+										"fill": "color-mix(in srgb, var(--mac-amber) 26%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-amber)"
+									},
+									"qualified": {
+										"fill": "color-mix(in srgb, var(--mac-accent) 22%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-accent)"
+									},
+									"won": {
+										"fill": "color-mix(in srgb, var(--mac-green) 26%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-green)"
+									}
+								}
+							}
 						},
 						"type": "BoardEngine"
 					}
@@ -196,7 +231,37 @@
 								"stage_change": "→",
 								"task": "□"
 							},
-							"groupByDay": true
+							"groupByDay": true,
+							"styleSet": {
+								"id": "crm-activities",
+								"styles": {
+									"call": {
+										"fill": "color-mix(in srgb, var(--mac-green) 22%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-green)"
+									},
+									"email": {
+										"fill": "color-mix(in srgb, var(--mac-accent) 20%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-accent)"
+									},
+									"meeting": {
+										"fill": "color-mix(in srgb, var(--mac-accent) 26%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-accent)"
+									},
+									"note": {
+										"fill": "color-mix(in srgb, var(--mac-amber) 22%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-amber)"
+									},
+									"task": {
+										"fill": "color-mix(in srgb, var(--mac-text-dim) 18%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-text-dim)"
+									}
+								}
+							}
 						},
 						"type": "ActivityFeed"
 					}
