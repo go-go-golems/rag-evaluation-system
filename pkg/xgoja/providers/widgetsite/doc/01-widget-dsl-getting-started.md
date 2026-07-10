@@ -208,7 +208,7 @@ function demo() {
           widget.ui.button("Refresh", widget.act.event("refresh"), { variant: "primary" })
         )
       ))
-    ))
+    ).toPage())
   })
 }
 ```
