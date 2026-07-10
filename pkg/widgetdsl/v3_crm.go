@@ -233,7 +233,11 @@ func (r *runtime) v3CRMFunnel(pipelineValue, summariesValue goja.Value, options 
 	for _, stage := range anySlice(pipeline["stages"]) {
 		s := exportMap(stage)
 		summary := byStage[fmt.Sprint(s["id"])]
-		segments = append(segments, map[string]any{"value": summary["count"], "styleKey": s["colorKey"], "label": s["name"]})
+		count := any(0)
+		if summary != nil && summary["count"] != nil {
+			count = summary["count"]
+		}
+		segments = append(segments, map[string]any{"value": count, "styleKey": s["colorKey"], "label": s["name"]})
 	}
 	props := exportOptions(options)
 	props["segments"] = segments
