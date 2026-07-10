@@ -27,6 +27,8 @@ RelatedFiles:
       Note: Resolve DSL bindings and event details (commit 8984e12e44ebbae7373c595af3dcc2927ff85d45)
     - Path: repo://packages/rag-evaluation-site/src/widgets/presets/crm.ts
       Note: Current CRM behavior investigated
+    - Path: repo://packages/rag-evaluation-site/src/widgets/presets/index.ts
+      Note: Public CRM preset barrel export (commit 9126ccaa418f15270694c5ad9cbd50fd400f062c)
     - Path: repo://pkg/widgetdsl/migrationcheck/logcopter.go
       Note: Generated file required by CI
     - Path: repo://pkg/widgetdsl/testdata/v3/examples/41-crm-workshop-pipeline.js
@@ -42,12 +44,16 @@ RelatedFiles:
         CRM namespace implementation (commit 196cb20800c7d3893daffe6aca37fa9682e0a251)
         CRM palette IR fix required by renderer
         Typed CRM action payload interpolation (commit 9b70f4af07fb89c2ef536348e02b0adbbdd5e478)
+        Default absent funnel summaries to numeric zero
+    - Path: repo://pkg/widgetdsl/v3_crm_test.go
+      Note: Sparse funnel regression coverage
 ExternalSources: []
 Summary: ""
 LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -392,3 +398,57 @@ Also check out what's going on with the cicd jobs."
 ### Technical details
 - Failed CI checks: `test / Verify logcopter package loggers` and `Go Vulnerability Check / Run govulncheck`.
 - Vulnerabilities fixed by Go 1.26.5: `GO-2026-5856` (`crypto/tls`) and `GO-2026-4970` (`os`).
+
+## Step 6: Address CRM preset export and sparse funnel review feedback
+
+A follow-up Codex review identified two public-contract edge cases in the CRM work. The CRM preset implementation existed but was omitted from the advertised presets barrel, and a pipeline funnel produced `nil` segment values for stages without a summary rather than the numeric zero required by SegmentedBar percentage calculations.
+
+The public barrel now exports CRM presets and the Go DSL explicitly emits `0` for absent or nil stage counts. A direct runtime regression test builds a two-stage pipeline with a single summary and verifies both the supplied count and the omitted-stage zero.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Address the  new code review comments: https://github.com/go-go-golems/rag-evaluation-system/pull/22"
+
+**Assistant interpretation:** Retrieve newly posted PR review feedback, make the valid targeted corrections, test them, and update the PR.
+
+**Inferred user intent:** Keep the public CRM API complete and prevent sparse pipeline data from breaking browser rendering.
+
+**Commit (code):** `9126ccaa418f15270694c5ad9cbd50fd400f062c` — "CRM: export presets and default funnel counts"
+
+### What I did
+- Added `export * from "./crm"` to the public Widget presets barrel.
+- Changed `v3CRMFunnel` to use numeric zero when the stage summary or its count is missing.
+- Added `TestV3CRMFunnelDefaultsMissingStageSummaryToZero`.
+- Ran Widget DSL tests, frontend TypeScript typecheck, and the full pre-commit test/lint/typecheck suite.
+
+### Why
+- `./widgets/presets` is a published package export, so CRM presets must be reachable from its barrel.
+- `SegmentedBar` requires numeric values: a nil value reaches `Math.max(0, value)` as `NaN` and creates invalid CSS percentage widths.
+
+### What worked
+- `GOWORK=off go test ./pkg/widgetdsl -count=1` passed.
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- Commit hooks passed the scoped Go test suite, golangci-lint, glazed lint, Biome checks, and frontend typecheck.
+
+### What didn't work
+- N/A
+
+### What I learned
+- Empty CRM stages are valid normal data rather than exceptional input; the IR boundary must preserve a numeric zero instead of letting a missing map key become a nil interface value.
+
+### What was tricky to build
+- Looking up a missing key in a nil Go map is safe but returns a nil interface. That appears harmless at the Go layer, but becomes a browser `NaN` when the React renderer performs number math. The fix distinguishes absent/nil counts from a legitimate supplied count before emitting IR.
+
+### What warrants a second pair of eyes
+- Review whether the TypeScript `pipelineFunnel` preset should independently normalize null counts if it ever accepts untyped external `StageSummary` JSON rather than its current typed model.
+
+### What should be done in the future
+- Add a frontend render regression for an empty pipeline stage if SegmentedBar’s numeric contract changes.
+
+### Code review instructions
+- Check `packages/rag-evaluation-site/src/widgets/presets/index.ts` exposes both CRM and scheduling APIs.
+- Check `pkg/widgetdsl/v3_crm.go:v3CRMFunnel` emits a numeric zero for an omitted stage.
+- Run `GOWORK=off go test ./pkg/widgetdsl -count=1` and `pnpm --dir packages/rag-evaluation-site typecheck`.
+
+### Technical details
+- Review threads addressed: public preset barrel omission and `nil` sparse-funnel `value` producing `NaN%` widths.

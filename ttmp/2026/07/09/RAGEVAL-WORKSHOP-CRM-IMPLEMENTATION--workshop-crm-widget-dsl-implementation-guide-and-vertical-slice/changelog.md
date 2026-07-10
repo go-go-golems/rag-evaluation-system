@@ -54,3 +54,13 @@ Step 5: addressed four Widget DSL action-contract review findings and fixed logc
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/go.mod — Standard-library security remediation
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/actions.ts — Action binding/event remediation
 
+
+## 2026-07-10
+
+Step 6: exported CRM presets publicly and defaulted sparse CRM funnel counts to zero with runtime regression coverage (commit 9126ccaa418f15270694c5ad9cbd50fd400f062c).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/presets/index.ts — Publish CRM presets
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3_crm.go — Prevent NaN SegmentedBar widths
+
