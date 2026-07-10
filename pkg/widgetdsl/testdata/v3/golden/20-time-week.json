@@ -37,15 +37,15 @@
 							"hourEnd": 18,
 							"hourStart": 8,
 							"onBlockSelectAction": {
-								"event": "time.event.select",
-								"kind": "event",
-								"payload": {
+								"detail": {
 									"eventId": {
 										"kind": "accessor",
 										"mode": "context",
 										"path": "block.id"
 									}
-								}
+								},
+								"event": "time.event.select",
+								"kind": "event"
 							},
 							"styleSet": {
 								"legend": [],

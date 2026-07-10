@@ -24,15 +24,15 @@
 								}
 							],
 							"onAssetOpenAction": {
-								"event": "cms.asset.open",
-								"kind": "event",
-								"payload": {
+								"detail": {
 									"assetId": {
 										"kind": "accessor",
 										"mode": "context",
 										"path": "asset.id"
 									}
-								}
+								},
+								"event": "cms.asset.open",
+								"kind": "event"
 							},
 							"selectedAssetIds": ["img-1"],
 							"selectionMode": "multi"

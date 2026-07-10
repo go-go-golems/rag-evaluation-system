@@ -39,9 +39,7 @@
 								"field": "id"
 							},
 							"onCellAction": {
-								"event": "schedule.availability.toggle",
-								"kind": "event",
-								"payload": {
+								"detail": {
 									"optionId": {
 										"kind": "accessor",
 										"mode": "context",
@@ -52,7 +50,9 @@
 										"mode": "context",
 										"path": "row.id"
 									}
-								}
+								},
+								"event": "schedule.availability.toggle",
+								"kind": "event"
 							},
 							"rowHeader": {
 								"field": "name",

@@ -137,6 +137,8 @@ export const matrixGridWidget = defineWidget<MatrixGridWidgetProps>({
 					props.onCellAction
 						? (payload) =>
 								ctx.dispatchAction(props.onCellAction!, {
+									row: payload.row as unknown as JsonObject,
+									column: { id: payload.col.id, meta: payload.col.meta ?? {} },
 									rowKey: payload.rowKey,
 									colId: payload.colId,
 									value: payload.value as string | number | boolean | null,

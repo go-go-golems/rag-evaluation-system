@@ -43,15 +43,15 @@
 								}
 							],
 							"onAssetSelectAction": {
-								"event": "cms.asset.select",
-								"kind": "event",
-								"payload": {
+								"detail": {
 									"assetId": {
 										"kind": "accessor",
 										"mode": "context",
 										"path": "asset.id"
 									}
-								}
+								},
+								"event": "cms.asset.select",
+								"kind": "event"
 							}
 						},
 						"type": "MediaLibraryPanel"

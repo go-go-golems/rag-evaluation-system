@@ -52,7 +52,9 @@ export interface MatrixGridProps<Row = MatrixRow>
 	stickyHeader?: boolean;
 	/** Content for the top-left corner cell. */
 	cornerCell?: ReactNode;
-	onCell?: (payload: { rowKey: string; colId: string; value: unknown }) => void;
+	onCell?: (
+		payload: Pick<MatrixCellPayload<Row>, "row" | "col" | "rowKey" | "value"> & { colId: string },
+	) => void;
 	ariaLabel?: string;
 }
 
@@ -128,6 +130,8 @@ export function MatrixGrid<Row = MatrixRow>({
 													editable,
 													onAction: (extra) =>
 														onCell?.({
+															row,
+															col,
 															rowKey,
 															colId: col.id,
 															value: extra && "value" in extra ? extra.value : value,

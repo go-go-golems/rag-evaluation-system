@@ -205,8 +205,8 @@ func (r *runtime) v3CRMTasksInbox(tasks goja.Value, cb ...goja.Value) map[string
 	for _, task := range anySlice(tasks.Export()) {
 		t := exportMap(task)
 		rows = append(rows, componentNode("Inline", map[string]any{"gap": "sm", "justify": "between"},
-			componentNode("Text", map[string]any{"size": "compact"}, t["title"]),
-			componentNode("Caption", map[string]any{}, fmt.Sprintf("%v · %v", t["priority"], t["dueISO"])),
+			componentNode("Text", map[string]any{"size": "compact"}, map[string]any{"kind": "text", "text": fmt.Sprint(t["title"])}),
+			componentNode("Caption", map[string]any{}, map[string]any{"kind": "text", "text": fmt.Sprintf("%v · %v", t["priority"], t["dueISO"])}),
 		))
 	}
 	props := map[string]any{"title": "Tasks", "density": "condensed"}

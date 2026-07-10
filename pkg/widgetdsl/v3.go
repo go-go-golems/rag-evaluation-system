@@ -106,10 +106,10 @@ func (r *runtime) v3ScheduleIntentObject() *goja.Object {
 		if len(value) > 0 {
 			payload["value"] = value[0].Export()
 		}
-		return map[string]any{"kind": "event", "event": "schedule.availability.toggle", "payload": payload}
+		return map[string]any{"kind": "event", "event": "schedule.availability.toggle", "detail": payload}
 	})
 	setExport(intent, "submitResponse", func(response goja.Value) map[string]any {
-		return map[string]any{"kind": "event", "event": "schedule.availability.submit", "payload": map[string]any{"response": response.Export()}}
+		return map[string]any{"kind": "event", "event": "schedule.availability.submit", "detail": map[string]any{"response": response.Export()}}
 	})
 	return intent
 }
@@ -233,10 +233,10 @@ func (r *runtime) v3TimeRangeObject() *goja.Object {
 func (r *runtime) v3TimeIntentObject() *goja.Object {
 	intent := r.vm.NewObject()
 	setExport(intent, "selectDay", func(dayISO goja.Value) map[string]any {
-		return map[string]any{"kind": "event", "event": "time.day.select", "payload": map[string]any{"dayISO": dayISO.Export()}}
+		return map[string]any{"kind": "event", "event": "time.day.select", "detail": map[string]any{"dayISO": dayISO.Export()}}
 	})
 	setExport(intent, "selectEvent", func(eventID goja.Value) map[string]any {
-		return map[string]any{"kind": "event", "event": "time.event.select", "payload": map[string]any{"eventId": eventID.Export()}}
+		return map[string]any{"kind": "event", "event": "time.event.select", "detail": map[string]any{"eventId": eventID.Export()}}
 	})
 	return intent
 }
@@ -469,10 +469,10 @@ func (r *runtime) v3ContextObject() *goja.Object {
 func (r *runtime) v3ContextIntentObject() *goja.Object {
 	intent := r.vm.NewObject()
 	setExport(intent, "selectPart", func(id goja.Value) map[string]any {
-		return map[string]any{"kind": "event", "event": "context.part.select", "payload": map[string]any{"partId": id.Export()}}
+		return map[string]any{"kind": "event", "event": "context.part.select", "detail": map[string]any{"partId": id.Export()}}
 	})
 	setExport(intent, "selectAnnotation", func(id goja.Value) map[string]any {
-		return map[string]any{"kind": "event", "event": "context.annotation.select", "payload": map[string]any{"annotationId": id.Export()}}
+		return map[string]any{"kind": "event", "event": "context.annotation.select", "detail": map[string]any{"annotationId": id.Export()}}
 	})
 	return intent
 }
@@ -610,13 +610,13 @@ func (r *runtime) v3CourseIntentObject() *goja.Object {
 		return map[string]any{"kind": "navigate", "to": "?item=" + v3URLTemplateValue(id)}
 	})
 	setExport(intent, "selectHandout", func(id goja.Value) map[string]any {
-		return map[string]any{"kind": "event", "event": "course.handout.select", "payload": map[string]any{"documentId": id.Export()}}
+		return map[string]any{"kind": "event", "event": "course.handout.select", "detail": map[string]any{"documentId": id.Export()}}
 	})
 	setExport(intent, "downloadHandout", func(id goja.Value) map[string]any {
 		return map[string]any{"kind": "download", "to": "/handouts/" + v3URLTemplateValue(id)}
 	})
 	setExport(intent, "printHandout", func(id goja.Value) map[string]any {
-		return map[string]any{"kind": "event", "event": "course.handout.print", "payload": map[string]any{"documentId": id.Export()}}
+		return map[string]any{"kind": "event", "event": "course.handout.print", "detail": map[string]any{"documentId": id.Export()}}
 	})
 	setExport(intent, "previousSlide", func() map[string]any { return map[string]any{"kind": "event", "event": "course.slide.previous"} })
 	setExport(intent, "nextSlide", func() map[string]any { return map[string]any{"kind": "event", "event": "course.slide.next"} })
@@ -776,14 +776,14 @@ func (r *runtime) v3CMSObject() *goja.Object {
 func (r *runtime) v3CMSIntentObject() *goja.Object {
 	intent := r.vm.NewObject()
 	setExport(intent, "selectAsset", func(id goja.Value) map[string]any {
-		return map[string]any{"kind": "event", "event": "cms.asset.select", "payload": map[string]any{"assetId": id.Export()}}
+		return map[string]any{"kind": "event", "event": "cms.asset.select", "detail": map[string]any{"assetId": id.Export()}}
 	})
 	setExport(intent, "openAsset", func(id goja.Value) map[string]any {
-		return map[string]any{"kind": "event", "event": "cms.asset.open", "payload": map[string]any{"assetId": id.Export()}}
+		return map[string]any{"kind": "event", "event": "cms.asset.open", "detail": map[string]any{"assetId": id.Export()}}
 	})
 	setExport(intent, "uploadAssets", func() map[string]any { return map[string]any{"kind": "server", "name": "cms.assets.upload"} })
 	setExport(intent, "selectArticle", func(id goja.Value) map[string]any {
-		return map[string]any{"kind": "event", "event": "cms.article.select", "payload": map[string]any{"articleId": id.Export()}}
+		return map[string]any{"kind": "event", "event": "cms.article.select", "detail": map[string]any{"articleId": id.Export()}}
 	})
 	setExport(intent, "createArticle", func() map[string]any { return map[string]any{"kind": "event", "event": "cms.article.create"} })
 	setExport(intent, "publishArticle", func(id goja.Value) map[string]any {

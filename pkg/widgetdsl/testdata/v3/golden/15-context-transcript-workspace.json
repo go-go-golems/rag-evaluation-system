@@ -33,15 +33,15 @@
 								}
 							],
 							"onAnnotationSelectAction": {
-								"event": "context.annotation.select",
-								"kind": "event",
-								"payload": {
+								"detail": {
 									"annotationId": {
 										"kind": "accessor",
 										"mode": "context",
 										"path": "annotation.id"
 									}
-								}
+								},
+								"event": "context.annotation.select",
+								"kind": "event"
 							},
 							"selectedAnnotationId": "a1",
 							"showNotes": true,

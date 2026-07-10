@@ -31,15 +31,15 @@
 								"to": "/handouts/${documentId}"
 							},
 							"onPrintAction": {
-								"event": "course.handout.print",
-								"kind": "event",
-								"payload": {
+								"detail": {
 									"documentId": {
 										"kind": "accessor",
 										"mode": "context",
 										"path": "documentId"
 									}
-								}
+								},
+								"event": "course.handout.print",
+								"kind": "event"
 							},
 							"selectedDocumentId": "deck"
 						},

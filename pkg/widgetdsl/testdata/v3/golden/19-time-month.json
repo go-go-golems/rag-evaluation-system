@@ -21,15 +21,15 @@
 							},
 							"monthISO": "2026-07",
 							"onDaySelectAction": {
-								"event": "time.day.select",
-								"kind": "event",
-								"payload": {
+								"detail": {
 									"dayISO": {
 										"kind": "accessor",
 										"mode": "context",
 										"path": "dayISO"
 									}
-								}
+								},
+								"event": "time.day.select",
+								"kind": "event"
 							},
 							"selectedDateISO": "2026-07-08",
 							"showHeader": true
