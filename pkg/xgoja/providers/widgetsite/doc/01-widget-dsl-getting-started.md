@@ -1,7 +1,7 @@
 ---
 Title: "Widget DSL Getting Started"
 Slug: widget-dsl-getting-started
-Short: "Author React-rendered Widget IR pages in xgoja with split Widget DSL modules."
+Short: "Author React-rendered Widget IR pages in xgoja with the v3-first Widget DSL."
 Topics:
 - xgoja
 - widget-dsl
@@ -29,7 +29,7 @@ The provider exposes the new parallel `widget.dsl` v3 module and the legacy spli
 
 | Module | Owns | Status |
 | --- | --- | --- |
-| `widget.dsl` | v3 namespaces: `raw`, `act`, `bind`, `ui`, `data`, `cms`, `course`, `context`, `schedule`, `time`, and `style` | Preferred for new work |
+| `widget.dsl` | v3 namespaces: `raw`, `act`, `bind`, `ui`, `data`, `crm`, `cms`, `course`, `context`, `schedule`, `time`, and `style` | Preferred for new work |
 | `ui.dsl` | page wrapper, text/element/component helpers, generic layout, primitive, foundation, and UI recipes | Legacy split module |
 | `data.dsl` | legacy/current `DataTable`, `cell.*` helpers, and data recipes | Legacy split module |
 | `data.v2.dsl` | typed/fluent data builders used by pre-v3 table/editor examples | Legacy split module |
@@ -84,26 +84,27 @@ const page = ui.page({
 
 `ui.page(...)` is still supported for existing split-module pages. For new pages, use `widget.page(...)` from `widget.dsl`.
 
-## Data table example
+## Data collection example
 
-For new hard-cutover examples, prefer `data.v2.dsl`:
+New v3 pages keep page composition and data widgets under one `widget.dsl` import. Build a schema with `widget.data`, then return the collection node from a section:
 
 ```js
-const data = require("data.v2.dsl")
+const widget = require("widget.dsl")
 
-const schema = data.schema("Query")
-  .field("id", data.f.key().label("ID"))
-  .field("name", data.f.primary().label("Name"))
-  .field("status", data.f.status().label("Status"))
-  .build()
+const schema = widget.data.fields("Query", (f) =>
+  f.key("id").primary("name").status("status")
+).build()
 
-return data.collection("queries", rows)
-  .schema(schema)
-  .table()
-  .toIR()
+const table = widget.data.collection("queries", rows, (c) =>
+  c.schema(schema).table()
+).toNode()
+
+const page = widget.page("Queries", (p) =>
+  p.section("Queries", (s) => s.view(table))
+)
 ```
 
-The older direct `data.dsl` table form is still supported for existing pages:
+`data.v2.dsl` and the older direct `data.dsl` table form remain available for existing pages during migration:
 
 ```js
 const ui = require("ui.dsl")
@@ -182,6 +183,8 @@ return ui.page({
 
 ## Serve from a jsverb
 
+An xgoja route returns page JSON while the embedded SPA renders it in the browser. Keep the SPA fallback away from `/api` routes and use the same v3 module as the page code:
+
 ```js
 __package__({ name: "sites", short: "WidgetRenderer sites" })
 
@@ -189,7 +192,7 @@ __verb__("demo", { name: "demo", output: "text", short: "Serve a WidgetRenderer 
 function demo() {
   const express = require("express")
   const assets = require("fs:assets")
-  const ui = require("ui.dsl")
+  const widget = require("widget.dsl")
 
   const app = express.app()
   app.spaFromAssetsModule("/", assets, "/app/public", {
@@ -198,14 +201,14 @@ function demo() {
 
   app.get("/healthz", (_req, res) => res.json({ ok: true }))
   app.get("/api/widget/pages/demo", (_req, res) => {
-    res.json(ui.page({
-      id: "demo",
-      title: "Demo",
-      root: ui.panel({ title: "Demo" },
-        ui.caption({ tone: "muted" }, "Rendered by React"),
-        ui.button({ variant: "primary" }, "Refresh")
-      )
-    }))
+    res.json(widget.page({ id: "demo", title: "Demo" }, (p) =>
+      p.section("Demo", (s) => s.view(
+        widget.ui.card({ title: "Demo" },
+          widget.ui.caption("Rendered by React"),
+          widget.ui.button("Refresh", widget.act.event("refresh"), { variant: "primary" })
+        )
+      ))
+    ))
   })
 }
 ```
@@ -229,8 +232,10 @@ function demo() {
 
 ## See Also
 
-- `widget-dsl-js-api-reference`
-- `widget-dsl-spa-bundling`
+- `widget-dsl-v3-examples` — runnable v3 composition, scheduling, CRM, and action recipes.
+- `widget-dsl-v3-api-reference` — descriptor-derived namespace inventory.
+- `widget-dsl-js-api-reference` — legacy module details and migration reference.
+- `widget-dsl-spa-bundling` — serve Widget IR from an xgoja application.
 - `tutorial-http-serve-jsverbs`
 - `tutorial-static-assets-http-server`
 - `buildspec-reference`

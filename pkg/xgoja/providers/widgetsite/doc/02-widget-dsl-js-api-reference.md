@@ -1,7 +1,7 @@
 ---
 Title: "Widget DSL JavaScript API Reference"
 Slug: widget-dsl-js-api-reference
-Short: "Reference for Widget DSL modules, helpers, recipes, actions, and table cell specifications."
+Short: "Reference for the v3-first Widget DSL, action contracts, and legacy migration modules."
 Topics:
 - xgoja
 - widget-dsl
@@ -16,13 +16,13 @@ SectionType: Reference
 
 This reference documents the JavaScript API exposed by the `rag-widget-site` provider. The API creates JSON-compatible Widget IR consumed by the React WidgetRenderer.
 
-For new code, prefer the parallel `widget.dsl` v3 module. The split module reference below remains useful for existing scripts during migration. The v3 namespace inventory is generated in the ticket API reference at `reference/05-widget-dsl-v3-api-reference.md`.
+For new code, prefer the parallel `widget.dsl` v3 module. The split-module reference below remains useful for existing scripts during migration. Use `widget-dsl-v3-api-reference` for the descriptor-derived v3 namespace inventory and `widget-dsl-v3-examples` for runnable authoring patterns.
 
 ## Module names
 
 | Module | Purpose |
 | --- | --- |
-| `widget.dsl` | Preferred v3 module with `raw`, `act`, `bind`, `ui`, `data`, `cms`, `course`, `context`, `schedule`, and `time` namespaces. |
+| `widget.dsl` | Preferred v3 module with `raw`, `act`, `bind`, `ui`, `data`, `crm`, `cms`, `course`, `context`, `schedule`, and `time` namespaces. |
 | `ui.dsl` | Generic page, layout, primitive, foundation, and UI recipe helpers. |
 | `data.dsl` | Legacy/current data-display widgets, `cell.*` helpers, and v1 data recipes. |
 | `data.v2.dsl` | Experimental hard-cutover typed/fluent builders for schemas, tables, selectable tables, master-detail editors, and row actions. |
@@ -46,6 +46,42 @@ const contextWindow = require("context_window.dsl")
 const course = require("course.dsl")
 const cms = require("cms.dsl")
 ```
+
+## v3 authoring model
+
+`widget.dsl` is a single composition grammar: use `widget.page(title, builder)` to construct a page, use the domain namespace that matches the problem, and pass builder lambdas to configure a view. Prefer typed helpers such as `widget.schedule.availabilityPoll(...)`, `widget.time.week(...)`, and `widget.crm.pipelineBoard(...)`; reserve `widget.raw.component(...)` for an unsupported component or a deliberate low-level escape hatch.
+
+Domain data stays plain serializable JavaScript. The opaque builder objects returned by `widget.data.fields(...)`, `widget.crm.fields(...)`, and `widget.crm.pipeline(...)` define UI schema or pipeline structure; call `.build()` only when another helper needs the plain snapshot.
+
+```js
+const widget = require("widget.dsl")
+
+const pipeline = widget.crm.pipeline("Sales", (p) =>
+  p.stage("lead", "Lead", { colorKey: "lead" })
+   .stage("won", "Won", { colorKey: "won" })
+)
+
+const board = widget.crm.pipelineBoard(pipeline, deals, (b) =>
+  b.onMove(widget.crm.intent.moveDeal("${cardId}", "${to}"))
+)
+```
+
+## Actions and bindings
+
+Actions are serializable intent objects. The browser resolves bindings against the interaction context before dispatch: use `widget.bind.context("row.id")` for a typed accessor or the concise `"${cardId}"` placeholders accepted by CRM intents. Server actions send resolved data in `payload`; browser event actions expose resolved data in `CustomEvent.detail`.
+
+```js
+widget.schedule.availabilityPoll(poll, (b) =>
+  b.editableRow("ana").onToggle(
+    widget.schedule.intent.toggleAvailability(
+      widget.bind.context("row.id"),
+      widget.bind.context("column.id"),
+    ),
+  ),
+)
+```
+
+MatrixGrid cell actions receive `row`, a serializable `column` object, `rowKey`, `colId`, and `value`. BoardEngine selection receives `cardId`; drag-and-drop also supplies `from`, `to`, and `beforeId`. Do not send accessor descriptors as plain application data—put them in an action `payload` or `detail` where the dispatcher resolves them.
 
 ## Shared constructors
 
