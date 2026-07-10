@@ -140,11 +140,28 @@ The frontend uses a Widget IR (Interchange Representation) — a JSON-compatible
 See the provider documentation for full bundling instructions:
 
 - [Widget DSL Getting Started](pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md)
+- [Widget DSL v3 Examples](pkg/xgoja/providers/widgetsite/doc/04-widget-dsl-v3-examples.md)
+- [Widget DSL v3 API Reference](pkg/xgoja/providers/widgetsite/doc/05-widget-dsl-v3-api-reference.md)
+- [Widget DSL JavaScript API Reference and Migration Notes](pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md)
 - [Bundling the WidgetRenderer SPA](pkg/xgoja/providers/widgetsite/doc/03-widget-dsl-spa-bundling.md)
 
 ### Semantic recipes
 
-The Goja `rag-widget-site` provider exposes split semantic helpers for common RAG views:
+New hosts import the single v3 module and compose its domain namespaces:
+
+```js
+const widget = require("widget.dsl")
+
+const page = widget.page("Workshop", (p) =>
+  p.section("Schedule", (s) =>
+    s.view(widget.time.week(events, (w) =>
+      w.range(widget.time.range.week("2026-07-14")),
+    )),
+  ),
+)
+```
+
+The Goja `rag-widget-site` provider still exposes split semantic helpers for existing RAG pages during migration:
 
 ```js
 const contextWindow = require("context_window.dsl")

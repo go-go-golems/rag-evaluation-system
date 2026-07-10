@@ -1,7 +1,7 @@
 ---
 Title: "Widget DSL SPA Bundling"
 Slug: widget-dsl-spa-bundling
-Short: "Serve React WidgetRenderer SPA assets for split Widget DSL pages."
+Short: "Serve React WidgetRenderer SPA assets for v3-first Widget DSL applications."
 Topics:
 - xgoja
 - widget-dsl
@@ -15,7 +15,7 @@ ShowPerDefault: true
 SectionType: Tutorial
 ---
 
-The split Widget DSL modules create Widget IR only. They do not render HTML and they do not include browser assets by themselves. A browser-facing xgoja application must also serve a React WidgetRenderer SPA and expose API routes that return Widget IR pages/actions.
+Widget DSL modules create Widget IR only. They do not render HTML and they do not include browser assets by themselves. A browser-facing xgoja application must also serve a React WidgetRenderer SPA and expose API routes that return Widget IR pages/actions. New hosts use `widget.dsl`; legacy split modules remain available only while a host is being migrated.
 
 ## Runtime model
 
@@ -67,6 +67,22 @@ runtime:
 ```
 
 Remove legacy module entries once the host scripts no longer import them.
+
+## Include provider help in an xgoja application
+
+The provider ships Glazed help entries with the generated application; adding the help source makes topics such as `widget-dsl-v3-examples` available through that application's `help` command. This is independent of runtime module selection, so include both when the host should teach its own DSL.
+
+```yaml
+sources:
+  - id: widget-dsl
+    kind: help
+    from:
+      provider:
+        provider: rag-widget-site
+        source: widget-dsl
+```
+
+The Doodle and workshop CRM examples use this source alongside their `widget.dsl` runtime module.
 
 ## Serve embedded SPA assets from a Go host
 
@@ -154,7 +170,9 @@ Legacy endpoints can keep importing `ui.dsl`, `data.dsl`, `context_window.dsl`, 
 
 ## See Also
 
-- `widget-dsl-getting-started`
-- `widget-dsl-js-api-reference`
+- `widget-dsl-getting-started` — select the provider module and build a first v3 page.
+- `widget-dsl-v3-examples` — composition, scheduling, CRM, and action recipes.
+- `widget-dsl-v3-api-reference` — descriptor-derived v3 namespace inventory.
+- `widget-dsl-js-api-reference` — action contracts and legacy module details.
 - `tutorial-static-assets-http-server`
 - `buildspec-reference`

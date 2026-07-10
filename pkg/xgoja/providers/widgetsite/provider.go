@@ -43,7 +43,7 @@ func Register(registry *providerapi.ProviderRegistry) error {
 		providerapi.Module{
 			Name:             widgetdsl.WidgetV3ModuleName,
 			DefaultAs:        widgetdsl.WidgetV3ModuleName,
-			Description:      "Parallel clean Widget DSL v3 root namespace.",
+			Description:      "Preferred Widget DSL v3 root namespace for new Widget IR pages.",
 			TypeScript:       widgetdsl.TypeScriptModule(widgetdsl.WidgetV3ModuleName),
 			NewModuleFactory: loader(widgetdsl.WidgetV3ModuleName),
 		},
@@ -70,7 +70,7 @@ func Register(registry *providerapi.ProviderRegistry) error {
 		},
 		providerapi.HelpSource{
 			Name:        "widget-dsl",
-			Description: "Getting started and JavaScript API reference for split Widget IR DSL modules.",
+			Description: "Getting started, v3 examples, API reference, and migration help for Widget IR DSL modules.",
 			FS:          doc.FS,
 			Root:        ".",
 		},
