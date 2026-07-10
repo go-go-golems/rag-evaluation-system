@@ -74,3 +74,12 @@ Step 7: published v3-first embedded Glazed help cookbook/API inventory, CRM and 
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc/04-widget-dsl-v3-examples.md — Runnable authoring documentation
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc/05-widget-dsl-v3-api-reference.md — Installed public v3 API inventory
 
+
+## 2026-07-10
+
+Step 8: corrected v3 getting-started jsverb route to call PageBuilder.toPage() before JSON serialization (commit f9187bbb2f07163b1e79e40ab3a1ce8369807b50).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md — Renderable Widget IR HTTP response contract
+

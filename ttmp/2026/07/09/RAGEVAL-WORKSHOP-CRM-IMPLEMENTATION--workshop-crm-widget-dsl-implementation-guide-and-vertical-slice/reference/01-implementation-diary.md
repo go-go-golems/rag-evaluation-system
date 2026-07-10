@@ -51,6 +51,8 @@ RelatedFiles:
       Note: Sparse funnel regression coverage
     - Path: repo://pkg/widgetdsl/v3_descriptors_test.go
       Note: Protect API-help snapshot against descriptor drift
+    - Path: repo://pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md
+      Note: Correct v3 PageBuilder serialization at HTTP boundary (commit f9187bbb2f07163b1e79e40ab3a1ce8369807b50)
     - Path: repo://pkg/xgoja/providers/widgetsite/doc/04-widget-dsl-v3-examples.md
       Note: Embedded Glazed v3 authoring cookbook (commit b49d497332eb6b29b84456f2602b25a619e187d1)
     - Path: repo://pkg/xgoja/providers/widgetsite/doc/05-widget-dsl-v3-api-reference.md
@@ -63,6 +65,7 @@ LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -527,3 +530,64 @@ The new pages are bundled through the existing provider `HelpSource`, not left i
 ### Technical details
 - New help slugs: `widget-dsl-v3-examples` and `widget-dsl-v3-api-reference`.
 - Relevant executable scripts: `pkg/widgetdsl/testdata/v3/examples/16-schedule-poll-editable.js`, `19-time-month.js`, and `41-crm-workshop-pipeline.js`.
+
+## Step 8: Correct the getting-started v3 route serialization example
+
+A Code Review comment on the documentation follow-up found that the v3 jsverb route passed a `PageBuilder` handle directly to `res.json`. The corrected example now calls `.toPage()` before serialization, matching the actual Widget IR page contract and the cookbook route example.
+
+This is a one-line documentation correction with real runtime impact: the browser expects a plain page object containing `id`, `title`, and `root`, not the Goja-backed fluent builder object.
+
+### Prompt Context
+
+**User prompt (verbatim):** "pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md
+        ui.button({ variant: \"primary\" }, \"Refresh\")
+      )
+    }))
+    res.json(widget.page({ id: \"demo\", title: \"Demo\" }, (p) =>
+@chatgpt-codex-connector
+chatgpt-codex-connector Bot
+1 hour ago
+
+P2 Badge Return the built v3 page from the route
+
+In this v3 serve example, widget.page(...) returns a PageBuilder handle; the Widget IR page is only produced by calling .toPage() (as the new v3 examples do for the API route). As written, following the getting-started guide makes /api/widget/pages/demo pass the builder/method object to res.json instead of a page with id, title, and root, so the SPA cannot render the demo. Add .toPage() before serializing."
+
+**Assistant interpretation:** Apply the review correction so the v3 getting-started route serializes a concrete Widget IR page rather than a builder handle.
+
+**Inferred user intent:** Ensure documentation examples are runnable and do not teach an API response shape that the React SPA cannot render.
+
+**Commit (code):** `f9187bbb2f07163b1e79e40ab3a1ce8369807b50` — "Docs: serialize built v3 page example"
+
+### What I did
+- Changed the `res.json(widget.page(...))` getting-started example to `res.json(widget.page(...).toPage())`.
+- Preserved the builder-lambda layout and the surrounding SPA route guidance.
+
+### Why
+- `widget.page(...)` returns a fluent PageBuilder. `.toPage()` emits the JSON-compatible page object required by the route and browser renderer.
+
+### What worked
+- The documentation change is a direct application of the established `page.toPage()` contract used in the v3 example harness and cookbook API route.
+- `git diff --check` passed before commit.
+
+### What didn't work
+- The original documentation route omitted `.toPage()`, so a reader would serialize the builder object instead of a renderable Widget IR page.
+
+### What I learned
+- Builder-returning v3 entrypoints require an explicit terminal conversion at HTTP serialization boundaries; this should remain visible in every route-level example.
+
+### What was tricky to build
+- The outer `res.json(...)` and inner fluent page callback use adjacent closing parentheses. The safe correction places `.toPage()` after the `widget.page(...)` call closes but before the `res.json(...)` call closes: `res.json(widget.page(...).toPage())`.
+
+### What warrants a second pair of eyes
+- Review other documentation snippets that return a PageBuilder at an HTTP boundary and ensure they all terminate with `.toPage()`.
+
+### What should be done in the future
+- Add a documentation-snippet contract test or generated route example to catch missing `.toPage()` calls automatically.
+
+### Code review instructions
+- Review the jsverb route in `pkg/xgoja/providers/widgetsite/doc/01-widget-dsl-getting-started.md`.
+- Confirm its response expression is `res.json(widget.page(...).toPage())`.
+
+### Technical details
+- The affected endpoint is `/api/widget/pages/demo`.
+- Expected serialized page shape includes `schemaVersion`, `id`, `title`, and `root`.
