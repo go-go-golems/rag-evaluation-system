@@ -64,3 +64,13 @@ Step 6: exported CRM presets publicly and defaulted sparse CRM funnel counts to 
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/presets/index.ts — Publish CRM presets
 - /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/widgetdsl/v3_crm.go — Prevent NaN SegmentedBar widths
 
+
+## 2026-07-10
+
+Step 7: published v3-first embedded Glazed help cookbook/API inventory, CRM and action-contract guidance, and README links (commit b49d497332eb6b29b84456f2602b25a619e187d1).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc/04-widget-dsl-v3-examples.md — Runnable authoring documentation
+- /home/manuel/workspaces/2026-07-03/improve-rag-evaluation-system/rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc/05-widget-dsl-v3-api-reference.md — Installed public v3 API inventory
+

@@ -7,6 +7,8 @@ DocType: ""
 Intent: ""
 Owners: []
 RelatedFiles:
+    - Path: repo://README.md
+      Note: Public links to provider documentation
     - Path: repo://examples/xgoja/workshop-crm-site/verbs/lib/pages.js
       Note: |-
         CRM Widget DSL page composition
@@ -47,12 +49,21 @@ RelatedFiles:
         Default absent funnel summaries to numeric zero
     - Path: repo://pkg/widgetdsl/v3_crm_test.go
       Note: Sparse funnel regression coverage
+    - Path: repo://pkg/widgetdsl/v3_descriptors_test.go
+      Note: Protect API-help snapshot against descriptor drift
+    - Path: repo://pkg/xgoja/providers/widgetsite/doc/04-widget-dsl-v3-examples.md
+      Note: Embedded Glazed v3 authoring cookbook (commit b49d497332eb6b29b84456f2602b25a619e187d1)
+    - Path: repo://pkg/xgoja/providers/widgetsite/doc/05-widget-dsl-v3-api-reference.md
+      Note: Descriptor-derived installed API reference
+    - Path: repo://pkg/xgoja/providers/widgetsite/provider_test.go
+      Note: Verify all embedded help entries are registered
 ExternalSources: []
 Summary: ""
 LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -452,3 +463,67 @@ The public barrel now exports CRM presets and the Go DSL explicitly emits `0` fo
 
 ### Technical details
 - Review threads addressed: public preset barrel omission and `nil` sparse-funnel `value` producing `NaN%` widths.
+
+## Step 7: Publish v3-first Widget DSL help and example documentation
+
+The provider already embedded three Glazed help pages, but its public teaching surface still described a split-module-first system. I updated that framing, added CRM and action-binding contracts, and published two discoverable v3 help entries: a runnable authoring cookbook and a descriptor-derived API inventory.
+
+The new pages are bundled through the existing provider `HelpSource`, not left in ticket documentation. A temporary build of the workshop CRM host proved that an application generated from the source exposes both new help slugs through its own `help` command.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead"
+
+**Assistant interpretation:** Implement the previously identified Widget DSL documentation updates as embedded Glazed help entries and supporting public docs.
+
+**Inferred user intent:** Make the v3 DSL, its examples, CRM namespace, and interaction contracts usable by host authors without requiring them to inspect implementation code or ticket-local notes.
+
+**Commit (code):** `b49d497332eb6b29b84456f2602b25a619e187d1` — "Docs: add Widget DSL v3 help cookbook"
+
+### What I did
+- Updated the getting-started and SPA-bundling help pages to describe `widget.dsl` as the new-host default and include `widget.crm`.
+- Added `04-widget-dsl-v3-examples.md`, a Glazed Tutorial covering page composition, bindings, scheduling/time, CRM, action contracts, xgoja configuration, troubleshooting, and links to executable examples.
+- Added `05-widget-dsl-v3-api-reference.md`, whose generated descriptor section is checked against `WidgetV3APIReferenceMarkdown()`.
+- Updated the legacy API entry with v3 authoring and action-context contracts.
+- Updated provider descriptions, help registration coverage, and README links/v3 snippet.
+- Built a temporary workshop CRM xgoja binary and ran `help widget-dsl-v3-examples` and `help widget-dsl-v3-api-reference` to verify real help discovery.
+
+### Why
+- Provider consumers need installed, discoverable help rather than links to a ticket-local API reference.
+- The newly introduced CRM API and recently repaired binding/event contracts are otherwise easy to misuse.
+- A descriptor-sync test prevents the public v3 API inventory from silently drifting as namespaces evolve.
+
+### What worked
+- `GOWORK=off go test ./pkg/widgetdsl ./pkg/xgoja/providers/widgetsite/... -count=1` passed after updating help-source expectations.
+- The pre-commit suite passed scoped Go tests, golangci-lint, glazed lint, and vet.
+- `make -C examples/xgoja/workshop-crm-site build BIN=/tmp/workshop-crm-docs-check` succeeded; its generated binary rendered both new help entries.
+
+### What didn't work
+- The first provider test run failed after adding two embedded pages: `expected three help entries, got [01-widget-dsl-getting-started.md 02-widget-dsl-js-api-reference.md 03-widget-dsl-spa-bundling.md 04-widget-dsl-v3-examples.md 05-widget-dsl-v3-api-reference.md]`. I updated `TestRegisterExposesWidgetDSLHelpSource` to require the five explicit slugs.
+- An exploratory ripgrep command used unquoted Markdown backticks and shell substitution attempted to run `data.v2.dsl`, producing `/bin/bash: line 35: data.v2.dsl: command not found`; subsequent searches avoided unquoted backticks.
+
+### What I learned
+- `providerapi.HelpSource` plus the existing `//go:embed *.md` is sufficient for a generated xgoja application to expose provider documentation through its application help command.
+- The descriptor API function is compact by design; it complements rather than replaces TypeScript declarations and the cookbook.
+
+### What was tricky to build
+- The API help needs to be human-navigable while retaining a mechanically checkable descriptor snapshot. The document begins with the exact `WidgetV3APIReferenceMarkdown()` body after frontmatter, then adds usage and troubleshooting sections; a test checks the generated portion remains a prefix.
+- Examples had to reflect renderer action contracts precisely: MatrixGrid resolves `row`/`column` bindings, browser event values arrive in `detail`, and BoardEngine move data is `cardId`/`from`/`to`/`beforeId`.
+
+### What warrants a second pair of eyes
+- Review whether the descriptor inventory should expand from selected domain views to every public helper, or whether TypeScript declarations remain the intentional detailed reference.
+- Review whether versioned example binaries should be rebuilt solely for documentation-only provider changes; this change validates a temporary generated binary without adding another large binary diff.
+
+### What should be done in the future
+- Add an explicit `go generate` command for refreshing the generated portion of `05-widget-dsl-v3-api-reference.md` if descriptor edits become frequent.
+- Consider a small browser-oriented action contract test page linked from the cookbook when server-action registry work expands.
+
+### Code review instructions
+- Start with `pkg/xgoja/providers/widgetsite/doc/04-widget-dsl-v3-examples.md` and `05-widget-dsl-v3-api-reference.md`.
+- Verify descriptor synchronization in `pkg/widgetdsl/v3_descriptors_test.go` and help registration in `pkg/xgoja/providers/widgetsite/provider_test.go`.
+- Run `GOWORK=off go test ./pkg/widgetdsl ./pkg/xgoja/providers/widgetsite/... -count=1`.
+- Optionally run `make -C examples/xgoja/workshop-crm-site build BIN=/tmp/workshop-crm-docs-check` then `/tmp/workshop-crm-docs-check help widget-dsl-v3-examples`.
+
+### Technical details
+- New help slugs: `widget-dsl-v3-examples` and `widget-dsl-v3-api-reference`.
+- Relevant executable scripts: `pkg/widgetdsl/testdata/v3/examples/16-schedule-poll-editable.js`, `19-time-month.js`, and `41-crm-workshop-pipeline.js`.
