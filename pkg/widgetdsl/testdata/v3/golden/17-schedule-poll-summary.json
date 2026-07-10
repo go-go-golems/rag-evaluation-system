@@ -1,0 +1,83 @@
+{
+	"id": "poll-summary",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"ariaLabel": "Availability poll summary",
+							"cell": {
+								"kind": "value"
+							},
+							"columns": [
+								{
+									"header": "Mon",
+									"id": "mon",
+									"meta": {
+										"id": "mon",
+										"label": "Mon"
+									}
+								},
+								{
+									"header": "Tue",
+									"id": "tue",
+									"meta": {
+										"id": "tue",
+										"label": "Tue"
+									}
+								}
+							],
+							"getRowKey": {
+								"field": "id"
+							},
+							"rowHeader": {
+								"field": "label",
+								"kind": "field"
+							},
+							"rows": [
+								{
+									"counts": {
+										"mon": 3,
+										"tue": 5
+									},
+									"id": "available",
+									"label": "Available"
+								},
+								{
+									"counts": {
+										"mon": 2,
+										"tue": 1
+									},
+									"id": "maybe",
+									"label": "Maybe"
+								}
+							],
+							"stickyHeader": true,
+							"valueAt": {
+								"mapField": "counts"
+							}
+						},
+						"type": "MatrixGrid"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Tallies",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Poll summary"
+}

@@ -1,0 +1,56 @@
+{
+	"id": "course-handouts",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"documents": [
+								{
+									"body": "# Overview\n\nRead this before starting the lab.",
+									"format": "Markdown",
+									"id": "overview",
+									"title": "Overview"
+								},
+								{
+									"body": "# Lab\n\nFollow the worksheet and capture your findings.",
+									"format": "Markdown",
+									"id": "lab",
+									"title": "Lab guide"
+								}
+							],
+							"intro": "Downloadable workshop material",
+							"onDocumentSelectAction": {
+								"kind": "navigate",
+								"to": "?item=${documentId}"
+							},
+							"onDownloadAction": {
+								"kind": "download",
+								"to": "/handouts/${document.id}"
+							},
+							"selectedDocumentId": "overview"
+						},
+						"type": "HandoutDocumentShell"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Handouts",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Course handouts"
+}

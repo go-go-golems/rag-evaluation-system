@@ -1,0 +1,66 @@
+{
+	"id": "calendar-week-agenda",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"blocks": [
+								{
+									"dayISO": "2026-07-06",
+									"endISO": "2026-07-06T09:30:00Z",
+									"id": "standup",
+									"label": "Standup",
+									"startISO": "2026-07-06T09:00:00Z",
+									"styleKey": "meeting"
+								},
+								{
+									"dayISO": "2026-07-10",
+									"endISO": "2026-07-10T16:00:00Z",
+									"id": "demo",
+									"label": "Demo",
+									"startISO": "2026-07-10T15:00:00Z",
+									"styleKey": "demo"
+								}
+							],
+							"days": [
+								"2026-07-06",
+								"2026-07-07",
+								"2026-07-08",
+								"2026-07-09",
+								"2026-07-10",
+								"2026-07-11",
+								"2026-07-12"
+							],
+							"hourEnd": 18,
+							"hourStart": 8,
+							"nowISO": "2026-07-06T10:00:00Z",
+							"styleSet": {
+								"legend": [],
+								"styles": {}
+							}
+						},
+						"type": "TimeGrid"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Calendar",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Calendar week agenda"
+}

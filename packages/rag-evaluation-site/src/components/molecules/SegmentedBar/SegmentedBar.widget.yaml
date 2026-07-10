@@ -1,0 +1,17 @@
+schemaVersion: widget-manifest/v1
+type: SegmentedBar
+module: ui.dsl
+helper: segmentedBar
+props: SegmentedBarWidgetProps
+adapter:
+  path: ./SegmentedBar.widget.tsx
+  export: segmentedBarWidget
+reactComponent: SegmentedBar
+children: false
+slots:
+  - segments.label
+  - markers.label
+actions:
+  - onSegmentAction
+status: proposed
+docs: Proportional segmented bar keyed by styleKey into a ContextStyleSet; generalizes ContextBudgetBar (poll tally, quota, sentiment split).

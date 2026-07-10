@@ -1,0 +1,84 @@
+schema: xgoja/v2
+name: doodle-site
+app:
+    name: doodle-site
+    envPrefix: DOODLE_SITE
+go:
+    module: xgoja.generated/doodle-site
+    version: "1.26"
+workspace:
+    mode: auto
+providers:
+    - id: go-go-goja-host
+      import: github.com/go-go-golems/go-go-goja/pkg/xgoja/providers/host
+      register: Register
+    - id: go-go-goja-http
+      import: github.com/go-go-golems/go-go-goja/pkg/xgoja/providers/http
+      register: Register
+    - id: rag-widget-site
+      import: github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite
+      register: Register
+      module:
+        replace: ../../..
+runtime:
+    modules:
+        - provider: go-go-goja-http
+          name: express
+          as: express
+        - provider: go-go-goja-host
+          name: fs
+          as: fs:assets
+          config:
+            embedded:
+                allow: true
+                mounts:
+                    - asset: webapp
+                      mount: /app
+        - provider: go-go-goja-host
+          name: db
+          as: db
+          config:
+            driverName: sqlite3
+            dataSourceName: 'file:doodle.db?_foreign_keys=on'
+        - provider: rag-widget-site
+          name: widget.dsl
+          as: widget.dsl
+sources:
+    - id: local-verbs
+      kind: jsverbs
+      from:
+        dir: ./verbs
+      language: javascript
+    - id: widget-dsl
+      kind: help
+      from:
+        provider:
+            provider: rag-widget-site
+            source: widget-dsl
+    - id: webapp
+      kind: assets
+      from:
+        dir: ./assets
+commands:
+    - id: verbs
+      type: builtin.jsverbs
+      name: verbs
+      sources:
+        - local-verbs
+    - id: http-serve
+      type: provider.command-set
+      name: serve
+      mount: serve
+      provider: go-go-goja-http
+      sources:
+        - local-verbs
+artifacts:
+    - id: binary
+      type: binary
+      output: dist/doodle-site
+      sources:
+        - local-verbs
+    - id: embedded-assets
+      type: embedded-assets
+      sources:
+        - webapp

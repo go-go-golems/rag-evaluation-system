@@ -1,0 +1,20 @@
+schemaVersion: widget-manifest/v1
+type: RecordFieldList
+module: data.dsl
+helper: recordFieldList
+props: RecordFieldListWidgetProps
+adapter:
+  path: ./RecordFieldList.widget.tsx
+  export: recordFieldListWidget
+reactComponent: RecordFieldList
+children: false
+slots:
+  - sections.label
+  - sections.fields.label
+actions:
+  - onFieldChangeAction
+status: proposed
+docs: >
+  Lays out many fields as label + control rows grouped into sections, handing
+  each a FieldRenderPayload to a FieldRenderer. Owns arrangement only; record
+  presets (contactRecord, dealRecord) supply the field specs and values.

@@ -1,0 +1,58 @@
+{
+	"id": "time-month",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"markers": {
+								"2026-07-08": {
+									"count": 1,
+									"label": "Launch",
+									"styleKey": "event"
+								},
+								"2026-07-16": {
+									"count": 1,
+									"label": "Review",
+									"styleKey": "event"
+								}
+							},
+							"monthISO": "2026-07",
+							"onDaySelectAction": {
+								"detail": {
+									"dayISO": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "dayISO"
+									}
+								},
+								"event": "time.day.select",
+								"kind": "event"
+							},
+							"selectedDateISO": "2026-07-08",
+							"showHeader": true
+						},
+						"type": "MonthGrid"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "July",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Time month"
+}

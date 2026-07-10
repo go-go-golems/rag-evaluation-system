@@ -1,0 +1,272 @@
+{
+	"id": "master-detail-editor",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"children": [
+							{
+								"kind": "component",
+								"props": {
+									"columns": [
+										{
+											"cell": {
+												"field": "id",
+												"kind": "caption",
+												"tone": "muted"
+											},
+											"header": "id",
+											"id": "id"
+										},
+										{
+											"cell": {
+												"field": "title",
+												"kind": "field"
+											},
+											"header": "title",
+											"id": "title"
+										},
+										{
+											"cell": {
+												"field": "duration",
+												"kind": "number"
+											},
+											"header": "Minutes",
+											"id": "duration"
+										},
+										{
+											"cell": {
+												"field": "status",
+												"kind": "status"
+											},
+											"header": "status",
+											"id": "status"
+										},
+										{
+											"cell": {
+												"action": {
+													"event": "server",
+													"kind": "server",
+													"name": "course.agenda.reorder",
+													"payload": {
+														"direction": "up"
+													}
+												},
+												"kind": "actionButton",
+												"label": "↑"
+											},
+											"header": "",
+											"id": "moveUp",
+											"maxWidth": "5ch"
+										},
+										{
+											"cell": {
+												"action": {
+													"event": "server",
+													"kind": "server",
+													"name": "course.agenda.reorder",
+													"payload": {
+														"direction": "down"
+													}
+												},
+												"kind": "actionButton",
+												"label": "↓"
+											},
+											"header": "",
+											"id": "moveDown",
+											"maxWidth": "5ch"
+										},
+										{
+											"cell": {
+												"action": {
+													"confirm": "Remove this agenda item?",
+													"event": "server",
+													"kind": "server",
+													"name": "course.agenda.remove"
+												},
+												"kind": "actionButton",
+												"label": "Delete"
+											},
+											"header": "Delete",
+											"id": "delete",
+											"maxWidth": "9ch"
+										}
+									],
+									"getRowKey": "id",
+									"onRowSelect": {
+										"kind": "navigate",
+										"to": "?id=${row.id}"
+									},
+									"rows": [
+										{
+											"duration": 15,
+											"id": "agenda-1",
+											"status": "locked",
+											"title": "Welcome"
+										},
+										{
+											"duration": 45,
+											"id": "agenda-2",
+											"status": "editable",
+											"title": "Hands-on lab"
+										}
+									],
+									"selectedKey": "agenda-2"
+								},
+								"type": "DataTable"
+							},
+							{
+								"children": [
+									{
+										"children": [
+											{
+												"children": [
+													{
+														"kind": "component",
+														"props": {
+															"control": {
+																"kind": "component",
+																"props": {
+																	"defaultValue": "agenda-2",
+																	"name": "id",
+																	"readOnly": true
+																},
+																"type": "TextInput"
+															},
+															"label": "id",
+															"orientation": "inline",
+															"required": false
+														},
+														"type": "FormRow"
+													},
+													{
+														"kind": "component",
+														"props": {
+															"control": {
+																"kind": "component",
+																"props": {
+																	"defaultValue": "Hands-on lab",
+																	"name": "title",
+																	"readOnly": false
+																},
+																"type": "TextInput"
+															},
+															"label": "title",
+															"orientation": "inline",
+															"required": false
+														},
+														"type": "FormRow"
+													},
+													{
+														"kind": "component",
+														"props": {
+															"control": {
+																"kind": "component",
+																"props": {
+																	"defaultValue": "45",
+																	"name": "duration",
+																	"readOnly": false
+																},
+																"type": "TextInput"
+															},
+															"label": "Minutes",
+															"orientation": "inline",
+															"required": false
+														},
+														"type": "FormRow"
+													},
+													{
+														"kind": "component",
+														"props": {
+															"control": {
+																"kind": "component",
+																"props": {
+																	"defaultValue": "editable",
+																	"name": "status",
+																	"readOnly": false
+																},
+																"type": "TextInput"
+															},
+															"label": "status",
+															"orientation": "inline",
+															"required": false
+														},
+														"type": "FormRow"
+													}
+												],
+												"kind": "component",
+												"props": {
+													"columns": 3
+												},
+												"type": "FieldGrid"
+											}
+										],
+										"kind": "component",
+										"props": {
+											"formAction": "/api/course/agenda",
+											"method": "post",
+											"title": "Edit: Hands-on lab"
+										},
+										"type": "FormPanel"
+									},
+									{
+										"children": [
+											{
+												"children": [
+													{
+														"kind": "text",
+														"text": "Close"
+													}
+												],
+												"kind": "component",
+												"props": {
+													"action": {
+														"kind": "navigate",
+														"to": "?id="
+													}
+												},
+												"type": "Button"
+											}
+										],
+										"kind": "component",
+										"props": {
+											"gap": "sm"
+										},
+										"type": "Inline"
+									}
+								],
+								"kind": "component",
+								"props": {
+									"gap": "sm"
+								},
+								"type": "Stack"
+							}
+						],
+						"kind": "component",
+						"props": {
+							"gap": "md"
+						},
+						"type": "Stack"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"caption": "A master-detail collection with edit actions.",
+					"density": "flush",
+					"label": "Agenda editor",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Master-detail editor"
+}

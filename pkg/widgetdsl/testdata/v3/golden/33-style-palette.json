@@ -1,0 +1,79 @@
+{
+	"id": "style-palette",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"snapshot": {
+								"id": "palette",
+								"limit": 1000,
+								"parts": [
+									{
+										"id": "a",
+										"label": "Alpha",
+										"styleKey": "a",
+										"tokens": 300
+									},
+									{
+										"id": "b",
+										"label": "Beta",
+										"styleKey": "b",
+										"tokens": 500
+									}
+								],
+								"title": "Palette"
+							},
+							"styleSet": {
+								"legend": [
+									{
+										"id": "a",
+										"label": "Alpha"
+									},
+									{
+										"id": "b",
+										"label": "Beta"
+									}
+								],
+								"styles": {
+									"a": {
+										"fill": "color-mix(in srgb, #9C527E 18%, #F2EEF2)",
+										"labelColor": "#141214",
+										"line": "color-mix(in srgb, #9C527E 60%, #F2EEF2)",
+										"pattern": "diagonal",
+										"stroke": "#141214"
+									},
+									"b": {
+										"fill": "#4F74A8",
+										"labelColor": "#ffffff",
+										"line": "transparent",
+										"pattern": "diagonal",
+										"stroke": "#141214"
+									}
+								}
+							}
+						},
+						"type": "ContextDiagramPanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Palette",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Style palette"
+}

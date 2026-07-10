@@ -1,0 +1,75 @@
+{
+	"id": "course-shell-layout",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"children": [
+							{
+								"children": [
+									{
+										"children": [
+											{
+												"kind": "text",
+												"text": "Course body inside shell. Use Slides to switch this panel."
+											}
+										],
+										"kind": "component",
+										"type": "Caption"
+									}
+								],
+								"kind": "component",
+								"props": {
+									"title": "Overview"
+								},
+								"type": "Panel"
+							}
+						],
+						"kind": "component",
+						"props": {
+							"activeItemId": "overview",
+							"onNavigateAction": {
+								"kind": "navigate",
+								"to": "?item=${item.id}"
+							},
+							"sections": [
+								{
+									"id": "nav",
+									"items": [
+										{
+											"id": "overview",
+											"label": "Overview"
+										},
+										{
+											"id": "slides",
+											"label": "Slides"
+										}
+									],
+									"label": "Navigation"
+								}
+							],
+							"title": "Course Shell"
+						},
+						"type": "CourseStudioShell"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Shell",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Course shell layout"
+}

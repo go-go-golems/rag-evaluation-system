@@ -11,6 +11,34 @@ const items: AppNavItem[] = [
 	{ id: "evaluation", label: "Evaluation" },
 ];
 
+const manyItems: AppNavItem[] = [
+	"Index",
+	"Simple Table",
+	"Selectable Table",
+	"Master Detail Editor",
+	"Row Actions",
+	"All Modules Gallery",
+	"Admin Course CMS",
+	"Handouts And Slide",
+	"Markdown Article",
+	"Markdown Editor",
+	"Course Landing",
+	"Course Slide Deck",
+	"Course Handouts",
+	"Course Shell Layout",
+	"Context Budget Diagram",
+	"Context Transcript Workspace",
+	"Schedule Poll Editable",
+	"Schedule Poll Summary",
+	"Booking Picker",
+	"Time Month",
+	"Time Week",
+	"CRM Board",
+	"Activity Feed",
+	"Page Chrome",
+	"Matrix Heatmap",
+].map((label) => ({ id: label.toLowerCase().replace(/ /g, "-"), label }));
+
 const meta = {
 	title: "Component Library/Molecules/AppNav",
 	component: AppNav,
@@ -45,6 +73,28 @@ export const Interactive: Story = {
 				activeItemId={activeItemId}
 				onItemSelect={setActiveItemId}
 			/>
+		);
+	},
+};
+
+export const OverflowManyItems: Story = {
+	args: {
+		brand: "Widget DSL v3 examples",
+		items: manyItems,
+		activeItemId: "matrix-heatmap",
+		onItemSelect: () => undefined,
+	},
+	render: () => {
+		const [activeItemId, setActiveItemId] = useState("matrix-heatmap");
+		return (
+			<div style={{ width: "100vw", overflow: "hidden", border: "1px solid var(--mac-border)" }}>
+				<AppNav
+					brand="Widget DSL v3 examples"
+					items={manyItems}
+					activeItemId={activeItemId}
+					onItemSelect={setActiveItemId}
+				/>
+			</div>
 		);
 	},
 };

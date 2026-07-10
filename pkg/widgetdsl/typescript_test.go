@@ -5,6 +5,85 @@ import (
 	"testing"
 )
 
+func TestWidgetV3TypeScriptModuleDeclaresRootNamespaces(t *testing.T) {
+	mod := TypeScriptModule(WidgetV3ModuleName)
+	if mod == nil {
+		t.Fatalf("TypeScriptModule(%q) returned nil", WidgetV3ModuleName)
+	}
+	dts := strings.Join(mod.RawDTS, "\n")
+	wantFragments := []string{
+		"export interface RawNamespace",
+		"component(type: string",
+		"export interface ActionNamespace",
+		"server(name: string",
+		"export interface AccessorSpec",
+		"export interface SelectionSpec",
+		"export interface ListItemSpec",
+		"export interface BindingNamespace",
+		"field(path: string): AccessorSpec;",
+		"export type Slot<TContext>",
+		"export interface SlotHelpers",
+		"strong(...children: WidgetChild[]): WidgetNodeSpec;",
+		"slot<TContext>(context: TContext, slot?: Slot<TContext> | null, fallback?: Slot<TContext>): this;",
+		"export interface FieldSetBuilder",
+		"key(name: string, options?: Record<string, any>): this;",
+		"export interface CollectionBuilder",
+		"table(configure?: Fragment<TableBuilder>): this;",
+		"export interface CellNamespace",
+		"cycle(field: string, options?: Record<string, any>): Record<string, any>;",
+		"export interface MatrixBuilder",
+		"valueAt(accessor: AccessorSpec): this;",
+		"export interface DataNamespace",
+		"fields(nameOrConfigure?: string | Fragment<FieldSetBuilder>, configure?: Fragment<FieldSetBuilder>): FieldSetBuilder;",
+		"selection: ((modeOrOptions: 'single' | 'multi' | { mode?: 'single' | 'multi'; keyField?: string; selected?: JsonValue }, options?: { keyField?: string; selected?: JsonValue }) => SelectionSpec) & { urlParam(param: string, value: JsonValue): Record<string, any> };",
+		"item(id: string, label: WidgetChild | WidgetChild[], options?: Record<string, any>): ListItemSpec;",
+		"export const raw: RawNamespace;",
+		"export const act: ActionNamespace;",
+		"export const bind: BindingNamespace;",
+		"export const data: DataNamespace;",
+		"export interface PageBuilder",
+		"export interface SectionBuilder",
+		"export function page(titleOrOptions: string | Record<string, any>, configure?: Fragment<PageBuilder>): PageBuilder;",
+		"export interface UINamespace",
+		"callout(options?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
+		"export interface ActionsBuilder",
+		"shell(shellSpec: JsonValue): this;",
+		"density(value: string): this;",
+		"breadcrumb(label: WidgetChild, href?: string): this;",
+		"actions(configure: Fragment<ActionsBuilder>): this;",
+		"metric(label: WidgetChild, value: WidgetChild, options?: Record<string, any>): this;",
+		"metadata(record: Record<string, JsonValue>): this;",
+		"export const ui: UINamespace;",
+		"export interface CmsNamespace",
+		"mediaLibrary(assets: CmsAsset[], configure?: Fragment<CmsMediaLibraryBuilder>): WidgetNodeSpec;",
+		"articleQueue(articles: CmsArticleSummary[], configure?: Fragment<CmsArticleQueueBuilder>): WidgetNodeSpec;",
+		"markdownEditor(body: string, configure?: Fragment<CmsMarkdownEditorBuilder>): WidgetNodeSpec;",
+		"export const cms: CmsNamespace;",
+		"export interface CourseNamespace",
+		"shell(definition: CourseDefinition, configure?: Fragment<CourseShellBuilder>): WidgetNodeSpec;",
+		"agendaEditor(items: Record<string, JsonValue>[], configure?: Fragment<CollectionBuilder>): CollectionBuilder;",
+		"materialUploads(material: CourseMaterialIndex, configure?: Fragment<CourseMaterialUploadsBuilder>): WidgetNodeSpec;",
+		"export const course: CourseNamespace;",
+		"export interface ContextNamespace",
+		"styleSet(configure?: Fragment<ContextStyleSetBuilder>): Record<string, any>;",
+		"diagram(snapshot: ContextSnapshot, configure?: Fragment<ContextDiagramBuilder>): WidgetNodeSpec;",
+		"workspace(session: Transcript, configure?: Fragment<ContextWorkspaceBuilder>): WidgetNodeSpec;",
+		"export const context: ContextNamespace;",
+		"export interface ScheduleNamespace",
+		"availabilityPoll(poll: AvailabilityPoll, configure?: Fragment<SchedulePollBuilder>): WidgetNodeSpec;",
+		"export interface TimeNamespace",
+		"week(events: CalendarEvent[], configure?: Fragment<TimeWeekBuilder>): WidgetNodeSpec;",
+		"export const schedule: ScheduleNamespace;",
+		"export const time: TimeNamespace;",
+		"export const style: Record<string, any>;",
+	}
+	for _, fragment := range wantFragments {
+		if !strings.Contains(dts, fragment) {
+			t.Fatalf("widget.dsl DTS missing %q\n--- DTS ---\n%s", fragment, dts)
+		}
+	}
+}
+
 func TestDataV2TypeScriptModuleDeclaresTypedFluentBuilders(t *testing.T) {
 	mod := TypeScriptModule(DataV2ModuleName)
 	if mod == nil {

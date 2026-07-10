@@ -15,6 +15,7 @@ const (
 	UIModuleName            = "ui.dsl"
 	DataModuleName          = "data.dsl"
 	DataV2ModuleName        = "data.v2.dsl"
+	WidgetV3ModuleName      = "widget.dsl"
 	ContextWindowModuleName = "context_window.dsl"
 	CourseModuleName        = "course.dsl"
 	CmsModuleName           = "cms.dsl"
@@ -159,6 +160,10 @@ var moduleSpecs = []moduleSpec{
 		doc:  "data.v2.dsl provides the hard-cutover typed/fluent collection builder experiment.",
 	},
 	{
+		name: WidgetV3ModuleName,
+		doc:  "widget.dsl provides the parallel clean Widget DSL v3 root namespace.",
+	},
+	{
 		name:    ContextWindowModuleName,
 		helpers: contextWindowHelpers,
 		action:  true,
@@ -234,6 +239,10 @@ type runtime struct {
 }
 
 func (r *runtime) install(exports *goja.Object, spec moduleSpec) {
+	if spec.name == WidgetV3ModuleName {
+		r.installWidgetV3(exports)
+		return
+	}
 	setExport(exports, "text", r.text)
 	setExport(exports, "element", r.element)
 	setExport(exports, "component", r.component)
@@ -267,6 +276,45 @@ func (r *runtime) install(exports *goja.Object, spec moduleSpec) {
 	if len(spec.recipes) > 0 {
 		setExport(exports, "recipes", r.recipesObject(spec.recipes))
 	}
+}
+
+func (r *runtime) installWidgetV3(exports *goja.Object) {
+	setExport(exports, "page", r.v3Page)
+	setExport(exports, "raw", r.v3RawObject())
+	setExport(exports, "act", r.actionObject())
+	setExport(exports, "bind", r.bindingObject())
+	setExport(exports, "ui", r.v3UIObject())
+	setExport(exports, "data", r.v3DataObject())
+	setExport(exports, "crm", r.v3CRMObject())
+	setExport(exports, "cms", r.v3CMSObject())
+	setExport(exports, "course", r.v3CourseObject())
+	setExport(exports, "context", r.v3ContextObject())
+	setExport(exports, "schedule", r.v3ScheduleObject())
+	setExport(exports, "time", r.v3TimeObject())
+	setExport(exports, "style", r.vm.NewObject())
+}
+
+func (r *runtime) bindingObject() *goja.Object {
+	bind := r.vm.NewObject()
+	setExport(bind, "field", func(path string) map[string]any {
+		return v3AccessorSpec("field", "field", path)
+	})
+	setExport(bind, "path", func(path string) map[string]any {
+		return v3AccessorSpec("path", "path", path)
+	})
+	setExport(bind, "map", func(field string) map[string]any {
+		return v3AccessorSpec("map", "mapField", field)
+	})
+	setExport(bind, "template", func(template string) map[string]any {
+		return v3AccessorSpec("template", "template", template)
+	})
+	setExport(bind, "context", func(path string) map[string]any {
+		return v3AccessorSpec("context", "path", path)
+	})
+	setExport(bind, "const", func(value goja.Value) map[string]any {
+		return map[string]any{"kind": "const", "value": value.Export()}
+	})
+	return bind
 }
 
 func (r *runtime) cellObject() *goja.Object {
@@ -337,8 +385,10 @@ func (r *runtime) actionObject() *goja.Object {
 		mergeOptions(out, exportOptions(options))
 		return out
 	})
-	setExport(action, "copy", func(value string) map[string]any {
-		return map[string]any{"kind": "copy", "value": value}
+	setExport(action, "copy", func(value string, options ...goja.Value) map[string]any {
+		out := map[string]any{"kind": "copy", "value": value}
+		mergeOptions(out, exportOptions(options))
+		return out
 	})
 	return action
 }
@@ -980,7 +1030,7 @@ func isWidgetNode(vm *goja.Runtime, value goja.Value) bool {
 }
 
 func looksLikeWidgetNodeExport(value goja.Value) bool {
-	exported, ok := value.Export().(map[string]any)
+	exported, ok := toStringAnyMap(value.Export())
 	if !ok {
 		return false
 	}
@@ -1004,7 +1054,7 @@ func exportObject(value goja.Value) map[string]any {
 	if value == nil || goja.IsUndefined(value) || goja.IsNull(value) {
 		return map[string]any{}
 	}
-	if exported, ok := value.Export().(map[string]any); ok {
+	if exported, ok := toStringAnyMap(value.Export()); ok {
 		return exported
 	}
 	return map[string]any{}
@@ -1098,8 +1148,45 @@ func componentNode(componentType string, props map[string]any, children ...any) 
 }
 
 func widgetNodeFromAny(value any) (map[string]any, bool) {
-	node, ok := value.(map[string]any)
+	node, ok := toStringAnyMap(value)
 	return node, ok && isWidgetNodeExport(node)
+}
+
+func toStringAnyMap(value any) (map[string]any, bool) {
+	if value == nil {
+		return nil, false
+	}
+	if out, ok := value.(map[string]any); ok {
+		return out, true
+	}
+	rv := reflect.ValueOf(value)
+	if rv.Kind() != reflect.Map || rv.Type().Key().Kind() != reflect.String {
+		return nil, false
+	}
+	out := make(map[string]any, rv.Len())
+	iter := rv.MapRange()
+	for iter.Next() {
+		out[iter.Key().String()] = normalizeJSONValue(iter.Value().Interface())
+	}
+	return out, true
+}
+
+func normalizeJSONValue(value any) any {
+	if value == nil {
+		return nil
+	}
+	if m, ok := toStringAnyMap(value); ok {
+		return m
+	}
+	rv := reflect.ValueOf(value)
+	if rv.Kind() == reflect.Slice || rv.Kind() == reflect.Array {
+		out := make([]any, 0, rv.Len())
+		for i := 0; i < rv.Len(); i++ {
+			out = append(out, normalizeJSONValue(rv.Index(i).Interface()))
+		}
+		return out
+	}
+	return value
 }
 
 func isWidgetNodeExport(exported map[string]any) bool {

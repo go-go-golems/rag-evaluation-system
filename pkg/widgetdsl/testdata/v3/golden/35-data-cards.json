@@ -1,0 +1,111 @@
+{
+	"id": "data-list-items",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"children": [
+							{
+								"children": [
+									{
+										"children": [
+											{
+												"kind": "component",
+												"props": {
+													"disabled": false,
+													"label": "new"
+												},
+												"type": "Tag"
+											},
+											{
+												"children": [
+													{
+														"kind": "text",
+														"text": "A freshly imported record ready for review."
+													}
+												],
+												"kind": "component",
+												"type": "Caption"
+											}
+										],
+										"kind": "component",
+										"props": {
+											"align": "center",
+											"gap": "sm"
+										},
+										"type": "Inline"
+									}
+								],
+								"kind": "component",
+								"props": {
+									"density": "condensed",
+									"title": "First"
+								},
+								"type": "Panel"
+							},
+							{
+								"children": [
+									{
+										"children": [
+											{
+												"kind": "component",
+												"props": {
+													"disabled": true,
+													"label": "locked"
+												},
+												"type": "Tag"
+											},
+											{
+												"children": [
+													{
+														"kind": "text",
+														"text": "A disabled record that still renders its metadata."
+													}
+												],
+												"kind": "component",
+												"type": "Caption"
+											}
+										],
+										"kind": "component",
+										"props": {
+											"align": "center",
+											"gap": "sm"
+										},
+										"type": "Inline"
+									}
+								],
+								"kind": "component",
+								"props": {
+									"density": "condensed",
+									"title": "Second"
+								},
+								"type": "Panel"
+							}
+						],
+						"kind": "component",
+						"props": {
+							"gap": "md"
+						},
+						"type": "Stack"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Items",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Data list items"
+}

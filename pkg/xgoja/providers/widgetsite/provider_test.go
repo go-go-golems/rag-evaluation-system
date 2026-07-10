@@ -12,7 +12,7 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl"
 )
 
-func TestRegisterExposesSplitWidgetModules(t *testing.T) {
+func TestRegisterExposesSplitAndWidgetV3Modules(t *testing.T) {
 	registry := providerapi.NewProviderRegistry()
 	if err := Register(registry); err != nil {
 		t.Fatalf("register provider: %v", err)
@@ -24,6 +24,7 @@ func TestRegisterExposesSplitWidgetModules(t *testing.T) {
 		{widgetdsl.UIModuleName, "panel"},
 		{widgetdsl.DataModuleName, "dataTable"},
 		{widgetdsl.DataV2ModuleName, "collection"},
+		{widgetdsl.WidgetV3ModuleName, "raw"},
 		{widgetdsl.ContextWindowModuleName, "contextDiagramPanel"},
 		{widgetdsl.CourseModuleName, "courseStudioShell"},
 	}
@@ -50,7 +51,7 @@ func TestRegisterExposesSplitWidgetModules(t *testing.T) {
 			t.Fatalf("module %s did not expose %s(): %#v", tc.name, tc.helper, got)
 		}
 	}
-	for _, oldName := range []string{"widget.dsl", "rag.dsl"} {
+	for _, oldName := range []string{"rag.dsl"} {
 		if _, ok := registry.ResolveModule(PackageID, oldName); ok {
 			t.Fatalf("old bucket module %q should not be exposed", oldName)
 		}

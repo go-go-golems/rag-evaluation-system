@@ -1,6 +1,6 @@
 module github.com/go-go-golems/rag-evaluation-system
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/blevesearch/bleve/v2 v2.6.0
@@ -15,6 +15,9 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.44
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/cobra v1.10.2
+	github.com/tree-sitter/go-tree-sitter v0.25.0
+	github.com/tree-sitter/tree-sitter-javascript v0.25.0
+	github.com/tree-sitter/tree-sitter-typescript v0.23.2
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -140,9 +143,6 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/tiendc/go-deepcopy v1.7.1 // indirect
 	github.com/tj/go-naturaldate v1.3.0 // indirect
-	github.com/tree-sitter/go-tree-sitter v0.25.0 // indirect
-	github.com/tree-sitter/tree-sitter-javascript v0.25.0 // indirect
-	github.com/tree-sitter/tree-sitter-typescript v0.23.2 // indirect
 	github.com/ugorji/go/codec v1.3.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect

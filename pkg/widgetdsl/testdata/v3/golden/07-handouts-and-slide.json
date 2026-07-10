@@ -1,0 +1,112 @@
+{
+	"id": "handouts-and-slide",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"documents": [
+								{
+									"body": "# Slide deck\n\nUse this deck to explain context-window pressure and reclaim policies.",
+									"format": "Markdown",
+									"id": "deck",
+									"title": "Slide deck"
+								},
+								{
+									"body": "# Lab guide\n\n1. Inspect the prompt parts.\n2. Pick a reclaim policy.\n3. Validate with the token diagram.",
+									"format": "Markdown",
+									"id": "lab",
+									"title": "Lab guide"
+								}
+							],
+							"intro": "Printable materials for the workshop.",
+							"onDocumentSelectAction": {
+								"kind": "navigate",
+								"to": "?doc=${documentId}\u0026slide=0"
+							},
+							"onDownloadAction": {
+								"kind": "download",
+								"to": "/handouts/${documentId}"
+							},
+							"onPrintAction": {
+								"detail": {
+									"documentId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "documentId"
+									}
+								},
+								"event": "course.handout.print",
+								"kind": "event"
+							},
+							"selectedDocumentId": "deck"
+						},
+						"type": "HandoutDocumentShell"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Handouts",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"index": 0,
+							"mode": "speaker",
+							"onNextAction": {
+								"kind": "navigate",
+								"to": "?doc=deck\u0026slide=1"
+							},
+							"onPresentAction": {
+								"event": "course.slide.present",
+								"kind": "event"
+							},
+							"onPreviousAction": {
+								"kind": "navigate",
+								"to": "?doc=deck\u0026slide=0"
+							},
+							"slide": {
+								"body": "Think in segments, budgets, and reclaim policies.",
+								"id": "s1",
+								"notes": ["Introduce token limits", "Connect the diagram to the handout"],
+								"title": "Context windows"
+							},
+							"snapshot": {
+								"id": "ctx",
+								"limit": 2000,
+								"parts": [],
+								"title": "Slide context"
+							},
+							"total": 2
+						},
+						"type": "CourseSlidePanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Slide",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Handouts and slide"
+}

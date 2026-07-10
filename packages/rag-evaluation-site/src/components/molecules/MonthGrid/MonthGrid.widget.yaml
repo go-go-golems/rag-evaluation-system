@@ -1,0 +1,17 @@
+schemaVersion: widget-manifest/v1
+type: MonthGrid
+module: time.dsl
+helper: monthGrid
+props: MonthGridWidgetProps
+adapter:
+  path: ./MonthGrid.widget.tsx
+  export: monthGridWidget
+reactComponent: MonthGrid
+children: false
+slots:
+  - markers.label
+actions:
+  - onDaySelectAction
+  - onMonthChangeAction
+status: proposed
+docs: Month-of-day-cells engine with markers (count or styleKey heat) via ContextStyleSet; date picker, poll slot picker, activity heatmap.

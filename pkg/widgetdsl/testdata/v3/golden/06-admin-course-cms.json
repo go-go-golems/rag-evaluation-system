@@ -1,0 +1,186 @@
+{
+	"id": "course-cms-admin",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"children": [
+							{
+								"children": [
+									{
+										"children": [
+											{
+												"children": [
+													{
+														"kind": "text",
+														"text": "Edit the lab agenda and upload supporting workshop material."
+													}
+												],
+												"kind": "component",
+												"type": "Caption"
+											}
+										],
+										"kind": "component",
+										"props": {
+											"title": "Lab module"
+										},
+										"type": "Panel"
+									},
+									{
+										"children": [
+											{
+												"kind": "component",
+												"props": {
+													"columns": [
+														{
+															"cell": {
+																"action": {
+																	"event": "server",
+																	"kind": "server",
+																	"name": "course.agenda.edit",
+																	"payload": {
+																		"direction": "up",
+																		"id": {
+																			"kind": "path",
+																			"path": "rows"
+																		}
+																	}
+																},
+																"kind": "actionButton",
+																"label": "↑"
+															},
+															"header": "",
+															"id": "moveUp",
+															"maxWidth": "5ch"
+														},
+														{
+															"cell": {
+																"action": {
+																	"event": "server",
+																	"kind": "server",
+																	"name": "course.agenda.edit",
+																	"payload": {
+																		"direction": "down",
+																		"id": {
+																			"kind": "path",
+																			"path": "rows"
+																		}
+																	}
+																},
+																"kind": "actionButton",
+																"label": "↓"
+															},
+															"header": "",
+															"id": "moveDown",
+															"maxWidth": "5ch"
+														}
+													],
+													"getRowKey": "id",
+													"rows": [
+														{
+															"duration": 20,
+															"id": "intro",
+															"status": "ready",
+															"title": "Introduction"
+														},
+														{
+															"duration": 60,
+															"id": "lab",
+															"status": "draft",
+															"title": "Hands-on Lab"
+														}
+													]
+												},
+												"type": "DataTable"
+											}
+										],
+										"kind": "component",
+										"props": {
+											"gap": "md"
+										},
+										"type": "Stack"
+									},
+									{
+										"kind": "component",
+										"props": {
+											"accept": ["application/pdf", "image/png"],
+											"description": "Slides, handouts, diagrams",
+											"onDeleteAction": {
+												"kind": "server",
+												"name": "course.material.delete",
+												"payload": {
+													"id": {
+														"kind": "accessor",
+														"mode": "context",
+														"path": "asset.id"
+													}
+												}
+											},
+											"onFilesSelectedAction": {
+												"kind": "server",
+												"name": "course.material.upload"
+											},
+											"title": "Upload material"
+										},
+										"type": "ContextUploadDropArea"
+									}
+								],
+								"kind": "component",
+								"props": {
+									"gap": "md"
+								},
+								"type": "Stack"
+							}
+						],
+						"kind": "component",
+						"props": {
+							"activeItemId": "lab",
+							"onNavigateAction": {
+								"kind": "navigate",
+								"to": "?item=${item.id}"
+							},
+							"sections": [
+								{
+									"id": "modules",
+									"items": [
+										{
+											"id": "intro",
+											"label": "Intro"
+										},
+										{
+											"id": "lab",
+											"label": "Lab"
+										}
+									],
+									"label": "Modules"
+								}
+							],
+							"subtitle": "Admin preview",
+							"title": "Context Window Engineering"
+						},
+						"type": "CourseStudioShell"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Course shell",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"shell": {
+		"kind": "course-admin"
+	},
+	"title": "Course CMS admin"
+}

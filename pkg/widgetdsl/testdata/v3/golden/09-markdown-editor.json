@@ -1,0 +1,39 @@
+{
+	"id": "markdown-editor",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"onSubmitAction": {
+								"kind": "server",
+								"name": "article.save"
+							},
+							"placeholder": "Start typing",
+							"title": "Live markdown",
+							"value": "# Draft\n\nWrite here..."
+						},
+						"type": "MarkdownEditor"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Draft",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Markdown editor"
+}

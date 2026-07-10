@@ -1,0 +1,55 @@
+{
+	"id": "raw-html-elements",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"attrs": {
+							"className": "custom-note"
+						},
+						"children": [
+							{
+								"children": [
+									{
+										"kind": "text",
+										"text": "Raw element"
+									}
+								],
+								"kind": "element",
+								"tag": "h2"
+							},
+							{
+								"children": [
+									{
+										"kind": "text",
+										"text": "Use raw elements sparingly for host-specific markup."
+									}
+								],
+								"kind": "element",
+								"tag": "p"
+							}
+						],
+						"kind": "element",
+						"tag": "div"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Raw",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Raw HTML elements"
+}

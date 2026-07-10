@@ -76,7 +76,9 @@ export function dispatchWidgetAction(
 			return;
 		}
 		window.dispatchEvent(
-			new CustomEvent(action.event, { detail: { ...(action.detail ?? {}), context } }),
+			new CustomEvent(action.event, {
+				detail: { ...resolveActionPayload(action.detail, context), context },
+			}),
 		);
 		return;
 	}
@@ -183,7 +185,57 @@ function resolveTemplatePartOrLiteral(
 	context: WidgetActionContext,
 ): JsonValue {
 	if (isTemplatePart(value)) return toJsonValue(resolveTemplatePart(value, context));
+	if (isAccessor(value)) return toJsonValue(resolveAccessor(value, context));
+	if (isConstBinding(value)) return value.value;
 	return value;
+}
+
+type AccessorBinding = {
+	kind: "accessor";
+	mode: "field" | "path" | "map" | "template" | "context";
+	field?: string;
+	path?: string;
+	mapField?: string;
+	template?: string;
+};
+
+type ConstBinding = { kind: "const"; value: JsonValue };
+
+function isAccessor(value: TemplatePartSpec | JsonValue): value is AccessorBinding {
+	return Boolean(
+		value &&
+			typeof value === "object" &&
+			!Array.isArray(value) &&
+			"kind" in value &&
+			(value as { kind?: unknown }).kind === "accessor",
+	);
+}
+
+function isConstBinding(value: TemplatePartSpec | JsonValue): value is ConstBinding {
+	return Boolean(
+		value &&
+			typeof value === "object" &&
+			!Array.isArray(value) &&
+			"kind" in value &&
+			"value" in value &&
+			(value as { kind?: unknown }).kind === "const",
+	);
+}
+
+function resolveAccessor(accessor: AccessorBinding, context: WidgetActionContext): unknown {
+	const row = context.row ?? {};
+	switch (accessor.mode) {
+		case "context":
+			return lookupContext(accessor.path ?? "", context);
+		case "field":
+			return lookupContext(accessor.field ?? "", row as WidgetActionContext);
+		case "path":
+			return lookupContext(accessor.path ?? "", row as WidgetActionContext);
+		case "map":
+			return lookupContext(accessor.mapField ?? "", row as WidgetActionContext);
+		case "template":
+			return interpolate(accessor.template ?? "", { ...context, row }, { encode: false });
+	}
 }
 
 function resolveTemplatePart(part: TemplatePartSpec, context: WidgetActionContext): unknown {

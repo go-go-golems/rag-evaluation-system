@@ -1,0 +1,105 @@
+{
+	"id": "editable-poll",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"ariaLabel": "Office hours",
+							"cell": {
+								"kind": "cycle",
+								"states": ["available", "maybe", "unavailable"]
+							},
+							"columns": [
+								{
+									"header": "Mon 9",
+									"id": "mon",
+									"meta": {
+										"endISO": "2026-07-06T10:00:00Z",
+										"id": "mon",
+										"label": "Mon 9",
+										"startISO": "2026-07-06T09:00:00Z"
+									}
+								},
+								{
+									"header": "Tue 10",
+									"id": "tue",
+									"meta": {
+										"endISO": "2026-07-07T11:00:00Z",
+										"id": "tue",
+										"label": "Tue 10",
+										"startISO": "2026-07-07T10:00:00Z"
+									}
+								}
+							],
+							"editableRowKey": "ana",
+							"getRowKey": {
+								"field": "id"
+							},
+							"onCellAction": {
+								"detail": {
+									"optionId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "column.id"
+									},
+									"responseId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "row.id"
+									}
+								},
+								"event": "schedule.availability.toggle",
+								"kind": "event"
+							},
+							"rowHeader": {
+								"field": "name",
+								"kind": "field"
+							},
+							"rows": [
+								{
+									"availability": {
+										"mon": "available",
+										"tue": "maybe"
+									},
+									"id": "ana",
+									"name": "Ana"
+								},
+								{
+									"availability": {
+										"mon": "unavailable",
+										"tue": "available"
+									},
+									"id": "noah",
+									"name": "Noah"
+								}
+							],
+							"stickyHeader": true,
+							"valueAt": {
+								"mapField": "availability"
+							}
+						},
+						"type": "MatrixGrid"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Poll",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Editable poll"
+}

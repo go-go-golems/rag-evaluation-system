@@ -1,0 +1,65 @@
+.root {
+	display: flex;
+	gap: 12px;
+	align-items: flex-start;
+	overflow-x: auto;
+	padding: 4px;
+	max-width: 100%;
+}
+
+.column {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	flex: 0 0 220px;
+	min-width: 200px;
+	background: var(--mac-surface-2);
+	border: 1px solid var(--mac-border);
+	padding: 8px;
+	max-height: 100%;
+}
+
+.column[data-drop-active] {
+	border-color: var(--mac-accent);
+	background: var(--mac-stripe);
+}
+
+.columnHead {
+	font: var(--rag-font-role-compact);
+	color: var(--mac-text);
+	padding: 2px 4px 6px;
+	border-bottom: 1px solid var(--mac-border-subtle);
+	border-left: 3px solid var(--ctx-line, var(--mac-border));
+	padding-left: 8px;
+}
+
+.cards {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	overflow-y: auto;
+	min-height: 24px;
+}
+
+.cardSlot {
+	list-style: none;
+}
+
+.empty {
+	list-style: none;
+	text-align: center;
+	padding: 12px 4px;
+	border: 1px dashed var(--mac-border);
+	color: var(--mac-text-dim);
+	font: var(--rag-font-role-compact);
+}
+
+.columnFoot {
+	font: var(--rag-font-role-metric);
+	color: var(--mac-text-dim);
+	padding: 4px;
+	border-top: 1px solid var(--mac-border-subtle);
+}

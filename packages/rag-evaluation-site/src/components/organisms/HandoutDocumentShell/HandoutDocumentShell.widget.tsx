@@ -16,6 +16,7 @@ export const handoutDocumentShellWidget = defineWidget<HandoutDocumentShellWidge
 					? (documentId) =>
 							ctx.dispatchAction(props.onDocumentSelectAction!, {
 								documentId,
+								document: { id: documentId },
 								value: documentId,
 								componentType: "HandoutDocumentShell",
 							})
@@ -26,6 +27,7 @@ export const handoutDocumentShellWidget = defineWidget<HandoutDocumentShellWidge
 					? (documentId) =>
 							ctx.dispatchAction(props.onDownloadAction!, {
 								documentId,
+								document: { id: documentId },
 								value: documentId,
 								componentType: "HandoutDocumentShell",
 							})
@@ -44,6 +46,7 @@ export const handoutDocumentShellWidget = defineWidget<HandoutDocumentShellWidge
 					? (documentId) =>
 							ctx.dispatchAction(props.onPrintAction!, {
 								documentId,
+								document: { id: documentId },
 								value: documentId,
 								componentType: "HandoutDocumentShell",
 							})

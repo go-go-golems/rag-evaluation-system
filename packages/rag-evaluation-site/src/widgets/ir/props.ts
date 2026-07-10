@@ -1,0 +1,854 @@
+import type {
+	CmsArticleSummary,
+	CmsAsset,
+	CmsContentStatus,
+	UploadQueueItem,
+} from "../../cms/types";
+import type {
+	ButtonSize,
+	ButtonVariant,
+	ContextStudioNavIconId,
+	MediaThumbAspect,
+	MediaThumbFit,
+	MediaThumbFrame,
+	MeterBarTone,
+} from "../../components/atoms";
+import type {
+	CaptionTone,
+	CaptionTransform,
+	RagStatus,
+	TextAlign,
+	TextAs,
+	TextSize,
+	TextTone,
+	TextWeight,
+} from "../../components/foundation";
+import type {
+	DashboardGridRecipe,
+	InlineGap,
+	InlineJustify,
+	StackAlign,
+	StackGap,
+} from "../../components/layout";
+import type {
+	AnchoredComment,
+	ArticleBlock,
+	ContextCourse,
+	ContextCourseAgendaItem,
+	ContextDiagramView,
+	ContextHandoutDocument,
+	ContextLegendItemSpec,
+	ContextSlide,
+	ContextStyleSet,
+	ContextVisualStyle,
+	ContextWindowSnapshot,
+	TranscriptAnnotation,
+	TranscriptMessage,
+	TranscriptRole,
+} from "../../context";
+import type { ActionSpec } from "./actions";
+import type { DataTableColumnSpec, RowKeySpec } from "./cells";
+import type { BaseWidgetProps, JsonObject, RenderableValue, WidgetNode } from "./core";
+import type {
+	ActivityFeedWidgetProps,
+	BoardEngineWidgetProps,
+	FieldRendererWidgetProps,
+	MatrixGridWidgetProps,
+	MonthGridWidgetProps,
+	RecordFieldListWidgetProps,
+	SegmentedBarWidgetProps,
+	StatTileWidgetProps,
+	TimeGridWidgetProps,
+} from "./engines";
+
+export interface AppShellWidgetProps extends BaseWidgetProps {
+	header?: WidgetNode;
+	sidebar?: WidgetNode;
+}
+
+export interface AppNavWidgetProps extends BaseWidgetProps {
+	brand: RenderableValue;
+	items: AppNavItemSpec[];
+	activeItemId: string;
+}
+
+export interface AppNavItemSpec {
+	id: string;
+	label: RenderableValue;
+	action?: ActionSpec;
+}
+
+export interface ButtonWidgetProps extends BaseWidgetProps {
+	variant?: ButtonVariant;
+	size?: ButtonSize;
+	selected?: boolean;
+	disabled?: boolean;
+	type?: "button" | "submit" | "reset";
+}
+
+export interface TextWidgetProps extends BaseWidgetProps {
+	as?: TextAs;
+	size?: TextSize;
+	tone?: TextTone;
+	weight?: TextWeight;
+	align?: TextAlign;
+	truncate?: boolean;
+}
+
+export interface CodeTextWidgetProps extends BaseWidgetProps {
+	as?: "code" | "span" | "div";
+	tone?: "primary" | "muted" | "accent";
+	display?: "inline" | "block";
+	copyable?: boolean;
+}
+
+export interface DividerWidgetProps extends BaseWidgetProps {
+	orientation?: "horizontal" | "vertical";
+}
+
+export interface ContextStudioNavIconWidgetProps extends BaseWidgetProps {
+	id: ContextStudioNavIconId;
+	title?: string;
+}
+
+export interface ContextStyleSwatchWidgetProps extends BaseWidgetProps {
+	visualStyle: ContextVisualStyle;
+	size?: "xs" | "sm" | "md" | "lg";
+	selected?: boolean;
+}
+
+export interface AnnotationBadgeWidgetProps extends BaseWidgetProps {
+	visualStyle: ContextVisualStyle;
+	label: string;
+	selected?: boolean;
+}
+
+export interface TranscriptRoleBadgeWidgetProps extends BaseWidgetProps {
+	role: TranscriptRole;
+	name?: string;
+}
+
+export interface ContextLegendWidgetProps extends BaseWidgetProps {
+	items: ContextLegendItemSpec[];
+	styles: Record<string, ContextVisualStyle>;
+	size?: "xs" | "sm" | "md" | "lg";
+	selectedId?: string;
+}
+
+export interface ContextBudgetBarWidgetProps extends BaseWidgetProps {
+	snapshot: ContextWindowSnapshot;
+	styleSet: ContextStyleSet;
+	showLegend?: boolean;
+	selectedPartId?: string;
+}
+
+export interface ContextStripDiagramWidgetProps extends BaseWidgetProps {
+	snapshot: ContextWindowSnapshot;
+	styleSet: ContextStyleSet;
+	selectedPartId?: string;
+	showLabels?: boolean;
+	showSelection?: boolean;
+}
+
+export interface ContextGroupedStripDiagramWidgetProps extends BaseWidgetProps {
+	snapshot: ContextWindowSnapshot;
+	styleSet: ContextStyleSet;
+	selectedPartId?: string;
+	groupBy?: "turn" | "styleKey" | "sourceId";
+	showGroupLabels?: boolean;
+	showPartLabels?: boolean;
+	showSelection?: boolean;
+}
+
+export interface ContextStackDiagramWidgetProps extends BaseWidgetProps {
+	snapshot: ContextWindowSnapshot;
+	styleSet: ContextStyleSet;
+	selectedPartId?: string;
+}
+
+export interface ContextTreemapWidgetProps extends BaseWidgetProps {
+	snapshot: ContextWindowSnapshot;
+	styleSet: ContextStyleSet;
+	selectedPartId?: string;
+}
+
+export interface ContextDiagramPanelWidgetProps extends BaseWidgetProps {
+	snapshot: ContextWindowSnapshot;
+	styleSet: ContextStyleSet;
+	initialView?: ContextDiagramView;
+	selectedPartId?: string;
+	views?: ContextDiagramView[];
+	showLegend?: boolean;
+	showPartDetails?: boolean;
+	chrome?: "panel" | "inline";
+}
+
+export interface ContextTurnPagerPanelWidgetProps extends BaseWidgetProps {
+	snapshots: ContextWindowSnapshot[];
+	styleSet: ContextStyleSet;
+	initialSnapshotId?: string;
+	selectedPartId?: string;
+	diagram?: "grouped-strip" | "strip";
+	groupBy?: "turn" | "styleKey" | "sourceId";
+	mode?: "turn-only" | "snapshot";
+	includeGlobalParts?: boolean;
+	showLegend?: boolean;
+	title?: string;
+}
+
+export interface TranscriptSessionHeaderWidgetProps extends BaseWidgetProps {
+	title: RenderableValue;
+	subtitle?: RenderableValue;
+	messageCount?: number;
+	annotationCount?: number;
+	tokenTotal?: number;
+	rightSlot?: WidgetNode;
+}
+
+export interface TranscriptMessageCardWidgetProps extends BaseWidgetProps {
+	message: TranscriptMessage;
+	annotations?: TranscriptAnnotation[];
+	selectedAnnotationId?: string;
+	showAnnotationChips?: boolean;
+	styleSet?: ContextStyleSet;
+	onAnnotationSelectAction?: ActionSpec;
+}
+
+export interface AnnotationNoteCardWidgetProps extends BaseWidgetProps {
+	annotation: TranscriptAnnotation;
+	selected?: boolean;
+	index?: number;
+	styleSet?: ContextStyleSet;
+}
+
+export interface AnnotationRailPanelWidgetProps extends BaseWidgetProps {
+	title?: string;
+	description?: string;
+	annotations: TranscriptAnnotation[];
+	selectedAnnotationId?: string;
+	styleSet?: ContextStyleSet;
+	onAnnotationSelectAction?: ActionSpec;
+}
+
+export interface TranscriptReaderPanelWidgetProps extends BaseWidgetProps {
+	title?: string;
+	subtitle?: string;
+	messages: TranscriptMessage[];
+	annotations?: TranscriptAnnotation[];
+	selectedAnnotationId?: string;
+	showAnnotationChips?: boolean;
+	styleSet?: ContextStyleSet;
+	onAnnotationSelectAction?: ActionSpec;
+}
+
+export interface TranscriptWorkspacePanelWidgetProps extends BaseWidgetProps {
+	title?: string;
+	subtitle?: string;
+	messages: TranscriptMessage[];
+	annotations?: TranscriptAnnotation[];
+	selectedAnnotationId?: string;
+	showNotes?: boolean;
+	styleSet?: ContextStyleSet;
+	onAnnotationSelectAction?: ActionSpec;
+}
+
+export interface AnchoredCommentCardWidgetProps extends BaseWidgetProps {
+	comment: AnchoredComment;
+	index?: number;
+	selected?: boolean;
+	compact?: boolean;
+	onDismissAction?: ActionSpec;
+}
+
+export interface AnchoredCommentRailWidgetProps extends BaseWidgetProps {
+	title?: string;
+	comments: AnchoredComment[];
+	selectedCommentId?: string;
+	onCommentSelectAction?: ActionSpec;
+}
+
+export interface KeyValueStripWidgetProps extends BaseWidgetProps {
+	items: Array<{ key: RenderableValue; value: RenderableValue }>;
+}
+export interface ShareLinkWidgetProps extends BaseWidgetProps {
+	label?: RenderableValue;
+	description?: RenderableValue;
+	href: string;
+	displayHref?: RenderableValue;
+	copyLabel?: RenderableValue;
+	copiedLabel?: RenderableValue;
+	copied?: boolean;
+	copyAction?: ActionSpec;
+}
+export interface CheckListWidgetProps extends BaseWidgetProps {
+	items: Array<{ id?: string; text: RenderableValue } | RenderableValue>;
+	marker?: RenderableValue;
+}
+export interface StepListWidgetProps extends BaseWidgetProps {
+	items: Array<{
+		id: string;
+		index: RenderableValue;
+		title: RenderableValue;
+		description?: RenderableValue;
+		meta?: RenderableValue;
+	}>;
+	activeItemId?: string;
+	onItemSelectAction?: ActionSpec;
+}
+export interface PersonSummaryWidgetProps extends BaseWidgetProps {
+	name: RenderableValue;
+	subtitle?: RenderableValue;
+	bio?: RenderableValue;
+	avatar?: RenderableValue;
+}
+export interface FigureBlockWidgetProps extends BaseWidgetProps {
+	as?: "figure" | "div";
+	caption?: RenderableValue;
+	legend?: WidgetNode;
+	frame?: "none" | "bordered" | "inset";
+}
+export interface KeyPointListWidgetProps extends BaseWidgetProps {
+	items: Array<
+		| {
+				id?: string;
+				index?: RenderableValue;
+				title?: RenderableValue;
+				text: RenderableValue;
+				meta?: RenderableValue;
+		  }
+		| RenderableValue
+	>;
+	markerTone?: "accent" | "muted";
+}
+
+export interface SidebarNavItemWidgetSpec {
+	id: string;
+	label: RenderableValue;
+	icon?: RenderableValue;
+	badge?: RenderableValue;
+	disabled?: boolean;
+}
+export interface SidebarNavSectionWidgetSpec {
+	id: string;
+	label: RenderableValue;
+	items: SidebarNavItemWidgetSpec[];
+}
+export interface SidebarNavWidgetProps extends BaseWidgetProps {
+	sections: SidebarNavSectionWidgetSpec[];
+	activeItemId?: string;
+	onItemSelectAction?: ActionSpec;
+	ariaLabel?: string;
+}
+
+export interface CourseStepNavWidgetProps extends BaseWidgetProps {
+	items: ContextCourseAgendaItem[];
+	activeItemId?: string;
+	onItemSelectAction?: ActionSpec;
+}
+export interface MarkdownArticleWidgetProps extends BaseWidgetProps {
+	source: string;
+}
+export interface RichArticleWidgetProps extends BaseWidgetProps {
+	blocks: ArticleBlock[];
+	styleSet?: ContextStyleSet;
+}
+export interface DocumentListItemWidgetSpec {
+	id: string;
+	title: RenderableValue;
+	format?: RenderableValue;
+	size?: RenderableValue;
+	description?: RenderableValue;
+	icon?: RenderableValue;
+	disabled?: boolean;
+}
+export interface DocumentListPanelWidgetProps extends BaseWidgetProps {
+	title: RenderableValue;
+	description?: RenderableValue;
+	items: DocumentListItemWidgetSpec[];
+	selectedItemId?: string;
+	onItemSelectAction?: ActionSpec;
+	onDownloadAllAction?: ActionSpec;
+	downloadAllLabel?: RenderableValue;
+	emptyMessage?: RenderableValue;
+	showItemDescriptions?: boolean;
+}
+export interface DocumentPreviewToolbarWidgetProps extends BaseWidgetProps {
+	file: RenderableValue;
+	format?: RenderableValue;
+	size?: RenderableValue;
+	onDownloadAction?: ActionSpec;
+	downloadLabel?: RenderableValue;
+	onPrintAction?: ActionSpec;
+	printLabel?: RenderableValue;
+	rightSlot?: WidgetNode;
+}
+export interface CourseLessonPanelWidgetProps extends BaseWidgetProps {
+	course: ContextCourse;
+	activeAgendaItemId?: string;
+	onAgendaItemSelectAction?: ActionSpec;
+	onPrimaryCtaAction?: ActionSpec;
+	onSecondaryCtaAction?: ActionSpec;
+}
+export interface CourseSlidePanelWidgetProps extends BaseWidgetProps {
+	slide: ContextSlide;
+	snapshot: ContextWindowSnapshot;
+	styleSet?: ContextStyleSet;
+	index?: number;
+	total?: number;
+	visualSide?: "left" | "right";
+	mode?: "default" | "present";
+	onPreviousAction?: ActionSpec;
+	onNextAction?: ActionSpec;
+	onPresentAction?: ActionSpec;
+	onFullscreenAction?: ActionSpec;
+}
+export interface CourseStudioShellWidgetProps extends BaseWidgetProps {
+	sections: SidebarNavSectionWidgetSpec[];
+	activeItemId?: string;
+	onNavigateAction?: ActionSpec;
+	title?: RenderableValue;
+	subtitle?: RenderableValue;
+	sidebarFooter?: WidgetNode;
+	contentPadding?: "default" | "none";
+}
+export interface HandoutDocumentShellWidgetProps extends BaseWidgetProps {
+	intro: RenderableValue;
+	documents: ContextHandoutDocument[];
+	selectedDocumentId?: string;
+	onDocumentSelectAction?: ActionSpec;
+	onDownloadAction?: ActionSpec;
+	onDownloadAllAction?: ActionSpec;
+	onPrintAction?: ActionSpec;
+	styleSet?: ContextStyleSet;
+	title?: RenderableValue;
+	emptyMessage?: RenderableValue;
+}
+export interface ContextUploadDropAreaWidgetProps extends BaseWidgetProps {
+	title?: RenderableValue;
+	description?: RenderableValue;
+	accept?: string;
+	disabled?: boolean;
+	active?: boolean;
+	onFilesSelectedAction?: ActionSpec;
+}
+
+export interface CaptionWidgetProps extends BaseWidgetProps {
+	tone?: CaptionTone;
+	transform?: CaptionTransform;
+	truncate?: boolean;
+}
+
+export interface DashboardGridWidgetProps extends BaseWidgetProps {
+	recipe?: DashboardGridRecipe;
+}
+
+export interface DataTableWidgetProps extends BaseWidgetProps {
+	columns: DataTableColumnSpec[];
+	rows: JsonObject[];
+	getRowKey: RowKeySpec;
+	selectedKey?: string | null;
+	onRowSelect?: ActionSpec;
+	emptyMessage?: RenderableValue;
+}
+
+export interface FormPanelWidgetProps extends BaseWidgetProps {
+	title: RenderableValue;
+	subtitle?: RenderableValue;
+	actions?: RenderableValue;
+	formAction?: string;
+	method?: "get" | "post";
+	status?: "idle" | "saving" | "success" | "error";
+	statusMessage?: RenderableValue;
+	submitLabel?: RenderableValue;
+	resetLabel?: RenderableValue;
+	footer?: RenderableValue;
+	disabled?: boolean;
+}
+
+export interface FormRowWidgetProps extends BaseWidgetProps {
+	label: RenderableValue;
+	control: WidgetNode;
+	description?: RenderableValue;
+	hint?: RenderableValue;
+	error?: RenderableValue;
+	success?: RenderableValue;
+	counter?: RenderableValue;
+	required?: boolean;
+	orientation?: "inline" | "stacked";
+}
+
+export interface InlineWidgetProps extends BaseWidgetProps {
+	gap?: InlineGap;
+	justify?: InlineJustify;
+	wrap?: boolean;
+}
+
+export interface MetadataGridWidgetProps extends BaseWidgetProps {
+	items: MetadataGridItemSpec[];
+	density?: "normal" | "compact";
+}
+
+export interface MetadataGridItemSpec {
+	key: RenderableValue;
+	value: RenderableValue;
+	copyValue?: string;
+}
+
+export interface PanelWidgetProps extends BaseWidgetProps {
+	title?: RenderableValue;
+	actions?: RenderableValue;
+	density?: "normal" | "condensed";
+	fill?: boolean;
+	titleTone?: "default" | "accent";
+}
+
+export interface ScrollRegionWidgetProps extends BaseWidgetProps {
+	axis?: "y" | "x" | "both";
+}
+
+export interface SectionBlockWidgetProps extends BaseWidgetProps {
+	as?: "section" | "article" | "div";
+	label?: RenderableValue;
+	caption?: RenderableValue;
+	actions?: RenderableValue;
+	level?: 1 | 2 | 3;
+	rule?: boolean;
+	anchorId?: string;
+	density?: "normal" | "spacious" | "flush";
+	divider?: "none" | "top" | "bottom" | "both";
+}
+
+export interface FieldGridWidgetProps extends BaseWidgetProps {
+	columns?: number;
+	gap?: "sm" | "md";
+}
+
+export interface SplitPaneWidgetProps extends BaseWidgetProps {
+	left: WidgetNode;
+	right: WidgetNode;
+	ratio?: "balanced" | "leftNarrow" | "rightNarrow" | "course" | "sidebar";
+	divider?: boolean;
+	gutter?: "none" | "md" | "lg";
+}
+
+export interface SidebarShellWidgetProps extends BaseWidgetProps {
+	sidebar?: WidgetNode;
+	sidebarWidth?: number;
+	contentPadding?: "none" | "md" | "lg";
+	header?: WidgetNode;
+	footer?: WidgetNode;
+}
+
+export interface SlideShellWidgetProps extends BaseWidgetProps {
+	as?: "article" | "section" | "div";
+	eyebrow?: RenderableValue;
+	counter?: RenderableValue;
+	title: RenderableValue;
+	subtitle?: RenderableValue;
+	primary: WidgetNode;
+	secondary?: WidgetNode;
+	primarySide?: "left" | "right";
+	ratio?: "balanced" | "primaryWide" | "secondaryWide";
+	divider?: boolean;
+	footer?: WidgetNode;
+}
+
+export interface SelectInputWidgetProps extends BaseWidgetProps {
+	name?: string;
+	value?: string | number;
+	defaultValue?: string | number;
+	disabled?: boolean;
+	required?: boolean;
+	ariaInvalid?: boolean;
+	options?: SelectOptionSpec[];
+}
+
+export interface SelectOptionSpec {
+	value: string | number;
+	label: RenderableValue;
+	selected?: boolean;
+	disabled?: boolean;
+}
+
+export interface StackWidgetProps extends BaseWidgetProps {
+	gap?: StackGap;
+	align?: StackAlign;
+}
+
+export interface StatusTextWidgetProps extends BaseWidgetProps {
+	status: RagStatus | string;
+	icon?: boolean;
+}
+
+export interface TabListWidgetProps extends BaseWidgetProps {
+	items: TabListItemSpec[];
+	activeId: string;
+	ariaLabel?: string;
+	onChange?: ActionSpec;
+}
+
+export interface TabListItemSpec {
+	id: string;
+	label: RenderableValue;
+}
+
+export interface TextInputWidgetProps extends BaseWidgetProps {
+	name?: string;
+	value?: string | number;
+	defaultValue?: string | number;
+	placeholder?: string;
+	type?: string;
+	disabled?: boolean;
+	readOnly?: boolean;
+	required?: boolean;
+	min?: number;
+	max?: number;
+	minLength?: number;
+	maxLength?: number;
+	autoComplete?: string;
+	ariaInvalid?: boolean;
+}
+
+export interface TextareaInputWidgetProps extends BaseWidgetProps {
+	name?: string;
+	value?: string | number;
+	defaultValue?: string | number;
+	placeholder?: string;
+	disabled?: boolean;
+	readOnly?: boolean;
+	required?: boolean;
+	minLength?: number;
+	maxLength?: number;
+	rows?: number;
+	resize?: "vertical" | "none";
+	ariaInvalid?: boolean;
+}
+
+export type WidgetProps =
+	| AppShellWidgetProps
+	| AppNavWidgetProps
+	| ButtonWidgetProps
+	| TextWidgetProps
+	| CodeTextWidgetProps
+	| DividerWidgetProps
+	| ContextStyleSwatchWidgetProps
+	| ContextStudioNavIconWidgetProps
+	| AnnotationBadgeWidgetProps
+	| TranscriptRoleBadgeWidgetProps
+	| ContextLegendWidgetProps
+	| ContextBudgetBarWidgetProps
+	| ContextStripDiagramWidgetProps
+	| ContextGroupedStripDiagramWidgetProps
+	| ContextStackDiagramWidgetProps
+	| ContextTreemapWidgetProps
+	| ContextDiagramPanelWidgetProps
+	| ContextTurnPagerPanelWidgetProps
+	| TranscriptSessionHeaderWidgetProps
+	| TranscriptMessageCardWidgetProps
+	| AnnotationNoteCardWidgetProps
+	| AnnotationRailPanelWidgetProps
+	| TranscriptReaderPanelWidgetProps
+	| TranscriptWorkspacePanelWidgetProps
+	| AnchoredCommentCardWidgetProps
+	| AnchoredCommentRailWidgetProps
+	| KeyValueStripWidgetProps
+	| ShareLinkWidgetProps
+	| CheckListWidgetProps
+	| StepListWidgetProps
+	| PersonSummaryWidgetProps
+	| FigureBlockWidgetProps
+	| KeyPointListWidgetProps
+	| SidebarNavWidgetProps
+	| CourseStepNavWidgetProps
+	| MarkdownArticleWidgetProps
+	| RichArticleWidgetProps
+	| DocumentListPanelWidgetProps
+	| DocumentPreviewToolbarWidgetProps
+	| CourseLessonPanelWidgetProps
+	| CourseSlidePanelWidgetProps
+	| CourseStudioShellWidgetProps
+	| HandoutDocumentShellWidgetProps
+	| ContextUploadDropAreaWidgetProps
+	| CaptionWidgetProps
+	| DashboardGridWidgetProps
+	| DataTableWidgetProps
+	| MatrixGridWidgetProps
+	| SegmentedBarWidgetProps
+	| MonthGridWidgetProps
+	| TimeGridWidgetProps
+	| FieldRendererWidgetProps
+	| RecordFieldListWidgetProps
+	| BoardEngineWidgetProps
+	| ActivityFeedWidgetProps
+	| StatTileWidgetProps
+	| FormPanelWidgetProps
+	| FormRowWidgetProps
+	| InlineWidgetProps
+	| MetadataGridWidgetProps
+	| PanelWidgetProps
+	| ScrollRegionWidgetProps
+	| SectionBlockWidgetProps
+	| FieldGridWidgetProps
+	| SplitPaneWidgetProps
+	| SidebarShellWidgetProps
+	| SlideShellWidgetProps
+	| SelectInputWidgetProps
+	| StackWidgetProps
+	| StatusTextWidgetProps
+	| TabListWidgetProps
+	| TextInputWidgetProps
+	| TextareaInputWidgetProps
+	| MediaThumbWidgetProps
+	| TagWidgetProps
+	| ContentStatusBadgeWidgetProps
+	| MeterBarWidgetProps
+	| TileGridWidgetProps
+	| AssetTileWidgetProps
+	| BreadcrumbsWidgetProps
+	| PaginationWidgetProps
+	| SearchFieldWidgetProps
+	| EmptyStateWidgetProps
+	| MarkdownEditorWidgetProps
+	| MediaLibraryPanelWidgetProps
+	| ArticleListPanelWidgetProps
+	| CmsShellWidgetProps
+	| BaseWidgetProps;
+
+// ─── cms.dsl widget props ────────────────────────────────────────────
+
+export interface MediaThumbWidgetProps extends BaseWidgetProps {
+	src?: string;
+	alt?: string;
+	aspect?: MediaThumbAspect;
+	fit?: MediaThumbFit;
+	frame?: MediaThumbFrame;
+	selected?: boolean;
+	fallbackGlyph?: RenderableValue;
+	fallbackLabel?: RenderableValue;
+}
+
+export interface TagWidgetProps extends BaseWidgetProps {
+	label: string;
+	selected?: boolean;
+	disabled?: boolean;
+	onRemoveAction?: ActionSpec;
+}
+
+export interface ContentStatusBadgeWidgetProps extends BaseWidgetProps {
+	status: CmsContentStatus;
+	icon?: boolean;
+}
+
+export interface MeterBarWidgetProps extends BaseWidgetProps {
+	value: number;
+	tone?: MeterBarTone;
+	label?: RenderableValue;
+}
+
+export interface TileGridWidgetProps extends BaseWidgetProps {
+	minTileWidth?: number;
+	gap?: "sm" | "md";
+}
+
+export interface AssetTileWidgetProps extends BaseWidgetProps {
+	asset: CmsAsset;
+	selected?: boolean;
+	onSelectAction?: ActionSpec;
+	onOpenAction?: ActionSpec;
+	footer?: WidgetNode;
+}
+
+export interface BreadcrumbItemWidgetSpec {
+	id: string;
+	label: RenderableValue;
+}
+
+export interface BreadcrumbsWidgetProps extends BaseWidgetProps {
+	items: BreadcrumbItemWidgetSpec[];
+	onNavigateAction?: ActionSpec;
+	ariaLabel?: string;
+}
+
+export interface PaginationWidgetProps extends BaseWidgetProps {
+	page: number;
+	pageCount: number;
+	onPageChangeAction?: ActionSpec;
+	pageSize?: number;
+	totalItems?: number;
+}
+
+export interface SearchFieldWidgetProps extends BaseWidgetProps {
+	name?: string;
+	defaultValue?: string;
+	placeholder?: string;
+	disabled?: boolean;
+	onSubmitAction?: ActionSpec;
+}
+
+export interface EmptyStateWidgetProps extends BaseWidgetProps {
+	glyph?: RenderableValue;
+	title: RenderableValue;
+	hint?: RenderableValue;
+	actionSlot?: WidgetNode;
+	framed?: boolean;
+}
+
+export interface MarkdownEditorWidgetProps extends BaseWidgetProps {
+	name?: string;
+	defaultValue?: string;
+	minRows?: number;
+	maxLength?: number;
+	disabled?: boolean;
+	preview?: "live" | "hidden";
+	textareaAriaLabel?: string;
+}
+
+export interface MediaLibraryPanelWidgetProps extends BaseWidgetProps {
+	assets: CmsAsset[];
+	selectedAssetIds?: string[];
+	selectionMode?: "none" | "single" | "multi";
+	onAssetSelectAction?: ActionSpec;
+	onAssetOpenAction?: ActionSpec;
+	query?: string;
+	onQuerySubmitAction?: ActionSpec;
+	kindFilter?: "all" | "image" | "file";
+	onKindFilterChangeAction?: ActionSpec;
+	page?: number;
+	pageCount?: number;
+	onPageChangeAction?: ActionSpec;
+	onFilesSelectedAction?: ActionSpec;
+	uploads?: UploadQueueItem[];
+	showStatusBadges?: boolean;
+	emptyMessage?: RenderableValue;
+	title?: RenderableValue;
+	minTileWidth?: number;
+}
+
+export interface ArticleListPanelWidgetProps extends BaseWidgetProps {
+	articles: CmsArticleSummary[];
+	selectedArticleId?: string;
+	onArticleSelectAction?: ActionSpec;
+	onCreateAction?: ActionSpec;
+	onRowActionAction?: ActionSpec;
+	statusFilter?: CmsContentStatus | "all";
+	onStatusFilterChangeAction?: ActionSpec;
+	query?: string;
+	onQuerySubmitAction?: ActionSpec;
+	page?: number;
+	pageCount?: number;
+	onPageChangeAction?: ActionSpec;
+	emptyMessage?: RenderableValue;
+	title?: RenderableValue;
+	maxVisibleTags?: number;
+}
+
+export interface CmsShellWidgetProps extends BaseWidgetProps {
+	sections?: SidebarNavSectionWidgetSpec[];
+	activeItemId?: string;
+	onNavigateAction?: ActionSpec;
+	title?: RenderableValue;
+	subtitle?: RenderableValue;
+	headerSlot?: WidgetNode;
+	sidebarFooter?: WidgetNode;
+	contentPadding?: "default" | "none";
+}

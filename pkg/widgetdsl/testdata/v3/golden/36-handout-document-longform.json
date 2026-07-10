@@ -1,0 +1,42 @@
+{
+	"id": "longform-handout",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"documents": [
+								{
+									"body": "# Guide\n\nThis is a longer handout body with **markdown** and checklists.\n\n- Read\n- Practice\n- Review",
+									"format": "Markdown",
+									"id": "guide",
+									"title": "Guide"
+								}
+							],
+							"intro": "Handout",
+							"selectedDocumentId": "guide"
+						},
+						"type": "HandoutDocumentShell"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Handout",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Longform handout"
+}

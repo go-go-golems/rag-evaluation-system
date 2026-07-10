@@ -1,0 +1,81 @@
+{
+	"id": "context-budget-diagram",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"initialView": "budget",
+							"selectedPartId": "retrieval",
+							"snapshot": {
+								"id": "ctx",
+								"limit": 16000,
+								"parts": [
+									{
+										"id": "system",
+										"label": "System",
+										"styleKey": "system",
+										"tokens": 1200
+									},
+									{
+										"id": "retrieval",
+										"label": "Retrieved docs",
+										"styleKey": "retrieval",
+										"tokens": 8000
+									}
+								],
+								"title": "Context budget"
+							},
+							"styleSet": {
+								"legend": [
+									{
+										"id": "system",
+										"label": "System"
+									},
+									{
+										"id": "retrieval",
+										"label": "Retrieval"
+									}
+								],
+								"styles": {
+									"retrieval": {
+										"fill": "color-mix(in srgb, #4F74A8 18%, #F2EEF2)",
+										"labelColor": "#141214",
+										"line": "color-mix(in srgb, #4F74A8 60%, #F2EEF2)",
+										"pattern": "diagonal",
+										"stroke": "#141214"
+									},
+									"system": {
+										"fill": "color-mix(in srgb, #9C527E 18%, #F2EEF2)",
+										"labelColor": "#141214",
+										"line": "color-mix(in srgb, #9C527E 60%, #F2EEF2)",
+										"pattern": "diagonal",
+										"stroke": "#141214"
+									}
+								}
+							}
+						},
+						"type": "ContextDiagramPanel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Diagram",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Context budget diagram"
+}

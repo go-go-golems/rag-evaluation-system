@@ -42,7 +42,16 @@ import { contextStackDiagramWidget } from "../components/molecules/ContextStackD
 import { contextStripDiagramWidget } from "../components/molecules/ContextStripDiagram/ContextStripDiagram.widget";
 import { contextTreemapWidget } from "../components/molecules/ContextTreemap/ContextTreemap.widget";
 import { courseStepNavWidget } from "../components/molecules/CourseStepNav/CourseStepNav.widget";
+import { activityFeedWidget } from "../components/molecules/ActivityFeed/ActivityFeed.widget";
+import { boardEngineWidget } from "../components/molecules/BoardEngine/BoardEngine.widget";
 import { dataTableWidget } from "../components/molecules/DataTable/DataTable.widget";
+import { fieldRendererWidget } from "../components/molecules/FieldRenderer/FieldRenderer.widget";
+import { matrixGridWidget } from "../components/molecules/MatrixGrid/MatrixGrid.widget";
+import { recordFieldListWidget } from "../components/molecules/RecordFieldList/RecordFieldList.widget";
+import { monthGridWidget } from "../components/molecules/MonthGrid/MonthGrid.widget";
+import { segmentedBarWidget } from "../components/molecules/SegmentedBar/SegmentedBar.widget";
+import { statTileWidget } from "../components/molecules/StatTile/StatTile.widget";
+import { timeGridWidget } from "../components/molecules/TimeGrid/TimeGrid.widget";
 import { documentListPanelWidget } from "../components/molecules/DocumentListPanel/DocumentListPanel.widget";
 import { documentPreviewToolbarWidget } from "../components/molecules/DocumentPreviewToolbar/DocumentPreviewToolbar.widget";
 import { emptyStateWidget } from "../components/molecules/EmptyState/EmptyState.widget";
@@ -55,6 +64,7 @@ import { metadataGridWidget } from "../components/molecules/MetadataGrid/Metadat
 import { paginationWidget } from "../components/molecules/Pagination/Pagination.widget";
 import { personSummaryWidget } from "../components/molecules/PersonSummary/PersonSummary.widget";
 import { searchFieldWidget } from "../components/molecules/SearchField/SearchField.widget";
+import { shareLinkWidget } from "../components/molecules/ShareLink/ShareLink.widget";
 import { sidebarNavWidget } from "../components/molecules/SidebarNav/SidebarNav.widget";
 import { stepListWidget } from "../components/molecules/StepList/StepList.widget";
 import { transcriptMessageCardWidget } from "../components/molecules/TranscriptMessageCard/TranscriptMessageCard.widget";
@@ -99,6 +109,8 @@ export const uiWidgetRegistry = createWidgetRegistry([
 	fieldGridWidget,
 	sectionBlockWidget,
 	selectInputWidget,
+	segmentedBarWidget,
+	shareLinkWidget,
 	sidebarNavWidget,
 	sidebarShellWidget,
 	splitPaneWidget,
@@ -111,7 +123,17 @@ export const uiWidgetRegistry = createWidgetRegistry([
 	textWidget,
 ]);
 
-export const dataWidgetRegistry = createWidgetRegistry([dataTableWidget]);
+export const dataWidgetRegistry = createWidgetRegistry([
+	activityFeedWidget,
+	boardEngineWidget,
+	dataTableWidget,
+	fieldRendererWidget,
+	matrixGridWidget,
+	recordFieldListWidget,
+	statTileWidget,
+]);
+
+export const timeWidgetRegistry = createWidgetRegistry([monthGridWidget, timeGridWidget]);
 
 export const contextWindowWidgetRegistry = createWidgetRegistry([
 	anchoredCommentCardWidget,
@@ -170,6 +192,7 @@ export const cmsWidgetRegistry = createWidgetRegistry([
 export const defaultWidgetRegistry = mergeWidgetRegistries(
 	uiWidgetRegistry,
 	dataWidgetRegistry,
+	timeWidgetRegistry,
 	contextWindowWidgetRegistry,
 	courseWidgetRegistry,
 	cmsWidgetRegistry,

@@ -1,0 +1,69 @@
+{
+	"id": "readonly-schedule",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"ariaLabel": "Readonly RSVP",
+							"cell": {
+								"kind": "cycle",
+								"states": ["available", "maybe", "unavailable"]
+							},
+							"columns": [
+								{
+									"header": "Friday",
+									"id": "slot",
+									"meta": {
+										"endISO": "2026-07-10T13:00:00Z",
+										"id": "slot",
+										"label": "Friday",
+										"startISO": "2026-07-10T12:00:00Z"
+									}
+								}
+							],
+							"getRowKey": {
+								"field": "id"
+							},
+							"rowHeader": {
+								"field": "name",
+								"kind": "field"
+							},
+							"rows": [
+								{
+									"availability": {
+										"slot": "available"
+									},
+									"id": "team",
+									"name": "Team"
+								}
+							],
+							"stickyHeader": true,
+							"valueAt": {
+								"mapField": "availability"
+							}
+						},
+						"type": "MatrixGrid"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Poll",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Readonly schedule"
+}

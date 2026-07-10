@@ -25,17 +25,19 @@ This tutorial explains how to use the `rag-widget-site` xgoja provider to write 
 
 ## Modules
 
-The provider exposes clean-break domain modules:
+The provider exposes the new parallel `widget.dsl` v3 module and the legacy split modules. Prefer `widget.dsl` for new pages; keep the split modules selected for existing scripts until those scripts are ported.
 
-| Module | Owns |
-| --- | --- |
-| `ui.dsl` | page wrapper, text/element/component helpers, generic layout, primitive, foundation, and UI recipes |
-| `data.dsl` | legacy/current `DataTable`, `cell.*` helpers, and data recipes |
-| `data.v2.dsl` | experimental hard-cutover typed/fluent data builders for new table/editor examples |
-| `context_window.dsl` | context-window diagrams, transcript, annotation, comment, and upload helpers |
-| `course.dsl` | course, slide, handout, course-studio helpers, and `contextStudioNavIcon` |
+| Module | Owns | Status |
+| --- | --- | --- |
+| `widget.dsl` | v3 namespaces: `raw`, `act`, `bind`, `ui`, `data`, `cms`, `course`, `context`, `schedule`, `time`, and `style` | Preferred for new work |
+| `ui.dsl` | page wrapper, text/element/component helpers, generic layout, primitive, foundation, and UI recipes | Legacy split module |
+| `data.dsl` | legacy/current `DataTable`, `cell.*` helpers, and data recipes | Legacy split module |
+| `data.v2.dsl` | typed/fluent data builders used by pre-v3 table/editor examples | Legacy split module |
+| `context_window.dsl` | context-window diagrams, transcript, annotation, comment, and upload helpers | Legacy split module |
+| `course.dsl` | course, slide, handout, course-studio helpers, and `contextStudioNavIcon` | Legacy split module |
+| `cms.dsl` | media, asset, and article-management helpers | Legacy split module |
 
-Select the modules you use in `xgoja.yaml`:
+Select the modules you use in `xgoja.yaml`. A new v3 host usually selects only `widget.dsl` from this provider:
 
 ```yaml
 packages:
@@ -44,25 +46,29 @@ packages:
 
 modules:
   - package: rag-widget-site
-    name: ui.dsl
-    as: ui.dsl
-  - package: rag-widget-site
-    name: data.dsl
-    as: data.dsl
-  - package: rag-widget-site
-    name: data.v2.dsl
-    as: data.v2.dsl
-  - package: rag-widget-site
-    name: context_window.dsl
-    as: context_window.dsl
-  - package: rag-widget-site
-    name: course.dsl
-    as: course.dsl
+    name: widget.dsl
+    as: widget.dsl
 ```
 
-For local development, add a `replace` entry that points to the RAG repository root.
+A migration host may select `widget.dsl` alongside `ui.dsl`, `data.dsl`, `data.v2.dsl`, `context_window.dsl`, `course.dsl`, and `cms.dsl` while pages are ported. Remove legacy entries only after the scripts no longer import them. For local development, add a `replace` entry that points to the RAG repository root.
 
-## Smallest page
+## Smallest `widget.dsl` v3 page
+
+```js
+const widget = require("widget.dsl")
+
+const page = widget.page("Demo", (p) =>
+  p.id("demo").section("Demo", (s) =>
+    s.caption("Rendered by React from Widget IR").view(
+      widget.ui.button("Refresh", widget.act.event("refresh"), { variant: "primary" })
+    )
+  )
+)
+```
+
+`widget.page(...)` returns a page object with `schemaVersion`, `id`, `title`, and `root`. Strings and numbers used as children are normalized into text nodes.
+
+## Legacy split-module smallest page
 
 ```js
 const ui = require("ui.dsl")
@@ -76,7 +82,7 @@ const page = ui.page({
 })
 ```
 
-`ui.page(...)` returns a page object with `schemaVersion`, `id`, `title`, and `root`. Strings and numbers used as children are normalized into text nodes.
+`ui.page(...)` is still supported for existing split-module pages. For new pages, use `widget.page(...)` from `widget.dsl`.
 
 ## Data table example
 
@@ -207,17 +213,16 @@ function demo() {
 ## What to remember
 
 - DSL constructors return JSON-compatible Widget IR; they do not return HTML strings or React elements.
-- `ui.dsl` owns `page(...)`.
-- `data.dsl` owns `cell.*` helpers.
-- `context_window.dsl` owns transcript, annotation, anchored-comment, context diagram, and upload helpers.
-- `course.dsl` owns course, slide, handout, and course-studio helpers.
-- Import only the domain modules you use; there is no compatibility bucket module.
+- `widget.dsl` is the preferred module for new work and exposes all v3 namespaces from one import.
+- The split modules still work for existing pages: `ui.dsl` owns old page helpers, `data.dsl` owns old `cell.*` helpers, `context_window.dsl` owns old context helpers, `course.dsl` owns old course helpers, and `cms.dsl` owns old CMS helpers.
+- Import only the modules you use; there is no compatibility bucket module.
 
 ## Troubleshooting
 
 | Problem | Cause | Solution |
 | --- | --- | --- |
-| `Cannot find module "ui.dsl"` | The module was not selected in `xgoja.yaml`. | Add a `modules:` entry for package `rag-widget-site`, name `ui.dsl`, alias `ui.dsl`. |
+| `Cannot find module "widget.dsl"` | The v3 module was not selected in `xgoja.yaml`. | Add a `modules:` entry for package `rag-widget-site`, name `widget.dsl`, alias `widget.dsl`. |
+| `Cannot find module "ui.dsl"` | A legacy script imports the split UI module but the module was not selected. | Keep the legacy `ui.dsl` entry while migrating, or port the script to `widget.dsl`. |
 | `xgoja build` tries to fetch the local provider from GitHub. | The provider package is local but the build spec has no `replace`. | Add `replace: ../../..` or another path to the RAG module root. |
 | The browser route `/pages/demo` returns `404`. | The React app is served as static files without SPA fallback. | Use `app.spaFromAssetsModule("/", assets, "/app/public", { excludePrefixes: ["/api"] })`. |
 | API routes return `index.html`. | The root SPA static handler is catching `/api/...`. | Add `/api` to `excludePrefixes`. |

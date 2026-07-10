@@ -13,6 +13,47 @@ import (
 	"github.com/go-go-golems/go-go-goja/pkg/tsgen/spec"
 )
 
+func TestWidgetV3TypeScriptFixtureCompilesExamples(t *testing.T) {
+	repoRoot := findRepoRoot(t)
+	tscPath := os.Getenv("WIDGETDSL_TSC")
+	if tscPath == "" {
+		tscPath = filepath.Join(repoRoot, "packages", "rag-evaluation-site", "node_modules", ".bin", "tsc")
+	}
+	if _, err := os.Stat(tscPath); err != nil {
+		t.Skipf("TypeScript compiler not installed at %s; run pnpm install first", tscPath)
+	}
+
+	dts, err := render.Bundle(&spec.Bundle{Modules: []*spec.Module{TypeScriptModule(WidgetV3ModuleName)}})
+	if err != nil {
+		t.Fatalf("render widget.dsl DTS: %v", err)
+	}
+
+	tmp := t.TempDir()
+	dtsPath := filepath.Join(tmp, "widgetdsl.d.ts")
+	fixturePath := filepath.Join(tmp, "widget-v3-fixture.ts")
+	if err := os.WriteFile(dtsPath, []byte(dts), 0o644); err != nil {
+		t.Fatalf("write DTS fixture: %v", err)
+	}
+	if err := os.WriteFile(fixturePath, []byte(widgetV3TypeScriptFixture), 0o644); err != nil {
+		t.Fatalf("write TS fixture: %v", err)
+	}
+
+	cmd := exec.Command(tscPath,
+		"--strict",
+		"--noEmit",
+		"--target", "ES2022",
+		"--module", "NodeNext",
+		"--moduleResolution", "NodeNext",
+		"--skipLibCheck",
+		fixturePath,
+	)
+	cmd.Dir = tmp
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("widget.dsl typescript fixture failed: %v\n%s", err, output)
+	}
+}
+
 func TestDataV2TypeScriptFixtureCompilesPositiveAndExpectedNegativeExamples(t *testing.T) {
 	repoRoot := findRepoRoot(t)
 	tscPath := os.Getenv("WIDGETDSL_TSC")
@@ -70,6 +111,51 @@ func findRepoRoot(t *testing.T) string {
 		}
 	}
 }
+
+const widgetV3TypeScriptFixture = `/// <reference path="./widgetdsl.d.ts" />
+import * as widget from "widget.dsl";
+
+const page = widget.page("Dashboard", p => p
+  .section("Overview", s => s
+    .view(widget.ui.card({ title: "Hello" }, "World"))));
+page.toPage();
+
+const collection = widget.data.collection("rows", [{ id: "a", title: "Alpha" }], c => c
+  .schema(widget.data.fields("rows", f => f.key("id").primary("title")).build())
+  .table(t => t.rowSelect(widget.act.event("row.select"))));
+collection.toNode();
+
+widget.cms.mediaLibrary([{ id: "asset-1", title: "Hero" }], m => m
+  .asset((asset, h) => h.card({ title: asset.title }, asset.id))
+  .onSelect(widget.cms.intent.selectAsset(widget.bind.context("asset.id"))));
+
+widget.course.shell({ title: "Course", sections: [{ id: "intro", items: [{ id: "start", label: "Start" }] }] }, c => c
+  .active("start")
+  .onNavigate(widget.course.intent.navigate(widget.bind.context("item.id"))));
+
+widget.course.handouts({ docs: [{ id: "h1", title: "Handout" }] }, h => h
+  .selected("h1")
+  .onDownload(widget.course.intent.downloadHandout(widget.bind.context("doc.id"))));
+
+widget.context.workspace({
+  title: "Session",
+  messages: [{ id: "m1", role: "user", content: "Hello" }],
+  annotations: [{ id: "a1", messageId: "m1", note: "Important" }],
+}, w => w
+  .message((message, h) => h.caption(message.content))
+  .annotation((annotation, h) => h.caption(annotation.note))
+  .onAnnotationSelect(widget.context.intent.selectAnnotation(widget.bind.context("annotation.id"))));
+
+const poll = {
+  title: "Availability",
+  options: [{ id: "mon-9", label: "Mon 9", startISO: "2026-07-08T09:00:00Z", endISO: "2026-07-08T10:00:00Z" }],
+  responses: [{ id: "ana", name: "Ana", availability: { "mon-9": "available" } }],
+};
+widget.schedule.availabilityPoll(poll, p => p.readOnly());
+widget.time.week([{ id: "ev1", title: "Launch", startISO: "2026-07-08T09:00:00Z", endISO: "2026-07-08T10:00:00Z" }], w => w
+  .range(widget.time.range.week("2026-07-08"))
+  .onSelect(widget.time.intent.selectEvent(widget.bind.context("block.id"))));
+`
 
 const dataV2TypeScriptFixture = `/// <reference path="./widgetdsl.d.ts" />
 import * as data from "data.v2.dsl";
