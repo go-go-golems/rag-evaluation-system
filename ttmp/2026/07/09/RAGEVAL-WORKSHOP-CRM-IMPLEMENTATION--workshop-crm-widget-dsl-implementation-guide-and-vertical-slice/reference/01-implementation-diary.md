@@ -19,14 +19,24 @@ RelatedFiles:
       Note: |-
         HTTP routes and xgoja host entrypoint (commit 0d81a70b594cfea9a1884d6cfc363c27c2fdb9d2)
         CRM action HTTP route
+    - Path: repo://go.mod
+      Note: Go 1.26.5 vulnerability remediation
+    - Path: repo://packages/rag-evaluation-site/src/components/molecules/MatrixGrid/MatrixGrid.widget.tsx
+      Note: Matrix action context contract
+    - Path: repo://packages/rag-evaluation-site/src/widgets/actions.ts
+      Note: Resolve DSL bindings and event details (commit 8984e12e44ebbae7373c595af3dcc2927ff85d45)
     - Path: repo://packages/rag-evaluation-site/src/widgets/presets/crm.ts
       Note: Current CRM behavior investigated
+    - Path: repo://pkg/widgetdsl/migrationcheck/logcopter.go
+      Note: Generated file required by CI
     - Path: repo://pkg/widgetdsl/testdata/v3/examples/41-crm-workshop-pipeline.js
       Note: CRM fluent API golden fixture
     - Path: repo://pkg/widgetdsl/testdata/v3/golden/41-crm-workshop-pipeline.json
       Note: Expected CRM Widget IR
     - Path: repo://pkg/widgetdsl/v3.go
-      Note: Current builder patterns investigated
+      Note: |-
+        Current builder patterns investigated
+        Event intent detail output
     - Path: repo://pkg/widgetdsl/v3_crm.go
       Note: |-
         CRM namespace implementation (commit 196cb20800c7d3893daffe6aca37fa9682e0a251)
@@ -38,6 +48,7 @@ LastUpdated: 0001-01-01T00:00:00Z
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -311,3 +322,73 @@ The repaired flow now uses the renderer’s real interaction context (`cardId` a
 - Card select context: `{ cardId, componentType: "BoardEngine" }`.
 - Move context: `{ cardId, from, to, beforeId, componentType: "BoardEngine" }`.
 - Durable endpoint: `POST /api/widget/actions/crm.deal.move` with resolved `{ dealId, toStage }` payload.
+
+## Step 5: Address PR action-contract review and CI failures
+
+I reviewed all four actionable automated review comments on PR #22 and traced each through the Widget DSL → IR → React adapter path. The fixes make bindings resolvable at dispatch time, put event-intent data in the `detail` channel the browser actually emits, expose row/column objects to MatrixGrid actions, and ensure CRM task text is always expressed as Widget IR nodes.
+
+The CI review also found two unrelated build gates: the Go logger generator expected a missing generated file, and `govulncheck` reported standard-library vulnerabilities in Go 1.26.4. I committed the generated logger source and advanced the module Go version to 1.26.5, the fixed release used by `actions/setup-go` via `go-version-file`.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Go over the code review comments and address them: https://github.com/go-go-golems/rag-evaluation-system/pull/22
+
+Also check out what's going on with the cicd jobs."
+
+**Assistant interpretation:** Review PR feedback and CI failures, implement the valid fixes, validate them, and report the root causes.
+
+**Inferred user intent:** Turn the PR from a reviewed-but-failing branch into a correct, green candidate without ignoring CI or review feedback.
+
+**Commit (code):** `8984e12e44ebbae7373c595af3dcc2927ff85d45` — "Widget DSL: resolve action bindings and CI"
+
+### What I did
+- Queried PR #22 review comments, workflow checks, and failed job logs.
+- Updated the React action resolver to resolve `widget.bind.context(...)` accessor objects and `widget.bind.const(...)` in payload/detail data.
+- Updated all v3 non-server intent helpers to use `detail` instead of ignored `payload`.
+- Passed MatrixGrid `row` and a serializable `column` object into action context.
+- Wrapped CRM task titles/captions as `{ kind: "text" }` children.
+- Regenerated affected Widget DSL goldens, frontend app assets, xgoja embedded assets, binaries, and `pkg/widgetdsl/migrationcheck/logcopter.go`.
+- Updated `go.mod` from Go `1.26.4` to `1.26.5`.
+
+### Why
+- The React dispatcher resolves template parts and now v3 accessors; otherwise server actions receive IR descriptors instead of values.
+- Browser `CustomEvent` consumers receive `detail`, not an arbitrary action `payload` field.
+- The CI toolchain must include the generated logger file and a Go standard library release containing the announced security fixes.
+
+### What worked
+- Direct resolver assertion produced `{"responseId":"r-1","optionId":"c-1","fixed":7}` from context accessors and a const binding.
+- `pnpm --dir packages/rag-evaluation-site typecheck` and `test:focused` passed.
+- `GOWORK=off go test ./pkg/... ./internal/chunking ./internal/db ./internal/ingest ./internal/services/... ./internal/web -count=1` passed.
+- `GOWORK=off make logcopter-check` passed after generating `logcopter.go`.
+- `GOWORK=off make govulncheck` reported `No vulnerabilities found` after moving to Go 1.26.5.
+- Rebuilt Doodle and workshop CRM xgoja assets/binaries successfully.
+
+### What didn't work
+- First pre-commit attempt failed locally because the parent workspace `go.work` specifies Go `1.26.4` while this module now requires `1.26.5`: `go: module . listed in go.work file requires go >= 1.26.5, but go.work lists go 1.26.4`. The repository CI already uses `GOWORK=off`; repeating the commit with `GOWORK=off git commit ...` let the repository hooks run against the module toolchain successfully.
+- Generated embedded SPA minified files trigger many Biome diagnostics. These are generated assets that the example hosts intentionally commit; source typecheck and Go lint/tests passed.
+
+### What I learned
+- `widget.bind.context` is a reusable IR accessor, but the action dispatcher needs an explicit evaluator for it; action payloads cannot rely on renderer-only accessor semantics.
+- `actions/setup-go` reads `go.mod`, so the Go patch-level security remediation is enforced in CI without pinning workflow YAML separately.
+
+### What was tricky to build
+- Event and server actions intentionally have different wire shapes. Server actions serialize a resolved `payload` to HTTP; event actions dispatch resolved values in browser `detail`. Treating both as the same field silently discarded event data.
+- MatrixGrid columns contain React renderable headers, so the action context provides only serializable `{ id, meta }` rather than leaking a React node into action data.
+
+### What warrants a second pair of eyes
+- Review the broader accessor resolver modes (`field`, `path`, `map`, `template`) if application authors begin using them in action data beyond the current `context` contract.
+- The generated host assets/binaries are required by existing example conventions but cause large PR diffs and lint noise; consider a repository-level artifact strategy separately.
+
+### What should be done in the future
+- Add a dedicated automated test module for `dispatchWidgetAction` event details and accessor resolution rather than relying on focused command-line assertions.
+- Re-run PR CI after push and reply/resolve each PR thread once GitHub sees the commit.
+
+### Code review instructions
+- Review `packages/rag-evaluation-site/src/widgets/actions.ts` for binding resolution and event detail dispatch.
+- Review MatrixGrid action context in `MatrixGrid.tsx` and `MatrixGrid.widget.tsx`.
+- Compare v3 intent goldens for `detail` rather than `payload` output.
+- Run `GOWORK=off make logcopter-check` and `GOWORK=off make govulncheck`.
+
+### Technical details
+- Failed CI checks: `test / Verify logcopter package loggers` and `Go Vulnerability Check / Run govulncheck`.
+- Vulnerabilities fixed by Go 1.26.5: `GO-2026-5856` (`crypto/tls`) and `GO-2026-4970` (`os`).
