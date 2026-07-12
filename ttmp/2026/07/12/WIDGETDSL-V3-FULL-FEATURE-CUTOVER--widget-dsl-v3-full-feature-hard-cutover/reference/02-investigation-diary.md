@@ -847,3 +847,62 @@ Context diagrams now dispatch selected part context, Markdown editing emits chan
 - Action audit threshold intentionally fails if extraction unexpectedly falls below 30 props.
 - Markdown submit context is `{ value, componentType: \"MarkdownEditor\" }`.
 - Upload delete context includes `assetId`, `asset`, `value`, and `componentType`.
+
+## Step 10: Add the Generic Content Vocabulary
+
+Phase 2 added typed v3 access to stable generic content and layout capabilities that previously required raw component construction. The helpers remain intent-oriented and reuse existing registered adapters rather than duplicating React behavior.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 8)
+
+**Assistant interpretation:** Continue filling approved generic parity after closing action correctness blockers.
+
+**Inferred user intent:** Make ordinary application pages expressible without `widget.raw.component(...)`.
+
+**Commit (code):** `e702cfcfed73144f4058c56acfc1452f867884c9` — "widgetdsl: add typed generic content helpers"
+
+### What I did
+
+- Added `ui.text`, `code`, `divider`, `scroll`, `tabs`, `summary`, `checkList`, `stepList`, `markdownArticle`, and `upload`.
+- Added descriptor and TypeScript parity for all helpers.
+- Added lowering tests covering every component target and Markdown source.
+- Regenerated embedded API help.
+
+### Why
+
+- These are stable, domain-neutral concepts repeatedly used by first-party pages and raw v3 examples.
+
+### What worked
+
+- Descriptor/runtime/declaration parity tests passed immediately after all three surfaces were updated.
+- Full Go and pre-commit test/lint suites passed.
+
+### What didn't work
+
+- N/A.
+
+### What I learned
+
+- Existing Widget adapters already cover most generic parity; the missing layer was a coherent v3 vocabulary.
+
+### What was tricky to build
+
+- Helpers accepting children use the existing component-factory normalization, while data-shaped helpers explicitly place ordered arrays into props.
+
+### What warrants a second pair of eyes
+
+- Review final naming of `summary`, `checkList`, and `upload` before public release.
+
+### What should be done in the future
+
+- Rewrite remaining raw examples to these typed helpers during migration.
+
+### Code review instructions
+
+- Review `v3UIObject`, `UINamespace`, and `TestWidgetV3GenericContentHelpers` together.
+- Run `go test ./... -count=1`.
+
+### Technical details
+
+- All helpers lower to existing registry component names; no parallel React implementations were introduced.

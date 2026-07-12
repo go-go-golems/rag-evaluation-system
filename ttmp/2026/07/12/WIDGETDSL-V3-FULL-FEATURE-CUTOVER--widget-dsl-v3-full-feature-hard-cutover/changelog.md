@@ -88,3 +88,13 @@ Step 9: audited and wired every serialized v3 action prop through Widget IR and 
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/ir/props.ts — Completed action contracts
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3_action_adapter_test.go — Cross-layer action consumption release gate
 
+
+## 2026-07-12
+
+Step 10: completed generic UI/content parity with ten typed v3 helpers and generated API coverage (commit e702cfc).
+
+### Related Files
+
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/typescript.go — Typed UINamespace additions
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3.go — Generic content helper runtime
+
