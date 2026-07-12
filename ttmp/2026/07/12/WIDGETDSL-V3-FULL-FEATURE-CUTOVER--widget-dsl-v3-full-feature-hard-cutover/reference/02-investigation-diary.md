@@ -769,3 +769,81 @@ Declaration tests parse top-level TypeScript interface members, compare them as 
 
 - No compatibility package remains at `pkg/widgetdsl/v2/spec`.
 - Runtime, descriptor, and declaration member sets are independently compared.
+
+## Step 9: Wire Every Serialized V3 Action into React
+
+This slice audited all action props assigned by the v3 Go runtime and established CI enforcement that each is declared in Widget IR and consumed by a React adapter. The known context, Markdown, CMS, and course gaps were fixed in the same vertical commit.
+
+Context diagrams now dispatch selected part context, Markdown editing emits change and explicit Save actions, CMS article rows dispatch dedicated publish/archive/preview actions, and course material uploads can render deletable items with stable asset context.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 8)
+
+**Assistant interpretation:** Continue through release blockers without pausing, implementing cross-layer action behavior and tests.
+
+**Inferred user intent:** Eliminate silent no-op APIs before adding more DSL surface.
+
+**Commit (code):** `8e6c83178012c65c434056d345fb17a13b95f64b` — "widgets: wire all serialized v3 action props"
+
+### What I did
+
+- Added `onPartSelect` behavior to ContextDiagramPanel and adapter dispatch context.
+- Added Markdown `onChangeAction` and `onSubmitAction` IR props and adapter behavior.
+- Corrected Markdown lowering from ignored `value` to `defaultValue`.
+- Added a Save toolbar action carrying current Markdown value.
+- Added dedicated article publish/archive/preview IR props and adapter routing.
+- Added a visible Preview row action.
+- Added upload item/delete contracts and course material delete dispatch context.
+- Added `TestWidgetV3SerializedActionPropsHaveIRAndAdapterConsumers`, auditing all action props extracted from v3 Go sources against IR declarations and adapter consumption.
+- Updated the Markdown golden fixture and existing CMS test.
+
+### Why
+
+- Serializing an action prop without adapter consumption creates an API that looks valid in Goja and goldens but never executes in the browser.
+- A source-driven audit prevents recurrence as new builders add actions.
+
+### What worked
+
+- The audit found 35 serialized action props and all now have IR declarations and adapter consumers.
+- React typecheck, Biome, Widget DSL tests, full Go tests, and pre-commit checks passed.
+- The final commit remained one cross-layer behavior slice.
+
+### What didn't work
+
+- Typecheck initially rejected unsupported `Inline align` and `Button variant=\"danger\"` props. The item row now uses `style={{ alignItems: \"center\" }}` and the supported default button variant.
+- The first audit only read `props.ts`, but several engine action contracts live in `engines.ts`. It was corrected to scan every TypeScript file under `widgets/ir`.
+- Existing tests and a golden expected Markdown `value`; they were updated after confirming the React adapter contract uses `defaultValue`.
+
+### What I learned
+
+- Several cross-layer action bugs were accompanied by prop-name drift, not only missing callbacks.
+- A global adapter-consumption check is a useful floor; component interaction stories remain necessary to prove exact payload behavior.
+
+### What was tricky to build
+
+- CMS exposes both a generic row action and dedicated semantic actions. The adapter now selects the dedicated action first and falls back to the generic action.
+- Course deletion required a real interactive representation; merely forwarding `onDeleteAction` would still leave no browser affordance.
+
+### What warrants a second pair of eyes
+
+- Review whether Markdown change actions should dispatch per keystroke or eventually support debounce/blur policy.
+- Review upload deletion presentation and confirmation policy.
+- Review the source-audit test for false positives when two components someday reuse an action prop name.
+
+### What should be done in the future
+
+- Add Storybook interaction tests for exact action contexts.
+- Extend audit metadata to component-specific ownership if prop-name reuse becomes ambiguous.
+
+### Code review instructions
+
+- Begin with `pkg/widgetdsl/v3_action_adapter_test.go`.
+- Trace each repaired action from `v3.go`, through `props.ts`, into its `.widget.tsx` adapter.
+- Run `go test ./... -count=1` and `pnpm --dir packages/rag-evaluation-site typecheck`.
+
+### Technical details
+
+- Action audit threshold intentionally fails if extraction unexpectedly falls below 30 props.
+- Markdown submit context is `{ value, componentType: \"MarkdownEditor\" }`.
+- Upload delete context includes `assetId`, `asset`, `value`, and `componentType`.

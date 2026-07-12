@@ -78,3 +78,13 @@ Step 8: completed Phase 1C by promoting the shared typed spec kernel and enforci
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/spec/types.go — Release-neutral typed spec kernel
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3_descriptors_test.go — Declaration parity parser and tests
 
+
+## 2026-07-12
+
+Step 9: audited and wired every serialized v3 action prop through Widget IR and React adapters, with source-driven CI enforcement (commit 8e6c831).
+
+### Related Files
+
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/packages/rag-evaluation-site/src/widgets/ir/props.ts — Completed action contracts
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3_action_adapter_test.go — Cross-layer action consumption release gate
+

@@ -21,12 +21,12 @@
 - [ ] Phase 7: complete typed CRM CMS course context schedule and time domain views <!-- t:hf4t -->
 - [ ] Phase 8: migrate first-party hosts and remove all legacy split modules <!-- t:uazl -->
 - [ ] Phase 9: run full release validation regenerate final docs and upload final implementation bundle <!-- t:saec -->
-- [ ] Fix descriptor-discovered v3 action adapter gaps for context diagrams Markdown editor CMS article actions and course material deletion <!-- t:tqve -->
+- [x] Fix descriptor-discovered v3 action adapter gaps for context diagrams Markdown editor CMS article actions and course material deletion <!-- t:tqve -->
 - [x] Phase 1C1: generate and verify v3 builder declarations from method-signature descriptors <!-- t:sq5o -->
 - [x] Phase 1C2: rename the shared typed spec kernel from v2/spec to spec without compatibility aliases <!-- t:cbfg -->
 - [x] Restore go test ./... by updating or excluding the historical XGOJA widgetprovider script that calls NewLoader without a module name <!-- t:4sqg -->
 - [x] Restore widget manifest validation by reconciling cms.dsl with schema/dsl-modules.yaml and the hard-cutover module policy <!-- t:sx1t -->
-- [ ] Audit every v3 builder action prop against Widget IR props and React adapter consumption and record a tested parity matrix <!-- t:pi3h -->
-- [ ] Wire and test context diagram selection plus Markdown editor change and submit actions <!-- t:pcgq -->
-- [ ] Wire and test CMS article publish archive preview actions plus course material deletion <!-- t:awor -->
-- [ ] Add CI enforcement preventing typed v3 action props from being serialized without adapter consumption <!-- t:u11p -->
+- [x] Audit every v3 builder action prop against Widget IR props and React adapter consumption and record a tested parity matrix <!-- t:pi3h -->
+- [x] Wire and test context diagram selection plus Markdown editor change and submit actions <!-- t:pcgq -->
+- [x] Wire and test CMS article publish archive preview actions plus course material deletion <!-- t:awor -->
+- [x] Add CI enforcement preventing typed v3 action props from being serialized without adapter consumption <!-- t:u11p -->
