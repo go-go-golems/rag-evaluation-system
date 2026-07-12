@@ -491,3 +491,106 @@ The same descriptor now emits the root `page` TypeScript declaration and a subst
 - Direct descriptor scope deliberately excludes nested builder methods and action-context schemas until Phase 1B.
 - `widgetV3DescriptorTypeScriptLines()` now emits root function declarations and namespace constants.
 - Generated help remains embedded by the existing widgetsite provider.
+
+## Step 6: Describe Nested APIs and Make Every V3 Builder Composable
+
+This slice extends parity below direct namespace keys. Nested cell/selection/range/intent namespaces and all 28 public builder types now have descriptor inventories, and runtime probes instantiate every builder through the public JavaScript API to compare its exact method set.
+
+A shared builder constructor adds `.use(fragment)` uniformly. TypeScript builder interfaces inherit a generic `ComposableBuilder<T>`, so reusable policy fragments now work across pages, collections, domain views, fields, matrices, and actions rather than only pages and sections.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 4)
+
+**Assistant interpretation:** Continue Phase 1 task-by-task, commit the builder-composition behavior separately, then complete action-context documentation as a focused follow-up.
+
+**Inferred user intent:** Make composition a language invariant and ensure nested public APIs are as discoverable and drift-resistant as root namespaces.
+
+**Commit (code):** `7d78d447dc543f76c66094f73db9983984e28bed` — "widgetdsl: compose and describe all v3 builders"
+
+**Commit (code):** `1a387adbe3ae82d11a25861892b8631af913c277` — "widgetdsl: document v3 action contexts"
+
+### What I did
+
+- Added descriptors for nine nested namespaces: data cells/selection, domain intents, and time ranges.
+- Added descriptors for 28 public builder types and their exact methods.
+- Added `newV3Builder(path)` and migrated every mutable v3 builder to it.
+- Added `.use(fragment)` to field, collection, table, editor, matrix, UI action, CMS, course, context, schedule, time, and CRM builders.
+- Added `ComposableBuilder<T>` to generated TypeScript declarations and made every v3 builder interface extend it.
+- Added a public-API runtime probe that instantiates all builders and compares exact method sets.
+- Added a fragment-composition behavior test.
+- Documented 28 currently dispatched browser action contexts from collection, matrix, context, course, CMS, time, CRM, activity, and upload adapters.
+- Added uniqueness/component-field validation for action-context descriptors.
+- Regenerated embedded API help after both commits.
+- Added follow-up task `tqve` for builder actions that source inspection revealed are serialized by Go but ignored by current React adapters.
+
+### Why
+
+- `.use(fragment)` was an explicit v3 grammar rule but existed only on page and section builders.
+- Exact builder probes prevent TypeScript and runtime method sets from diverging silently.
+- Action payload bindings are only safe when authors can discover which context fields adapters actually dispatch.
+
+### What worked
+
+- All 28 builder probes execute through the real public `widget` object.
+- Nested namespace set equality passed for callable objects such as `data.selection` as well as ordinary namespace objects.
+- A collection and nested table successfully composed two reusable fragments through `.use(...)`.
+- Targeted Widget DSL/provider tests and both pre-commit test/lint suites passed for both commits.
+
+### What didn't work
+
+- The first formatting run failed because a TypeScript declaration edit accidentally joined two Go string literals:
+
+  ```text
+  pkg/widgetdsl/typescript.go:354:207: missing ',' in composite literal
+  pkg/widgetdsl/typescript.go:354:419: string literal not terminated
+  ```
+
+  I separated `CrmActivityFeedBuilder` and `CrmIntentNamespace` into valid list entries and reran formatting.
+
+- The first builder probe passed `pipeline.build()` and `crmFields.build()` into helpers that currently require hidden Goja builder references. It panicked in `crmRef` with a nil-pointer dereference. The probe was corrected to pass the builder handles directly. This exposes a declaration/runtime mismatch to revisit in Phase 1C or CRM completion.
+
+- The first fragment assertion cast a typed `spec.JSONObject` export to `map[string]any`, then a Goja object lookup assumed a direct `props` shape. Both were brittle. The test now asserts observable fragment invocation count, while exact builder keys cover structural behavior.
+
+### What I learned
+
+- `.use` can be implemented once without changing lowering: it is author-time callback composition over the same builder object.
+- Several public builder methods currently set props that their React adapters ignore: context diagram selection, Markdown editor actions, CMS publish/archive/preview actions, and course material deletion are notable examples.
+- `CrmNamespace` TypeScript currently says built records are accepted where runtime relies on hidden builder references; the hard cutover can fix this contract rather than preserve it.
+- Browser action context is defined by adapters, not by Go action builders, so adapter evidence must be part of API documentation.
+
+### What was tricky to build
+
+- Some builders are returned handles, while others exist only inside callbacks. The parity test probes all of them through realistic public calls instead of coupling to private Go constructors.
+- `data.selection` is both callable and property-bearing. Resolving nested descriptor paths through `goja.Value.ToObject` handles functions and objects uniformly.
+- Adding composition to inline builders required finding course material and Markdown editor builders that did not have named Go constructor methods.
+
+### What warrants a second pair of eyes
+
+- Review the 28 action-context descriptors against adapter source, especially CMS callbacks with shared dispatch helpers.
+- Review whether all builders—including low-level ActionsBuilder—should remain public composable types.
+- Review the CRM built-value mismatch before declarations are made fully descriptor-generated.
+- Inspect task `tqve`; ignored action props are correctness gaps, not documentation-only debt.
+
+### What should be done in the future
+
+- Implement task `tqve` in the appropriate UI/domain phases and add browser interaction tests.
+- Phase 1C should make builder declarations themselves descriptor-generated or parity-checked beyond the composition base interface.
+- Add typed context interfaces generated from action-context descriptors after final field names stabilize.
+
+### Code review instructions
+
+- Start with `newV3Builder` in `pkg/widgetdsl/v3.go`, then inspect migrated builder constructors.
+- Review `TestWidgetV3DescriptorMatchesBuilderRuntimeMethods` and its JavaScript probe.
+- Compare `widgetV3Module.NestedNamespaces`, `Builders`, and `ActionContexts` to the generated help.
+- Run:
+
+  ```bash
+  go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1
+  ```
+
+### Technical details
+
+- Every described builder automatically receives `use`, and descriptor method lists append it through `v3Builder(...)`.
+- `ComposableBuilder<TBuilder>` returns `TBuilder`, preserving fluent TypeScript inference.
+- The runtime probe fails on both missing descriptor methods and unexpected JavaScript methods.

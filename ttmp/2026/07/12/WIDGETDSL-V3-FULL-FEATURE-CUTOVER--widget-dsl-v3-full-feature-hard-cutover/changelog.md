@@ -47,3 +47,14 @@ Step 5: completed Phase 1A direct runtime/descriptor parity, descriptor-generate
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3_descriptors_test.go — Runtime set-equality parity tests
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc/05-widget-dsl-v3-api-reference.md — Regenerated embedded API help
 
+
+## 2026-07-12
+
+Step 6: completed Phase 1B nested namespace and builder parity, made all 28 v3 builders fragment-composable, and documented current browser action contexts (commits 7d78d44 and 1a387ad).
+
+### Related Files
+
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3.go — Shared composable-builder constructor and generic/domain builder migration
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3_descriptors.go — Nested namespace builder and action-context inventory
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3_descriptors_test.go — Public runtime probes and composition tests
+
