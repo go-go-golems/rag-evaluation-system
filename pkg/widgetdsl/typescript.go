@@ -402,7 +402,6 @@ func widgetV3TypeScriptLines() []string {
 		"metric(label: WidgetChild, value: WidgetChild, options?: Record<string, any>): this;",
 		"metadata(record: Record<string, JsonValue>): this;",
 		"}",
-		"export function page(titleOrOptions: string | Record<string, any>, configure?: Fragment<PageBuilder>): PageBuilder;",
 	}
 	lines = append(lines, widgetV3DescriptorTypeScriptLines()...)
 	return lines

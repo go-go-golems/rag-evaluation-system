@@ -13,7 +13,11 @@ ShowPerDefault: true
 SectionType: GeneralTopic
 ---
 
-Generated from widgetV3NamespaceDescriptors.
+Generated from widgetV3Module.
+
+## `page`
+
+`page(titleOrOptions: string | Record<string, any>, configure?: Fragment<PageBuilder>): PageBuilder`. Create a page builder.
 
 ## `raw` — RawNamespace
 
@@ -21,11 +25,22 @@ Low-level escape hatches for text, element, component, and fragment nodes.
 
 Runtime factory: `v3RawObject`.
 
+- `text` (function)
+- `element` (function)
+- `component` (function)
+- `fragment` (function)
+
 ## `act` — ActionNamespace
 
 Generic action builders.
 
 Runtime factory: `actionObject`.
+
+- `server` (function)
+- `navigate` (function)
+- `download` (function)
+- `event` (function)
+- `copy` (function)
 
 ## `bind` — BindingNamespace
 
@@ -33,11 +48,36 @@ Accessor and constant binding builders.
 
 Runtime factory: `bindingObject`.
 
+- `field` (function)
+- `path` (function)
+- `map` (function)
+- `template` (function)
+- `context` (function)
+- `const` (function)
+
 ## `ui` — UINamespace
 
 Generic composition widgets.
 
 Runtime factory: `v3UIObject`.
+
+- `callout` (function)
+- `stack` (function)
+- `inline` (function)
+- `splitPane` (function)
+- `card` (function)
+- `button` (function)
+- `caption` (function)
+- `badge` (function)
+- `metadata` (function)
+- `shareLink` (function)
+- `form` (function)
+- `formRow` (function)
+- `textInput` (function)
+- `textareaInput` (function)
+- `selectInput` (function)
+- `status` (function)
+- `emptyState` (function)
 
 ## `data` — DataNamespace
 
@@ -45,15 +85,28 @@ Schema, collection, matrix, selection, cell, and item helpers.
 
 Runtime factory: `v3DataObject`.
 
+- `fields` (function)
+- `collection` (function)
+- `selection` (function)
+- `item` (function)
+- `matrix` (function)
+- `cell` (object)
+
 ## `crm` — CrmNamespace
 
 CRM field schemas, pipelines, records, activities, tasks, and actions.
 
 Runtime factory: `v3CRMObject`.
 
+- `fields` (function)
+- `pipeline` (function)
 - `pipelineBoard`: `pipelineBoard(pipeline: Record<string, any>, deals: Record<string, any>[], configure?: Fragment<CrmPipelineBoardBuilder>): WidgetNodeSpec` → `BoardEngine`. Render an opportunity pipeline board.
 - `recordFields`: `recordFields(values: Record<string, JsonValue>, fields: Record<string, any>, configure?: Fragment<CrmRecordFieldsBuilder>): WidgetNodeSpec` → `RecordFieldList`. Render typed CRM fields.
 - `activityFeed`: `activityFeed(activities: Record<string, any>[], configure?: Fragment<CrmActivityFeedBuilder>): WidgetNodeSpec` → `ActivityFeed`. Render a CRM activity timeline.
+- `tasksInbox` (function)
+- `stat` (function)
+- `funnel` (function)
+- `intent` (object)
 
 ## `cms` — CmsNamespace
 
@@ -61,17 +114,37 @@ CMS media, queue, and markdown editor helpers.
 
 Runtime factory: `v3CMSObject`.
 
+- `mediaLibrary` (function)
+- `articleQueue` (function)
+- `markdownEditor` (function)
+- `intent` (object)
+
 ## `course` — CourseNamespace
 
 Course shell, landing, slide, handout, metadata, agenda, and material helpers.
 
 Runtime factory: `v3CourseObject`.
 
+- `shell` (function)
+- `landing` (function)
+- `slideDeck` (function)
+- `handouts` (function)
+- `metadataForm` (function)
+- `agendaEditor` (function)
+- `materialUploads` (function)
+- `intent` (object)
+
 ## `context` — ContextNamespace
 
 Context style, diagram, transcript workspace, and intent helpers.
 
 Runtime factory: `v3ContextObject`.
+
+- `styleSet` (function)
+- `palette` (function)
+- `diagram` (function)
+- `workspace` (function)
+- `intent` (object)
 
 ## `schedule` — ScheduleNamespace
 
@@ -82,6 +155,7 @@ Runtime factory: `v3ScheduleObject`.
 - `availabilityPoll`: `availabilityPoll(poll: AvailabilityPoll, configure?: Fragment<SchedulePollBuilder>): WidgetNodeSpec` → `MatrixGrid`. Render respondent availability against poll options.
 - `pollSummary`: `pollSummary(poll: AvailabilityPoll, tallies: PollTally[], configure?: Fragment<SchedulePollBuilder>): WidgetNodeSpec` → `MatrixGrid`. Render aggregate option tallies.
 - `bookingPicker`: `bookingPicker(availability: Record<string, any>, configure?: Fragment<SchedulePollBuilder>): WidgetNodeSpec` → `MatrixGrid`. Render bookable resources by slot.
+- `intent` (object)
 
 ## `time` — TimeNamespace
 
@@ -91,6 +165,11 @@ Runtime factory: `v3TimeObject`.
 
 - `month`: `month(eventsOrMarkers: CalendarEvent[] | Record<string, any>, configure?: Fragment<TimeMonthBuilder>): WidgetNodeSpec` → `MonthGrid`. Render day markers for a month.
 - `week`: `week(events: CalendarEvent[], configure?: Fragment<TimeWeekBuilder>): WidgetNodeSpec` → `TimeGrid`. Render event blocks for a week; allDay is intentionally omitted.
+- `format` (function)
+- `formatRange` (function)
+- `slotLabel` (function)
+- `range` (object)
+- `intent` (object)
 
 ## `style` — Record<string, any>
 
