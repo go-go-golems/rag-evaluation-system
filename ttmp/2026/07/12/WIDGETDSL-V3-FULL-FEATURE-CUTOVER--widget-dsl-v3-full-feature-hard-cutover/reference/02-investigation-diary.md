@@ -695,3 +695,77 @@ The action-adapter problem remains intentionally open as a parent audit plus com
 - Closed tasks: `4sqg` and `sx1t`.
 - Open ignored-action tasks: `tqve`, `pi3h`, `pcgq`, `awor`, and `u11p`.
 - The catalog remains transitional until the Phase 8 provider/manifest hard cutover.
+
+## Step 8: Finish the Descriptor and Typed-Spec Foundation
+
+Phase 1C removed the obsolete `v2/spec` package identity and made TypeScript namespace/builder declarations exact-parity checked against descriptors. The typed kernel now has a release-neutral import path, while legacy data.v2 builders and v3 collections share it without a compatibility alias.
+
+Declaration tests parse top-level TypeScript interface members, compare them as sets to direct, nested, and builder descriptors, and continue to compare runtime objects separately. This creates a three-way invariant across Goja runtime, descriptors, and TypeScript declarations.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Continue. I'm going swimming, I want you to be done when I come back."
+
+**Assistant interpretation:** Continue autonomously through the implementation queue, testing and committing each dependency-ordered slice without waiting for intermediate confirmation.
+
+**Inferred user intent:** Return to a substantially completed, clean, reviewable implementation rather than another planning checkpoint.
+
+**Commit (code):** `40703641d1e6a4f0cc22d76ed28157261b9aebb2` — "widgetdsl: promote shared typed spec kernel"
+
+**Commit (code):** `4b61e61c27e261b20e1d921d092bc110e5e8f67f` — "widgetdsl: enforce descriptor declaration parity"
+
+### What I did
+
+- Moved `pkg/widgetdsl/v2/spec` to `pkg/widgetdsl/spec` with Git history preserved.
+- Updated v2 legacy builders and v3 runtime imports to the neutral `widgetspec` alias.
+- Added named TypeScript declarations for selection, CMS intents, and course intents.
+- Added descriptor type names for all nested namespaces.
+- Added a brace-aware TypeScript interface parser in tests.
+- Enforced exact member parity for direct namespaces, nested namespaces, and all builder declarations.
+- Ran targeted and full repository tests before both commits.
+
+### Why
+
+- Shipping v3 on a package named `v2/spec` would preserve misleading architecture and complicate future ownership.
+- Runtime parity alone cannot prevent declarations from advertising missing methods or omitting installed methods.
+- Named nested interfaces improve discoverability and enable descriptor parity checks.
+
+### What worked
+
+- `go test ./... -count=1` passed after the package move and declaration changes.
+- Git recognized all six spec files as renames.
+- The declaration parser handles one-line and multiline interfaces plus nested object types.
+- Pre-commit tests and lint passed for both commits.
+
+### What didn't work
+
+- An existing TypeScript snapshot test expected the old inline selection intersection. It failed after introducing `SelectionNamespace`; the fixture was updated to assert the named interface contract.
+
+### What I learned
+
+- Exact method-name parity can be enforced without generating every complex TypeScript signature from metadata.
+- CMS and course intent declarations previously used broad index signatures, masking runtime drift; explicit methods now match Goja objects.
+
+### What was tricky to build
+
+- Interface signatures contain nested object types, so splitting blindly on braces or semicolons produces false members. The parser tracks brace depth and only flushes declarations at the outer interface level.
+
+### What warrants a second pair of eyes
+
+- Review whether signature-level descriptor generation is worth the metadata duplication beyond exact member parity.
+- Verify downstream repositories do not import the old internal Go package path.
+
+### What should be done in the future
+
+- Add signature metadata only where generated docs need parameter-level details.
+- Continue with generic UI parity and action-adapter auditing.
+
+### Code review instructions
+
+- Review the package rename, then `TestWidgetV3TypeScriptNamespaceMembersMatchDescriptors` and `typescriptInterfaceMembers`.
+- Validate with `go test ./... -count=1`.
+
+### Technical details
+
+- No compatibility package remains at `pkg/widgetdsl/v2/spec`.
+- Runtime, descriptor, and declaration member sets are independently compared.

@@ -68,3 +68,13 @@ Step 7: made baseline and ignored-action gaps explicit blockers, repaired histor
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/schema/dsl-modules.yaml — Current transitional module ownership now validates
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/ttmp/2026/06/04/XGOJA-WIDGETSITE--xgoja-widget-site-binary-design/scripts/01-current-xgoja-widgetsite-experiment/widgetprovider/provider.go — Historical package now compiles with named loader
 
+
+## 2026-07-12
+
+Step 8: completed Phase 1C by promoting the shared typed spec kernel and enforcing runtime/descriptor/TypeScript member parity (commits 4070364 and 4b61e61).
+
+### Related Files
+
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/spec/types.go — Release-neutral typed spec kernel
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3_descriptors_test.go — Declaration parity parser and tests
+
