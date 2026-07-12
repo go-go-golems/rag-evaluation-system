@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ActionSpec, ArticleListPanelWidgetProps } from "../../../widgets/ir";
 import { defineWidget, type RenderContext } from "../../../widgets/registry";
-import type { ArticleStatusFilter } from "./ArticleListPanel";
+import type { ArticleRowAction, ArticleStatusFilter } from "./ArticleListPanel";
 import { ArticleListPanel } from "./ArticleListPanel";
 
 export const articleListPanelWidget = defineWidget<ArticleListPanelWidgetProps>({
@@ -22,6 +22,12 @@ function ArticleListPanelWidgetHost({
 	const onArticleSelectAction = props.onArticleSelectAction;
 	const onCreateAction = props.onCreateAction;
 	const onRowActionAction = props.onRowActionAction;
+	const rowActions: Partial<Record<ArticleRowAction, ActionSpec>> = {
+		publish: props.onPublishAction,
+		archive: props.onArchiveAction,
+		preview: props.onPreviewAction,
+	};
+	const hasRowActions = onRowActionAction != null || Object.values(rowActions).some(Boolean);
 	const onStatusFilterChangeAction = props.onStatusFilterChangeAction;
 	const onQuerySubmitAction = props.onQuerySubmitAction;
 	const onPageChangeAction = props.onPageChangeAction;
@@ -40,9 +46,11 @@ function ArticleListPanelWidgetHost({
 			}
 			onCreate={onCreateAction ? () => dispatch(onCreateAction, {}) : undefined}
 			onRowAction={
-				onRowActionAction
-					? (articleId, rowAction) =>
-							dispatch(onRowActionAction, { articleId, rowAction, value: articleId })
+				hasRowActions
+					? (articleId, rowAction) => {
+							const action = rowActions[rowAction] ?? onRowActionAction;
+							if (action) dispatch(action, { articleId, rowAction, value: articleId });
+						}
 					: undefined
 			}
 			statusFilter={props.statusFilter}

@@ -11,6 +11,7 @@ export const contextUploadDropAreaWidget = defineWidget<ContextUploadDropAreaWid
 	module: "context_window.dsl",
 	render: (props, _children, ctx) => {
 		const onFilesSelectedAction = props.onFilesSelectedAction;
+		const onDeleteAction = props.onDeleteAction;
 		return (
 			<ContextUploadDropArea
 				className={props.className}
@@ -19,6 +20,18 @@ export const contextUploadDropAreaWidget = defineWidget<ContextUploadDropAreaWid
 				accept={props.accept}
 				disabled={props.disabled}
 				active={props.active}
+				items={props.items?.map((item) => ({ ...item, label: ctx.renderValue(item.label) }))}
+				onDelete={
+					onDeleteAction
+						? (itemId) =>
+								ctx.dispatchAction(onDeleteAction, {
+									assetId: itemId,
+									asset: { id: itemId },
+									value: itemId,
+									componentType: "ContextUploadDropArea",
+								})
+						: undefined
+				}
 				onFilesSelected={
 					onFilesSelectedAction
 						? (files) => {

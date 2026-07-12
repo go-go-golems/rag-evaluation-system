@@ -14,7 +14,7 @@ import {
 import { ConfirmDialog } from "../ConfirmDialog";
 import styles from "./ArticleListPanel.module.css";
 
-export type ArticleRowAction = "edit" | "publish" | "archive" | "delete";
+export type ArticleRowAction = "edit" | "preview" | "publish" | "archive" | "delete";
 export type ArticleStatusFilter = CmsContentStatus | "all";
 
 export interface ArticleListPanelProps
@@ -134,6 +134,14 @@ export function ArticleListPanel({
 						onClick={(event) => runRowAction(event, () => onRowAction(row.id, "edit"))}
 					>
 						✎
+					</IconButton>
+					<IconButton
+						size="large"
+						variant="boxed"
+						label={`Preview ${row.title}`}
+						onClick={(event) => runRowAction(event, () => onRowAction(row.id, "preview"))}
+					>
+						◉
 					</IconButton>
 					{row.status !== "published" && (
 						<IconButton

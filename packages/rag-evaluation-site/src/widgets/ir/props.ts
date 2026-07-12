@@ -181,6 +181,7 @@ export interface ContextDiagramPanelWidgetProps extends BaseWidgetProps {
 	showLegend?: boolean;
 	showPartDetails?: boolean;
 	chrome?: "panel" | "inline";
+	onPartSelectAction?: ActionSpec;
 }
 
 export interface ContextTurnPagerPanelWidgetProps extends BaseWidgetProps {
@@ -430,6 +431,8 @@ export interface ContextUploadDropAreaWidgetProps extends BaseWidgetProps {
 	disabled?: boolean;
 	active?: boolean;
 	onFilesSelectedAction?: ActionSpec;
+	items?: Array<{ id: string; label?: RenderableValue }>;
+	onDeleteAction?: ActionSpec;
 }
 
 export interface CaptionWidgetProps extends BaseWidgetProps {
@@ -796,6 +799,8 @@ export interface EmptyStateWidgetProps extends BaseWidgetProps {
 export interface MarkdownEditorWidgetProps extends BaseWidgetProps {
 	name?: string;
 	defaultValue?: string;
+	onChangeAction?: ActionSpec;
+	onSubmitAction?: ActionSpec;
 	minRows?: number;
 	maxLength?: number;
 	disabled?: boolean;
@@ -830,6 +835,9 @@ export interface ArticleListPanelWidgetProps extends BaseWidgetProps {
 	onArticleSelectAction?: ActionSpec;
 	onCreateAction?: ActionSpec;
 	onRowActionAction?: ActionSpec;
+	onPublishAction?: ActionSpec;
+	onArchiveAction?: ActionSpec;
+	onPreviewAction?: ActionSpec;
 	statusFilter?: CmsContentStatus | "all";
 	onStatusFilterChangeAction?: ActionSpec;
 	query?: string;

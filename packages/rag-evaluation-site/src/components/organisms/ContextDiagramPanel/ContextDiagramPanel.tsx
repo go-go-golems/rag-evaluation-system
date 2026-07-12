@@ -32,6 +32,7 @@ export interface ContextDiagramPanelProps extends HTMLAttributes<HTMLDivElement>
 	showLegend?: boolean;
 	showPartDetails?: boolean;
 	chrome?: "panel" | "inline";
+	onPartSelect?: (partId: string) => void;
 }
 
 const defaultViews: ContextDiagramView[] = ["strip", "stack", "budget", "treemap"];
@@ -106,6 +107,7 @@ export function ContextDiagramPanel({
 	showLegend = true,
 	showPartDetails = false,
 	chrome = "panel",
+	onPartSelect,
 	className,
 	...rest
 }: ContextDiagramPanelProps) {
@@ -126,6 +128,10 @@ export function ContextDiagramPanel({
 				snapshot.parts.find((part) => part.styleKey !== "empty")?.id,
 		);
 	}, [selectedPartId, snapshot]);
+	const selectPart = (partId: string) => {
+		setActivePartId(partId);
+		onPartSelect?.(partId);
+	};
 	const selected = activePartId;
 	const selectedPart = selected ? snapshot.parts.find((part) => part.id === selected) : undefined;
 	const legendItems = legendItemsForSnapshot(snapshot, styleSet, view);
@@ -153,7 +159,7 @@ export function ContextDiagramPanel({
 						snapshot={snapshot}
 						styleSet={styleSet}
 						selectedPartId={selected}
-						onPartSelect={setActivePartId}
+						onPartSelect={selectPart}
 					/>
 				)}
 				{view === "stack" && (
@@ -161,7 +167,7 @@ export function ContextDiagramPanel({
 						snapshot={snapshot}
 						styleSet={styleSet}
 						selectedPartId={selected}
-						onPartSelect={setActivePartId}
+						onPartSelect={selectPart}
 					/>
 				)}
 				{view === "budget" && (
@@ -169,7 +175,7 @@ export function ContextDiagramPanel({
 						snapshot={snapshot}
 						styleSet={styleSet}
 						selectedPartId={selected}
-						onPartSelect={setActivePartId}
+						onPartSelect={selectPart}
 					/>
 				)}
 				{view === "treemap" && (
@@ -177,7 +183,7 @@ export function ContextDiagramPanel({
 						snapshot={snapshot}
 						styleSet={styleSet}
 						selectedPartId={selected}
-						onPartSelect={setActivePartId}
+						onPartSelect={selectPart}
 					/>
 				)}
 			</div>

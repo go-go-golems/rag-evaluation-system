@@ -1,4 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
+import { Button } from "../../atoms";
+import { Inline, Stack } from "../../layout";
 import { FileDropZone } from "../../molecules";
 
 export interface ContextUploadDropAreaProps
@@ -9,6 +11,8 @@ export interface ContextUploadDropAreaProps
 	disabled?: boolean;
 	active?: boolean;
 	onFilesSelected?: (files: File[]) => void;
+	items?: Array<{ id: string; label?: ReactNode }>;
+	onDelete?: (itemId: string) => void;
 }
 
 export function ContextUploadDropArea({
@@ -18,19 +22,31 @@ export function ContextUploadDropArea({
 	disabled = false,
 	active = false,
 	onFilesSelected,
+	items = [],
+	onDelete,
 	...rest
 }: ContextUploadDropAreaProps) {
 	return (
-		<FileDropZone
-			title={title}
-			description={description}
-			accept={accept}
-			disabled={disabled}
-			active={active}
-			onFilesSelected={onFilesSelected}
-			inputAriaLabel="Choose context-window JSON file"
-			data-rag-organism="ContextUploadDropArea"
-			{...rest}
-		/>
+		<Stack gap="sm" data-rag-organism="ContextUploadDropArea" {...rest}>
+			<FileDropZone
+				title={title}
+				description={description}
+				accept={accept}
+				disabled={disabled}
+				active={active}
+				onFilesSelected={onFilesSelected}
+				inputAriaLabel="Choose context-window JSON file"
+			/>
+			{items.map((item) => (
+				<Inline key={item.id} justify="between" style={{ alignItems: "center" }}>
+					<span>{item.label ?? item.id}</span>
+					{onDelete && (
+						<Button size="compact" onClick={() => onDelete(item.id)}>
+							Delete
+						</Button>
+					)}
+				</Inline>
+			))}
+		</Stack>
 	);
 }

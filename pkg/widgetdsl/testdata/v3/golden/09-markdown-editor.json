@@ -7,13 +7,13 @@
 					{
 						"kind": "component",
 						"props": {
+							"defaultValue": "# Draft\n\nWrite here...",
 							"onSubmitAction": {
 								"kind": "server",
 								"name": "article.save"
 							},
 							"placeholder": "Start typing",
-							"title": "Live markdown",
-							"value": "# Draft\n\nWrite here..."
+							"title": "Live markdown"
 						},
 						"type": "MarkdownEditor"
 					}

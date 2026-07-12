@@ -865,7 +865,7 @@ func (r *runtime) v3CMSArticleQueueBuilder(props map[string]any) *goja.Object {
 }
 
 func (r *runtime) v3CMSMarkdownEditor(body goja.Value, cb ...goja.Value) map[string]any {
-	props := map[string]any{"value": body.Export()}
+	props := map[string]any{"defaultValue": body.Export()}
 	if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
 		builder := r.newV3Builder("cms.markdownEditor")
 		setExport(builder, "title", func(title string) *goja.Object { props["title"] = title; return builder })

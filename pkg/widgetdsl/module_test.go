@@ -614,7 +614,7 @@ func TestWidgetV3CMSDomainViews(t *testing.T) {
 		t.Fatalf("editor = %#v, want MarkdownEditor", editor)
 	}
 	editorProps := anyMap(editor["props"])
-	if editorProps["value"] != "# Draft" || editorProps["title"] != "Body" || editorProps["onSubmitAction"] == nil {
+	if editorProps["defaultValue"] != "# Draft" || editorProps["title"] != "Body" || editorProps["onSubmitAction"] == nil {
 		t.Fatalf("editor props = %#v", editorProps)
 	}
 }
