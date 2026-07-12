@@ -144,6 +144,19 @@ func TestWidgetV3DescriptorMatchesBuilderRuntimeMethods(t *testing.T) {
 	}
 }
 
+func TestWidgetV3TypeScriptNamespaceMembersMatchDescriptors(t *testing.T) {
+	dts := strings.Join(TypeScriptModule(WidgetV3ModuleName).RawDTS, "\n")
+	for _, namespace := range widgetV3Module.Namespaces {
+		if !strings.HasSuffix(namespace.TypeName, "Namespace") {
+			continue
+		}
+		assertSameStringSet(t, namespace.TypeName+" declaration members", typescriptInterfaceMembers(t, dts, namespace.TypeName), v3DescriptorMemberNames(namespace.Members))
+	}
+	for _, namespace := range widgetV3Module.NestedNamespaces {
+		assertSameStringSet(t, namespace.TypeName+" declaration members", typescriptInterfaceMembers(t, dts, namespace.TypeName), v3DescriptorMemberNames(namespace.Members))
+	}
+}
+
 func TestWidgetV3ComposableBuilderDeclarationsMatchDescriptors(t *testing.T) {
 	dts := strings.Join(TypeScriptModule(WidgetV3ModuleName).RawDTS, "\n")
 	for _, builder := range widgetV3Module.Builders {
@@ -151,7 +164,72 @@ func TestWidgetV3ComposableBuilderDeclarationsMatchDescriptors(t *testing.T) {
 		if !strings.Contains(dts, want) {
 			t.Errorf("builder descriptor %s is not declared as composable", builder.TypeName)
 		}
+		wantMethods := make([]string, 0, len(builder.Methods)-1)
+		for _, method := range builder.Methods {
+			if method != "use" {
+				wantMethods = append(wantMethods, method)
+			}
+		}
+		assertSameStringSet(t, builder.TypeName+" declaration methods", typescriptInterfaceMembers(t, dts, builder.TypeName), wantMethods)
 	}
+}
+
+func typescriptInterfaceMembers(t *testing.T, dts, typeName string) []string {
+	t.Helper()
+	marker := "export interface " + typeName
+	start := strings.Index(dts, marker)
+	if start < 0 {
+		t.Fatalf("TypeScript declaration has no interface %s", typeName)
+	}
+	open := strings.Index(dts[start:], "{")
+	if open < 0 {
+		t.Fatalf("TypeScript interface %s has no body", typeName)
+	}
+	open += start
+	depth := 1
+	segment := strings.Builder{}
+	members := []string{}
+	flush := func() {
+		value := strings.TrimSpace(segment.String())
+		segment.Reset()
+		if value == "" || strings.HasPrefix(value, "[") {
+			return
+		}
+		end := len(value)
+		for _, delimiter := range []string{"(", ":", "<"} {
+			if at := strings.Index(value, delimiter); at >= 0 && at < end {
+				end = at
+			}
+		}
+		name := strings.TrimSpace(value[:end])
+		if name != "" {
+			members = append(members, name)
+		}
+	}
+	for _, ch := range dts[open+1:] {
+		switch ch {
+		case '{':
+			depth++
+			segment.WriteRune(ch)
+		case '}':
+			depth--
+			if depth == 0 {
+				flush()
+				return members
+			}
+			segment.WriteRune(ch)
+		case ';':
+			if depth == 1 {
+				flush()
+			} else {
+				segment.WriteRune(ch)
+			}
+		default:
+			segment.WriteRune(ch)
+		}
+	}
+	t.Fatalf("TypeScript interface %s has an unterminated body", typeName)
+	return nil
 }
 
 func TestWidgetV3BuilderUseComposesFragments(t *testing.T) {

@@ -31,8 +31,9 @@ type v3MemberDescriptor struct {
 }
 
 type v3NestedNamespaceDescriptor struct {
-	Path    string
-	Members []v3MemberDescriptor
+	Path     string
+	TypeName string
+	Members  []v3MemberDescriptor
 }
 
 type v3BuilderDescriptor struct {
@@ -183,15 +184,15 @@ var widgetV3Module = v3ModuleDescriptor{
 		},
 	},
 	NestedNamespaces: []v3NestedNamespaceDescriptor{
-		{Path: "data.cell", Members: v3Members([]string{"field", "status", "template", "cycle", "value"})},
-		{Path: "data.selection", Members: v3Members([]string{"urlParam"})},
-		{Path: "crm.intent", Members: v3Members([]string{"openDeal", "moveDeal", "updateField", "completeTask"})},
-		{Path: "cms.intent", Members: v3Members([]string{"selectAsset", "openAsset", "uploadAssets", "selectArticle", "createArticle", "publishArticle", "archiveArticle", "previewArticle"})},
-		{Path: "course.intent", Members: v3Members([]string{"navigate", "selectHandout", "downloadHandout", "printHandout", "previousSlide", "nextSlide", "presentSlide", "editAgenda", "uploadMaterial", "deleteMaterial"})},
-		{Path: "context.intent", Members: v3Members([]string{"selectPart", "selectAnnotation"})},
-		{Path: "schedule.intent", Members: v3Members([]string{"toggleAvailability", "submitResponse"})},
-		{Path: "time.range", Members: v3Members([]string{"week"})},
-		{Path: "time.intent", Members: v3Members([]string{"selectDay", "selectEvent"})},
+		{Path: "data.cell", TypeName: "CellNamespace", Members: v3Members([]string{"field", "status", "template", "cycle", "value"})},
+		{Path: "data.selection", TypeName: "SelectionNamespace", Members: v3Members([]string{"urlParam"})},
+		{Path: "crm.intent", TypeName: "CrmIntentNamespace", Members: v3Members([]string{"openDeal", "moveDeal", "updateField", "completeTask"})},
+		{Path: "cms.intent", TypeName: "CmsIntentNamespace", Members: v3Members([]string{"selectAsset", "openAsset", "uploadAssets", "selectArticle", "createArticle", "publishArticle", "archiveArticle", "previewArticle"})},
+		{Path: "course.intent", TypeName: "CourseIntentNamespace", Members: v3Members([]string{"navigate", "selectHandout", "downloadHandout", "printHandout", "previousSlide", "nextSlide", "presentSlide", "editAgenda", "uploadMaterial", "deleteMaterial"})},
+		{Path: "context.intent", TypeName: "ContextIntentNamespace", Members: v3Members([]string{"selectPart", "selectAnnotation"})},
+		{Path: "schedule.intent", TypeName: "ScheduleIntentNamespace", Members: v3Members([]string{"toggleAvailability", "submitResponse"})},
+		{Path: "time.range", TypeName: "TimeRangeNamespace", Members: v3Members([]string{"week"})},
+		{Path: "time.intent", TypeName: "TimeIntentNamespace", Members: v3Members([]string{"selectDay", "selectEvent"})},
 	},
 	Builders: []v3BuilderDescriptor{
 		v3Builder("PageBuilder", "id", "title", "meta", "shell", "density", "breadcrumb", "section", "view", "validate", "toPage"),
