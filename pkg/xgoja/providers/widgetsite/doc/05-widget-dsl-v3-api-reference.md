@@ -177,6 +177,59 @@ Reserved style namespace.
 
 Runtime factory: `NewObject`.
 
+## Nested namespaces
+
+- `data.cell`: [field status template cycle value]
+- `data.selection`: [urlParam]
+- `crm.intent`: [openDeal moveDeal updateField completeTask]
+- `cms.intent`: [selectAsset openAsset uploadAssets selectArticle createArticle publishArticle archiveArticle previewArticle]
+- `course.intent`: [navigate selectHandout downloadHandout printHandout previousSlide nextSlide presentSlide editAgenda uploadMaterial deleteMaterial]
+- `context.intent`: [selectPart selectAnnotation]
+- `schedule.intent`: [toggleAvailability submitResponse]
+- `time.range`: [week]
+- `time.intent`: [selectDay selectEvent]
+
+## Composable builders
+
+All builders below expose `use(fragment)` in addition to their listed methods.
+
+- `PageBuilder`: [id title meta shell density breadcrumb section view validate toPage use]
+- `SectionBuilder`: [caption anchor tone text view slot actions metric metadata use]
+- `ActionsBuilder`: [add button use]
+- `FieldSetBuilder`: [key primary short prose count status date currency media url build validate use]
+- `CollectionBuilder`: [id schema empty select table edit masterDetail validate toNode toIR use]
+- `TableBuilder`: [className rowSelect actionColumn use]
+- `EditorBuilder`: [create submit submitPost reorder remove actions use]
+- `MatrixBuilder`: [id columns column valueAt cell onCellAction toNode use]
+- `SchedulePollBuilder`: [styleSet readOnly editableRow selectedCell onToggle ariaLabel use]
+- `TimeMonthBuilder`: [styleSet selected today weekStartsOn onSelect use]
+- `TimeWeekBuilder`: [styleSet range hours hourHeight viewportHeight now selected onSelect onSlotCreate use]
+- `ContextStyleSetBuilder`: [style legend use]
+- `ContextDiagramBuilder`: [styleSet palette view selected legend empty onSelect use]
+- `ContextWorkspaceBuilder`: [selectedAnnotation showNotes styleSet message annotation empty onAnnotationSelect use]
+- `CourseShellBuilder`: [active subtitle contentPadding main footer onNavigate use]
+- `CourseLandingBuilder`: [activeAgenda onAgendaSelect onPrimary onSecondary use]
+- `CourseSlideDeckBuilder`: [mode visualSide onPrevious onNext onPresent onFullscreen use]
+- `CourseHandoutsBuilder`: [selected title empty onSelect onDownload onPrint use]
+- `CourseMetadataFormBuilder`: [title onSubmit use]
+- `CourseMaterialUploadsBuilder`: [accept onUpload onDelete use]
+- `CmsMediaLibraryBuilder`: [selection selected query kindFilter page empty accept asset details toolbar onSelect onOpen onUpload use]
+- `CmsArticleQueueBuilder`: [selected status query page empty row rowActions filters onSelect onCreate onRowAction onPublish onArchive onPreview use]
+- `CmsMarkdownEditorBuilder`: [title placeholder onChange onSubmit use]
+- `CrmFieldsBuilder`: [text longtext email phone url number currency percent date datetime boolean select multiselect tags user relation build validate use]
+- `CrmPipelineBuilder`: [stage build validate use]
+- `CrmPipelineBoardBuilder`: [summaries selected ariaLabel onMove onOpen use]
+- `CrmRecordFieldsBuilder`: [mode refs onChange use]
+- `CrmActivityFeedBuilder`: [groupByDay onOpen onLoadMore use]
+
+## Action contexts
+
+- `table.rowSelect` (`DataTable`): `[row rowKey componentType]`. Context dispatched when a collection row is selected.
+- `table.cellAction` (`DataTableCell`): `[row rowKey componentType]`. Context dispatched by an action-button cell.
+- `matrix.cellAction` (`MatrixGrid`): `[row column rowKey colId value componentType]`. Context dispatched when a matrix cell is activated.
+- `activity.open` (`ActivityFeed`): `[activityId componentType]`. Context dispatched when an activity is opened.
+- `activity.loadMore` (`ActivityFeed`): `[componentType]`. Context dispatched when earlier activities are requested.
+
 
 ## Using this reference
 

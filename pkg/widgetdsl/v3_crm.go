@@ -65,7 +65,7 @@ func (r *runtime) v3CRMFields(args ...goja.Value) *goja.Object {
 }
 
 func (r *runtime) v3CRMFieldsBuilder(spec *v3CRMFieldsSpec) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("crm.fields")
 	r.attachCRMRef(obj, &v3CRMRef{kind: "fields", fields: spec})
 	add := func(kind, key string, options ...goja.Value) *goja.Object {
 		if strings.TrimSpace(key) == "" {
@@ -120,7 +120,7 @@ func (r *runtime) v3CRMPipeline(nameOrOptions goja.Value, cb ...goja.Value) *goj
 }
 
 func (r *runtime) v3CRMPipelineBuilder(spec *v3CRMPipelineSpec) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("crm.pipeline")
 	r.attachCRMRef(obj, &v3CRMRef{kind: "pipeline", pipeline: spec})
 	setExport(obj, "stage", func(id, label string, options ...goja.Value) *goja.Object {
 		if strings.TrimSpace(id) == "" || strings.TrimSpace(label) == "" {
@@ -154,7 +154,7 @@ func (r *runtime) v3CRMPipelineBoard(pipelineValue, dealsValue goja.Value, cb ..
 }
 
 func (r *runtime) v3CRMPipelineBoardBuilder(props map[string]any, pipeline map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("crm.pipelineBoard")
 	setExport(obj, "summaries", func(value goja.Value) *goja.Object {
 		mergeOptions(props, v3CRMBoardProps(pipeline, anySlice(props["cards"]), anySlice(value.Export())))
 		return obj
@@ -181,7 +181,7 @@ func (r *runtime) v3CRMRecordFields(valuesValue, fieldsValue goja.Value, cb ...g
 }
 
 func (r *runtime) v3CRMRecordFieldsBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("crm.recordFields")
 	setExport(obj, "mode", func(mode string) *goja.Object { props["mode"] = mode; return obj })
 	setExport(obj, "refs", func(refs goja.Value) *goja.Object { props["refs"] = refs.Export(); return obj })
 	setExport(obj, "onChange", func(action goja.Value) *goja.Object { props["onFieldChangeAction"] = action.Export(); return obj })
@@ -190,7 +190,7 @@ func (r *runtime) v3CRMRecordFieldsBuilder(props map[string]any) *goja.Object {
 
 func (r *runtime) v3CRMActivityFeed(activities goja.Value, cb ...goja.Value) map[string]any {
 	props := map[string]any{"activities": anySlice(activities.Export()), "styleSet": v3CRMActivityStyleSet(), "glyphs": map[string]any{"note": "📝", "email": "✉", "call": "☎", "meeting": "◎", "task": "□", "stage_change": "→", "field_change": "•"}, "groupByDay": true}
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("crm.activityFeed")
 	setExport(obj, "groupByDay", func(value bool) *goja.Object { props["groupByDay"] = value; return obj })
 	setExport(obj, "onOpen", func(action goja.Value) *goja.Object { props["onOpenAction"] = action.Export(); return obj })
 	setExport(obj, "onLoadMore", func(action goja.Value) *goja.Object { props["onLoadMoreAction"] = action.Export(); return obj })

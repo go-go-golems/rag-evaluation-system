@@ -3,8 +3,11 @@ package widgetdsl
 import "fmt"
 
 type v3ModuleDescriptor struct {
-	Exports    []v3ExportDescriptor
-	Namespaces []v3NamespaceDescriptor
+	Exports          []v3ExportDescriptor
+	Namespaces       []v3NamespaceDescriptor
+	NestedNamespaces []v3NestedNamespaceDescriptor
+	Builders         []v3BuilderDescriptor
+	ActionContexts   []v3ActionContextDescriptor
 }
 
 type v3ExportDescriptor struct {
@@ -27,6 +30,23 @@ type v3MemberDescriptor struct {
 	Kind string
 }
 
+type v3NestedNamespaceDescriptor struct {
+	Path    string
+	Members []v3MemberDescriptor
+}
+
+type v3BuilderDescriptor struct {
+	TypeName string
+	Methods  []string
+}
+
+type v3ActionContextDescriptor struct {
+	Name        string
+	Component   string
+	Fields      []string
+	Description string
+}
+
 type v3ViewDescriptor struct {
 	Name        string
 	Signature   string
@@ -45,9 +65,13 @@ func v3Members(functions []string, objects ...string) []v3MemberDescriptor {
 	return members
 }
 
-// widgetV3Module describes every direct public export installed by widget.dsl.
-// Nested builder methods, intent methods, and action-context contracts are
-// intentionally modeled separately from this direct-runtime parity inventory.
+func v3Builder(typeName string, methods ...string) v3BuilderDescriptor {
+	return v3BuilderDescriptor{TypeName: typeName, Methods: append(methods, "use")}
+}
+
+// widgetV3Module describes every public export and composable builder installed
+// by widget.dsl. Runtime parity tests execute the actual Goja factories so this
+// inventory cannot silently drift from JavaScript behavior.
 var widgetV3Module = v3ModuleDescriptor{
 	Exports: []v3ExportDescriptor{
 		{
@@ -158,6 +182,54 @@ var widgetV3Module = v3ModuleDescriptor{
 			RuntimeFactory: "NewObject",
 		},
 	},
+	NestedNamespaces: []v3NestedNamespaceDescriptor{
+		{Path: "data.cell", Members: v3Members([]string{"field", "status", "template", "cycle", "value"})},
+		{Path: "data.selection", Members: v3Members([]string{"urlParam"})},
+		{Path: "crm.intent", Members: v3Members([]string{"openDeal", "moveDeal", "updateField", "completeTask"})},
+		{Path: "cms.intent", Members: v3Members([]string{"selectAsset", "openAsset", "uploadAssets", "selectArticle", "createArticle", "publishArticle", "archiveArticle", "previewArticle"})},
+		{Path: "course.intent", Members: v3Members([]string{"navigate", "selectHandout", "downloadHandout", "printHandout", "previousSlide", "nextSlide", "presentSlide", "editAgenda", "uploadMaterial", "deleteMaterial"})},
+		{Path: "context.intent", Members: v3Members([]string{"selectPart", "selectAnnotation"})},
+		{Path: "schedule.intent", Members: v3Members([]string{"toggleAvailability", "submitResponse"})},
+		{Path: "time.range", Members: v3Members([]string{"week"})},
+		{Path: "time.intent", Members: v3Members([]string{"selectDay", "selectEvent"})},
+	},
+	Builders: []v3BuilderDescriptor{
+		v3Builder("PageBuilder", "id", "title", "meta", "shell", "density", "breadcrumb", "section", "view", "validate", "toPage"),
+		v3Builder("SectionBuilder", "caption", "anchor", "tone", "text", "view", "slot", "actions", "metric", "metadata"),
+		v3Builder("ActionsBuilder", "add", "button"),
+		v3Builder("FieldSetBuilder", "key", "primary", "short", "prose", "count", "status", "date", "currency", "media", "url", "build", "validate"),
+		v3Builder("CollectionBuilder", "id", "schema", "empty", "select", "table", "edit", "masterDetail", "validate", "toNode", "toIR"),
+		v3Builder("TableBuilder", "className", "rowSelect", "actionColumn"),
+		v3Builder("EditorBuilder", "create", "submit", "submitPost", "reorder", "remove", "actions"),
+		v3Builder("MatrixBuilder", "id", "columns", "column", "valueAt", "cell", "onCellAction", "toNode"),
+		v3Builder("SchedulePollBuilder", "styleSet", "readOnly", "editableRow", "selectedCell", "onToggle", "ariaLabel"),
+		v3Builder("TimeMonthBuilder", "styleSet", "selected", "today", "weekStartsOn", "onSelect"),
+		v3Builder("TimeWeekBuilder", "styleSet", "range", "hours", "hourHeight", "viewportHeight", "now", "selected", "onSelect", "onSlotCreate"),
+		v3Builder("ContextStyleSetBuilder", "style", "legend"),
+		v3Builder("ContextDiagramBuilder", "styleSet", "palette", "view", "selected", "legend", "empty", "onSelect"),
+		v3Builder("ContextWorkspaceBuilder", "selectedAnnotation", "showNotes", "styleSet", "message", "annotation", "empty", "onAnnotationSelect"),
+		v3Builder("CourseShellBuilder", "active", "subtitle", "contentPadding", "main", "footer", "onNavigate"),
+		v3Builder("CourseLandingBuilder", "activeAgenda", "onAgendaSelect", "onPrimary", "onSecondary"),
+		v3Builder("CourseSlideDeckBuilder", "mode", "visualSide", "onPrevious", "onNext", "onPresent", "onFullscreen"),
+		v3Builder("CourseHandoutsBuilder", "selected", "title", "empty", "onSelect", "onDownload", "onPrint"),
+		v3Builder("CourseMetadataFormBuilder", "title", "onSubmit"),
+		v3Builder("CourseMaterialUploadsBuilder", "accept", "onUpload", "onDelete"),
+		v3Builder("CmsMediaLibraryBuilder", "selection", "selected", "query", "kindFilter", "page", "empty", "accept", "asset", "details", "toolbar", "onSelect", "onOpen", "onUpload"),
+		v3Builder("CmsArticleQueueBuilder", "selected", "status", "query", "page", "empty", "row", "rowActions", "filters", "onSelect", "onCreate", "onRowAction", "onPublish", "onArchive", "onPreview"),
+		v3Builder("CmsMarkdownEditorBuilder", "title", "placeholder", "onChange", "onSubmit"),
+		v3Builder("CrmFieldsBuilder", "text", "longtext", "email", "phone", "url", "number", "currency", "percent", "date", "datetime", "boolean", "select", "multiselect", "tags", "user", "relation", "build", "validate"),
+		v3Builder("CrmPipelineBuilder", "stage", "build", "validate"),
+		v3Builder("CrmPipelineBoardBuilder", "summaries", "selected", "ariaLabel", "onMove", "onOpen"),
+		v3Builder("CrmRecordFieldsBuilder", "mode", "refs", "onChange"),
+		v3Builder("CrmActivityFeedBuilder", "groupByDay", "onOpen", "onLoadMore"),
+	},
+	ActionContexts: []v3ActionContextDescriptor{
+		{Name: "table.rowSelect", Component: "DataTable", Fields: []string{"row", "rowKey", "componentType"}, Description: "Context dispatched when a collection row is selected."},
+		{Name: "table.cellAction", Component: "DataTableCell", Fields: []string{"row", "rowKey", "componentType"}, Description: "Context dispatched by an action-button cell."},
+		{Name: "matrix.cellAction", Component: "MatrixGrid", Fields: []string{"row", "column", "rowKey", "colId", "value", "componentType"}, Description: "Context dispatched when a matrix cell is activated."},
+		{Name: "activity.open", Component: "ActivityFeed", Fields: []string{"activityId", "componentType"}, Description: "Context dispatched when an activity is opened."},
+		{Name: "activity.loadMore", Component: "ActivityFeed", Fields: []string{"componentType"}, Description: "Context dispatched when earlier activities are requested."},
+	},
 }
 
 func widgetV3DescriptorTypeScriptLines() []string {
@@ -196,5 +268,26 @@ func WidgetV3APIReferenceMarkdown() string {
 			out += "\n"
 		}
 	}
+	out += "## Nested namespaces\n\n"
+	for _, namespace := range widgetV3Module.NestedNamespaces {
+		out += fmt.Sprintf("- `%s`: %v\n", namespace.Path, v3DescriptorMemberNamesForMarkdown(namespace.Members))
+	}
+	out += "\n## Composable builders\n\nAll builders below expose `use(fragment)` in addition to their listed methods.\n\n"
+	for _, builder := range widgetV3Module.Builders {
+		out += fmt.Sprintf("- `%s`: %v\n", builder.TypeName, builder.Methods)
+	}
+	out += "\n## Action contexts\n\n"
+	for _, context := range widgetV3Module.ActionContexts {
+		out += fmt.Sprintf("- `%s` (`%s`): `%v`. %s\n", context.Name, context.Component, context.Fields, context.Description)
+	}
+	out += "\n"
 	return out
+}
+
+func v3DescriptorMemberNamesForMarkdown(members []v3MemberDescriptor) []string {
+	names := make([]string, 0, len(members))
+	for _, member := range members {
+		names = append(names, member.Name)
+	}
+	return names
 }

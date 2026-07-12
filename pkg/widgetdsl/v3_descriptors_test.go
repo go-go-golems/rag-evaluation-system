@@ -64,6 +64,141 @@ func TestWidgetV3DescriptorMatchesDirectRuntimeExports(t *testing.T) {
 	assertSameStringSet(t, "widget.dsl root exports", exports.Keys(), wantRoot)
 }
 
+func TestWidgetV3DescriptorMatchesNestedNamespaces(t *testing.T) {
+	vm := goja.New()
+	exports := vm.NewObject()
+	(&runtime{vm: vm}).installWidgetV3(exports)
+
+	for _, namespace := range widgetV3Module.NestedNamespaces {
+		object := resolveV3DescriptorPath(t, vm, exports, namespace.Path)
+		assertSameStringSet(t, namespace.Path+" members", object.Keys(), v3DescriptorMemberNames(namespace.Members))
+	}
+}
+
+func TestWidgetV3DescriptorMatchesBuilderRuntimeMethods(t *testing.T) {
+	vm := goja.New()
+	exports := vm.NewObject()
+	(&runtime{vm: vm}).installWidgetV3(exports)
+	if err := vm.Set("widget", exports); err != nil {
+		t.Fatalf("install widget global: %v", err)
+	}
+
+	value, err := vm.RunString(`
+		const builders = {};
+		const capture = (name) => (builder) => { builders[name] = Object.keys(builder); };
+
+		widget.page("Probe", page => {
+			capture("PageBuilder")(page);
+			page.section("Section", section => {
+				capture("SectionBuilder")(section);
+				section.actions(capture("ActionsBuilder"));
+			});
+		});
+		capture("FieldSetBuilder")(widget.data.fields());
+		const collection = widget.data.collection([]);
+		capture("CollectionBuilder")(collection);
+		collection.table(capture("TableBuilder"));
+		collection.edit(capture("EditorBuilder"));
+		widget.data.matrix([], capture("MatrixBuilder"));
+		widget.schedule.availabilityPoll({ options: [], responses: [] }, capture("SchedulePollBuilder"));
+		widget.time.month([], capture("TimeMonthBuilder"));
+		widget.time.week([], capture("TimeWeekBuilder"));
+		widget.context.styleSet(capture("ContextStyleSetBuilder"));
+		widget.context.diagram({ parts: [] }, capture("ContextDiagramBuilder"));
+		widget.context.workspace({ messages: [], annotations: [] }, capture("ContextWorkspaceBuilder"));
+		widget.course.shell({}, capture("CourseShellBuilder"));
+		widget.course.landing({}, capture("CourseLandingBuilder"));
+		widget.course.slideDeck({ slides: [] }, capture("CourseSlideDeckBuilder"));
+		widget.course.handouts({ docs: [] }, capture("CourseHandoutsBuilder"));
+		widget.course.metadataForm({}, capture("CourseMetadataFormBuilder"));
+		widget.course.materialUploads({}, capture("CourseMaterialUploadsBuilder"));
+		widget.cms.mediaLibrary([], capture("CmsMediaLibraryBuilder"));
+		widget.cms.articleQueue([], capture("CmsArticleQueueBuilder"));
+		widget.cms.markdownEditor("", capture("CmsMarkdownEditorBuilder"));
+		const crmFields = widget.crm.fields();
+		capture("CrmFieldsBuilder")(crmFields);
+		const pipeline = widget.crm.pipeline("Probe");
+		capture("CrmPipelineBuilder")(pipeline);
+		widget.crm.pipelineBoard(pipeline, [], capture("CrmPipelineBoardBuilder"));
+		widget.crm.recordFields({}, crmFields, capture("CrmRecordFieldsBuilder"));
+		widget.crm.activityFeed([], capture("CrmActivityFeedBuilder"));
+		builders;
+	`)
+	if err != nil {
+		t.Fatalf("probe v3 builders: %v", err)
+	}
+	got := value.Export().(map[string]any)
+	for _, builder := range widgetV3Module.Builders {
+		rawMethods, ok := got[builder.TypeName].([]any)
+		if !ok {
+			t.Fatalf("builder probe did not capture %s (got %#v)", builder.TypeName, got[builder.TypeName])
+		}
+		methods := make([]string, 0, len(rawMethods))
+		for _, method := range rawMethods {
+			methods = append(methods, method.(string))
+		}
+		assertSameStringSet(t, builder.TypeName+" methods", methods, builder.Methods)
+	}
+	if len(got) != len(widgetV3Module.Builders) {
+		t.Fatalf("builder descriptor count mismatch: runtime captured %d, descriptors contain %d", len(got), len(widgetV3Module.Builders))
+	}
+}
+
+func TestWidgetV3ComposableBuilderDeclarationsMatchDescriptors(t *testing.T) {
+	dts := strings.Join(TypeScriptModule(WidgetV3ModuleName).RawDTS, "\n")
+	for _, builder := range widgetV3Module.Builders {
+		want := "export interface " + builder.TypeName + " extends ComposableBuilder<" + builder.TypeName + ">"
+		if !strings.Contains(dts, want) {
+			t.Errorf("builder descriptor %s is not declared as composable", builder.TypeName)
+		}
+	}
+}
+
+func TestWidgetV3BuilderUseComposesFragments(t *testing.T) {
+	vm := goja.New()
+	exports := vm.NewObject()
+	(&runtime{vm: vm}).installWidgetV3(exports)
+	if err := vm.Set("widget", exports); err != nil {
+		t.Fatalf("install widget global: %v", err)
+	}
+	value, err := vm.RunString(`
+		let fragmentCalls = 0;
+		const compact = table => { fragmentCalls += 1; return table.className("compact"); };
+		widget.data.collection([{ id: "one", title: "One" }], collection => collection
+			.use(c => { fragmentCalls += 1; return c.empty("None"); })
+			.table(table => table.use(compact)))
+			.toNode();
+		fragmentCalls;
+	`)
+	if err != nil {
+		t.Fatalf("compose builder fragments: %v", err)
+	}
+	if got := value.ToInteger(); got != 2 {
+		t.Fatalf("composed fragment calls = %d, want 2", got)
+	}
+}
+
+func resolveV3DescriptorPath(t *testing.T, vm *goja.Runtime, root *goja.Object, path string) *goja.Object {
+	t.Helper()
+	object := root
+	for _, segment := range strings.Split(path, ".") {
+		value := object.Get(segment)
+		if value == nil || goja.IsUndefined(value) || goja.IsNull(value) {
+			t.Fatalf("descriptor path %q is missing segment %q", path, segment)
+		}
+		object = value.ToObject(vm)
+	}
+	return object
+}
+
+func v3DescriptorMemberNames(members []v3MemberDescriptor) []string {
+	names := make([]string, 0, len(members))
+	for _, member := range members {
+		names = append(names, member.Name)
+	}
+	return names
+}
+
 func TestWidgetV3DescriptorViewsAreDirectMembers(t *testing.T) {
 	for _, namespace := range widgetV3Module.Namespaces {
 		members := make(map[string]struct{}, len(namespace.Members))

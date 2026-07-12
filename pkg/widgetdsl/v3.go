@@ -178,7 +178,7 @@ func (r *runtime) v3ScheduleBookingPicker(availability goja.Value, cb ...goja.Va
 }
 
 func (r *runtime) v3SchedulePollBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("schedule.poll")
 	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
 	setExport(obj, "readOnly", func(readOnly ...bool) *goja.Object { props["readOnly"] = len(readOnly) == 0 || readOnly[0]; return obj })
 	setExport(obj, "editableRow", func(rowKey string) *goja.Object { props["editableRowKey"] = rowKey; return obj })
@@ -268,7 +268,7 @@ func (r *runtime) v3TimeMonth(eventsOrMarkers goja.Value, cb ...goja.Value) map[
 }
 
 func (r *runtime) v3TimeMonthBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("time.month")
 	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
 	setExport(obj, "selected", func(dayISO string) *goja.Object { props["selectedDateISO"] = dayISO; return obj })
 	setExport(obj, "today", func(dayISO string) *goja.Object { props["todayISO"] = dayISO; return obj })
@@ -294,7 +294,7 @@ func (r *runtime) v3TimeWeek(events goja.Value, cb ...goja.Value) map[string]any
 }
 
 func (r *runtime) v3TimeWeekBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("time.week")
 	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
 	setExport(obj, "range", func(rangeSpec goja.Value) *goja.Object {
 		props["days"] = weekDaysFromRange(exportObject(rangeSpec))
@@ -500,7 +500,7 @@ func (r *runtime) v3ContextStyleSet(args ...goja.Value) map[string]any {
 }
 
 func (r *runtime) v3ContextStyleSetBuilder(styleSet map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("context.styleSet")
 	setExport(obj, "style", func(id string, options goja.Value) *goja.Object {
 		styles, _ := styleSet["styles"].(map[string]any)
 		if styles == nil {
@@ -546,7 +546,7 @@ func (r *runtime) v3ContextDiagram(snapshot goja.Value, cb ...goja.Value) map[st
 }
 
 func (r *runtime) v3ContextDiagramBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("context.diagram")
 	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
 	setExport(obj, "palette", func(nameOrOptions goja.Value, entries ...goja.Value) *goja.Object {
 		props["styleSet"] = r.v3ContextPalette(nameOrOptions, entries...)
@@ -580,7 +580,7 @@ func (r *runtime) v3ContextWorkspace(session goja.Value, cb ...goja.Value) map[s
 }
 
 func (r *runtime) v3ContextWorkspaceBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("context.workspace")
 	setExport(obj, "selectedAnnotation", func(id string) *goja.Object { props["selectedAnnotationId"] = id; return obj })
 	setExport(obj, "showNotes", func(show bool) *goja.Object { props["showNotes"] = show; return obj })
 	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
@@ -648,7 +648,7 @@ func (r *runtime) v3CourseShell(definition goja.Value, cb ...goja.Value) map[str
 }
 
 func (r *runtime) v3CourseShellBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("course.shell")
 	setExport(obj, "active", func(id string) *goja.Object { props["activeItemId"] = id; return obj })
 	setExport(obj, "subtitle", func(value goja.Value) *goja.Object { props["subtitle"] = r.v3Renderable(value); return obj })
 	setExport(obj, "contentPadding", func(value string) *goja.Object { props["contentPadding"] = value; return obj })
@@ -668,7 +668,7 @@ func (r *runtime) v3CourseLanding(definition goja.Value, cb ...goja.Value) map[s
 }
 
 func (r *runtime) v3CourseLandingBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("course.landing")
 	setExport(obj, "activeAgenda", func(id string) *goja.Object { props["activeAgendaItemId"] = id; return obj })
 	setExport(obj, "onAgendaSelect", func(action goja.Value) *goja.Object { props["onAgendaItemSelectAction"] = action.Export(); return obj })
 	setExport(obj, "onPrimary", func(action goja.Value) *goja.Object { props["onPrimaryCtaAction"] = action.Export(); return obj })
@@ -697,7 +697,7 @@ func (r *runtime) v3CourseSlideDeck(deck goja.Value, cb ...goja.Value) map[strin
 }
 
 func (r *runtime) v3CourseSlideBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("course.slideDeck")
 	setExport(obj, "mode", func(mode string) *goja.Object { props["mode"] = mode; return obj })
 	setExport(obj, "visualSide", func(side string) *goja.Object { props["visualSide"] = side; return obj })
 	setExport(obj, "onPrevious", func(action goja.Value) *goja.Object { props["onPreviousAction"] = action.Export(); return obj })
@@ -718,7 +718,7 @@ func (r *runtime) v3CourseHandouts(bundle goja.Value, cb ...goja.Value) map[stri
 }
 
 func (r *runtime) v3CourseHandoutsBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("course.handouts")
 	setExport(obj, "selected", func(id string) *goja.Object { props["selectedDocumentId"] = id; return obj })
 	setExport(obj, "title", func(title goja.Value) *goja.Object { props["title"] = r.v3Renderable(title); return obj })
 	setExport(obj, "empty", func(message goja.Value) *goja.Object { props["emptyMessage"] = r.v3Renderable(message); return obj })
@@ -738,7 +738,7 @@ func (r *runtime) v3CourseMetadataForm(metadata goja.Value, cb ...goja.Value) ma
 }
 
 func (r *runtime) v3CourseFormBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("course.metadataForm")
 	setExport(obj, "title", func(title string) *goja.Object { props["title"] = title; return obj })
 	setExport(obj, "onSubmit", func(action goja.Value) *goja.Object { props["onSubmitAction"] = action.Export(); return obj })
 	return obj
@@ -754,7 +754,7 @@ func (r *runtime) v3CourseMaterialUploads(material goja.Value, cb ...goja.Value)
 	if _, ok := props["title"]; !ok {
 		props["title"] = "Course materials"
 	}
-	builder := r.vm.NewObject()
+	builder := r.newV3Builder("course.materialUploads")
 	setExport(builder, "accept", func(list goja.Value) *goja.Object { props["accept"] = anySlice(list.Export()); return builder })
 	setExport(builder, "onUpload", func(action goja.Value) *goja.Object { props["onFilesSelectedAction"] = action.Export(); return builder })
 	setExport(builder, "onDelete", func(action goja.Value) *goja.Object { props["onDeleteAction"] = action.Export(); return builder })
@@ -808,7 +808,7 @@ func (r *runtime) v3CMSMediaLibrary(assets goja.Value, cb ...goja.Value) map[str
 }
 
 func (r *runtime) v3CMSMediaLibraryBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("cms.mediaLibrary")
 	setExport(obj, "selection", func(mode string) *goja.Object { props["selectionMode"] = mode; return obj })
 	setExport(obj, "selected", func(ids goja.Value) *goja.Object { props["selectedAssetIds"] = anySlice(ids.Export()); return obj })
 	setExport(obj, "query", func(value string) *goja.Object { props["query"] = value; return obj })
@@ -842,7 +842,7 @@ func (r *runtime) v3CMSArticleQueue(articles goja.Value, cb ...goja.Value) map[s
 }
 
 func (r *runtime) v3CMSArticleQueueBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("cms.articleQueue")
 	setExport(obj, "selected", func(id string) *goja.Object { props["selectedArticleId"] = id; return obj })
 	setExport(obj, "status", func(status string) *goja.Object { props["statusFilter"] = status; return obj })
 	setExport(obj, "query", func(query string) *goja.Object { props["query"] = query; return obj })
@@ -867,7 +867,7 @@ func (r *runtime) v3CMSArticleQueueBuilder(props map[string]any) *goja.Object {
 func (r *runtime) v3CMSMarkdownEditor(body goja.Value, cb ...goja.Value) map[string]any {
 	props := map[string]any{"value": body.Export()}
 	if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
-		builder := r.vm.NewObject()
+		builder := r.newV3Builder("cms.markdownEditor")
 		setExport(builder, "title", func(title string) *goja.Object { props["title"] = title; return builder })
 		setExport(builder, "placeholder", func(placeholder string) *goja.Object { props["placeholder"] = placeholder; return builder })
 		setExport(builder, "onChange", func(action goja.Value) *goja.Object { props["onChangeAction"] = action.Export(); return builder })
@@ -996,7 +996,7 @@ func (r *runtime) v3UIShareLink(href goja.Value, options ...goja.Value) map[stri
 }
 
 func (r *runtime) v3ActionsBuilder(actions *[]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("actions")
 	setExport(obj, "add", func(label goja.Value, action goja.Value, options ...goja.Value) *goja.Object {
 		item := exportOptions(options)
 		item["label"] = r.v3Renderable(label)
@@ -1033,7 +1033,7 @@ func (r *runtime) v3Fields(args ...goja.Value) *goja.Object {
 }
 
 func (r *runtime) v3FieldsBuilder(schema *v2spec.SchemaSpec) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("data.fields")
 	r.attachV2Ref(obj, &v2Ref{kind: "schemaBuilder", schema: schema})
 	addField := func(name string, field v2spec.FieldSpec, options ...goja.Value) *goja.Object {
 		if strings.TrimSpace(name) == "" {
@@ -1118,7 +1118,7 @@ func (r *runtime) v3Collection(args ...goja.Value) *goja.Object {
 }
 
 func (r *runtime) v3CollectionBuilder(collection *v2spec.CollectionSpec) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("data.collection")
 	r.attachV2Ref(obj, &v2Ref{kind: "collectionBuilder", collection: collection})
 	setExport(obj, "id", func(name string) *goja.Object {
 		if strings.TrimSpace(name) != "" {
@@ -1160,7 +1160,7 @@ func (r *runtime) v3CollectionBuilder(collection *v2spec.CollectionSpec) *goja.O
 }
 
 func (r *runtime) v3TableBuilder(collection *v2spec.CollectionSpec) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("data.collection.table")
 	setExport(obj, "className", func(className string) *goja.Object { collection.Table.ClassName = className; return obj })
 	setExport(obj, "rowSelect", func(actionValue goja.Value) *goja.Object {
 		action := v3ActionFromAny(actionValue.Export())
@@ -1178,7 +1178,7 @@ func (r *runtime) v3TableBuilder(collection *v2spec.CollectionSpec) *goja.Object
 }
 
 func (r *runtime) v3EditorBuilder(collection *v2spec.CollectionSpec) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("data.collection.edit")
 	setExport(obj, "create", func(value goja.Value) *goja.Object {
 		label := "New item"
 		if !goja.IsUndefined(value) && !goja.IsNull(value) {
@@ -1278,7 +1278,7 @@ func (r *runtime) v3Matrix(rows goja.Value, cb ...goja.Value) *goja.Object {
 }
 
 func (r *runtime) v3MatrixBuilder(spec map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("data.matrix")
 	setExport(obj, "id", func(id string) *goja.Object { spec["id"] = id; return obj })
 	setExport(obj, "columns", func(columns goja.Value) *goja.Object { spec["columns"] = columns.Export(); return obj })
 	setExport(obj, "column", func(id string, label goja.Value, options ...goja.Value) *goja.Object {
@@ -1317,7 +1317,7 @@ func (r *runtime) v3ListItem(id string, label goja.Value, options ...goja.Value)
 }
 
 func (r *runtime) v3PageBuilder(spec *v3PageSpec) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("page")
 	setExport(obj, "id", func(id string) *goja.Object {
 		if strings.TrimSpace(id) != "" {
 			spec.ID = id
@@ -1353,10 +1353,6 @@ func (r *runtime) v3PageBuilder(spec *v3PageSpec) *goja.Object {
 		spec.Breadcrumbs = append(spec.Breadcrumbs, item)
 		return obj
 	})
-	setExport(obj, "use", func(fragment goja.Value) *goja.Object {
-		r.applyV3BuilderCallback(obj, fragment, "page.use")
-		return obj
-	})
 	setExport(obj, "section", func(title goja.Value, cb ...goja.Value) *goja.Object {
 		section := v3SectionSpec{Title: r.v3RenderableTitle(title)}
 		sectionBuilder := r.v3SectionBuilder(&section)
@@ -1385,7 +1381,7 @@ func (r *runtime) v3PageBuilder(spec *v3PageSpec) *goja.Object {
 }
 
 func (r *runtime) v3SectionBuilder(spec *v3SectionSpec) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("section")
 	setExport(obj, "caption", func(caption string) *goja.Object {
 		spec.Caption = caption
 		return obj
@@ -1396,10 +1392,6 @@ func (r *runtime) v3SectionBuilder(spec *v3SectionSpec) *goja.Object {
 	})
 	setExport(obj, "tone", func(tone string) *goja.Object {
 		spec.Tone = tone
-		return obj
-	})
-	setExport(obj, "use", func(fragment goja.Value) *goja.Object {
-		r.applyV3BuilderCallback(obj, fragment, "section.use")
 		return obj
 	})
 	setExport(obj, "text", func(value goja.Value) *goja.Object {
@@ -1437,6 +1429,15 @@ func (r *runtime) v3SectionBuilder(spec *v3SectionSpec) *goja.Object {
 		return obj
 	})
 	return obj
+}
+
+func (r *runtime) newV3Builder(path string) *goja.Object {
+	builder := r.vm.NewObject()
+	setExport(builder, "use", func(fragment goja.Value) *goja.Object {
+		r.applyV3BuilderCallback(builder, fragment, path+".use")
+		return builder
+	})
+	return builder
 }
 
 func (r *runtime) applyV3BuilderCallback(builder *goja.Object, cb goja.Value, name string) {
