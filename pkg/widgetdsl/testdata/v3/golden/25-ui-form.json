@@ -13,11 +13,15 @@
 										"kind": "component",
 										"props": {
 											"defaultValue": "Ada",
-											"name": "name"
+											"name": "name",
+											"readOnly": false
 										},
 										"type": "TextInput"
 									},
-									"label": "Name"
+									"label": {
+										"kind": "text",
+										"text": "Name"
+									}
 								},
 								"type": "FormRow"
 							},
@@ -28,11 +32,15 @@
 										"kind": "component",
 										"props": {
 											"defaultValue": "Hello",
-											"name": "notes"
+											"name": "notes",
+											"readOnly": false
 										},
 										"type": "TextareaInput"
 									},
-									"label": "Notes"
+									"label": {
+										"kind": "text",
+										"text": "Notes"
+									}
 								},
 								"type": "FormRow"
 							}

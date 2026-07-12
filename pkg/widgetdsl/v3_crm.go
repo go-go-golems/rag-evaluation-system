@@ -35,6 +35,7 @@ func (r *runtime) v3CRMObject() *goja.Object {
 	setExport(crm, "pipeline", r.v3CRMPipeline)
 	setExport(crm, "pipelineBoard", r.v3CRMPipelineBoard)
 	setExport(crm, "recordFields", r.v3CRMRecordFields)
+	setExport(crm, "field", r.v3CRMField)
 	setExport(crm, "activityFeed", r.v3CRMActivityFeed)
 	setExport(crm, "tasksInbox", r.v3CRMTasksInbox)
 	setExport(crm, "stat", r.v3CRMStat)
@@ -164,6 +165,13 @@ func (r *runtime) v3CRMPipelineBoardBuilder(props map[string]any, pipeline map[s
 	setExport(obj, "onMove", func(action goja.Value) *goja.Object { props["onMoveAction"] = action.Export(); return obj })
 	setExport(obj, "onOpen", func(action goja.Value) *goja.Object { props["onCardSelectAction"] = action.Export(); return obj })
 	return obj
+}
+
+func (r *runtime) v3CRMField(value goja.Value, fieldSpec goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	props["value"] = value.Export()
+	props["spec"] = fieldSpec.Export()
+	return componentNode("FieldRenderer", props)
 }
 
 func (r *runtime) v3CRMRecordFields(valuesValue, fieldsValue goja.Value, cb ...goja.Value) map[string]any {

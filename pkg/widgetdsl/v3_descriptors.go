@@ -126,7 +126,7 @@ var widgetV3Module = v3ModuleDescriptor{
 			TypeName:       "CrmNamespace",
 			Description:    "CRM field schemas, pipelines, records, activities, tasks, and actions.",
 			RuntimeFactory: "v3CRMObject",
-			Members:        v3Members([]string{"fields", "pipeline", "pipelineBoard", "recordFields", "activityFeed", "tasksInbox", "stat", "funnel"}, "intent"),
+			Members:        v3Members([]string{"fields", "pipeline", "pipelineBoard", "recordFields", "field", "activityFeed", "tasksInbox", "stat", "funnel"}, "intent"),
 			Views: []v3ViewDescriptor{
 				{Name: "pipelineBoard", Signature: "pipelineBoard(pipeline: Record<string, any>, deals: Record<string, any>[], configure?: Fragment<CrmPipelineBoardBuilder>): WidgetNodeSpec", Component: "BoardEngine", Description: "Render an opportunity pipeline board."},
 				{Name: "recordFields", Signature: "recordFields(values: Record<string, JsonValue>, fields: Record<string, any>, configure?: Fragment<CrmRecordFieldsBuilder>): WidgetNodeSpec", Component: "RecordFieldList", Description: "Render typed CRM fields."},

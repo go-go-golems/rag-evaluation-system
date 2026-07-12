@@ -9,13 +9,17 @@
 						"props": {
 							"ariaLabel": "Deals",
 							"card": {
+								"accentField": "status",
 								"meta": {
-									"field": "value",
+									"fallback": "unassigned",
+									"field": "ownerId",
 									"kind": "field"
 								},
 								"subtitle": {
-									"field": "owner",
-									"kind": "field"
+									"fallback": "—",
+									"field": "amount",
+									"format": "integer",
+									"kind": "number"
 								},
 								"title": {
 									"field": "title",
@@ -38,18 +42,57 @@
 									"value": "$25k"
 								}
 							],
-							"columnField": "stage",
+							"columnField": "stageId",
 							"columns": [
 								{
+									"accent": null,
 									"header": "Lead",
 									"id": "lead"
 								},
 								{
+									"accent": null,
 									"header": "Won",
 									"id": "won"
 								}
 							],
-							"getCardId": "id"
+							"getCardId": {
+								"field": "id"
+							},
+							"styleSet": {
+								"id": "crm-stages",
+								"styles": {
+									"lead": {
+										"fill": "color-mix(in srgb, var(--mac-text-dim) 20%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-text-dim)"
+									},
+									"lost": {
+										"fill": "color-mix(in srgb, var(--mac-accent-2) 30%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-accent-2)"
+									},
+									"negotiation": {
+										"fill": "color-mix(in srgb, var(--mac-accent-2) 24%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-accent-2)"
+									},
+									"proposal": {
+										"fill": "color-mix(in srgb, var(--mac-amber) 26%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-amber)"
+									},
+									"qualified": {
+										"fill": "color-mix(in srgb, var(--mac-accent) 22%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-accent)"
+									},
+									"won": {
+										"fill": "color-mix(in srgb, var(--mac-green) 26%, var(--mac-surface))",
+										"labelColor": "var(--mac-text)",
+										"line": "var(--mac-green)"
+									}
+								}
+							}
 						},
 						"type": "BoardEngine"
 					}

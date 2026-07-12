@@ -112,6 +112,7 @@ Runtime factory: `v3CRMObject`.
 - `pipeline` (function)
 - `pipelineBoard`: `pipelineBoard(pipeline: Record<string, any>, deals: Record<string, any>[], configure?: Fragment<CrmPipelineBoardBuilder>): WidgetNodeSpec` → `BoardEngine`. Render an opportunity pipeline board.
 - `recordFields`: `recordFields(values: Record<string, JsonValue>, fields: Record<string, any>, configure?: Fragment<CrmRecordFieldsBuilder>): WidgetNodeSpec` → `RecordFieldList`. Render typed CRM fields.
+- `field` (function)
 - `activityFeed`: `activityFeed(activities: Record<string, any>[], configure?: Fragment<CrmActivityFeedBuilder>): WidgetNodeSpec` → `ActivityFeed`. Render a CRM activity timeline.
 - `tasksInbox` (function)
 - `stat` (function)

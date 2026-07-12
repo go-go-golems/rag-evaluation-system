@@ -14,20 +14,23 @@
 										{
 											"key": "name",
 											"label": "Name",
+											"section": "Basics",
 											"type": "text"
 										},
 										{
 											"key": "stage",
 											"label": "Stage",
+											"section": "Basics",
 											"type": "select"
 										},
 										{
 											"key": "value",
 											"label": "Value",
+											"section": "Basics",
 											"type": "currency"
 										}
 									],
-									"label": "Basics"
+									"label": "Details"
 								}
 							],
 							"values": {
