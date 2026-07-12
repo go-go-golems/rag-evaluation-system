@@ -98,3 +98,13 @@ Step 10: completed generic UI/content parity with ten typed v3 helpers and gener
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/typescript.go — Typed UINamespace additions
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3.go — Generic content helper runtime
 
+
+## 2026-07-12
+
+Step 11: completed typed domain example coverage and reduced canonical v3 raw escape findings from 11 to zero (commit 8c3c1d3).
+
+### Related Files
+
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/testdata/v3/examples — Canonical typed v3 corpus
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3_crm.go — Standalone typed CRM field helper
+

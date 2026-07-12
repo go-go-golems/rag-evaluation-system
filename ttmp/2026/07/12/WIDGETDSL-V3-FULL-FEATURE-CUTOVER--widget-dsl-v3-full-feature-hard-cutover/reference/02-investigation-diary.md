@@ -906,3 +906,61 @@ Phase 2 added typed v3 access to stable generic content and layout capabilities 
 ### Technical details
 
 - All helpers lower to existing registry component names; no parallel React implementations were introduced.
+
+## Step 11: Remove Raw Escapes from the Canonical V3 Corpus
+
+The canonical v3 examples now use typed generic and domain APIs exclusively. A missing CRM single-field helper was added rather than leaving FieldRenderer as the final raw exception.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 8)
+
+**Assistant interpretation:** Continue migration until the parser-backed checker can enforce zero raw escapes in first-party v3 examples.
+
+**Inferred user intent:** Make examples trustworthy release documentation for the final language.
+
+**Commit (code):** `8c3c1d3618e46aac2ee78a05b7be6dcd1902da7a` — "widgetdsl: eliminate raw escapes from v3 examples"
+
+### What I did
+
+- Rewrote Markdown, CRM record, CRM board, activity, form, upload, and field-renderer examples to typed APIs.
+- Added `crm.field(value, spec, options)` for standalone FieldRenderer use.
+- Regenerated all affected goldens and API help.
+- Ran the migration checker with `--fail-on-findings`.
+
+### Why
+
+- Raw examples normalize bypasses and hide missing public grammar.
+
+### What worked
+
+- Migration checker reports: `No legacy Widget DSL imports or raw component escape hatches found.`
+- Full Go tests and pre-commit checks passed.
+
+### What didn't work
+
+- Biome reports existing example `page` variables as unused because the Goja example runner reads them by convention. These remain warnings, not failures.
+
+### What I learned
+
+- The only genuine remaining raw gap in the corpus was standalone CRM field rendering.
+
+### What was tricky to build
+
+- Golden updates had to follow semantic helper rewrites while preserving stable rendered IR.
+
+### What warrants a second pair of eyes
+
+- Review whether example-runner conventions should export page explicitly to eliminate Biome warnings.
+
+### What should be done in the future
+
+- Apply the same fail-on-findings gate workspace-wide before deleting legacy modules.
+
+### Code review instructions
+
+- Run the migration checker command from the design guide with `--fail-on-findings`.
+
+### Technical details
+
+- Raw findings fell from 11 to zero in the v3 golden corpus.

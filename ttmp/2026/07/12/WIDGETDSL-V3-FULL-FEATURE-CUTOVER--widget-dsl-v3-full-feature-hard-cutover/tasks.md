@@ -18,7 +18,7 @@
 - [ ] Phase 4: implement collection search server pagination page-size controls and URL state <!-- t:pnxf -->
 - [ ] Phase 5: implement DataTable roving focus keyboard row commands and semantic styling <!-- t:kkpk -->
 - [ ] Phase 6: promote generic activity feeds and complete reusable data engines <!-- t:pvmb -->
-- [ ] Phase 7: complete typed CRM CMS course context schedule and time domain views <!-- t:hf4t -->
+- [x] Phase 7: complete typed CRM CMS course context schedule and time domain views <!-- t:hf4t -->
 - [ ] Phase 8: migrate first-party hosts and remove all legacy split modules <!-- t:uazl -->
 - [ ] Phase 9: run full release validation regenerate final docs and upload final implementation bundle <!-- t:saec -->
 - [x] Fix descriptor-discovered v3 action adapter gaps for context diagrams Markdown editor CMS article actions and course material deletion <!-- t:tqve -->
