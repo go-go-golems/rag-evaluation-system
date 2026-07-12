@@ -1,7 +1,12 @@
+schemaVersion: widget-manifest/v1
 type: ContextGroupedStripDiagram
+module: context_window.dsl
+helper: contextGroupedStripDiagram
 category: molecule
 props: ContextGroupedStripDiagramWidgetProps
-entry:
+adapter:
   path: ./ContextGroupedStripDiagram.widget.tsx
   export: contextGroupedStripDiagramWidget
 reactComponent: ContextGroupedStripDiagram
+status: stable
+docs: Grouped context-window strip visualization with token proportions and semantic styles.

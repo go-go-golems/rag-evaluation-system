@@ -1,8 +1,9 @@
+schemaVersion: widget-manifest/v1
 type: TextareaInput
 module: ui.dsl
 helper: textareaInput
 props: TextareaInputWidgetProps
-entry:
+adapter:
   path: ./TextareaInput.widget.tsx
   export: textareaInputWidget
 reactComponent: TextareaInput
