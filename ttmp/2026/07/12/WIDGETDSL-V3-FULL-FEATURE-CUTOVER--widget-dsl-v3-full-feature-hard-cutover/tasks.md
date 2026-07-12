@@ -10,7 +10,7 @@
 - [x] Write phased intern implementation and migration guide <!-- t:a3pp -->
 - [x] Validate ticket and upload documentation bundle to reMarkable <!-- t:q49c -->
 - [x] Commit the validated research ticket as the implementation baseline <!-- t:dpqm -->
-- [ ] Phase 1A: complete top-level and direct namespace descriptors with runtime parity tests <!-- t:dmpg -->
+- [x] Phase 1A: complete top-level and direct namespace descriptors with runtime parity tests <!-- t:dmpg -->
 - [ ] Phase 1B: describe builder methods nested intents action contexts and fragment composition <!-- t:7651 -->
 - [ ] Phase 1C: make declarations and API help descriptor-driven and reorganize the typed spec kernel <!-- t:ycbj -->
 - [ ] Phase 2: implement typed generic UI content upload shell and form parity <!-- t:fv77 -->

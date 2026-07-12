@@ -17,10 +17,14 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: repo://pkg/widgetdsl/v3_descriptors_test.go
+      Note: Direct runtime and descriptor set-equality enforcement from commit f208624
     - Path: repo://ttmp/2026/07/12/WIDGETDSL-V3-FULL-FEATURE-CUTOVER--widget-dsl-v3-full-feature-hard-cutover/design-doc/01-widget-dsl-v3-full-feature-analysis-design-and-intern-implementation-guide.md
       Note: Design synthesis produced by the investigation
     - Path: repo://ttmp/2026/07/12/WIDGETDSL-V3-FULL-FEATURE-CUTOVER--widget-dsl-v3-full-feature-hard-cutover/scripts/01-inventory-widget-dsl.py
       Note: Repeatable evidence inventory script created during investigation
+    - Path: repo://ttmp/2026/07/12/WIDGETDSL-V3-FULL-FEATURE-CUTOVER--widget-dsl-v3-full-feature-hard-cutover/scripts/02-regenerate-v3-api-reference.go
+      Note: Reproducible generated-prefix help updater from commit f208624
     - Path: repo://ttmp/2026/07/12/WIDGETDSL-V3-FULL-FEATURE-CUTOVER--widget-dsl-v3-full-feature-hard-cutover/sources/01-generated-runtime-inventory.md
       Note: Generated helper namespace and registry counts
     - Path: repo://ttmp/2026/07/12/WIDGETDSL-V3-FULL-FEATURE-CUTOVER--widget-dsl-v3-full-feature-hard-cutover/sources/02-v3-example-migration-check.txt
@@ -33,6 +37,7 @@ LastUpdated: 2026-07-12T19:45:00-04:00
 WhatFor: Preserve the commands, evidence, failures, decisions, and review instructions behind the v3 parity and hard-cutover design.
 WhenToUse: Before resuming this ticket, reviewing its recommendations, or implementing any phase of the cutover.
 ---
+
 
 
 # Diary
@@ -378,3 +383,111 @@ The first engineering slice is descriptor parity rather than user-facing UI. Com
 - Branch: `main`.
 - First implementation task: `dmpg`, direct namespace descriptor/runtime parity.
 - Production baseline command: `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1`.
+
+## Step 5: Enforce Direct Runtime and Descriptor Parity
+
+The first production slice replaces the partial namespace list with a module descriptor that accounts for the root `page` export and every direct member of every namespace. A runtime parity test now boots the actual Goja installer and fails if runtime keys and descriptor keys differ in either direction.
+
+The same descriptor now emits the root `page` TypeScript declaration and a substantially more useful API reference. A checked-in regeneration tool preserves the hand-authored help suffix while replacing only the descriptor-generated prefix.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 4)
+
+**Assistant interpretation:** Implement the first planned task as a tested, focused commit and document both success and failure evidence.
+
+**Inferred user intent:** Establish trustworthy API inventory before broadening or reorganizing the unreleased DSL.
+
+**Commit (code):** `f208624f137d9367bda7796da3e50a04a5c8be2a` — "widgetdsl: enforce direct v3 API descriptor parity"
+
+### What I did
+
+- Introduced `v3ModuleDescriptor`, root export descriptors, and direct namespace member descriptors.
+- Described all current root/namespace keys, including empty reserved `style`.
+- Moved the `page(...)` TypeScript declaration from a handwritten line to descriptor output.
+- Added runtime parity tests using `installWidgetV3` and Goja object keys.
+- Added a test requiring every semantic view to be a described direct member.
+- Expanded generated API help with root exports and direct member inventories.
+- Added `scripts/02-regenerate-v3-api-reference.go` and regenerated embedded help.
+- Ran targeted tests, package/provider tests, full repository tests, and pre-commit hooks.
+
+### Why
+
+- Runtime, TypeScript, descriptors, help, and examples had drifted because no test compared actual installed keys with the public inventory.
+- Modeling direct exports first creates a stable base for nested builders and intent/context contracts in Phase 1B.
+- Generated help must be reproducible without overwriting its authored troubleshooting and cross-reference sections.
+
+### What worked
+
+- Targeted descriptor/help tests passed after regeneration.
+- `go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1` passed.
+- The commit hook passed its scoped package tests, golangci-lint, and glazed-lint checks.
+- Runtime parity now checks unexpected runtime additions as well as missing described exports.
+
+### What didn't work
+
+- The first targeted run failed as expected because the embedded help snapshot was stale:
+
+  ```text
+  --- FAIL: TestWidgetV3EmbeddedAPIHelpMatchesDescriptorReference (0.00s)
+      v3_descriptors_test.go:123: embedded API help descriptor reference is stale; regenerate ../xgoja/providers/widgetsite/doc/05-widget-dsl-v3-api-reference.md from WidgetV3APIReferenceMarkdown
+  FAIL
+  ```
+
+  I added and ran the scoped regeneration tool, then reran the tests successfully.
+
+- `go test ./... -count=1` is not currently a clean repository command. It failed in unrelated pre-existing surfaces:
+
+  ```text
+  ttmp/2026/06/04/XGOJA-WIDGETSITE--xgoja-widget-site-binary-design/scripts/01-current-xgoja-widgetsite-experiment/widgetprovider/provider.go:18:12: not enough arguments in call to widgetdsl.NewLoader
+  have ()
+  want (string)
+  ```
+
+  and:
+
+  ```text
+  validate_test.go:20: unexpected manifest error: {Severity:error Check:unknown_module Path:packages/rag-evaluation-site/src/components/atoms/ContentStatusBadge/ContentStatusBadge.widget.yaml Subject:cms.dsl Message:widget module is not declared in schema/dsl-modules.yaml}
+  ```
+
+  These failures were not caused by this slice. The repository's pre-commit command excludes historical ticket scripts and passed.
+
+### What I learned
+
+- The direct public surface is 13 root keys: `page` plus 12 namespaces.
+- Current namespace kinds are not uniformly objects: `data.selection` is a callable function with a nested helper, while `data.cell`, domain intents, and `time.range` are objects. Nested parity belongs in Phase 1B.
+- Help generation needs an explicit authored/generated boundary to avoid discarding prose.
+
+### What was tricky to build
+
+- A set-equality test is stronger than checking only described exports. Both runtime and descriptor names are sorted before comparison so source declaration order does not affect correctness.
+- Semantic views are a documented subset of direct members. The generator builds a view lookup so detailed view lines replace, rather than duplicate, the generic member line.
+
+### What warrants a second pair of eyes
+
+- Review whether `v3MemberDescriptor.Kind` should become a typed enum before adding nested descriptors.
+- Review the help generator's authored suffix marker (`## Using this reference`) as a long-term generation boundary.
+- Confirm that direct property enumerability through `goja.Object.Keys()` matches the intended public-JavaScript definition.
+
+### What should be done in the future
+
+- Phase 1B should model nested intent/range/cell/selection members and builder methods.
+- Add `.use(fragment)` consistently to all mutable builders and parity-test those builder keys.
+- Decide whether the two unrelated full-repository test failures should receive a separate maintenance ticket.
+
+### Code review instructions
+
+- Start in `pkg/widgetdsl/v3_descriptors.go` at `widgetV3Module`.
+- Review `TestWidgetV3DescriptorMatchesDirectRuntimeExports` for the enforcement contract.
+- Run:
+
+  ```bash
+  go run ./ttmp/2026/07/12/WIDGETDSL-V3-FULL-FEATURE-CUTOVER--widget-dsl-v3-full-feature-hard-cutover/scripts/02-regenerate-v3-api-reference.go
+  go test ./pkg/widgetdsl/... ./pkg/xgoja/providers/widgetsite/... -count=1
+  ```
+
+### Technical details
+
+- Direct descriptor scope deliberately excludes nested builder methods and action-context schemas until Phase 1B.
+- `widgetV3DescriptorTypeScriptLines()` now emits root function declarations and namespace constants.
+- Generated help remains embedded by the existing widgetsite provider.

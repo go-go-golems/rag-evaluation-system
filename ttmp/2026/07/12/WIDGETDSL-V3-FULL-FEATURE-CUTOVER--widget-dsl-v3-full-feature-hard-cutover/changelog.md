@@ -36,3 +36,14 @@ Step 4: converted the validated research ticket into a twelve-task implementatio
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/ttmp/2026/07/12/WIDGETDSL-V3-FULL-FEATURE-CUTOVER--widget-dsl-v3-full-feature-hard-cutover/reference/02-investigation-diary.md — Implementation kickoff evidence
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/ttmp/2026/07/12/WIDGETDSL-V3-FULL-FEATURE-CUTOVER--widget-dsl-v3-full-feature-hard-cutover/tasks.md — Implementation work queue
 
+
+## 2026-07-12
+
+Step 5: completed Phase 1A direct runtime/descriptor parity, descriptor-generated page declaration and API member inventory (commit f208624).
+
+### Related Files
+
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3_descriptors.go — Complete root and direct namespace descriptor inventory
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3_descriptors_test.go — Runtime set-equality parity tests
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite/doc/05-widget-dsl-v3-api-reference.md — Regenerated embedded API help
+
