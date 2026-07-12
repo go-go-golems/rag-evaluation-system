@@ -23,8 +23,8 @@ RelatedFiles:
       Note: Browser action interpolation payload resolution and dispatch boundary
     - Path: repo://packages/rag-evaluation-site/src/widgets/defaultRegistry.ts
       Note: Complete React Widget adapter inventory and layer grouping
-    - Path: repo://pkg/widgetdsl/v2/spec/types.go
-      Note: Typed collection action and schema model to extend and rename for final v3
+    - Path: repo://pkg/widgetdsl/spec/types.go
+      Note: Release-neutral typed collection action and schema model
     - Path: repo://pkg/widgetdsl/v3.go
       Note: Current v3 page UI data CMS course context schedule and time runtime builders
     - Path: repo://pkg/widgetdsl/v3_crm.go
@@ -37,6 +37,8 @@ LastUpdated: 2026-07-12T19:40:00-04:00
 WhatFor: Give a new engineer the architecture, language rules, API contracts, file map, phased implementation sequence, and validation criteria needed to complete and release Widget DSL v3 without preserving legacy split-module compatibility.
 WhenToUse: Before implementing v3 parity, reorganizing namespaces, adding browser interaction capabilities, migrating first-party hosts, deleting legacy modules, or reviewing whether a new helper belongs in the public DSL.
 ---
+
+
 
 
 # Widget DSL v3 Full Feature Analysis, Design, and Intern Implementation Guide
