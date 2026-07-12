@@ -17,14 +17,25 @@ DocType: index
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: repo://packages/rag-evaluation-site/src/components/atoms/TextareaInput/TextareaInput.widget.yaml
+      Note: Stale entry manifest migrated to adapter schema
+    - Path: repo://packages/rag-evaluation-site/src/components/molecules/ContextGroupedStripDiagram/ContextGroupedStripDiagram.widget.yaml
+      Note: Context manifest metadata completed
+    - Path: repo://packages/rag-evaluation-site/src/components/organisms/ContextTurnPagerPanel/ContextTurnPagerPanel.widget.yaml
+      Note: Context manifest metadata completed
     - Path: repo://pkg/xgoja/providers/widgetsite/doc/05-widget-dsl-v3-api-reference.md
       Note: Descriptor-generated direct API inventory updated by commit f208624
+    - Path: repo://schema/dsl-modules.yaml
+      Note: Transitional manifest module catalog repaired in commit 217ad13
+    - Path: repo://ttmp/2026/06/04/XGOJA-WIDGETSITE--xgoja-widget-site-binary-design/scripts/01-current-xgoja-widgetsite-experiment/widgetprovider/provider.go
+      Note: Historical provider loader drift fixed in commit 2017908
 ExternalSources: []
 Summary: Research and implementation design workspace for completing Widget DSL v3, migrating all first-party consumers, and removing the unreleased legacy split-module surface through a coordinated hard cutover.
 LastUpdated: 2026-07-12T19:50:00-04:00
 WhatFor: Track the full-feature parity analysis, target language, implementation phases, migration evidence, and reMarkable delivery for Widget DSL v3.
 WhenToUse: Use before implementing or reviewing v3 parity, namespace reorganization, first-party migration, or legacy module deletion.
 ---
+
 
 
 # Widget DSL v3 Full Feature Hard Cutover

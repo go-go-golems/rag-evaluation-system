@@ -58,3 +58,13 @@ Step 6: completed Phase 1B nested namespace and builder parity, made all 28 v3 b
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3_descriptors.go — Nested namespace builder and action-context inventory
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3_descriptors_test.go — Public runtime probes and composition tests
 
+
+## 2026-07-12
+
+Step 7: made baseline and ignored-action gaps explicit blockers, repaired historical loader drift and manifest catalog consistency, and restored go test ./... (commits 2017908 and 217ad13).
+
+### Related Files
+
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/schema/dsl-modules.yaml — Current transitional module ownership now validates
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/ttmp/2026/06/04/XGOJA-WIDGETSITE--xgoja-widget-site-binary-design/scripts/01-current-xgoja-widgetsite-experiment/widgetprovider/provider.go — Historical package now compiles with named loader
+
