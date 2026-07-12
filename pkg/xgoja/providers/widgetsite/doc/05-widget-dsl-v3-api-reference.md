@@ -227,6 +227,29 @@ All builders below expose `use(fragment)` in addition to their listed methods.
 - `table.rowSelect` (`DataTable`): `[row rowKey componentType]`. Context dispatched when a collection row is selected.
 - `table.cellAction` (`DataTableCell`): `[row rowKey componentType]`. Context dispatched by an action-button cell.
 - `matrix.cellAction` (`MatrixGrid`): `[row column rowKey colId value componentType]`. Context dispatched when a matrix cell is activated.
+- `context.annotationSelect` (`TranscriptWorkspacePanel`): `[annotationId value componentType]`. Context dispatched when a transcript annotation is selected.
+- `course.navigate` (`CourseStudioShell`): `[itemId item value componentType]`. Context dispatched from course navigation.
+- `course.agendaSelect` (`CourseLessonPanel`): `[agendaItemId value componentType]`. Context dispatched when an agenda item is selected.
+- `course.cta` (`CourseLessonPanel`): `[cta componentType]`. Context dispatched by a primary or secondary course call to action.
+- `course.slideControl` (`CourseSlidePanel`): `[value componentType]`. Context dispatched by previous, next, present, and fullscreen slide controls.
+- `course.handout` (`HandoutDocumentShell`): `[documentId document value componentType]`. Context dispatched when a handout is selected, downloaded, or printed.
+- `upload.files` (`ContextUploadDropArea`): `[files fileNames fileCount componentType]`. Serialized file context dispatched by a generic upload area.
+- `cms.asset` (`MediaLibraryPanel`): `[assetId value componentType]`. Context dispatched when an asset is selected or opened.
+- `cms.assetQuery` (`MediaLibraryPanel`): `[query value componentType]`. Context dispatched when an asset query is submitted.
+- `cms.assetKind` (`MediaLibraryPanel`): `[kind value componentType]`. Context dispatched when the asset kind filter changes.
+- `cms.assetPage` (`MediaLibraryPanel`): `[page value componentType]`. Context dispatched when the asset page changes.
+- `cms.assetUpload` (`MediaLibraryPanel`): `[files fileNames fileCount componentType]`. Serialized file context dispatched by the media library.
+- `cms.article` (`ArticleListPanel`): `[articleId value componentType]`. Context dispatched when an article is selected.
+- `cms.articleRowAction` (`ArticleListPanel`): `[articleId rowAction value componentType]`. Context dispatched by an article row action.
+- `cms.articleStatus` (`ArticleListPanel`): `[status value componentType]`. Context dispatched when the article status filter changes.
+- `cms.articleQuery` (`ArticleListPanel`): `[query value componentType]`. Context dispatched when an article query is submitted.
+- `cms.articlePage` (`ArticleListPanel`): `[page value componentType]`. Context dispatched when the article page changes.
+- `time.daySelect` (`MonthGrid`): `[dateISO value componentType]`. Context dispatched when a calendar day is selected.
+- `time.blockSelect` (`TimeGrid`): `[blockId value componentType]`. Context dispatched when a time block is selected.
+- `time.slotCreate` (`TimeGrid`): `[dayISO hour value componentType]`. Context dispatched when an empty time slot is activated.
+- `crm.boardMove` (`BoardEngine`): `[cardId from to beforeId componentType]`. Context dispatched when a CRM card moves.
+- `crm.boardOpen` (`BoardEngine`): `[cardId componentType]`. Context dispatched when a CRM card is opened.
+- `crm.fieldChange` (`RecordFieldList`): `[key value componentType]`. Context dispatched when a CRM record field changes.
 - `activity.open` (`ActivityFeed`): `[activityId componentType]`. Context dispatched when an activity is opened.
 - `activity.loadMore` (`ActivityFeed`): `[componentType]`. Context dispatched when earlier activities are requested.
 

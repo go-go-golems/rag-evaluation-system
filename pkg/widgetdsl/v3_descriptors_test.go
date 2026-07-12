@@ -199,6 +199,29 @@ func v3DescriptorMemberNames(members []v3MemberDescriptor) []string {
 	return names
 }
 
+func TestWidgetV3ActionContextDescriptorsAreUniqueAndIdentifyComponents(t *testing.T) {
+	seen := map[string]struct{}{}
+	for _, context := range widgetV3Module.ActionContexts {
+		if _, ok := seen[context.Name]; ok {
+			t.Errorf("duplicate action context descriptor %q", context.Name)
+		}
+		seen[context.Name] = struct{}{}
+		if context.Component == "" {
+			t.Errorf("action context %q has no component", context.Name)
+		}
+		foundComponentType := false
+		for _, field := range context.Fields {
+			if field == "componentType" {
+				foundComponentType = true
+				break
+			}
+		}
+		if !foundComponentType {
+			t.Errorf("action context %q does not document componentType", context.Name)
+		}
+	}
+}
+
 func TestWidgetV3DescriptorViewsAreDirectMembers(t *testing.T) {
 	for _, namespace := range widgetV3Module.Namespaces {
 		members := make(map[string]struct{}, len(namespace.Members))
