@@ -78,6 +78,16 @@ Runtime factory: `v3UIObject`.
 - `selectInput` (function)
 - `status` (function)
 - `emptyState` (function)
+- `text` (function)
+- `code` (function)
+- `divider` (function)
+- `scroll` (function)
+- `tabs` (function)
+- `summary` (function)
+- `checkList` (function)
+- `stepList` (function)
+- `markdownArticle` (function)
+- `upload` (function)
 
 ## `data` — DataNamespace
 

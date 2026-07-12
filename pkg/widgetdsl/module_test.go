@@ -619,6 +619,43 @@ func TestWidgetV3CMSDomainViews(t *testing.T) {
 	}
 }
 
+func TestWidgetV3GenericContentHelpers(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	Register(reg)
+	reg.Enable(vm)
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		([
+			widget.ui.text("Body"),
+			widget.ui.code("x := 1"),
+			widget.ui.divider(),
+			widget.ui.scroll({ axis: "x" }, widget.ui.text("Wide")),
+			widget.ui.tabs([{ id: "one", label: "One" }]),
+			widget.ui.summary([{ key: "status", label: "Status", value: "Ready" }]),
+			widget.ui.checkList([{ id: "a", label: "Checked", checked: true }]),
+			widget.ui.stepList([{ id: "a", label: "First" }]),
+			widget.ui.markdownArticle("# Title"),
+			widget.ui.upload({ title: "Upload" }),
+		]);
+	`)
+	if err != nil {
+		t.Fatalf("build generic content helpers: %v", err)
+	}
+	got := value.Export().([]any)
+	wantTypes := []string{"Text", "CodeText", "Divider", "ScrollRegion", "TabList", "KeyValueStrip", "CheckList", "StepList", "MarkdownArticle", "ContextUploadDropArea"}
+	for index, wantType := range wantTypes {
+		node := anyMap(got[index])
+		if node["type"] != wantType {
+			t.Errorf("helper %d type = %#v, want %s", index, node["type"], wantType)
+		}
+	}
+	articleProps := anyMap(anyMap(got[8])["props"])
+	if articleProps["source"] != "# Title" {
+		t.Fatalf("markdown source = %#v", articleProps["source"])
+	}
+}
+
 func TestWidgetV3DataCollectionMatchesDataV2TableShape(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()

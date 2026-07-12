@@ -903,6 +903,36 @@ func (r *runtime) v3UIObject() *goja.Object {
 	setExport(ui, "selectInput", r.v3ComponentFactory("SelectInput", nil))
 	setExport(ui, "status", r.v3UIStatus)
 	setExport(ui, "emptyState", r.v3UIEmptyState)
+	setExport(ui, "text", r.v3ComponentFactory("Text", nil))
+	setExport(ui, "code", r.v3ComponentFactory("CodeText", nil))
+	setExport(ui, "divider", r.v3ComponentFactory("Divider", nil))
+	setExport(ui, "scroll", r.v3ComponentFactory("ScrollRegion", nil))
+	setExport(ui, "tabs", func(items goja.Value, options ...goja.Value) map[string]any {
+		props := exportOptions(options)
+		props["items"] = anySlice(items.Export())
+		return componentNode("TabList", props)
+	})
+	setExport(ui, "summary", func(items goja.Value, options ...goja.Value) map[string]any {
+		props := exportOptions(options)
+		props["items"] = anySlice(items.Export())
+		return componentNode("KeyValueStrip", props)
+	})
+	setExport(ui, "checkList", func(items goja.Value, options ...goja.Value) map[string]any {
+		props := exportOptions(options)
+		props["items"] = anySlice(items.Export())
+		return componentNode("CheckList", props)
+	})
+	setExport(ui, "stepList", func(items goja.Value, options ...goja.Value) map[string]any {
+		props := exportOptions(options)
+		props["items"] = anySlice(items.Export())
+		return componentNode("StepList", props)
+	})
+	setExport(ui, "markdownArticle", func(source string, options ...goja.Value) map[string]any {
+		props := exportOptions(options)
+		props["source"] = source
+		return componentNode("MarkdownArticle", props)
+	})
+	setExport(ui, "upload", r.v3ComponentFactory("ContextUploadDropArea", nil))
 	return ui
 }
 
