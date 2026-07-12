@@ -5,18 +5,18 @@ import (
 	"strings"
 
 	"github.com/dop251/goja"
-	v2spec "github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec"
+	widgetspec "github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/spec"
 )
 
 const v2RefProperty = "__widgetdsl_v2_ref"
 
 type v2Ref struct {
 	kind       string
-	field      *v2spec.FieldSpec
-	schema     *v2spec.SchemaSpec
-	collection *v2spec.CollectionSpec
-	action     *v2spec.ActionSpec
-	selection  *v2spec.SelectionSpec
+	field      *widgetspec.FieldSpec
+	schema     *widgetspec.SchemaSpec
+	collection *widgetspec.CollectionSpec
+	action     *widgetspec.ActionSpec
+	selection  *widgetspec.SelectionSpec
 }
 
 func (r *runtime) installDataV2(exports *goja.Object) {
@@ -30,27 +30,27 @@ func (r *runtime) installDataV2(exports *goja.Object) {
 func (r *runtime) v2FieldFactoryObject() *goja.Object {
 	f := r.vm.NewObject()
 	setExport(f, "key", func() *goja.Object {
-		return r.v2FieldBuilder(v2spec.FieldSpec{Kind: v2spec.FieldKindString, Semantic: v2spec.FieldSemanticKey, Editor: v2spec.EditorSpec{Control: v2spec.EditorControlText}, Summary: v2spec.SummarySpec{CellKind: "caption"}})
+		return r.v2FieldBuilder(widgetspec.FieldSpec{Kind: widgetspec.FieldKindString, Semantic: widgetspec.FieldSemanticKey, Editor: widgetspec.EditorSpec{Control: widgetspec.EditorControlText}, Summary: widgetspec.SummarySpec{CellKind: "caption"}})
 	})
 	setExport(f, "primary", func() *goja.Object {
-		return r.v2FieldBuilder(v2spec.FieldSpec{Kind: v2spec.FieldKindString, Semantic: v2spec.FieldSemanticPrimary, Editor: v2spec.EditorSpec{Control: v2spec.EditorControlText}, Summary: v2spec.SummarySpec{CellKind: "field"}})
+		return r.v2FieldBuilder(widgetspec.FieldSpec{Kind: widgetspec.FieldKindString, Semantic: widgetspec.FieldSemanticPrimary, Editor: widgetspec.EditorSpec{Control: widgetspec.EditorControlText}, Summary: widgetspec.SummarySpec{CellKind: "field"}})
 	})
 	setExport(f, "short", func() *goja.Object {
-		return r.v2FieldBuilder(v2spec.FieldSpec{Kind: v2spec.FieldKindString, Semantic: v2spec.FieldSemanticShort, Editor: v2spec.EditorSpec{Control: v2spec.EditorControlText}, Summary: v2spec.SummarySpec{CellKind: "field"}})
+		return r.v2FieldBuilder(widgetspec.FieldSpec{Kind: widgetspec.FieldKindString, Semantic: widgetspec.FieldSemanticShort, Editor: widgetspec.EditorSpec{Control: widgetspec.EditorControlText}, Summary: widgetspec.SummarySpec{CellKind: "field"}})
 	})
 	setExport(f, "prose", func() *goja.Object {
-		return r.v2FieldBuilder(v2spec.FieldSpec{Kind: v2spec.FieldKindString, Semantic: v2spec.FieldSemanticProse, Editor: v2spec.EditorSpec{Control: v2spec.EditorControlTextarea, Rows: 4}, Summary: v2spec.SummarySpec{Elide: true}})
+		return r.v2FieldBuilder(widgetspec.FieldSpec{Kind: widgetspec.FieldKindString, Semantic: widgetspec.FieldSemanticProse, Editor: widgetspec.EditorSpec{Control: widgetspec.EditorControlTextarea, Rows: 4}, Summary: widgetspec.SummarySpec{Elide: true}})
 	})
 	setExport(f, "count", func() *goja.Object {
-		return r.v2FieldBuilder(v2spec.FieldSpec{Kind: v2spec.FieldKindNumber, Semantic: v2spec.FieldSemanticCount, Editor: v2spec.EditorSpec{Control: v2spec.EditorControlText}, Summary: v2spec.SummarySpec{CellKind: "number"}})
+		return r.v2FieldBuilder(widgetspec.FieldSpec{Kind: widgetspec.FieldKindNumber, Semantic: widgetspec.FieldSemanticCount, Editor: widgetspec.EditorSpec{Control: widgetspec.EditorControlText}, Summary: widgetspec.SummarySpec{CellKind: "number"}})
 	})
 	setExport(f, "status", func() *goja.Object {
-		return r.v2FieldBuilder(v2spec.FieldSpec{Kind: v2spec.FieldKindString, Semantic: v2spec.FieldSemanticStatus, Editor: v2spec.EditorSpec{Control: v2spec.EditorControlText}, Summary: v2spec.SummarySpec{CellKind: "status"}})
+		return r.v2FieldBuilder(widgetspec.FieldSpec{Kind: widgetspec.FieldKindString, Semantic: widgetspec.FieldSemanticStatus, Editor: widgetspec.EditorSpec{Control: widgetspec.EditorControlText}, Summary: widgetspec.SummarySpec{CellKind: "status"}})
 	})
 	return f
 }
 
-func (r *runtime) v2FieldBuilder(field v2spec.FieldSpec) *goja.Object {
+func (r *runtime) v2FieldBuilder(field widgetspec.FieldSpec) *goja.Object {
 	fieldCopy := field
 	obj := r.vm.NewObject()
 	r.attachV2Ref(obj, &v2Ref{kind: "field", field: &fieldCopy})
@@ -71,7 +71,7 @@ func (r *runtime) v2FieldBuilder(field v2spec.FieldSpec) *goja.Object {
 		return obj
 	})
 	setExport(obj, "rows", func(rows int) *goja.Object {
-		fieldCopy.Editor.Control = v2spec.EditorControlTextarea
+		fieldCopy.Editor.Control = widgetspec.EditorControlTextarea
 		fieldCopy.Editor.Rows = rows
 		return obj
 	})
@@ -89,7 +89,7 @@ func (r *runtime) v2SchemaCtor(call goja.FunctionCall) goja.Value {
 	if len(call.Arguments) == 0 || strings.TrimSpace(call.Arguments[0].String()) == "" {
 		panic(r.vm.NewGoError(fmt.Errorf("data.v2.dsl schema(name) requires a non-empty name")))
 	}
-	schema := &v2spec.SchemaSpec{Name: call.Arguments[0].String()}
+	schema := &widgetspec.SchemaSpec{Name: call.Arguments[0].String()}
 	obj := r.vm.NewObject()
 	r.attachV2Ref(obj, &v2Ref{kind: "schemaBuilder", schema: schema})
 	setExport(obj, "field", func(name string, fieldValue goja.Value) *goja.Object {
@@ -109,7 +109,7 @@ func (r *runtime) v2SchemaCtor(call goja.FunctionCall) goja.Value {
 	return obj
 }
 
-func (r *runtime) v2SchemaValue(schema *v2spec.SchemaSpec) *goja.Object {
+func (r *runtime) v2SchemaValue(schema *widgetspec.SchemaSpec) *goja.Object {
 	obj := r.vm.NewObject()
 	r.attachV2Ref(obj, &v2Ref{kind: "schema", schema: schema})
 	setExport(obj, "validate", func() []map[string]any {
@@ -126,11 +126,11 @@ func (r *runtime) v2CollectionCtor(call goja.FunctionCall) goja.Value {
 	if name == "" {
 		panic(r.vm.NewGoError(fmt.Errorf("data.v2.dsl collection(name, rows) requires a non-empty name")))
 	}
-	collection := &v2spec.CollectionSpec{
+	collection := &widgetspec.CollectionSpec{
 		Name:        name,
 		Rows:        v2Rows(call.Arguments[1].Export()),
-		Mode:        v2spec.CollectionModeShow,
-		Arrangement: v2spec.ArrangementSpec{Kind: v2spec.ArrangementKindTable},
+		Mode:        widgetspec.CollectionModeShow,
+		Arrangement: widgetspec.ArrangementSpec{Kind: widgetspec.ArrangementKindTable},
 	}
 	obj := r.vm.NewObject()
 	r.attachV2Ref(obj, &v2Ref{kind: "collectionBuilder", collection: collection})
@@ -164,7 +164,7 @@ func (r *runtime) v2CollectionCtor(call goja.FunctionCall) goja.Value {
 		return obj
 	})
 	setExport(obj, "edit", func(args ...goja.Value) *goja.Object {
-		collection.Mode = v2spec.CollectionModeEdit
+		collection.Mode = widgetspec.CollectionModeEdit
 		if len(args) > 0 && !goja.IsUndefined(args[0]) && !goja.IsNull(args[0]) {
 			fn, ok := goja.AssertFunction(args[0])
 			if !ok {
@@ -177,7 +177,7 @@ func (r *runtime) v2CollectionCtor(call goja.FunctionCall) goja.Value {
 		return obj
 	})
 	setExport(obj, "table", func(args ...goja.Value) *goja.Object {
-		collection.Arrangement = v2spec.ArrangementSpec{Kind: v2spec.ArrangementKindTable}
+		collection.Arrangement = widgetspec.ArrangementSpec{Kind: widgetspec.ArrangementKindTable}
 		if len(args) > 0 && !goja.IsUndefined(args[0]) && !goja.IsNull(args[0]) {
 			fn, ok := goja.AssertFunction(args[0])
 			if !ok {
@@ -190,7 +190,7 @@ func (r *runtime) v2CollectionCtor(call goja.FunctionCall) goja.Value {
 		return obj
 	})
 	setExport(obj, "masterDetail", func() *goja.Object {
-		collection.Arrangement = v2spec.ArrangementSpec{Kind: v2spec.ArrangementKindMasterDetail}
+		collection.Arrangement = widgetspec.ArrangementSpec{Kind: widgetspec.ArrangementKindMasterDetail}
 		return obj
 	})
 	setExport(obj, "validate", func() []map[string]any {
@@ -198,7 +198,7 @@ func (r *runtime) v2CollectionCtor(call goja.FunctionCall) goja.Value {
 	})
 	setExport(obj, "toIR", func() any {
 		issues := collection.Validate("collection")
-		if v2spec.HasErrors(issues) {
+		if widgetspec.HasErrors(issues) {
 			panic(r.vm.NewGoError(fmt.Errorf("data.v2.dsl collection %q is invalid: %s", collection.Name, firstValidationError(issues))))
 		}
 		return collection.ToNode().ToWidgetNode()
@@ -209,17 +209,17 @@ func (r *runtime) v2CollectionCtor(call goja.FunctionCall) goja.Value {
 func (r *runtime) v2SelectionObject() *goja.Object {
 	selection := r.vm.NewObject()
 	setExport(selection, "urlParam", func(param string, value goja.Value) *goja.Object {
-		return r.v2SelectionValue(&v2spec.SelectionSpec{Kind: v2spec.SelectionKindURLParam, Param: param, Value: stringifyValue(value)})
+		return r.v2SelectionValue(&widgetspec.SelectionSpec{Kind: widgetspec.SelectionKindURLParam, Param: param, Value: stringifyValue(value)})
 	})
 	return selection
 }
 
 func (r *runtime) v2SelectionBuilder() *goja.Object {
-	spec := &v2spec.SelectionSpec{}
+	spec := &widgetspec.SelectionSpec{}
 	obj := r.vm.NewObject()
 	r.attachV2Ref(obj, &v2Ref{kind: "selectionBuilder", selection: spec})
 	setExport(obj, "urlParam", func(param string, value goja.Value) *goja.Object {
-		spec.Kind = v2spec.SelectionKindURLParam
+		spec.Kind = widgetspec.SelectionKindURLParam
 		spec.Param = param
 		spec.Value = stringifyValue(value)
 		return r.v2SelectionValue(spec)
@@ -227,20 +227,20 @@ func (r *runtime) v2SelectionBuilder() *goja.Object {
 	return obj
 }
 
-func (r *runtime) v2SelectionValue(selection *v2spec.SelectionSpec) *goja.Object {
+func (r *runtime) v2SelectionValue(selection *widgetspec.SelectionSpec) *goja.Object {
 	obj := r.vm.NewObject()
 	r.attachV2Ref(obj, &v2Ref{kind: "selection", selection: selection})
 	return obj
 }
 
-func (r *runtime) v2EditorBuilder(collection *v2spec.CollectionSpec) *goja.Object {
+func (r *runtime) v2EditorBuilder(collection *widgetspec.CollectionSpec) *goja.Object {
 	obj := r.vm.NewObject()
 	setExport(obj, "selectUrl", func(param string, value goja.Value) *goja.Object {
-		collection.Selection = &v2spec.SelectionSpec{Kind: v2spec.SelectionKindURLParam, Param: param, Value: stringifyValue(value)}
+		collection.Selection = &widgetspec.SelectionSpec{Kind: widgetspec.SelectionKindURLParam, Param: param, Value: stringifyValue(value)}
 		return obj
 	})
 	setExport(obj, "submitPost", func(formAction string) *goja.Object {
-		collection.Actions.Submit = &v2spec.SubmitSpec{FormAction: formAction, Method: "post"}
+		collection.Actions.Submit = &widgetspec.SubmitSpec{FormAction: formAction, Method: "post"}
 		return obj
 	})
 	setExport(obj, "create", func(value goja.Value) *goja.Object {
@@ -254,7 +254,7 @@ func (r *runtime) v2EditorBuilder(collection *v2spec.CollectionSpec) *goja.Objec
 				}
 			}
 		}
-		collection.Actions.Create = &v2spec.CreateActionSpec{Label: label}
+		collection.Actions.Create = &widgetspec.CreateActionSpec{Label: label}
 		return obj
 	})
 	setExport(obj, "reorder", func(actionValue goja.Value) *goja.Object {
@@ -278,7 +278,7 @@ func (r *runtime) v2EditorBuilder(collection *v2spec.CollectionSpec) *goja.Objec
 	return obj
 }
 
-func (r *runtime) v2CollectionActionsBuilder(collection *v2spec.CollectionSpec) *goja.Object {
+func (r *runtime) v2CollectionActionsBuilder(collection *widgetspec.CollectionSpec) *goja.Object {
 	obj := r.vm.NewObject()
 	setExport(obj, "reorder", func(actionValue goja.Value) *goja.Object {
 		collection.Actions.Reorder = r.mustV2Ref(actionValue, "action").action
@@ -291,7 +291,7 @@ func (r *runtime) v2CollectionActionsBuilder(collection *v2spec.CollectionSpec) 
 	return obj
 }
 
-func (r *runtime) v2TableBuilder(collection *v2spec.CollectionSpec) *goja.Object {
+func (r *runtime) v2TableBuilder(collection *widgetspec.CollectionSpec) *goja.Object {
 	obj := r.vm.NewObject()
 	setExport(obj, "className", func(className string) *goja.Object {
 		collection.Table.ClassName = className
@@ -304,7 +304,7 @@ func (r *runtime) v2TableBuilder(collection *v2spec.CollectionSpec) *goja.Object
 	})
 	setExport(obj, "actionColumn", func(id string, header string, label string, actionValue goja.Value, options ...goja.Value) *goja.Object {
 		actionRef := r.mustV2Ref(actionValue, "action")
-		column := v2spec.TableActionColumnSpec{ID: id, Header: header, Label: label, Action: *actionRef.action}
+		column := widgetspec.TableActionColumnSpec{ID: id, Header: header, Label: label, Action: *actionRef.action}
 		if opts := exportOptions(options); opts != nil {
 			if maxWidth, ok := opts["maxWidth"].(string); ok {
 				column.MaxWidth = maxWidth
@@ -319,27 +319,27 @@ func (r *runtime) v2TableBuilder(collection *v2spec.CollectionSpec) *goja.Object
 func (r *runtime) v2ActionObject() *goja.Object {
 	action := r.vm.NewObject()
 	setExport(action, "navigate", func(to string) *goja.Object {
-		return r.v2ActionValue(&v2spec.ActionSpec{Kind: v2spec.ActionKindNavigate, To: to})
+		return r.v2ActionValue(&widgetspec.ActionSpec{Kind: widgetspec.ActionKindNavigate, To: to})
 	})
 	setExport(action, "server", func(name string) *goja.Object {
-		return r.v2ActionValue(&v2spec.ActionSpec{Kind: v2spec.ActionKindServer, Name: name})
+		return r.v2ActionValue(&widgetspec.ActionSpec{Kind: widgetspec.ActionKindServer, Name: name})
 	})
 	return action
 }
 
-func (r *runtime) v2ActionValue(action *v2spec.ActionSpec) *goja.Object {
+func (r *runtime) v2ActionValue(action *widgetspec.ActionSpec) *goja.Object {
 	obj := r.vm.NewObject()
 	r.attachV2Ref(obj, &v2Ref{kind: "action", action: action})
 	setExport(obj, "confirm", func(text string) *goja.Object {
-		action.Confirm = &v2spec.TemplateSpec{Parts: []v2spec.TemplateValue{{Kind: v2spec.TemplateValueText, Text: text}}}
+		action.Confirm = &widgetspec.TemplateSpec{Parts: []widgetspec.TemplateValue{{Kind: widgetspec.TemplateValueText, Text: text}}}
 		return obj
 	})
 	setExport(obj, "payloadPath", func(name string, path string) *goja.Object {
-		action.Payload.Fields = append(action.Payload.Fields, v2spec.PayloadFieldSpec{Name: name, Value: v2spec.TemplateValue{Kind: v2spec.TemplateValuePath, Path: path}})
+		action.Payload.Fields = append(action.Payload.Fields, widgetspec.PayloadFieldSpec{Name: name, Value: widgetspec.TemplateValue{Kind: widgetspec.TemplateValuePath, Path: path}})
 		return obj
 	})
 	setExport(obj, "payload", func(name string, value goja.Value) *goja.Object {
-		action.Payload.Fields = append(action.Payload.Fields, v2spec.PayloadFieldSpec{Name: name, Value: v2spec.TemplateValue{Kind: v2spec.TemplateValueLiteral, Value: value.Export()}})
+		action.Payload.Fields = append(action.Payload.Fields, widgetspec.PayloadFieldSpec{Name: name, Value: widgetspec.TemplateValue{Kind: widgetspec.TemplateValueLiteral, Value: value.Export()}})
 		return obj
 	})
 	return obj
@@ -370,11 +370,11 @@ func (r *runtime) mustV2Ref(value goja.Value, wantKind string) *v2Ref {
 	return ref
 }
 
-func v2Rows(value any) []v2spec.JSONObject {
+func v2Rows(value any) []widgetspec.JSONObject {
 	items := anySlice(value)
-	rows := make([]v2spec.JSONObject, 0, len(items))
+	rows := make([]widgetspec.JSONObject, 0, len(items))
 	for _, item := range items {
-		row := v2spec.JSONObject{}
+		row := widgetspec.JSONObject{}
 		if m, ok := item.(map[string]any); ok {
 			for k, v := range m {
 				row[k] = v
@@ -385,7 +385,7 @@ func v2Rows(value any) []v2spec.JSONObject {
 	return rows
 }
 
-func validationIssuesForJS(issues []v2spec.ValidationIssue) []map[string]any {
+func validationIssuesForJS(issues []widgetspec.ValidationIssue) []map[string]any {
 	out := make([]map[string]any, 0, len(issues))
 	for _, issue := range issues {
 		out = append(out, map[string]any{"severity": string(issue.Severity), "code": issue.Code, "path": issue.Path, "message": issue.Message, "hint": issue.Hint})
@@ -393,9 +393,9 @@ func validationIssuesForJS(issues []v2spec.ValidationIssue) []map[string]any {
 	return out
 }
 
-func firstValidationError(issues []v2spec.ValidationIssue) string {
+func firstValidationError(issues []widgetspec.ValidationIssue) string {
 	for _, issue := range issues {
-		if issue.Severity == v2spec.ValidationSeverityError {
+		if issue.Severity == widgetspec.ValidationSeverityError {
 			return issue.Code + " at " + issue.Path + ": " + issue.Message
 		}
 	}
