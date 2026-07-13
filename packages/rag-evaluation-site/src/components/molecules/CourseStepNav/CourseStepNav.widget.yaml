@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: CourseStepNav
-module: course.dsl
+module: widget.dsl
 helper: courseStepNav
 props: CourseStepNavWidgetProps
 adapter:

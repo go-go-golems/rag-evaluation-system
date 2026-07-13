@@ -9,7 +9,7 @@ import { MarkdownEditor } from "./MarkdownEditor";
 
 export const markdownEditorWidget = defineWidget<MarkdownEditorWidgetProps>({
 	type: "MarkdownEditor",
-	module: "cms.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => <MarkdownEditorWidgetHost props={props} ctx={ctx} />,
 });
 

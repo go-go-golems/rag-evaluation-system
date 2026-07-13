@@ -4,7 +4,7 @@ import { AppNav } from "./AppNav";
 
 export const appNavWidget = defineWidget<AppNavWidgetProps>({
 	type: "AppNav",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<AppNav
 			brand={ctx.renderValue(props.brand)}

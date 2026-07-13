@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: SlideShell
-module: course.dsl
+module: widget.dsl
 helper: slideShell
 props: SlideShellWidgetProps
 adapter:

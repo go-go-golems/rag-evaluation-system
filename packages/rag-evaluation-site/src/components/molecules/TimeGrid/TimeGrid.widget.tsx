@@ -5,7 +5,7 @@ import { TimeGrid } from "./TimeGrid";
 
 export const timeGridWidget = defineWidget<TimeGridWidgetProps>({
 	type: "TimeGrid",
-	module: "time.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<TimeGrid
 			className={props.className}

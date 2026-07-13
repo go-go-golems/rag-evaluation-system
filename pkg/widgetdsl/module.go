@@ -201,20 +201,38 @@ type module struct {
 var _ modules.NativeModule = (*module)(nil)
 
 func NewLoader(moduleName string) require.ModuleLoader {
+	if moduleName != WidgetV3ModuleName {
+		panic(fmt.Sprintf("unknown public widget DSL module %q; use %q", moduleName, WidgetV3ModuleName))
+	}
+	return newLegacyLoaderForTests(moduleName)
+}
+
+func newLegacyLoaderForTests(moduleName string) require.ModuleLoader {
 	spec, ok := moduleSpecsByName[moduleName]
 	if !ok {
 		panic(fmt.Sprintf("unknown widget DSL module %q", moduleName))
 	}
-	mod := &module{spec: spec}
-	return mod.Loader
+	return (&module{spec: spec}).Loader
 }
 
+// Register exposes the hard-cutover public surface. widget.dsl is the only
+// runtime module available to first-party hosts.
 func Register(reg *require.Registry) {
 	if reg == nil {
 		return
 	}
+	reg.RegisterNativeModule(WidgetV3ModuleName, NewLoader(WidgetV3ModuleName))
+}
+
+// registerLegacyModulesForTests keeps historical behavior executable while
+// migration tests are retained as implementation archaeology. Production
+// registrars must never call it.
+func registerLegacyModulesForTests(reg *require.Registry) {
+	if reg == nil {
+		return
+	}
 	for _, spec := range moduleSpecs {
-		reg.RegisterNativeModule(spec.name, NewLoader(spec.name))
+		reg.RegisterNativeModule(spec.name, newLegacyLoaderForTests(spec.name))
 	}
 }
 

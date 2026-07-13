@@ -4,7 +4,7 @@ import { EmptyState } from "./EmptyState";
 
 export const emptyStateWidget = defineWidget<EmptyStateWidgetProps>({
 	type: "EmptyState",
-	module: "cms.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<EmptyState
 			className={props.className}

@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: Pagination
-module: cms.dsl
+module: widget.dsl
 helper: pagination
 props: PaginationWidgetProps
 adapter:

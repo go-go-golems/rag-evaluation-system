@@ -4,7 +4,7 @@ import { AnnotationRailPanel } from "./AnnotationRailPanel";
 
 export const annotationRailPanelWidget = defineWidget<AnnotationRailPanelWidgetProps>({
 	type: "AnnotationRailPanel",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<AnnotationRailPanel
 			className={props.className}

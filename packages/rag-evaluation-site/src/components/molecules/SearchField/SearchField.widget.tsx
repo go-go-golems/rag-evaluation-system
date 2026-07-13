@@ -6,7 +6,7 @@ import { SearchField } from "./SearchField";
 
 export const searchFieldWidget = defineWidget<SearchFieldWidgetProps>({
 	type: "SearchField",
-	module: "data.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => <SearchFieldWidgetHost props={props} ctx={ctx} />,
 });
 

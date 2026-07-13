@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: Divider
-module: ui.dsl
+module: widget.dsl
 helper: divider
 props: DividerWidgetProps
 adapter:

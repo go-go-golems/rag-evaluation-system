@@ -4,7 +4,7 @@ import { ContextBudgetBar } from "./ContextBudgetBar";
 
 export const contextBudgetBarWidget = defineWidget<ContextBudgetBarWidgetProps>({
 	type: "ContextBudgetBar",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props) => (
 		<ContextBudgetBar
 			className={props.className}

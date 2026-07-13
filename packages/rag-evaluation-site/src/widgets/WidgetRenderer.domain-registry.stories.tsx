@@ -38,7 +38,7 @@ export const UiAndDataRegistrySurface: Story = {
 						]),
 						component("Inline", { gap: "xs" }, [
 							component("StatusText", { status: "ready", icon: true }),
-							component("CodeText", {}, [text("ui.dsl")]),
+							component("CodeText", {}, [text("widget.dsl")]),
 							component("Caption", {}, [text("registered")]),
 						]),
 						component("DataTable", {
@@ -47,8 +47,8 @@ export const UiAndDataRegistrySurface: Story = {
 								{ id: "module", header: "Module", cell: { kind: "caption", field: "module" } },
 							],
 							rows: [
-								{ id: "panel", widget: "Panel", module: "ui.dsl" },
-								{ id: "table", widget: "DataTable", module: "data.dsl" },
+								{ id: "panel", widget: "Panel", module: "widget.dsl" },
+								{ id: "table", widget: "DataTable", module: "widget.dsl" },
 							],
 							getRowKey: "id",
 						}),
@@ -108,7 +108,7 @@ export const CourseHandoutRegistrySurface: Story = {
 			"CourseStudioShell",
 			{
 				title: "Course registry coverage",
-				subtitle: "Course and handout widgets render through course.dsl adapters.",
+				subtitle: "Course and handout widgets render through widget.dsl adapters.",
 				activeItemId: "agenda-01",
 				sections: [
 					{

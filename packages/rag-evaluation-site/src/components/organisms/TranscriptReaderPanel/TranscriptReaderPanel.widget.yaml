@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: TranscriptReaderPanel
-module: context_window.dsl
+module: widget.dsl
 helper: transcriptReaderPanel
 props: TranscriptReaderPanelWidgetProps
 adapter:

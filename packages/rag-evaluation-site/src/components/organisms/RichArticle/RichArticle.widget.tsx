@@ -4,7 +4,7 @@ import { RichArticle } from "./RichArticle";
 
 export const richArticleWidget = defineWidget<RichArticleWidgetProps>({
 	type: "RichArticle",
-	module: "course.dsl",
+	module: "widget.dsl",
 	render: (props) => (
 		<RichArticle className={props.className} blocks={props.blocks} styleSet={props.styleSet} />
 	),

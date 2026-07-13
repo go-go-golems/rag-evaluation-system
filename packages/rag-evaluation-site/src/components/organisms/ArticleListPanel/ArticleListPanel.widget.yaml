@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: ArticleListPanel
-module: cms.dsl
+module: widget.dsl
 helper: articleListPanel
 props: ArticleListPanelWidgetProps
 adapter:

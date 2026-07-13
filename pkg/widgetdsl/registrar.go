@@ -5,11 +5,7 @@ import (
 	"github.com/go-go-golems/go-go-goja/pkg/engine"
 )
 
-// Registrar registers the split Widget IR DSL modules with a go-go-goja engine runtime.
-//
-// Use this when composing a runtime through engine.NewRuntimeFactoryBuilder(). It registers
-// ui.dsl, data.dsl, context_window.dsl, and course.dsl. Former bucket-style
-// compatibility modules are intentionally not registered.
+// Registrar registers the single widget.dsl module with a go-go-goja engine runtime.
 type Registrar struct{}
 
 var _ engine.RuntimeModuleRegistrar = (*Registrar)(nil)

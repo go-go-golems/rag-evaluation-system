@@ -4,7 +4,7 @@ import { Tag } from "./Tag";
 
 export const tagWidget = defineWidget<TagWidgetProps>({
 	type: "Tag",
-	module: "cms.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => {
 		const onRemoveAction = props.onRemoveAction;
 		return (

@@ -4,6 +4,6 @@ import { MarkdownArticle } from "./MarkdownArticle";
 
 export const markdownArticleWidget = defineWidget<MarkdownArticleWidgetProps>({
 	type: "MarkdownArticle",
-	module: "course.dsl",
+	module: "widget.dsl",
 	render: (props) => <MarkdownArticle className={props.className} source={props.source} />,
 });

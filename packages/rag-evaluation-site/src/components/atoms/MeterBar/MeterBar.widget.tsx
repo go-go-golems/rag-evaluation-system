@@ -4,7 +4,7 @@ import { MeterBar } from "./MeterBar";
 
 export const meterBarWidget = defineWidget<MeterBarWidgetProps>({
 	type: "MeterBar",
-	module: "cms.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<MeterBar
 			className={props.className}

@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: Breadcrumbs
-module: cms.dsl
+module: widget.dsl
 helper: breadcrumbs
 props: BreadcrumbsWidgetProps
 adapter:

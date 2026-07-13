@@ -4,7 +4,7 @@ import { TextInput } from "./TextInput";
 
 export const textInputWidget = defineWidget<TextInputWidgetProps>({
 	type: "TextInput",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props) => {
 		const readOnly = props.readOnly ?? true;
 		const sharedProps = {

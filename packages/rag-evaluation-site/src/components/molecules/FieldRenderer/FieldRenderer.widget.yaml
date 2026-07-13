@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: FieldRenderer
-module: data.dsl
+module: widget.dsl
 helper: field
 props: FieldRendererWidgetProps
 adapter:

@@ -4,7 +4,7 @@ import { FormPanel } from "./FormPanel";
 
 export const formPanelWidget = defineWidget<FormPanelWidgetProps>({
 	type: "FormPanel",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children, ctx) => (
 		<FormPanel
 			className={props.className}

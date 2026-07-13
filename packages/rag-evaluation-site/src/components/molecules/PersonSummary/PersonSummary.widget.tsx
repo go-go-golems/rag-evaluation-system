@@ -4,7 +4,7 @@ import { PersonSummary } from "./PersonSummary";
 
 export const personSummaryWidget = defineWidget<PersonSummaryWidgetProps>({
 	type: "PersonSummary",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<PersonSummary
 			className={props.className}

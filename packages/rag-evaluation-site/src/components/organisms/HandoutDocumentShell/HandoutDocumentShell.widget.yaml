@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: HandoutDocumentShell
-module: course.dsl
+module: widget.dsl
 helper: handoutDocumentShell
 props: HandoutDocumentShellWidgetProps
 adapter:

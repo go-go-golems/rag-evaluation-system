@@ -4,7 +4,7 @@ import { TranscriptWorkspacePanel } from "./TranscriptWorkspacePanel";
 
 export const transcriptWorkspacePanelWidget = defineWidget<TranscriptWorkspacePanelWidgetProps>({
 	type: "TranscriptWorkspacePanel",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<TranscriptWorkspacePanel
 			className={props.className}

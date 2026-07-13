@@ -4,7 +4,7 @@ import { CourseStepNav } from "./CourseStepNav";
 
 export const courseStepNavWidget = defineWidget<CourseStepNavWidgetProps>({
 	type: "CourseStepNav",
-	module: "course.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<CourseStepNav
 			className={props.className}

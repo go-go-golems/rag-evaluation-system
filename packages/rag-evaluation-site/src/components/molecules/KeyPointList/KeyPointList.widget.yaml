@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: KeyPointList
-module: ui.dsl
+module: widget.dsl
 helper: keyPointList
 props: KeyPointListWidgetProps
 adapter:

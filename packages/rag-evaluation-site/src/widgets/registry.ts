@@ -2,13 +2,7 @@ import type { ReactNode } from "react";
 import type { WidgetActionContext } from "./actions";
 import type { ActionSpec, ComponentNode, WidgetNode } from "./ir";
 
-export type WidgetModule =
-	| "ui.dsl"
-	| "data.dsl"
-	| "time.dsl"
-	| "context_window.dsl"
-	| "course.dsl"
-	| "cms.dsl";
+export type WidgetModule = "widget.dsl";
 
 export interface RenderContext {
 	renderNode(node: WidgetNode): ReactNode;

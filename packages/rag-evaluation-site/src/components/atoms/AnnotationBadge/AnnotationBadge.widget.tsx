@@ -4,7 +4,7 @@ import { AnnotationBadge } from "./AnnotationBadge";
 
 export const annotationBadgeWidget = defineWidget<AnnotationBadgeWidgetProps>({
 	type: "AnnotationBadge",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props) => (
 		<AnnotationBadge
 			className={props.className}

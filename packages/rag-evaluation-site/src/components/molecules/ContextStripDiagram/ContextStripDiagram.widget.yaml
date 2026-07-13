@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: ContextStripDiagram
-module: context_window.dsl
+module: widget.dsl
 helper: contextStripDiagram
 props: ContextStripDiagramWidgetProps
 adapter:

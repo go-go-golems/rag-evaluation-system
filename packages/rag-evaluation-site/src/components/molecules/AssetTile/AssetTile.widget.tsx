@@ -4,7 +4,7 @@ import { AssetTile } from "./AssetTile";
 
 export const assetTileWidget = defineWidget<AssetTileWidgetProps>({
 	type: "AssetTile",
-	module: "cms.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => {
 		const onSelectAction = props.onSelectAction;
 		const onOpenAction = props.onOpenAction;

@@ -12,7 +12,7 @@ import (
 func TestDataV2BuilderBuildsSimpleTable(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -55,7 +55,7 @@ func TestDataV2BuilderBuildsSimpleTable(t *testing.T) {
 func TestDataV2BuilderBuildsTableWithExplicitActionColumns(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -106,7 +106,7 @@ func TestDataV2BuilderBuildsTableWithExplicitActionColumns(t *testing.T) {
 func TestDataV2BuilderBuildsSelectableTable(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -141,7 +141,7 @@ func TestDataV2BuilderBuildsSelectableTable(t *testing.T) {
 func TestDataV2BuilderBuildsMasterDetailEditor(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -202,7 +202,7 @@ func TestDataV2BuilderBuildsMasterDetailEditor(t *testing.T) {
 func TestDataV2BuilderRejectsPresentNonFunctionCallback(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	_, err := vm.RunString(`

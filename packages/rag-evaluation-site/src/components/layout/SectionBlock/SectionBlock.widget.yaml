@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: SectionBlock
-module: ui.dsl
+module: widget.dsl
 helper: sectionBlock
 props: SectionBlockWidgetProps
 adapter:

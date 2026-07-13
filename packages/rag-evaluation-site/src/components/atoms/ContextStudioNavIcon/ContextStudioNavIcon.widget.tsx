@@ -4,7 +4,7 @@ import { ContextStudioNavIcon } from "./ContextStudioNavIcon";
 
 export const contextStudioNavIconWidget = defineWidget<ContextStudioNavIconWidgetProps>({
 	type: "ContextStudioNavIcon",
-	module: "course.dsl",
+	module: "widget.dsl",
 	render: (props) => (
 		<ContextStudioNavIcon className={props.className} id={props.id} title={props.title} />
 	),

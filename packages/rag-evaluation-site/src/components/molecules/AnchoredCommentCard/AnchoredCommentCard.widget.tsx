@@ -4,7 +4,7 @@ import { AnchoredCommentCard } from "./AnchoredCommentCard";
 
 export const anchoredCommentCardWidget = defineWidget<AnchoredCommentCardWidgetProps>({
 	type: "AnchoredCommentCard",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<AnchoredCommentCard
 			className={props.className}

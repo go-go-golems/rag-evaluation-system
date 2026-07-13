@@ -28,7 +28,7 @@ When adding a component that should later be available from the Widget IR/Goja D
 
 Review package Storybook under `Widget IR/Renderer/...` for IR-authored examples grouped by Foundation and Atoms, Layout Recipes, Context Diagrams, Transcript and Notes, and Course Studio.
 
-Goja authors can use direct helpers from split modules such as `require("ui.dsl")`, `require("data.dsl")`, `require("context_window.dsl")`, and `require("course.dsl")`. Semantic recipes live under their owning domains, for example `contextWindow.recipes.contextDiagram`, `contextWindow.recipes.annotatedTranscript`, `course.recipes.courseStudio`, `course.recipes.courseSlide`, and `course.recipes.handout`.
+Goja authors use only `require("widget.dsl")`. Generic UI/data capabilities and semantic context, course, CMS, CRM, schedule, and time views are organized as typed namespaces on that module.
 
 ## Context and transcript style sets
 

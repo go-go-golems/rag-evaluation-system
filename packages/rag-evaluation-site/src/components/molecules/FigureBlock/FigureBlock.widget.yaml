@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: FigureBlock
-module: ui.dsl
+module: widget.dsl
 helper: figureBlock
 props: FigureBlockWidgetProps
 adapter:

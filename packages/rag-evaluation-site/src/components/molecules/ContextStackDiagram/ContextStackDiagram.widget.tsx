@@ -4,7 +4,7 @@ import { ContextStackDiagram } from "./ContextStackDiagram";
 
 export const contextStackDiagramWidget = defineWidget<ContextStackDiagramWidgetProps>({
 	type: "ContextStackDiagram",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props) => (
 		<ContextStackDiagram
 			className={props.className}

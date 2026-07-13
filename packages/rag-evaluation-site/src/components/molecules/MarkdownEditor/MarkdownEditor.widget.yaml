@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: MarkdownEditor
-module: cms.dsl
+module: widget.dsl
 helper: markdownEditor
 props: MarkdownEditorWidgetProps
 adapter:

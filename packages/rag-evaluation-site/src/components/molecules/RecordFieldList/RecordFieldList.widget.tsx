@@ -24,7 +24,7 @@ function toView(spec: FieldSpec, ctx: RenderContext): RecordFieldSpecView {
 
 export const recordFieldListWidget = defineWidget<RecordFieldListWidgetProps>({
 	type: "RecordFieldList",
-	module: "data.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => {
 		const sectionSpecs: RecordFieldListSectionSpec[] =
 			props.sections ?? (props.fields ? [{ fields: props.fields }] : []);

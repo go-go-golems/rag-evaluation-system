@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: SidebarNav
-module: ui.dsl
+module: widget.dsl
 helper: sidebarNav
 props: SidebarNavWidgetProps
 adapter:

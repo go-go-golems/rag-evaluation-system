@@ -1,6 +1,6 @@
 schemaVersion: recipe-manifest/v1
 name: actionToolbar
-module: ui.dsl
+module: widget.dsl
 input: ActionToolbarRecipeOptions
 output: WidgetNode
 implementation:

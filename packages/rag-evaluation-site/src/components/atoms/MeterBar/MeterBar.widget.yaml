@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: MeterBar
-module: cms.dsl
+module: widget.dsl
 helper: meterBar
 props: MeterBarWidgetProps
 adapter:

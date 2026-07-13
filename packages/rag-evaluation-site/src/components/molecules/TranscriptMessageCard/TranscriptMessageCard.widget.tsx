@@ -4,7 +4,7 @@ import { TranscriptMessageCard } from "./TranscriptMessageCard";
 
 export const transcriptMessageCardWidget = defineWidget<TranscriptMessageCardWidgetProps>({
 	type: "TranscriptMessageCard",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<TranscriptMessageCard
 			className={props.className}

@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: AnnotationRailPanel
-module: context_window.dsl
+module: widget.dsl
 helper: annotationRailPanel
 props: AnnotationRailPanelWidgetProps
 adapter:

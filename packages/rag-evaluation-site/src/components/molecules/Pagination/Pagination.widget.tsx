@@ -4,7 +4,7 @@ import { Pagination } from "./Pagination";
 
 export const paginationWidget = defineWidget<PaginationWidgetProps>({
 	type: "Pagination",
-	module: "data.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => {
 		const onPageChangeAction = props.onPageChangeAction;
 		const onPageSizeChangeAction = props.onPageSizeChangeAction;

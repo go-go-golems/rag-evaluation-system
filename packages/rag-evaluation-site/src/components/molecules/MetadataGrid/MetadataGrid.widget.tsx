@@ -4,7 +4,7 @@ import { MetadataGrid } from "./MetadataGrid";
 
 export const metadataGridWidget = defineWidget<MetadataGridWidgetProps>({
 	type: "MetadataGrid",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<MetadataGrid
 			className={props.className}

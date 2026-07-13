@@ -1,7 +1,7 @@
 schemaVersion: dsl-modules/v1
 modules:
-  ui.dsl:
-    description: Generic Widget IR page, layout, primitive, and foundation helpers.
+  widget.dsl:
+    description: The single typed, composable Widget DSL and Widget IR adapter catalog.
     packageId: rag-widget-site
     dependsOn: []
     folderRoots:
@@ -11,67 +11,4 @@ modules:
       - packages/rag-evaluation-site/src/components/molecules
       - packages/rag-evaluation-site/src/components/organisms
     ownsPageHelper: true
-    ownsCellHelpers: false
-
-  data.dsl:
-    description: Generic data-display widgets, table cell helpers, and dashboard/data recipes.
-    packageId: rag-widget-site
-    dependsOn:
-      - ui.dsl
-    folderRoots:
-      - packages/rag-evaluation-site/src/components/molecules
-    ownsPageHelper: false
     ownsCellHelpers: true
-
-  context_window.dsl:
-    description: Context-window, transcript, annotation, and anchored-comment helpers.
-    packageId: rag-widget-site
-    dependsOn:
-      - ui.dsl
-      - data.dsl
-    folderRoots:
-      - packages/rag-evaluation-site/src/components/atoms
-      - packages/rag-evaluation-site/src/components/molecules
-      - packages/rag-evaluation-site/src/components/organisms
-    ownsPageHelper: false
-    ownsCellHelpers: false
-
-  course.dsl:
-    description: Course, lesson, slide, handout, and course/studio navigation helpers.
-    packageId: rag-widget-site
-    dependsOn:
-      - ui.dsl
-      - data.dsl
-      - context_window.dsl
-    folderRoots:
-      - packages/rag-evaluation-site/src/components/atoms
-      - packages/rag-evaluation-site/src/components/layout
-      - packages/rag-evaluation-site/src/components/molecules
-      - packages/rag-evaluation-site/src/components/organisms
-    ownsPageHelper: false
-    ownsCellHelpers: false
-
-  cms.dsl:
-    description: Transitional CMS asset and article component ownership until manifests hard-cut over to widget.dsl.
-    packageId: rag-widget-site
-    dependsOn:
-      - ui.dsl
-      - data.dsl
-    folderRoots:
-      - packages/rag-evaluation-site/src/components/atoms
-      - packages/rag-evaluation-site/src/components/layout
-      - packages/rag-evaluation-site/src/components/molecules
-      - packages/rag-evaluation-site/src/components/organisms
-    ownsPageHelper: false
-    ownsCellHelpers: false
-
-  time.dsl:
-    description: Transitional calendar and time-grid component ownership until manifests hard-cut over to widget.dsl.
-    packageId: rag-widget-site
-    dependsOn:
-      - ui.dsl
-      - data.dsl
-    folderRoots:
-      - packages/rag-evaluation-site/src/components/molecules
-    ownsPageHelper: false
-    ownsCellHelpers: false

@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: TileGrid
-module: cms.dsl
+module: widget.dsl
 helper: tileGrid
 props: TileGridWidgetProps
 adapter:

@@ -6,7 +6,7 @@ import { ArticleListPanel } from "./ArticleListPanel";
 
 export const articleListPanelWidget = defineWidget<ArticleListPanelWidgetProps>({
 	type: "ArticleListPanel",
-	module: "cms.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => <ArticleListPanelWidgetHost props={props} ctx={ctx} />,
 });
 

@@ -4,7 +4,7 @@ import { ContentStatusBadge } from "./ContentStatusBadge";
 
 export const contentStatusBadgeWidget = defineWidget<ContentStatusBadgeWidgetProps>({
 	type: "ContentStatusBadge",
-	module: "cms.dsl",
+	module: "widget.dsl",
 	render: (props) => (
 		<ContentStatusBadge className={props.className} status={props.status} icon={props.icon} />
 	),

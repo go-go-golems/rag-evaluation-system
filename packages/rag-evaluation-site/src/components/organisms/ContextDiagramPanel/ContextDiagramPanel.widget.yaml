@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: ContextDiagramPanel
-module: context_window.dsl
+module: widget.dsl
 helper: contextDiagramPanel
 props: ContextDiagramPanelWidgetProps
 adapter:

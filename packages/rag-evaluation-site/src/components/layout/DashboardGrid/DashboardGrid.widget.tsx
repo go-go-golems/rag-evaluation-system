@@ -4,7 +4,7 @@ import { DashboardGrid } from "./DashboardGrid";
 
 export const dashboardGridWidget = defineWidget<DashboardGridWidgetProps>({
 	type: "DashboardGrid",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children) => (
 		<DashboardGrid className={props.className} recipe={props.recipe}>
 			{children}

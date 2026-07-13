@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: Caption
-module: ui.dsl
+module: widget.dsl
 helper: caption
 props: CaptionWidgetProps
 adapter:

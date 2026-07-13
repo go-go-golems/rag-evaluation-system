@@ -4,7 +4,7 @@ import { SelectInput } from "./SelectInput";
 
 export const selectInputWidget = defineWidget<SelectInputWidgetProps>({
 	type: "SelectInput",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children, ctx) => {
 		const selectedOption = (props.options ?? []).find((option) => option.selected);
 		const valueProps =

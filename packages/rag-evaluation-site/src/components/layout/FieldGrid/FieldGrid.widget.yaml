@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: FieldGrid
-module: ui.dsl
+module: widget.dsl
 helper: fieldGrid
 props: FieldGridWidgetProps
 adapter:

@@ -5,7 +5,7 @@ import { ContextGroupedStripDiagram } from "./ContextGroupedStripDiagram";
 export const contextGroupedStripDiagramWidget = defineWidget<ContextGroupedStripDiagramWidgetProps>(
 	{
 		type: "ContextGroupedStripDiagram",
-		module: "context_window.dsl",
+		module: "widget.dsl",
 		render: (props) => (
 			<ContextGroupedStripDiagram
 				className={props.className}

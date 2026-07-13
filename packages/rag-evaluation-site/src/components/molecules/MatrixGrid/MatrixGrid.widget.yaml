@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: MatrixGrid
-module: data.dsl
+module: widget.dsl
 helper: matrixGrid
 props: MatrixGridWidgetProps
 adapter:

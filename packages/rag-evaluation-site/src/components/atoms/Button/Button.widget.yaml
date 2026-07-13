@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: Button
-module: ui.dsl
+module: widget.dsl
 helper: button
 props: ButtonWidgetProps
 adapter:

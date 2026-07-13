@@ -4,7 +4,7 @@ import { DocumentListPanel } from "./DocumentListPanel";
 
 export const documentListPanelWidget = defineWidget<DocumentListPanelWidgetProps>({
 	type: "DocumentListPanel",
-	module: "course.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<DocumentListPanel
 			className={props.className}

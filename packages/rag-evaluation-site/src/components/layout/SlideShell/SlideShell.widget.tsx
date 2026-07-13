@@ -4,7 +4,7 @@ import { SlideShell } from "./SlideShell";
 
 export const slideShellWidget = defineWidget<SlideShellWidgetProps>({
 	type: "SlideShell",
-	module: "course.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<SlideShell
 			className={props.className}

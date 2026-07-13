@@ -4,7 +4,7 @@ import { Caption } from "./Caption";
 
 export const captionWidget = defineWidget<CaptionWidgetProps>({
 	type: "Caption",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children) => (
 		<Caption
 			className={props.className}

@@ -4,7 +4,7 @@ import { SidebarNav } from "./SidebarNav";
 
 export const sidebarNavWidget = defineWidget<SidebarNavWidgetProps>({
 	type: "SidebarNav",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<SidebarNav
 			className={props.className}

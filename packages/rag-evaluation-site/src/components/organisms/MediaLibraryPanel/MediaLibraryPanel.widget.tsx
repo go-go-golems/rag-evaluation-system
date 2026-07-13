@@ -8,7 +8,7 @@ import { MediaLibraryPanel } from "./MediaLibraryPanel";
 
 export const mediaLibraryPanelWidget = defineWidget<MediaLibraryPanelWidgetProps>({
 	type: "MediaLibraryPanel",
-	module: "cms.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => <MediaLibraryPanelWidgetHost props={props} ctx={ctx} />,
 });
 

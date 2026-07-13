@@ -4,7 +4,7 @@ import { CodeText } from "./CodeText";
 
 export const codeTextWidget = defineWidget<CodeTextWidgetProps>({
 	type: "CodeText",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children) => (
 		<CodeText
 			className={props.className}

@@ -4,7 +4,7 @@ import { ContextDiagramPanel } from "./ContextDiagramPanel";
 
 export const contextDiagramPanelWidget = defineWidget<ContextDiagramPanelWidgetProps>({
 	type: "ContextDiagramPanel",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => {
 		const onPartSelectAction = props.onPartSelectAction;
 		return (

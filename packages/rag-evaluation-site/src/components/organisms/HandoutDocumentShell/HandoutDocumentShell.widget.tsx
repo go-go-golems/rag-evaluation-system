@@ -4,7 +4,7 @@ import { HandoutDocumentShell } from "./HandoutDocumentShell";
 
 export const handoutDocumentShellWidget = defineWidget<HandoutDocumentShellWidgetProps>({
 	type: "HandoutDocumentShell",
-	module: "course.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<HandoutDocumentShell
 			className={props.className}

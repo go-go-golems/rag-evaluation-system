@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: ContextStackDiagram
-module: context_window.dsl
+module: widget.dsl
 helper: contextStackDiagram
 props: ContextStackDiagramWidgetProps
 adapter:

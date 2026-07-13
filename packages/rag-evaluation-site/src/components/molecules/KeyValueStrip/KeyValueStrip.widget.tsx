@@ -4,7 +4,7 @@ import { KeyValueStrip } from "./KeyValueStrip";
 
 export const keyValueStripWidget = defineWidget<KeyValueStripWidgetProps>({
 	type: "KeyValueStrip",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<KeyValueStrip
 			className={props.className}

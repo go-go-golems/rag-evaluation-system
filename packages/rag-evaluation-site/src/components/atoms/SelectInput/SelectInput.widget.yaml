@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: SelectInput
-module: ui.dsl
+module: widget.dsl
 helper: selectInput
 props: SelectInputWidgetProps
 adapter:

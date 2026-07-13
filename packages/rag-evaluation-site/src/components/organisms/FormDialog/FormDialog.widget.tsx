@@ -19,7 +19,7 @@ type ResultEvent = CustomEvent<{
 
 export const formDialogWidget = defineWidget<FormDialogWidgetProps>({
 	type: "FormDialog",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => <FormDialogHost props={props} ctx={ctx} />,
 });
 

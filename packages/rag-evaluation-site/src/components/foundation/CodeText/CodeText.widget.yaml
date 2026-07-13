@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: CodeText
-module: ui.dsl
+module: widget.dsl
 helper: codeText
 props: CodeTextWidgetProps
 adapter:

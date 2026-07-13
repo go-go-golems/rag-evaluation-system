@@ -5,7 +5,7 @@ import { DataTable } from "./DataTable";
 
 export const dataTableWidget = defineWidget<DataTableWidgetProps>({
 	type: "DataTable",
-	module: "data.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => {
 		const rowSelectAction = props.onRowSelect;
 		return (

@@ -4,7 +4,7 @@ import { CmsShell } from "./CmsShell";
 
 export const cmsShellWidget = defineWidget<CmsShellWidgetProps>({
 	type: "CmsShell",
-	module: "cms.dsl",
+	module: "widget.dsl",
 	render: (props, children, ctx) => {
 		const onNavigateAction = props.onNavigateAction;
 		return (

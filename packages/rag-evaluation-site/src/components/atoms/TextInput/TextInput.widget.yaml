@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: TextInput
-module: ui.dsl
+module: widget.dsl
 helper: textInput
 props: TextInputWidgetProps
 adapter:

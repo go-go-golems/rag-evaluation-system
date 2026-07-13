@@ -4,7 +4,7 @@ import { Stack } from "./Stack";
 
 export const stackWidget = defineWidget<StackWidgetProps>({
 	type: "Stack",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children) => (
 		<Stack className={props.className} gap={props.gap} align={props.align}>
 			{children}

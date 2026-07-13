@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: EmptyState
-module: cms.dsl
+module: widget.dsl
 helper: emptyState
 props: EmptyStateWidgetProps
 adapter:

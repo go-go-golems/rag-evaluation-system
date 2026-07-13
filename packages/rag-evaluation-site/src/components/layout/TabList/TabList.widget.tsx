@@ -4,7 +4,7 @@ import { TabList } from "./TabList";
 
 export const tabListWidget = defineWidget<TabListWidgetProps>({
 	type: "TabList",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<TabList
 			items={props.items.map((item) => ({ id: item.id, label: ctx.renderValue(item.label) }))}

@@ -4,7 +4,7 @@ import { SectionBlock } from "./SectionBlock";
 
 export const sectionBlockWidget = defineWidget<SectionBlockWidgetProps>({
 	type: "SectionBlock",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children, ctx) => (
 		<SectionBlock
 			className={props.className}

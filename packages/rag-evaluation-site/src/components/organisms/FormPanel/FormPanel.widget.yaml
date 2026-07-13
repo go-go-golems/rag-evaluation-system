@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: FormPanel
-module: ui.dsl
+module: widget.dsl
 helper: formPanel
 props: FormPanelWidgetProps
 adapter:

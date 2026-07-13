@@ -161,24 +161,7 @@ const page = widget.page("Workshop", (p) =>
 )
 ```
 
-The Goja `rag-widget-site` provider still exposes split semantic helpers for existing RAG pages during migration:
-
-```js
-const contextWindow = require("context_window.dsl")
-const course = require("course.dsl")
-
-// Returns Widget IR for a context window diagram
-contextWindow.recipes.contextDiagram({ snapshot, view: "budget" })
-
-// Returns Widget IR for a teaching page with sidebar navigation
-course.recipes.courseStudio({
-  sections: [{ id: "course", label: "Course", items: [{ id: "slides", label: "Slides" }] }],
-  main: course.recipes.courseSlide({ slide, snapshot, index: 0, total: 1 })
-})
-
-// Returns Widget IR for an annotated transcript
-contextWindow.recipes.annotatedTranscript({ transcript, annotations })
-```
+The Goja `rag-widget-site` provider exposes only `widget.dsl`. Context, course, CMS, CRM, scheduling, and time capabilities live under typed namespaces on that module; split helper modules are no longer registered.
 
 ## Build
 

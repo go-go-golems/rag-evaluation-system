@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: ContextGroupedStripDiagram
-module: context_window.dsl
+module: widget.dsl
 helper: contextGroupedStripDiagram
 category: molecule
 props: ContextGroupedStripDiagramWidgetProps

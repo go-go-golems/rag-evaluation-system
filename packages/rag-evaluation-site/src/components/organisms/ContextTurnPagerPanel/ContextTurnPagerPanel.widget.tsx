@@ -4,7 +4,7 @@ import { ContextTurnPagerPanel } from "./ContextTurnPagerPanel";
 
 export const contextTurnPagerPanelWidget = defineWidget<ContextTurnPagerPanelWidgetProps>({
 	type: "ContextTurnPagerPanel",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props) => (
 		<ContextTurnPagerPanel
 			className={props.className}

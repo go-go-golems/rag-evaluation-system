@@ -4,7 +4,7 @@ import { AnchoredCommentRail } from "./AnchoredCommentRail";
 
 export const anchoredCommentRailWidget = defineWidget<AnchoredCommentRailWidgetProps>({
 	type: "AnchoredCommentRail",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<AnchoredCommentRail
 			className={props.className}

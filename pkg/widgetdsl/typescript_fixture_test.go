@@ -218,7 +218,7 @@ func newRegisteredRuntime(t *testing.T) *goja.Runtime {
 	t.Helper()
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 	return vm
 }

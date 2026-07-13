@@ -8,7 +8,7 @@ export type { SerializedUploadFile } from "../../../widgets/uploadSerialization"
 
 export const contextUploadDropAreaWidget = defineWidget<ContextUploadDropAreaWidgetProps>({
 	type: "ContextUploadDropArea",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => {
 		const onFilesSelectedAction = props.onFilesSelectedAction;
 		const onDeleteAction = props.onDeleteAction;

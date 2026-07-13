@@ -4,7 +4,7 @@ import { ContextStyleSwatch } from "./ContextStyleSwatch";
 
 export const contextStyleSwatchWidget = defineWidget<ContextStyleSwatchWidgetProps>({
 	type: "ContextStyleSwatch",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props) => (
 		<ContextStyleSwatch
 			className={props.className}
