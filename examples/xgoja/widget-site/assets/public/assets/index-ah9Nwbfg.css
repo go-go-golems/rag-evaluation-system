@@ -2779,13 +2779,13 @@ button._title_vbmlt_86:hover {
 ._description_xikwm_50 {
 	font: var(--rag-font-role-body);
 }
-._root_1fjbc_1 {
+._root_nyhol_1 {
 	border-collapse: collapse;
 	width: 100%;
 	font-family: var(--font-mono);
 	font-size: 11px;
 }
-._root_1fjbc_1 th {
+._root_nyhol_1 th {
 	z-index: 1;
 	background: var(--mac-surface);
 	color: var(--mac-text);
@@ -2795,7 +2795,7 @@ button._title_vbmlt_86:hover {
 	position: sticky;
 	top: 0;
 }
-._root_1fjbc_1 td {
+._root_nyhol_1 td {
 	border-bottom: 1px solid var(--mac-border-subtle, #ddd);
 	vertical-align: top;
 	text-overflow: ellipsis;
@@ -2803,26 +2803,51 @@ button._title_vbmlt_86:hover {
 	padding: 3px 4px;
 	overflow: hidden;
 }
-._selectable_1fjbc_25 {
+._selectable_nyhol_25 {
 	cursor: pointer;
 }
-._selectable_1fjbc_25:hover {
+._selectable_nyhol_25:hover {
 	background: var(--mac-surface-2);
 }
-._selected_1fjbc_31 {
+._selected_nyhol_31 {
 	background: var(--mac-bg-dark) !important;
 	color: var(--mac-text-inv) !important;
 }
-._start_1fjbc_35 {
+._focused_nyhol_35 {
+	outline: 2px solid var(--mac-accent, #005fcc);
+	outline-offset: -2px;
+}
+._tone-muted_nyhol_39 {
+	opacity: 0.64;
+}
+._tone-success_nyhol_42 {
+	background: #16833b1f;
+}
+._tone-warning_nyhol_45 {
+	background: #b66a0024;
+}
+._tone-danger_nyhol_48 {
+	background: #b423181f;
+}
+._tone-accent_nyhol_51 {
+	background: color-mix(in srgb, var(--mac-accent, #005fcc) 12%, transparent);
+}
+._commandHelp_nyhol_54 {
+	caption-side: bottom;
+	color: var(--mac-text-dim);
+	text-align: left;
+	padding: 4px;
+}
+._start_nyhol_60 {
 	text-align: left;
 }
-._end_1fjbc_38 {
+._end_nyhol_63 {
 	text-align: right;
 }
-._center_1fjbc_41 {
+._center_nyhol_66 {
 	text-align: center;
 }
-._empty_1fjbc_44 {
+._empty_nyhol_69 {
 	text-align: center;
 	color: var(--mac-text-dim);
 	padding: 24px !important;
@@ -4990,6 +5015,28 @@ button._button_1rsrn_10:hover {
 	._withNotes_1gd3r_8 {
 		grid-template-columns: 1fr;
 	}
+}
+._dialog_1kkyz_1 {
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+	width: min(560px, 100vw - 32px);
+	color: var(--mac-text);
+	padding: 16px;
+	box-shadow: 8px 8px #0000003d;
+}
+._dialog_1kkyz_1::backdrop {
+	background: #0000006b;
+}
+._title_1kkyz_12 {
+	font: 700 15px var(--font-mono);
+	margin: 0;
+}
+._error_1kkyz_16,
+._errors_1kkyz_17 {
+	color: #8f1710;
+	background: #fff0ee;
+	border: 1px solid #b42318;
+	padding: 6px;
 }
 .rag-evaluation-site-root {
 	background: var(--mac-bg);

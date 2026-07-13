@@ -241,7 +241,7 @@ function createPages({ widget, store }) {
 						),
 				)
 				.section("Opportunity record", (s) => s.view(widget.crm.recordFields(values, dealFields)))
-				.section("Activity", (s) => s.view(widget.crm.activityFeed(activities))),
+				.section("Activity", (s) => s.view(widget.data.activityFeed(activities))),
 		);
 	}
 

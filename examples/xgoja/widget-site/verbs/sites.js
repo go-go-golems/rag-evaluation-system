@@ -41,13 +41,36 @@ function demo() {
 			res.json({ ok: true, site: "rag-widget-xgoja-site", module: "widget.dsl" }),
 		);
 
-	function rows() {
-		return db.query(
-			"SELECT id, name, status, priority, owner, notes FROM queries ORDER BY priority DESC, id ASC",
+	function collectionPage(req) {
+		const query = req?.request?.query || {};
+		const search = String(query.q || "").trim();
+		const requestedPage = Math.max(1, Number.parseInt(query.page || "1", 10) || 1);
+		const pageSize = [20, 50, 100].includes(Number(query.pageSize)) ? Number(query.pageSize) : 20;
+		const pattern = `%${search}%`;
+		const countRows = db.query(
+			"SELECT COUNT(*) AS total FROM queries WHERE ? = '' OR name LIKE ? OR owner LIKE ? OR status LIKE ?",
+			search,
+			pattern,
+			pattern,
+			pattern,
 		);
+		const total = Number(countRows[0]?.total || 0);
+		const pageCount = Math.max(1, Math.ceil(total / pageSize));
+		const currentPage = Math.min(requestedPage, pageCount);
+		const rows = db.query(
+			"SELECT id, name, status, priority, owner, notes FROM queries WHERE ? = '' OR name LIKE ? OR owner LIKE ? OR status LIKE ? ORDER BY priority DESC, id ASC LIMIT ? OFFSET ?",
+			search,
+			pattern,
+			pattern,
+			pattern,
+			pageSize,
+			(currentPage - 1) * pageSize,
+		);
+		return { rows, total, currentPage, pageSize };
 	}
-	function page() {
-		const queryRows = rows();
+	function page(req) {
+		const result = collectionPage(req);
+		const queryRows = result.rows;
 		const fields = widget.data.fields((f) =>
 			f
 				.key("id", { label: "ID" })
@@ -64,7 +87,7 @@ function demo() {
 				.search((search) =>
 					search
 						.query("q", { placeholder: "Search queued work" })
-						.resultCount(queryRows.length)
+						.resultCount(result.total)
 						.submit(
 							widget.act.navigate("/pages/demo", {
 								query: { q: widget.bind.context("query") },
@@ -74,9 +97,9 @@ function demo() {
 				)
 				.paginate((pager) =>
 					pager
-						.current(1)
-						.size(20)
-						.total(queryRows.length)
+						.current(result.currentPage)
+						.size(result.pageSize)
+						.total(result.total)
 						.sizes(20, 50, 100)
 						.onChange(
 							widget.act.navigate("/pages/demo", {
@@ -174,7 +197,7 @@ function demo() {
 		app
 			.get(`/api/widget/pages/${id}`)
 			.public()
-			.handle((_req, res) => res.json(page()));
+			.handle((req, res) => res.json(page(req)));
 	});
 
 	function payload(req) {

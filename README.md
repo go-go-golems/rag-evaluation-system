@@ -145,6 +145,10 @@ See the provider documentation for full bundling instructions:
 - [Widget DSL JavaScript API Reference and Migration Notes](pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md)
 - [Bundling the WidgetRenderer SPA](pkg/xgoja/providers/widgetsite/doc/03-widget-dsl-spa-bundling.md)
 
+### Generated-host integration suites
+
+Run `make widgetdsl-sites-smoke` to rebuild the canonical SPA and validate every xgoja reference host. The suite covers the interactive collection/search/pagination/dialog host, the scheduling poll, the workshop CRM, and all committed Widget DSL v3 golden examples through generated binaries and real HTTP routes. Each site also exposes `make smoke` for focused debugging.
+
 ### Semantic recipes
 
 New hosts import the single v3 module and compose its domain namespaces:

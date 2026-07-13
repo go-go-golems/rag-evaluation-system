@@ -1,4 +1,4 @@
-.PHONY: build run test clean web-build web-dev bleve-knn-experiment docker-lint lint lintmax golangci-lint-install glazed-lint-build glazed-lint gosec govulncheck logcopter-generate logcopter-check goreleaser tag-major tag-minor tag-patch release bump-go-go-golems install
+.PHONY: build run test clean web-build web-dev widgetdsl-sites-smoke bleve-knn-experiment docker-lint lint lintmax golangci-lint-install glazed-lint-build glazed-lint gosec govulncheck logcopter-generate logcopter-check goreleaser tag-major tag-minor tag-patch release bump-go-go-golems install
 
 BINARY := rag-eval
 MODULE := github.com/go-go-golems/rag-evaluation-system
@@ -57,6 +57,9 @@ web-dev:
 
 web-build:
 	cd web && pnpm build
+
+widgetdsl-sites-smoke:
+	./scripts/test-widgetdsl-v3-sites.sh
 
 # Build Go binary with embedded SPA.
 build-full: web-build build-bin

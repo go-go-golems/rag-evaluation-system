@@ -21,6 +21,8 @@ providers:
   - id: rag-widget-site
     import: github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite
     register: Register
+    module:
+      replace: ../..
 runtime:
   modules:
     - provider: go-go-goja-host

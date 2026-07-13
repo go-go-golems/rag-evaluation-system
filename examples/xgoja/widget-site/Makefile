@@ -11,6 +11,7 @@ HTTP_ADDR := 127.0.0.1:18791
 smoke: doctor list-modules build serve-smoke
 
 sync-app:
+	pnpm --dir $(REPO_ROOT)/packages/rag-evaluation-site build:app
 	rm -rf $(CURDIR)/assets/public
 	mkdir -p $(CURDIR)/assets/public
 	cp -R $(REPO_ROOT)/packages/rag-evaluation-site/app-dist/index.html $(REPO_ROOT)/packages/rag-evaluation-site/app-dist/assets $(CURDIR)/assets/public/
@@ -22,18 +23,20 @@ doctor:
 list-modules:
 	$(XGOJA) list-modules -f $(CURDIR)/xgoja.yaml
 
-build:
+build: sync-app
 	$(XGOJA) build -f $(CURDIR)/xgoja.yaml --output $(BIN) --xgoja-replace $(XGOJA_ROOT) --keep-work
 
 serve-smoke: build
 	@set -eu; \
-	log=$$(mktemp); page=$$(mktemp); action=$$(mktemp); invalid=$$(mktemp); \
+	log=$$(mktemp); page=$$(mktemp); filtered=$$(mktemp); action=$$(mktemp); invalid=$$(mktemp); \
 	$(BIN) serve sites demo --http-listen $(HTTP_ADDR) >$$log 2>&1 & pid=$$!; \
-	trap 'kill $$pid >/dev/null 2>&1 || true; wait $$pid >/dev/null 2>&1 || true; rm -f $$log $$page $$action $$invalid' EXIT; \
+	trap 'kill $$pid >/dev/null 2>&1 || true; wait $$pid >/dev/null 2>&1 || true; rm -f $$log $$page $$filtered $$action $$invalid' EXIT; \
 	for i in $$(seq 1 100); do curl -fsS http://$(HTTP_ADDR)/healthz >/dev/null 2>&1 && break; kill -0 $$pid >/dev/null 2>&1 || { cat $$log; exit 1; }; sleep 0.1; done; \
 	curl -fsS http://$(HTTP_ADDR)/healthz | grep -q '"module":"widget.dsl"'; \
 	curl -fsS http://$(HTTP_ADDR)/api/widget/pages/demo >$$page; \
 	for type in DataTable SearchField Pagination FormDialog; do grep -q "\"type\":\"$$type\"" $$page; done; \
+	curl -fsS 'http://$(HTTP_ADDR)/api/widget/pages/demo?q=Arbor' >$$filtered; \
+	grep -q 'Arborvitae Spacing' $$filtered; ! grep -q 'Fast Growing Trees' $$filtered; grep -q '"totalItems":1' $$filtered; \
 	curl -fsS -X POST http://$(HTTP_ADDR)/api/widget/actions/cycle-status -H 'Content-Type: application/json' -d '{"payload":{"id":2},"context":{"componentType":"DataTable"}}' >$$action; \
 	grep -q '"refresh":true' $$action; \
 	curl -sS -o $$invalid -w '%{http_code}' -X POST http://$(HTTP_ADDR)/api/widget/actions/save-note -H 'Content-Type: application/json' -d '{"payload":{"id":2,"notes":""},"context":{"overlayId":"edit-note"}}' | grep -q 422; \
