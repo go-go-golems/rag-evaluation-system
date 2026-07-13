@@ -20,7 +20,7 @@
 - [x] Phase 6: promote generic activity feeds and complete reusable data engines <!-- t:pvmb -->
 - [x] Phase 7: complete typed CRM CMS course context schedule and time domain views <!-- t:hf4t -->
 - [x] Phase 8: migrate first-party hosts and remove all legacy split modules <!-- t:uazl -->
-- [ ] Phase 9: run full release validation regenerate final docs and upload final implementation bundle <!-- t:saec -->
+- [x] Phase 9: run full release validation regenerate final docs and upload final implementation bundle <!-- t:saec -->
 - [x] Fix descriptor-discovered v3 action adapter gaps for context diagrams Markdown editor CMS article actions and course material deletion <!-- t:tqve -->
 - [x] Phase 1C1: generate and verify v3 builder declarations from method-signature descriptors <!-- t:sq5o -->
 - [x] Phase 1C2: rename the shared typed spec kernel from v2/spec to spec without compatibility aliases <!-- t:cbfg -->
@@ -30,3 +30,4 @@
 - [x] Wire and test context diagram selection plus Markdown editor change and submit actions <!-- t:pcgq -->
 - [x] Wire and test CMS article publish archive preview actions plus course material deletion <!-- t:awor -->
 - [x] Add CI enforcement preventing typed v3 action props from being serialized without adapter consumption <!-- t:u11p -->
+- [x] Upgrade every xgoja Widget DSL reference site with current SPA assets, generated-host smoke coverage, and deep feature assertions <!-- t:lfpd -->

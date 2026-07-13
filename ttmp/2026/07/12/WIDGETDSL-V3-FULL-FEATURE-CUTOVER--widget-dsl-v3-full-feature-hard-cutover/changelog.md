@@ -131,3 +131,27 @@ Phase 8 host validation: migrated widget-site to xgoja/v2, modern Express route 
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/examples/xgoja/widget-site/Makefile — Generated host interaction smoke
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/examples/xgoja/widget-site/xgoja.yaml — xgoja/v2 single-module plan
 
+
+## 2026-07-12
+
+Phase 9 complete: upgraded all legacy reference hosts, validated 42 canonical pages, passed full release gates and browser interaction review (commits 7a8db2b, 3e4fafb).
+
+### Related Files
+
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/scripts/test-widgetdsl-v3-sites.sh — Unified generated-host release gate
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/ttmp/2026/07/12/WIDGETDSL-V3-FULL-FEATURE-CUTOVER--widget-dsl-v3-full-feature-hard-cutover/reference/03-release-validation.md — Final release evidence
+
+
+## 2026-07-12
+
+Published final implementation, parity, diary, release-validation, and API-reference bundle to reMarkable as Widget DSL v3 Full Feature Final Implementation.pdf.
+
+### Related Files
+
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/ttmp/2026/07/12/WIDGETDSL-V3-FULL-FEATURE-CUTOVER--widget-dsl-v3-full-feature-hard-cutover/reference/03-release-validation.md — Final release evidence
+
+
+## 2026-07-12
+
+Ticket closed
+

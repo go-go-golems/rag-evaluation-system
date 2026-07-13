@@ -1105,3 +1105,87 @@ Phase 8 removed split modules from both production registration paths and conver
 ### Technical details
 
 - The public migration scan reports no legacy imports or raw escapes under `examples`, `packages`, and the root README.
+
+## Step 14: Upgrade Every Reference Host and Close Release Validation
+
+The release pass turned every historical xgoja site into an active integration suite instead of validating only the newest work-queue host. Each host now rebuilds against the canonical SPA, resolves the local hard-cutover provider, and asserts the domain capabilities it exists to demonstrate.
+
+The browser pass then exercised the complete interactive path: URL-backed search, server filtering, keyboard row commands, FormDialog opening, server field errors, successful save, and focus restoration. This converted the remaining Phase 9 checklist from architectural confidence into generated-binary and browser evidence.
+
+### Prompt Context
+
+**User prompt (verbatim):** "make sure all the other older test sites and such are updated as well to take full advantage of the new capabilities, and to allow us to do real in depth testing too."
+
+**Assistant interpretation:** Upgrade all old Widget DSL example hosts to the final v3 runtime and make them durable, deep integration tests.
+
+**Inferred user intent:** Prevent the flagship host from being the only realistic validation surface and make future regressions visible across collections, scheduling, CRM, domain views, generated hosts, and browser interaction.
+
+**Commit (code):** `7a8db2b` — "widgetdsl: deepen generated host integration suites"
+
+**Commit (code):** `3e4fafb` — "build: keep embedded SPA assets reproducible"
+
+### What I did
+
+- Added `make smoke` suites to the work queue, Doodle scheduling, workshop CRM, and 42-page v3 gallery hosts.
+- Added `scripts/test-widgetdsl-v3-sites.sh` and the root `make widgetdsl-sites-smoke` release gate.
+- Made every host rebuild/embed the current canonical SPA and use explicit local provider replacement.
+- Added real server search/count/pagination behavior to the work-queue host.
+- Migrated the workshop CRM from removed `widget.crm.activityFeed` ownership to `widget.data.activityFeed`.
+- Validated domain-specific IR components and write actions in every generated binary.
+- Rebuilt `pkg/defaultspa/dist` and all committed host assets.
+- Excluded generated host assets from Biome source formatting to preserve reproducible minified output.
+- Ran Go, GOWORK-off, TypeScript, focused frontend, Storybook, npm package/consumer, migration, generated-host, browser, and docmgr gates.
+- Uploaded `Widget DSL v3 Full Feature Final Implementation.pdf` to `/ai/2026/07/12/WIDGETDSL-V3-FULL-FEATURE-CUTOVER`.
+
+### Why
+
+- Golden IR tests prove lowering, but generated hosts additionally prove xgoja plans, module resolution, embedded assets, Express routes, SQLite behavior, and renderer compatibility.
+- Old reference sites cover rich scheduling and CRM capabilities that the collection host does not.
+
+### What worked
+
+- All four generated-host smoke suites pass through the single root target.
+- The gallery generated and served all 42 canonical examples successfully.
+- Chromium verified server filtering, keyboard `t`, FormDialog errors, successful save, focus restoration, and narrow layout behavior.
+- Both workspace-aware and `GOWORK=off` full repository suites pass.
+
+### What didn't work
+
+- Initial Doodle smoke assertions expected `StatusPill`, `AvailabilityPoll`, `PollResults`, and `CalendarWeekPanel`; actual lowered registry types were `StatusText`, `MatrixGrid`, `MonthGrid`, and `TimeGrid`. Assertions were corrected to stable IR component names.
+- Initial workshop assertions expected `PipelineFunnel`, `PipelineBoard`, and `RecordFields`; actual stable lowering uses `SegmentedBar`, `BoardEngine`, and `RecordFieldList`.
+- The gallery smoke initially required the whitespace-sensitive text `\"schemaVersion\":\"0.2\"`; generated JSON includes spaces, so the check now asserts the field plus component root independently.
+- The first browser page still showed all rows for `?q=Arbor` because planned Express handlers expose query state at `ctx.request.query`, not `ctx.query`; the host was corrected.
+- The first browser render showed `Unknown widget: SearchField`, `Pagination`, and `FormDialog` because the host embedded stale assets; all host builds now depend on rebuilding/synchronizing the canonical SPA.
+- Running `go run ./cmd/widgetdsl-v3-examples -check` failed with `flag provided but not defined: -check`; golden coverage was correctly run through `go test ./pkg/widgetdsl/...` instead.
+- Biome reformatted staged minified host assets into tens of thousands of source lines; `biome.json` now excludes generated host asset folders, and a clean rebuild restored byte-reproducible minified assets.
+
+### What I learned
+
+- A host smoke must assert the stable lowered registry component name, not the author-facing DSL helper name.
+- Embedded-SPA freshness is a first-class compatibility gate: valid IR is insufficient when the bundled registry predates the components.
+- Generated assets need explicit formatter exclusions even when build output is committed intentionally.
+
+### What was tricky to build
+
+- The same suite spans four process lifecycles, three SQLite-backed hosts, generated temporary Go modules, and independently embedded assets. Each Makefile now uses a unique port, readiness loop, temporary response files, deterministic database cleanup, and an EXIT trap that terminates the host and removes evidence files.
+- Browser validation had to distinguish native required-field blocking from server validation. A whitespace-only value passes native validation, reaches the action endpoint, and demonstrates that 422 `fieldErrors` plus the form-level error are routed back into the open dialog.
+
+### What warrants a second pair of eyes
+
+- Review whether the committed SPA bundles should remain duplicated per reference host or move to one generated test fixture in a future repository-size optimization.
+- Review the intentional browser console error produced by the negative HTTP 422 path; the UI handles it correctly, but automated console-clean policies may need an explicit allowance.
+
+### What should be done in the future
+
+- Add a checked-in Playwright dependency only if CI should replay the browser scenario rather than relying on generated-host HTTP suites plus manual release-browser evidence.
+
+### Code review instructions
+
+- Start with `scripts/test-widgetdsl-v3-sites.sh` and the four example Makefiles.
+- Review `examples/xgoja/widget-site/verbs/sites.js` for deterministic search/pagination and `examples/xgoja/workshop-crm-site/verbs/lib/pages.js` for generic activity ownership.
+- Run `make widgetdsl-sites-smoke`, then the commands listed in `reference/03-release-validation.md`.
+
+### Technical details
+
+- The all-host target validates 42 gallery pages plus collection, scheduling, calendar, CRM board, record, activity, form, and action routes.
+- Browser acceptance was run at desktop and 390×844 viewport sizes.
