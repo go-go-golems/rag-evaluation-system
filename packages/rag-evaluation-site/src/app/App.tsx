@@ -76,14 +76,33 @@ export function RagEvaluationSiteApp({
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ payload: resolveActionPayload(action.payload, context), context }),
 		});
-		if (!response.ok) {
-			throw new Error(`Widget action failed: ${response.status} ${response.statusText}`);
+		const result = (await response.json().catch(() => ({
+			ok: false,
+			error: `Widget action failed: ${response.status} ${response.statusText}`,
+		}))) as {
+			ok?: boolean;
+			refresh?: boolean;
+			toast?: string;
+			error?: string;
+			fieldErrors?: Record<string, string>;
+		};
+		if (typeof window !== "undefined") {
+			window.dispatchEvent(
+				new CustomEvent("widget:action-result", {
+					detail: { action, context, responseOk: response.ok, result },
+				}),
+			);
+			if (result.toast || result.error)
+				window.dispatchEvent(
+					new CustomEvent("widget:toast", {
+						detail: {
+							message: result.toast ?? result.error,
+							tone: response.ok && result.ok !== false ? "success" : "danger",
+						},
+					}),
+				);
 		}
-		const result = (await response.json()) as { refresh?: boolean; toast?: string };
-		if (result.toast && typeof window !== "undefined") {
-			window.dispatchEvent(new CustomEvent("widget:toast", { detail: result }));
-		}
-		if (result.refresh) refresh();
+		if (response.ok && result.refresh) refresh();
 	}
 
 	if (loading && !page) {
