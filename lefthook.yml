@@ -14,7 +14,7 @@ pre-commit:
       glob: '*.{ts,tsx,js,jsx,css,json}'
       # Lint errors are informational only for now; do not block commits
       # until the existing backlog is addressed incrementally.
-      run: npx biome lint {staged_files} || true
+      run: npx biome lint --no-errors-on-unmatched {staged_files} || true
     rag-evaluation-site-typecheck:
       glob: 'packages/rag-evaluation-site/**/*.{ts,tsx}'
       run: pnpm --dir packages/rag-evaluation-site typecheck
