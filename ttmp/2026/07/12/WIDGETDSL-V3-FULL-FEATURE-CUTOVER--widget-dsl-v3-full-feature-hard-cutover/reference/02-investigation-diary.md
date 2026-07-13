@@ -1047,6 +1047,10 @@ Phase 8 removed split modules from both production registration paths and conver
 
 **Commit (code):** `b439d5de97b1e6243e76024f89010de7a9aba49f` — "widgets: route server validation results to dialogs"
 
+**Commit (code):** `62d75d41d2d71912aaffd8b6fcf89d0697309296` — "xgoja: validate widget.dsl v3 host cutover"
+
+**Commit (code):** `a4506c1` — "xgoja: keep seed callback side-effect only"
+
 ### What I did
 
 - Restricted `Register`, `Registrar`, the xgoja provider, and public `NewLoader` to `widget.dsl`.
@@ -1056,6 +1060,8 @@ Phase 8 removed split modules from both production registration paths and conver
 - Replaced split-module help and README guidance.
 - Ran the parser-backed first-party migration gate with zero findings.
 - Routed application-owned server responses into FormDialog and toast services.
+- Migrated the host spec to `xgoja/v2` and replaced its stale smoke suite with Widget DSL v3 interaction assertions.
+- Built and served the generated host; verified DataTable, SearchField, Pagination, FormDialog, action refresh, and 422 field-error behavior.
 
 ### Why
 
@@ -1068,7 +1074,10 @@ Phase 8 removed split modules from both production registration paths and conver
 
 ### What didn't work
 
-- The first commit attempt surfaced Biome's `useIterableCallbackReturn` errors in the rewritten xgoja example; callbacks were reformatted by the hook and the validated commit completed.
+- The first commit attempt surfaced Biome's `useIterableCallbackReturn` errors in the rewritten xgoja example; the seed callback was corrected to be side-effect-only.
+- Initial host smoke failed with `/xgoja.yaml appears to be a legacy xgoja spec; run xgoja migrate-spec`; migrating to `schema: xgoja/v2` fixed validation.
+- The next host run failed with `TypeError: app.get(pattern, handler) was removed`; routes were migrated to `.public().handle(...)`.
+- A stale server retained port 18791 and caused a false smoke failure; after terminating it, `make serve-smoke` passed.
 - Existing adapter non-null assertions and CSS `!important` declarations remain Biome warnings inherited from the adapter corpus.
 
 ### What I learned

@@ -121,3 +121,13 @@ Steps 12-13: completed phases 3-6 and 8: structured navigation, overlays/FormDia
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/spec/types.go — Typed shaping, keyboard, command, style, and action contracts
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite/provider.go — Single-module production provider
 
+
+## 2026-07-12
+
+Phase 8 host validation: migrated widget-site to xgoja/v2, modern Express route declarations, and passing generated binary serve smoke (commits 62d75d4, a4506c1).
+
+### Related Files
+
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/examples/xgoja/widget-site/Makefile — Generated host interaction smoke
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/examples/xgoja/widget-site/xgoja.yaml — xgoja/v2 single-module plan
+
