@@ -395,6 +395,7 @@ func widgetV3TypeScriptLines() []string {
 		"text(options?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
 		"code(options?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
 		"divider(options?: Record<string, any>): WidgetNodeSpec;",
+		"disclosure(title: WidgetChild, content: WidgetChild, options?: { open?: boolean; className?: string }): WidgetNodeSpec;",
 		"scroll(options?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
 		"tabs(items: Record<string, any>[], options?: Record<string, any>): WidgetNodeSpec;",
 		"summary(items: Record<string, any>[], options?: Record<string, any>): WidgetNodeSpec;",

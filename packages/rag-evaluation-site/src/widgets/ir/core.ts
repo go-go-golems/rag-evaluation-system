@@ -47,6 +47,7 @@ export type RagWidgetType =
 	| "ActivityFeed"
 	| "StatTile"
 	| "Divider"
+	| "Disclosure"
 	| "FormPanel"
 	| "FormRow"
 	| "Inline"

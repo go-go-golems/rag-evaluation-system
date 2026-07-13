@@ -52,6 +52,7 @@ import { monthGridWidget } from "../components/molecules/MonthGrid/MonthGrid.wid
 import { segmentedBarWidget } from "../components/molecules/SegmentedBar/SegmentedBar.widget";
 import { statTileWidget } from "../components/molecules/StatTile/StatTile.widget";
 import { timeGridWidget } from "../components/molecules/TimeGrid/TimeGrid.widget";
+import { disclosureWidget } from "../components/molecules/Disclosure/Disclosure.widget";
 import { documentListPanelWidget } from "../components/molecules/DocumentListPanel/DocumentListPanel.widget";
 import { documentPreviewToolbarWidget } from "../components/molecules/DocumentPreviewToolbar/DocumentPreviewToolbar.widget";
 import { emptyStateWidget } from "../components/molecules/EmptyState/EmptyState.widget";
@@ -96,6 +97,7 @@ export const uiWidgetRegistry = createWidgetRegistry([
 	checkListWidget,
 	codeTextWidget,
 	dashboardGridWidget,
+	disclosureWidget,
 	dividerWidget,
 	figureBlockWidget,
 	formDialogWidget,

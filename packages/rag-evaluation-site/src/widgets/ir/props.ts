@@ -106,6 +106,11 @@ export interface DividerWidgetProps extends BaseWidgetProps {
 	orientation?: "horizontal" | "vertical";
 }
 
+export interface DisclosureWidgetProps extends BaseWidgetProps {
+	title: RenderableValue;
+	open?: boolean;
+}
+
 export interface ContextStudioNavIconWidgetProps extends BaseWidgetProps {
 	id: ContextStudioNavIconId;
 	title?: string;
@@ -662,6 +667,7 @@ export type WidgetProps =
 	| TextWidgetProps
 	| CodeTextWidgetProps
 	| DividerWidgetProps
+	| DisclosureWidgetProps
 	| ContextStyleSwatchWidgetProps
 	| ContextStudioNavIconWidgetProps
 	| AnnotationBadgeWidgetProps

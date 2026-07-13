@@ -93,6 +93,7 @@ Runtime factory: `v3UIObject`.
 - `text` (function)
 - `code` (function)
 - `divider` (function)
+- `disclosure` (function)
 - `scroll` (function)
 - `tabs` (function)
 - `summary` (function)

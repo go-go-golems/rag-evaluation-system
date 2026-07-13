@@ -118,7 +118,7 @@ var widgetV3Module = v3ModuleDescriptor{
 			Members: v3Members([]string{
 				"callout", "stack", "inline", "splitPane", "card", "button", "caption", "badge", "metadata",
 				"shareLink", "form", "formRow", "textInput", "textareaInput", "selectInput", "status", "emptyState",
-				"text", "code", "divider", "scroll", "tabs", "summary", "checkList", "stepList", "markdownArticle", "upload", "formDialog",
+				"text", "code", "divider", "disclosure", "scroll", "tabs", "summary", "checkList", "stepList", "markdownArticle", "upload", "formDialog",
 			}),
 		},
 		{

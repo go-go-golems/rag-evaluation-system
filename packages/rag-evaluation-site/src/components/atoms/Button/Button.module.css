@@ -31,9 +31,39 @@
 	color: var(--mac-text-inv);
 }
 
+.success {
+	border-color: var(--mac-green);
+	background: color-mix(in srgb, var(--mac-green) 16%, var(--mac-surface));
+	color: var(--mac-green);
+}
+
+.warning {
+	border-color: var(--mac-amber);
+	background: color-mix(in srgb, var(--mac-amber) 16%, var(--mac-surface));
+	color: var(--mac-amber);
+}
+
+.danger {
+	border-color: var(--mac-accent-2);
+	background: color-mix(in srgb, var(--mac-accent-2) 14%, var(--mac-surface));
+	color: var(--mac-accent-2);
+}
+
 .primary:hover:not(:disabled),
 .selected:hover:not(:disabled) {
 	background: #333333;
+}
+
+.success:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--mac-green) 26%, var(--mac-surface));
+}
+
+.warning:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--mac-amber) 26%, var(--mac-surface));
+}
+
+.danger:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--mac-accent-2) 24%, var(--mac-surface));
 }
 
 .root:disabled {

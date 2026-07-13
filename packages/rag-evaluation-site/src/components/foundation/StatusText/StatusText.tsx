@@ -11,7 +11,22 @@ export type RagStatus =
 	| "warning"
 	| "failed"
 	| "error"
-	| "canceled";
+	| "canceled"
+	| "new"
+	| "shortlisted"
+	| "applied"
+	| "interviewing"
+	| "won"
+	| "rejected"
+	| "archived"
+	| "not_started"
+	| "planning"
+	| "drafting"
+	| "review"
+	| "submitted"
+	| "skipped"
+	| "expired"
+	| "withdrawn";
 
 export interface StatusTextProps extends HTMLAttributes<HTMLSpanElement> {
 	status: RagStatus | string;
@@ -30,6 +45,21 @@ const statusIcon: Record<string, string> = {
 	failed: "✘",
 	error: "✘",
 	canceled: "⊘",
+	new: "◌",
+	shortlisted: "✔",
+	applied: "●",
+	interviewing: "◐",
+	won: "★",
+	rejected: "✘",
+	archived: "⊘",
+	not_started: "◌",
+	planning: "●",
+	drafting: "●",
+	review: "⚠",
+	submitted: "●",
+	skipped: "⊘",
+	expired: "✘",
+	withdrawn: "✘",
 };
 
 export function StatusText({

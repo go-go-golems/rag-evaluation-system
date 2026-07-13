@@ -1041,6 +1041,7 @@ func (r *runtime) v3UIObject() *goja.Object {
 	setExport(ui, "text", r.v3ComponentFactory("Text", nil))
 	setExport(ui, "code", r.v3ComponentFactory("CodeText", nil))
 	setExport(ui, "divider", r.v3ComponentFactory("Divider", nil))
+	setExport(ui, "disclosure", r.v3UIDisclosure)
 	setExport(ui, "scroll", r.v3ComponentFactory("ScrollRegion", nil))
 	setExport(ui, "tabs", func(items goja.Value, options ...goja.Value) map[string]any {
 		props := exportOptions(options)
@@ -1112,6 +1113,12 @@ func (r *runtime) v3UIButton(label goja.Value, action goja.Value, options ...goj
 		props["action"] = action.Export()
 	}
 	return componentNode("Button", props, r.v3NodeSpecsToIR(r.v3ExportChild(label))...)
+}
+
+func (r *runtime) v3UIDisclosure(title goja.Value, content goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	props["title"] = r.v3Renderable(title)
+	return componentNode("Disclosure", props, r.v3NodeSpecsToIR(r.v3ExportChild(content))...)
 }
 
 func (r *runtime) v3UISplitPane(left goja.Value, right goja.Value, options ...goja.Value) map[string]any {
