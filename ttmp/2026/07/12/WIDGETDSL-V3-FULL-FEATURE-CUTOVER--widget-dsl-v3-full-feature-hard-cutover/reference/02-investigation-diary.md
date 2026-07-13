@@ -964,3 +964,135 @@ The canonical v3 examples now use typed generic and domain APIs exclusively. A m
 ### Technical details
 
 - Raw findings fell from 11 to zero in the v3 golden corpus.
+
+## Step 12: Deliver Interactive Collections, FormDialog, and Generic Activity
+
+Phases 3–6 landed as one end-to-end interaction slice rather than disconnected APIs. The typed spec now shapes search and pagination, DataTable owns accessible keyboard mechanics, and FormDialog carries frozen row context through native form serialization and server validation.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue
+
+do phases 3-8, i'm going swimming, so i want to be coming back to something that kicks ass"
+
+**Assistant interpretation:** Autonomously implement and validate the queued interaction phases through hard cutover.
+
+**Inferred user intent:** Return to a substantial, integrated implementation rather than another design-only checkpoint.
+
+**Commit (code):** `ed372286eeebf89b7ac9b6d9e09848fec7fe69de` — "widgetdsl: add interactive collections and overlay forms"
+
+### What I did
+
+- Added structured navigation query/preserve/omit/replace semantics and overlay actions.
+- Added FormDialog with opener restoration, native validation, `context.form`, field errors, and live-region notifications.
+- Added collection search/pagination builders, page-size selection, stable lowering order, and typed specs.
+- Added DataTable roving focus, Arrow/J/K navigation, Enter selection, row commands, editable-target guards, command help, and semantic tones.
+- Promoted ActivityFeed to `data.activityFeed` and removed the CRM duplicate.
+- Added example/golden 42 as the integrated interaction contract.
+
+### Why
+
+- The Upwork workflow needs URL-driven scale and keyboard-speed triage without custom DOM scripts.
+
+### What worked
+
+- Full Go tests, TypeScript, focused frontend checks, descriptor parity, action audit, and migration checks passed.
+
+### What didn't work
+
+- The first pre-commit attempt failed with `missing cases in switch of type spec.ActionKind: spec.ActionKindOpenOverlay, spec.ActionKindCloseOverlay` and unused CRM activity helpers.
+- Biome initially rejected FormDialog's effect with `This hook does not specify its dependency on close`.
+
+### What I learned
+
+- Action result routing must exist both in the default dispatcher and the application-provided action handler.
+
+### What was tricky to build
+
+- Focus had to move by stable row key after React committed state; setting `tabIndex` alone does not move DOM focus.
+- Structured navigation options had to survive typed Go action conversion instead of disappearing during lowering.
+
+### What warrants a second pair of eyes
+
+- Browser-test IME composition and nested editable controls around table commands.
+- FormDialog field-error placement currently provides a summary rather than binding each message to its control.
+
+### What should be done in the future
+
+- Add Playwright coverage for repeated query values, Back/Forward, dialog validation, and S/R/T commands.
+
+### Code review instructions
+
+- Start with `pkg/widgetdsl/spec/types.go`, `pkg/widgetdsl/spec/lower.go`, `DataTable.tsx`, and `FormDialog.widget.tsx`.
+- Run `go test ./... -count=1` and package `typecheck`/`test:focused`.
+
+### Technical details
+
+- The collection lowering order is search → arrangement → pagination → detail.
+- Page-size changes dispatch `{page: 1, pageSize, value}`.
+
+## Step 13: Hard-Cut First-Party Hosts to One Module
+
+Phase 8 removed split modules from both production registration paths and converted the complete React adapter manifest catalog to `widget.dsl`. The xgoja widget-site example was rewritten around native v3 collections rather than receiving aliases.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 12)
+
+**Assistant interpretation:** Complete the first-party migration and make legacy module names unavailable in generated hosts.
+
+**Inferred user intent:** Enforce one coherent language in production, examples, manifests, and documentation.
+
+**Commit (code):** `a028a9ca5c053085ff6ad0c0f6d858c0536a4145` — "widgetdsl: hard cut over first-party hosts to widget.dsl"
+
+**Commit (code):** `b439d5de97b1e6243e76024f89010de7a9aba49f` — "widgets: route server validation results to dialogs"
+
+### What I did
+
+- Restricted `Register`, `Registrar`, the xgoja provider, and public `NewLoader` to `widget.dsl`.
+- Added negative tests for every legacy module name.
+- Converted 85 widget manifests/adapters and the module catalog to sole `widget.dsl` ownership.
+- Rewrote the xgoja widget-site host and xgoja module plan to native v3.
+- Replaced split-module help and README guidance.
+- Ran the parser-backed first-party migration gate with zero findings.
+- Routed application-owned server responses into FormDialog and toast services.
+
+### Why
+
+- A hard cutover is only real when providers, manifests, examples, and docs all reject the old dialects.
+
+### What worked
+
+- `go test ./... -count=1`, frontend typecheck/focused checks, manifest validation, and first-party migration checks pass.
+- Production module resolution exposes exactly `widget.dsl`.
+
+### What didn't work
+
+- The first commit attempt surfaced Biome's `useIterableCallbackReturn` errors in the rewritten xgoja example; callbacks were reformatted by the hook and the validated commit completed.
+- Existing adapter non-null assertions and CSS `!important` declarations remain Biome warnings inherited from the adapter corpus.
+
+### What I learned
+
+- Provider registration, engine registration, and xgoja build-plan selection are three independent exposure surfaces and all need negative tests.
+
+### What was tricky to build
+
+- Historical legacy implementation tests still need private registration to preserve regression archaeology while public loaders reject those names. The test-only function is deliberately unexported and unreachable from production registrars.
+
+### What warrants a second pair of eyes
+
+- Decide whether to delete the retained private legacy implementation tests/code now or in a dedicated repository-size cleanup after release evidence is archived.
+- Browser-smoke the rewritten generated xgoja host against embedded assets.
+
+### What should be done in the future
+
+- Phase 9 should regenerate host assets, run Playwright/Storybook, and publish the final review bundle.
+
+### Code review instructions
+
+- Start with `pkg/widgetdsl/module.go`, `pkg/xgoja/providers/widgetsite/provider.go`, `schema/dsl-modules.yaml`, and `examples/xgoja/widget-site/verbs/sites.js`.
+- Verify old module resolution fails and `widget.dsl` succeeds.
+
+### Technical details
+
+- The public migration scan reports no legacy imports or raw escapes under `examples`, `packages`, and the root README.

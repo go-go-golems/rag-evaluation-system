@@ -14,12 +14,12 @@
 - [x] Phase 1B: describe builder methods nested intents action contexts and fragment composition <!-- t:7651 -->
 - [x] Phase 1C: make declarations and API help descriptor-driven and reorganize the typed spec kernel <!-- t:ycbj -->
 - [x] Phase 2: implement typed generic UI content upload shell and form parity <!-- t:fv77 -->
-- [ ] Phase 3: implement structured navigation overlays FormDialog notifications and form action context <!-- t:4gd9 -->
-- [ ] Phase 4: implement collection search server pagination page-size controls and URL state <!-- t:pnxf -->
-- [ ] Phase 5: implement DataTable roving focus keyboard row commands and semantic styling <!-- t:kkpk -->
-- [ ] Phase 6: promote generic activity feeds and complete reusable data engines <!-- t:pvmb -->
+- [x] Phase 3: implement structured navigation overlays FormDialog notifications and form action context <!-- t:4gd9 -->
+- [x] Phase 4: implement collection search server pagination page-size controls and URL state <!-- t:pnxf -->
+- [x] Phase 5: implement DataTable roving focus keyboard row commands and semantic styling <!-- t:kkpk -->
+- [x] Phase 6: promote generic activity feeds and complete reusable data engines <!-- t:pvmb -->
 - [x] Phase 7: complete typed CRM CMS course context schedule and time domain views <!-- t:hf4t -->
-- [ ] Phase 8: migrate first-party hosts and remove all legacy split modules <!-- t:uazl -->
+- [x] Phase 8: migrate first-party hosts and remove all legacy split modules <!-- t:uazl -->
 - [ ] Phase 9: run full release validation regenerate final docs and upload final implementation bundle <!-- t:saec -->
 - [x] Fix descriptor-discovered v3 action adapter gaps for context diagrams Markdown editor CMS article actions and course material deletion <!-- t:tqve -->
 - [x] Phase 1C1: generate and verify v3 builder declarations from method-signature descriptors <!-- t:sq5o -->

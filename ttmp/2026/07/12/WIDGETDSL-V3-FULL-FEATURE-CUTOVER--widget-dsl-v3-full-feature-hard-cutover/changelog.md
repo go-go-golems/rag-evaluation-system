@@ -108,3 +108,16 @@ Step 11: completed typed domain example coverage and reduced canonical v3 raw es
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/testdata/v3/examples — Canonical typed v3 corpus
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3_crm.go — Standalone typed CRM field helper
 
+
+## 2026-07-12
+
+Steps 12-13: completed phases 3-6 and 8: structured navigation, overlays/FormDialog, search/pagination, keyboard triage, generic ActivityFeed, and single-module first-party hard cutover (commits ed37228, a028a9c, b439d5d).
+
+### Related Files
+
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/examples/xgoja/widget-site/verbs/sites.js — Native v3 first-party host
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/packages/rag-evaluation-site/src/components/molecules/DataTable/DataTable.tsx — Roving focus and command mechanics
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/packages/rag-evaluation-site/src/components/organisms/FormDialog/FormDialog.widget.tsx — Overlay lifecycle and form context
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/spec/types.go — Typed shaping, keyboard, command, style, and action contracts
+- /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite/provider.go — Single-module production provider
+
