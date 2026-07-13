@@ -34,6 +34,12 @@ export function SidebarShell({
 		...style,
 		"--rag-sidebar-width": toCssSize(sidebarWidth),
 	} as CSSProperties;
+	const contentPaddingClass =
+		contentPadding === "md"
+			? styles.contentPaddingMd
+			: contentPadding === "lg"
+				? styles.contentPaddingLg
+				: "";
 
 	return (
 		<div
@@ -48,16 +54,7 @@ export function SidebarShell({
 				<div className={styles.sidebarBody}>{sidebar}</div>
 				{footer && <div className={styles.sidebarFooter}>{footer}</div>}
 			</aside>
-			<main
-				className={[
-					styles.content,
-					contentPadding !== "none"
-						? styles[`contentPadding${contentPadding[0]!.toUpperCase()}${contentPadding.slice(1)}`]
-						: "",
-				]
-					.filter(Boolean)
-					.join(" ")}
-			>
+			<main className={[styles.content, contentPaddingClass].filter(Boolean).join(" ")}>
 				{children}
 			</main>
 		</div>

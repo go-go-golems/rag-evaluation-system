@@ -41,11 +41,21 @@ function createWidgetHelpers(widget) {
 	}
 
 	function applyPageMeta(p, id, activeNavItemId) {
-		return p
-			.id(id)
-			.meta("activeNavItemId", activeNavItemId)
-			.meta("navItems", navItems)
-			.meta("maxWidth", "wide");
+		const shell = widget.app.shell((builder) =>
+			builder
+				.brand("Doodle")
+				.navigation((navigation) =>
+					navigation
+						.placement("top")
+						.active(activeNavItemId)
+						.ariaLabel("Polls")
+						.section("polls", "Polls", (items) => {
+							navItems.forEach((item) => items.item(item.id, item.label, item.action));
+						}),
+				)
+				.content((content) => content.maxWidth("wide").padding("none")),
+		);
+		return p.id(id).shell(shell);
 	}
 
 	function asPage(pageBuilder) {

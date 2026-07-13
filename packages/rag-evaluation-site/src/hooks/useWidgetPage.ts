@@ -69,6 +69,8 @@ export function useWidgetPage(
 	const refresh = useCallback(() => setVersion((current) => current + 1), []);
 
 	useEffect(() => {
+		// Reading the refresh counter makes the deliberate re-fetch dependency explicit.
+		void version;
 		if (!enabled || !url) {
 			setLoading(false);
 			return;

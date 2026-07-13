@@ -34,9 +34,9 @@ function attachShell(page, active) {
 						.active(active)
 						.ariaLabel("Examples")
 						.section("examples", "Examples", (items) => {
-							navItems().forEach((item) =>
-								items.item(item.id, item.label, widget.act.navigate(`/pages/${item.id}`)),
-							);
+							navItems().forEach((item) => {
+								items.item(item.id, item.label, widget.act.navigate(`/pages/${item.id}`));
+							});
 						}),
 				)
 				.content((content) => content.maxWidth("wide").padding("none")),
@@ -85,7 +85,7 @@ app
 	.public()
 	.handle((ctx, res) => {
 		const id = ctx.params.id || "index";
-		const query = (ctx.request && ctx.request.query) || {};
+		const query = ctx.request?.query || {};
 		const page = id === "index" ? indexPage() : renderExample(id, query);
 		if (!page) {
 			res.status(404).json({ error: { code: "page_not_found", message: `Unknown page ${id}` } });
