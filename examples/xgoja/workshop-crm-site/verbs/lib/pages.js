@@ -37,9 +37,9 @@ function createPages({ widget, store }) {
 						.active(active)
 						.ariaLabel("Workspace")
 						.section("workspace", "Workspace", (items) => {
-							navItems.forEach((item) =>
-								items.item(item.id, item.label, act.navigate(`/pages/${item.id}`)),
-							);
+							navItems.forEach((item) => {
+								items.item(item.id, item.label, act.navigate(`/pages/${item.id}`));
+							});
 						}),
 				)
 				.content((content) => content.maxWidth("wide").padding("none")),

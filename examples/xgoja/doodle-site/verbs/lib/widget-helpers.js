@@ -50,7 +50,9 @@ function createWidgetHelpers(widget) {
 						.active(activeNavItemId)
 						.ariaLabel("Polls")
 						.section("polls", "Polls", (items) => {
-							navItems.forEach((item) => items.item(item.id, item.label, item.action));
+							navItems.forEach((item) => {
+								items.item(item.id, item.label, item.action);
+							});
 						}),
 				)
 				.content((content) => content.maxWidth("wide").padding("none")),
