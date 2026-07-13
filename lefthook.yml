@@ -8,7 +8,7 @@ pre-commit:
       run: make test
     biome-format:
       glob: '*.{ts,tsx,js,jsx,css,json}'
-      run: npx biome format --write {staged_files}
+      run: npx biome format --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
     biome-lint:
       glob: '*.{ts,tsx,js,jsx,css,json}'
