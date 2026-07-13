@@ -41,6 +41,8 @@ Runtime factory: `actionObject`.
 - `download` (function)
 - `event` (function)
 - `copy` (function)
+- `openOverlay` (function)
+- `closeOverlay` (function)
 
 ## `bind` — BindingNamespace
 
@@ -88,6 +90,7 @@ Runtime factory: `v3UIObject`.
 - `stepList` (function)
 - `markdownArticle` (function)
 - `upload` (function)
+- `formDialog` (function)
 
 ## `data` — DataNamespace
 
@@ -100,6 +103,7 @@ Runtime factory: `v3DataObject`.
 - `selection` (function)
 - `item` (function)
 - `matrix` (function)
+- `activityFeed` (function)
 - `cell` (object)
 
 ## `crm` — CrmNamespace
@@ -113,7 +117,6 @@ Runtime factory: `v3CRMObject`.
 - `pipelineBoard`: `pipelineBoard(pipeline: Record<string, any>, deals: Record<string, any>[], configure?: Fragment<CrmPipelineBoardBuilder>): WidgetNodeSpec` → `BoardEngine`. Render an opportunity pipeline board.
 - `recordFields`: `recordFields(values: Record<string, JsonValue>, fields: Record<string, any>, configure?: Fragment<CrmRecordFieldsBuilder>): WidgetNodeSpec` → `RecordFieldList`. Render typed CRM fields.
 - `field` (function)
-- `activityFeed`: `activityFeed(activities: Record<string, any>[], configure?: Fragment<CrmActivityFeedBuilder>): WidgetNodeSpec` → `ActivityFeed`. Render a CRM activity timeline.
 - `tasksInbox` (function)
 - `stat` (function)
 - `funnel` (function)
@@ -207,9 +210,14 @@ All builders below expose `use(fragment)` in addition to their listed methods.
 - `PageBuilder`: [id title meta shell density breadcrumb section view validate toPage use]
 - `SectionBuilder`: [caption anchor tone text view slot actions metric metadata use]
 - `ActionsBuilder`: [add button use]
+- `FormDialogBuilder`: [title body initialFocus submitLabel cancelLabel submit use]
 - `FieldSetBuilder`: [key primary short prose count status date currency media url build validate use]
-- `CollectionBuilder`: [id schema empty select table edit masterDetail validate toNode toIR use]
-- `TableBuilder`: [className rowSelect actionColumn use]
+- `CollectionBuilder`: [id schema empty select search paginate table edit masterDetail validate toNode toIR use]
+- `SearchBuilder`: [value query placeholder resultCount submit clear use]
+- `PaginationBuilder`: [current size total sizes position onChange use]
+- `TableBuilder`: [className rowSelect actionColumn keyboard command styleWhen use]
+- `TableKeyboardBuilder`: [mode selection vimAliases enterSelect use]
+- `RowCommandBuilder`: [key label danger action use]
 - `EditorBuilder`: [create submit submitPost reorder remove actions use]
 - `MatrixBuilder`: [id columns column valueAt cell onCellAction toNode use]
 - `SchedulePollBuilder`: [styleSet readOnly editableRow selectedCell onToggle ariaLabel use]
@@ -231,7 +239,7 @@ All builders below expose `use(fragment)` in addition to their listed methods.
 - `CrmPipelineBuilder`: [stage build validate use]
 - `CrmPipelineBoardBuilder`: [summaries selected ariaLabel onMove onOpen use]
 - `CrmRecordFieldsBuilder`: [mode refs onChange use]
-- `CrmActivityFeedBuilder`: [groupByDay onOpen onLoadMore use]
+- `ActivityFeedBuilder`: [groupByDay glyph glyphs styleSet onOpen onLoadMore use]
 
 ## Action contexts
 

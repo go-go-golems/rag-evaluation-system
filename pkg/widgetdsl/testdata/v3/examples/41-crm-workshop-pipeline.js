@@ -65,5 +65,5 @@ const page = widget.page("Workshop CRM pipeline", (p) =>
 				),
 			),
 		)
-		.section("Activity", (s) => s.view(widget.crm.activityFeed(activities))),
+		.section("Activity", (s) => s.view(widget.data.activityFeed(activities))),
 );

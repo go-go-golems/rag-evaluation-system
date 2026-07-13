@@ -94,10 +94,17 @@ func TestWidgetV3DescriptorMatchesBuilderRuntimeMethods(t *testing.T) {
 				section.actions(capture("ActionsBuilder"));
 			});
 		});
+		widget.ui.formDialog("probe", capture("FormDialogBuilder"));
 		capture("FieldSetBuilder")(widget.data.fields());
 		const collection = widget.data.collection([]);
 		capture("CollectionBuilder")(collection);
-		collection.table(capture("TableBuilder"));
+		collection.search(capture("SearchBuilder"));
+		collection.paginate(capture("PaginationBuilder"));
+		collection.table(table => {
+			capture("TableBuilder")(table);
+			table.keyboard(capture("TableKeyboardBuilder"));
+			table.command("probe", capture("RowCommandBuilder"));
+		});
 		collection.edit(capture("EditorBuilder"));
 		widget.data.matrix([], capture("MatrixBuilder"));
 		widget.schedule.availabilityPoll({ options: [], responses: [] }, capture("SchedulePollBuilder"));
@@ -121,7 +128,7 @@ func TestWidgetV3DescriptorMatchesBuilderRuntimeMethods(t *testing.T) {
 		capture("CrmPipelineBuilder")(pipeline);
 		widget.crm.pipelineBoard(pipeline, [], capture("CrmPipelineBoardBuilder"));
 		widget.crm.recordFields({}, crmFields, capture("CrmRecordFieldsBuilder"));
-		widget.crm.activityFeed([], capture("CrmActivityFeedBuilder"));
+		widget.data.activityFeed([], capture("ActivityFeedBuilder"));
 		builders;
 	`)
 	if err != nil {

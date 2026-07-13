@@ -141,6 +141,7 @@ type CollectionSpec struct {
 	Schema      SchemaSpec
 	Mode        CollectionMode
 	Selection   *SelectionSpec
+	Shaping     CollectionShapingSpec
 	Arrangement ArrangementSpec
 	Actions     CollectionActions
 	Table       TableSpec
@@ -179,10 +180,58 @@ const (
 	ArrangementKindMasterDetail ArrangementKind = "master-detail"
 )
 
+type CollectionShapingSpec struct {
+	Search     *SearchSpec
+	Pagination *PaginationSpec
+}
+
+type SearchSpec struct {
+	Name        string
+	Value       string
+	Placeholder string
+	ResultCount int
+	Submit      *ActionSpec
+	Clear       *ActionSpec
+}
+
+type PaginationSpec struct {
+	Page       int
+	PageSize   int
+	TotalItems int
+	Sizes      []int
+	Position   string
+	OnChange   *ActionSpec
+}
+
 type TableSpec struct {
 	ActionColumns []TableActionColumnSpec
 	RowSelect     *ActionSpec
 	ClassName     string
+	Keyboard      TableKeyboardSpec
+	Commands      []RowCommandSpec
+	StyleRules    []SemanticStyleRule
+}
+
+type TableKeyboardSpec struct {
+	Enabled     bool
+	Mode        string
+	Selection   string
+	VimAliases  bool
+	EnterSelect bool
+}
+
+type RowCommandSpec struct {
+	ID     string
+	Key    string
+	Label  string
+	Danger bool
+	Action ActionSpec
+}
+
+type SemanticStyleRule struct {
+	Field  string
+	Equals JSONValue
+	Tone   string
 }
 
 type TableActionColumnSpec struct {
@@ -221,16 +270,19 @@ type ActionSpec struct {
 	Payload PayloadTemplate
 	Confirm *TemplateSpec
 	Result  *ServerResultPolicy
+	Options JSONObject
 }
 
 type ActionKind string
 
 const (
-	ActionKindNavigate ActionKind = "navigate"
-	ActionKindServer   ActionKind = "server"
-	ActionKindDownload ActionKind = "download"
-	ActionKindEvent    ActionKind = "event"
-	ActionKindCopy     ActionKind = "copy"
+	ActionKindNavigate     ActionKind = "navigate"
+	ActionKindServer       ActionKind = "server"
+	ActionKindDownload     ActionKind = "download"
+	ActionKindEvent        ActionKind = "event"
+	ActionKindCopy         ActionKind = "copy"
+	ActionKindOpenOverlay  ActionKind = "openOverlay"
+	ActionKindCloseOverlay ActionKind = "closeOverlay"
 )
 
 type PayloadTemplate struct {

@@ -28,6 +28,19 @@ export const dataTableWidget = defineWidget<DataTableWidgetProps>({
 				}))}
 				getRowKey={(row) => rowKey(row, props.getRowKey)}
 				selectedKey={props.selectedKey == null ? props.selectedKey : String(props.selectedKey)}
+				keyboard={props.keyboard}
+				commands={props.commands}
+				onCommand={(command, row) => {
+					const action = props.commands?.find((candidate) => candidate.id === command.id)?.action;
+					if (action)
+						ctx.dispatchAction(action, {
+							row,
+							rowKey: rowKey(row, props.getRowKey),
+							commandId: command.id,
+							componentType: "DataTable",
+						});
+				}}
+				rowTone={(row) => props.styleRules?.find((rule) => row[rule.field] === rule.equals)?.tone}
 				emptyMessage={ctx.renderValue(props.emptyMessage)}
 				onRowSelect={
 					rowSelectAction

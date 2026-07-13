@@ -134,6 +134,34 @@ func TestCollectionSpecLowersNewMasterDetailWithEditableKey(t *testing.T) {
 	}
 }
 
+func TestCollectionSpecLowersShapingKeyboardCommandsAndSemanticStyles(t *testing.T) {
+	navigate := ActionSpec{Kind: ActionKindNavigate, To: "/jobs", Options: JSONObject{"query": JSONObject{"page": JSONObject{"kind": "accessor", "mode": "context", "path": "page"}}, "preserveQuery": []string{"q"}, "omitEmpty": true}}
+	collection := CollectionSpec{
+		Name: "jobs", Rows: []JSONObject{{"sessionId": "j1", "title": "Go", "status": "shortlisted"}}, Schema: sessionSchema(), Arrangement: ArrangementSpec{Kind: ArrangementKindTable},
+		Shaping: CollectionShapingSpec{Search: &SearchSpec{Name: "q", Value: "go", ResultCount: 47, Submit: &navigate}, Pagination: &PaginationSpec{Page: 2, PageSize: 20, TotalItems: 47, Sizes: []int{20, 50, 100}, OnChange: &navigate}},
+		Table:   TableSpec{Keyboard: TableKeyboardSpec{Enabled: true, Mode: "rows", Selection: "manual", VimAliases: true, EnterSelect: true}, Commands: []RowCommandSpec{{ID: "star", Key: "s", Label: "Toggle star", Action: ActionSpec{Kind: ActionKindServer, Name: "job.star"}}}, StyleRules: []SemanticStyleRule{{Field: "status", Equals: "shortlisted", Tone: "success"}}},
+	}
+	root := collection.ToNode().ToWidgetNode()
+	children := root["children"].([]JSONValue)
+	if len(children) != 3 {
+		t.Fatalf("children len = %d, want search/table/pagination", len(children))
+	}
+	if children[0].(JSONObject)["type"] != "SearchField" || children[2].(JSONObject)["type"] != "Pagination" {
+		t.Fatalf("unexpected shaping order: %#v", children)
+	}
+	tableProps := children[1].(JSONObject)["props"].(JSONObject)
+	if tableProps["keyboard"].(JSONObject)["vimAliases"] != true {
+		t.Fatalf("keyboard not lowered: %#v", tableProps["keyboard"])
+	}
+	if len(tableProps["commands"].([]JSONValue)) != 1 || len(tableProps["styleRules"].([]JSONValue)) != 1 {
+		t.Fatalf("commands/styles not lowered: %#v", tableProps)
+	}
+	pagerAction := children[2].(JSONObject)["props"].(JSONObject)["onPageChangeAction"].(JSONObject)
+	if pagerAction["omitEmpty"] != true || pagerAction["query"] == nil {
+		t.Fatalf("structured navigation options lost: %#v", pagerAction)
+	}
+}
+
 func TestCollectionSpecValidationRejectsBadArrangement(t *testing.T) {
 	collection := CollectionSpec{
 		Name:        "sessions",

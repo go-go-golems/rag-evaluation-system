@@ -390,6 +390,16 @@ func (r *runtime) actionObject() *goja.Object {
 		mergeOptions(out, exportOptions(options))
 		return out
 	})
+	setExport(action, "openOverlay", func(target string, options ...goja.Value) map[string]any {
+		out := map[string]any{"kind": "openOverlay", "target": target}
+		mergeOptions(out, exportOptions(options))
+		return out
+	})
+	setExport(action, "closeOverlay", func(options ...goja.Value) map[string]any {
+		out := map[string]any{"kind": "closeOverlay"}
+		mergeOptions(out, exportOptions(options))
+		return out
+	})
 	return action
 }
 

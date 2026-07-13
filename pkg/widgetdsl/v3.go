@@ -933,6 +933,7 @@ func (r *runtime) v3UIObject() *goja.Object {
 		return componentNode("MarkdownArticle", props)
 	})
 	setExport(ui, "upload", r.v3ComponentFactory("ContextUploadDropArea", nil))
+	setExport(ui, "formDialog", r.v3UIFormDialog)
 	return ui
 }
 
@@ -949,6 +950,7 @@ func (r *runtime) v3DataObject() *goja.Object {
 	setExport(data, "item", r.v3ListItem)
 	setExport(data, "cell", r.v3CellObject())
 	setExport(data, "matrix", r.v3Matrix)
+	setExport(data, "activityFeed", r.v3DataActivityFeed)
 	return data
 }
 
@@ -1013,6 +1015,19 @@ func (r *runtime) v3UIMetadata(record goja.Value, options ...goja.Value) map[str
 	props := exportOptions(options)
 	props["items"] = v3MetadataItems(exportObject(record))
 	return componentNode("MetadataGrid", props)
+}
+
+func (r *runtime) v3UIFormDialog(id string, cb goja.Value) map[string]any {
+	props := map[string]any{"id": id, "title": id, "onSubmitAction": map[string]any{"kind": "closeOverlay", "target": id}}
+	obj := r.newV3Builder("ui.formDialog")
+	setExport(obj, "title", func(value goja.Value) *goja.Object { props["title"] = r.v3Renderable(value); return obj })
+	setExport(obj, "body", func(value goja.Value) *goja.Object { props["body"] = value.Export(); return obj })
+	setExport(obj, "initialFocus", func(value string) *goja.Object { props["initialFocus"] = value; return obj })
+	setExport(obj, "submitLabel", func(value goja.Value) *goja.Object { props["submitLabel"] = r.v3Renderable(value); return obj })
+	setExport(obj, "cancelLabel", func(value goja.Value) *goja.Object { props["cancelLabel"] = r.v3Renderable(value); return obj })
+	setExport(obj, "submit", func(value goja.Value) *goja.Object { props["onSubmitAction"] = value.Export(); return obj })
+	r.applyV3BuilderCallback(obj, cb, "ui.formDialog")
+	return componentNode("FormDialog", props)
 }
 
 func (r *runtime) v3UIShareLink(href goja.Value, options ...goja.Value) map[string]any {
@@ -1165,6 +1180,20 @@ func (r *runtime) v3CollectionBuilder(collection *widgetspec.CollectionSpec) *go
 		collection.Selection = v3SelectionToV2(selectionValue.Export())
 		return obj
 	})
+	setExport(obj, "search", func(cb ...goja.Value) *goja.Object {
+		collection.Shaping.Search = &widgetspec.SearchSpec{ResultCount: -1}
+		if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
+			r.applyV3BuilderCallback(r.v3SearchBuilder(collection.Shaping.Search), cb[0], "data.collection.search")
+		}
+		return obj
+	})
+	setExport(obj, "paginate", func(cb ...goja.Value) *goja.Object {
+		collection.Shaping.Pagination = &widgetspec.PaginationSpec{Page: 1, PageSize: 20, Position: "bottom"}
+		if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
+			r.applyV3BuilderCallback(r.v3PaginationBuilder(collection.Shaping.Pagination), cb[0], "data.collection.paginate")
+		}
+		return obj
+	})
 	setExport(obj, "table", func(args ...goja.Value) *goja.Object {
 		collection.Arrangement = widgetspec.ArrangementSpec{Kind: widgetspec.ArrangementKindTable}
 		if len(args) > 0 && !goja.IsUndefined(args[0]) && !goja.IsNull(args[0]) {
@@ -1189,6 +1218,50 @@ func (r *runtime) v3CollectionBuilder(collection *widgetspec.CollectionSpec) *go
 	return obj
 }
 
+func (r *runtime) v3SearchBuilder(search *widgetspec.SearchSpec) *goja.Object {
+	obj := r.newV3Builder("data.collection.search")
+	setExport(obj, "value", func(value string) *goja.Object { search.Value = value; return obj })
+	setExport(obj, "query", func(name string, options ...goja.Value) *goja.Object {
+		search.Name = name
+		search.Placeholder = stringFromMap(exportOptions(options), "placeholder", search.Placeholder)
+		return obj
+	})
+	setExport(obj, "placeholder", func(value string) *goja.Object { search.Placeholder = value; return obj })
+	setExport(obj, "resultCount", func(value int) *goja.Object { search.ResultCount = value; return obj })
+	setExport(obj, "submit", func(actionValue goja.Value) *goja.Object {
+		action := v3ActionFromAny(actionValue.Export())
+		search.Submit = &action
+		return obj
+	})
+	setExport(obj, "clear", func(actionValue goja.Value) *goja.Object {
+		action := v3ActionFromAny(actionValue.Export())
+		search.Clear = &action
+		return obj
+	})
+	return obj
+}
+
+func (r *runtime) v3PaginationBuilder(pager *widgetspec.PaginationSpec) *goja.Object {
+	obj := r.newV3Builder("data.collection.paginate")
+	setExport(obj, "current", func(value int) *goja.Object { pager.Page = value; return obj })
+	setExport(obj, "size", func(value int) *goja.Object { pager.PageSize = value; return obj })
+	setExport(obj, "total", func(value int) *goja.Object { pager.TotalItems = value; return obj })
+	setExport(obj, "sizes", func(call goja.FunctionCall) goja.Value {
+		pager.Sizes = nil
+		for _, value := range call.Arguments {
+			pager.Sizes = append(pager.Sizes, int(value.ToInteger()))
+		}
+		return obj
+	})
+	setExport(obj, "position", func(value string) *goja.Object { pager.Position = value; return obj })
+	setExport(obj, "onChange", func(actionValue goja.Value) *goja.Object {
+		action := v3ActionFromAny(actionValue.Export())
+		pager.OnChange = &action
+		return obj
+	})
+	return obj
+}
+
 func (r *runtime) v3TableBuilder(collection *widgetspec.CollectionSpec) *goja.Object {
 	obj := r.newV3Builder("data.collection.table")
 	setExport(obj, "className", func(className string) *goja.Object { collection.Table.ClassName = className; return obj })
@@ -1204,7 +1277,60 @@ func (r *runtime) v3TableBuilder(collection *widgetspec.CollectionSpec) *goja.Ob
 		collection.Table.ActionColumns = append(collection.Table.ActionColumns, column)
 		return obj
 	})
+	setExport(obj, "keyboard", func(cb ...goja.Value) *goja.Object {
+		collection.Table.Keyboard = widgetspec.TableKeyboardSpec{Enabled: true, Mode: "rows", Selection: "manual", EnterSelect: true}
+		if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
+			r.applyV3BuilderCallback(r.v3TableKeyboardBuilder(&collection.Table.Keyboard), cb[0], "data.collection.table.keyboard")
+		}
+		return obj
+	})
+	setExport(obj, "command", func(id string, cb goja.Value) *goja.Object {
+		command := widgetspec.RowCommandSpec{ID: id, Key: id, Label: id}
+		r.applyV3BuilderCallback(r.v3RowCommandBuilder(&command), cb, "data.collection.table.command")
+		collection.Table.Commands = append(collection.Table.Commands, command)
+		return obj
+	})
+	setExport(obj, "styleWhen", func(field string, equals goja.Value, tone string) *goja.Object {
+		collection.Table.StyleRules = append(collection.Table.StyleRules, widgetspec.SemanticStyleRule{Field: field, Equals: equals.Export(), Tone: tone})
+		return obj
+	})
 	return obj
+}
+
+func (r *runtime) v3TableKeyboardBuilder(keyboard *widgetspec.TableKeyboardSpec) *goja.Object {
+	obj := r.newV3Builder("data.collection.table.keyboard")
+	setExport(obj, "mode", func(value string) *goja.Object { keyboard.Mode = value; return obj })
+	setExport(obj, "selection", func(value string) *goja.Object { keyboard.Selection = value; return obj })
+	setExport(obj, "vimAliases", func(value ...bool) *goja.Object { keyboard.VimAliases = len(value) == 0 || value[0]; return obj })
+	setExport(obj, "enterSelect", func(value ...bool) *goja.Object { keyboard.EnterSelect = len(value) == 0 || value[0]; return obj })
+	return obj
+}
+
+func (r *runtime) v3RowCommandBuilder(command *widgetspec.RowCommandSpec) *goja.Object {
+	obj := r.newV3Builder("data.collection.table.command")
+	setExport(obj, "key", func(value string) *goja.Object { command.Key = value; return obj })
+	setExport(obj, "label", func(value string) *goja.Object { command.Label = value; return obj })
+	setExport(obj, "danger", func(value ...bool) *goja.Object { command.Danger = len(value) == 0 || value[0]; return obj })
+	setExport(obj, "action", func(value goja.Value) *goja.Object { command.Action = v3ActionFromAny(value.Export()); return obj })
+	return obj
+}
+
+func (r *runtime) v3DataActivityFeed(activities goja.Value, cb ...goja.Value) map[string]any {
+	props := map[string]any{"activities": anySlice(activities.Export()), "glyphs": map[string]any{}, "groupByDay": true}
+	obj := r.newV3Builder("data.activityFeed")
+	setExport(obj, "groupByDay", func(value bool) *goja.Object { props["groupByDay"] = value; return obj })
+	setExport(obj, "glyph", func(kind string, glyph goja.Value) *goja.Object {
+		props["glyphs"].(map[string]any)[kind] = glyph.Export()
+		return obj
+	})
+	setExport(obj, "glyphs", func(value goja.Value) *goja.Object { props["glyphs"] = value.Export(); return obj })
+	setExport(obj, "styleSet", func(value goja.Value) *goja.Object { props["styleSet"] = value.Export(); return obj })
+	setExport(obj, "onOpen", func(action goja.Value) *goja.Object { props["onOpenAction"] = action.Export(); return obj })
+	setExport(obj, "onLoadMore", func(action goja.Value) *goja.Object { props["onLoadMoreAction"] = action.Export(); return obj })
+	if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
+		r.applyV3BuilderCallback(obj, cb[0], "data.activityFeed")
+	}
+	return componentNode("ActivityFeed", props)
 }
 
 func (r *runtime) v3EditorBuilder(collection *widgetspec.CollectionSpec) *goja.Object {
@@ -1881,9 +2007,22 @@ func v3ActionFromAny(value any) widgetspec.ActionSpec {
 		if v, ok := m["value"].(string); ok {
 			action.Payload.Fields = append(action.Payload.Fields, widgetspec.PayloadFieldSpec{Name: "value", Value: widgetspec.TemplateValue{Kind: widgetspec.TemplateValueLiteral, Value: v}})
 		}
+	case "openOverlay":
+		action.Kind = widgetspec.ActionKindOpenOverlay
+		action.Options = widgetspec.JSONObject{"target": m["target"]}
+	case "closeOverlay":
+		action.Kind = widgetspec.ActionKindCloseOverlay
 	default:
 		action.Kind = widgetspec.ActionKindEvent
 		action.Event = stringFromMap(m, "event", kind)
+	}
+	for _, key := range []string{"query", "preserveQuery", "omitEmpty", "replace", "target"} {
+		if value, ok := m[key]; ok {
+			if action.Options == nil {
+				action.Options = widgetspec.JSONObject{}
+			}
+			action.Options[key] = value
+		}
 	}
 	if confirm, ok := m["confirm"].(string); ok && confirm != "" {
 		action.Confirm = &widgetspec.TemplateSpec{Parts: []widgetspec.TemplateValue{{Kind: widgetspec.TemplateValueText, Text: confirm}}}

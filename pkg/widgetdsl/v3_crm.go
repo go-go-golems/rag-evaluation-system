@@ -36,7 +36,6 @@ func (r *runtime) v3CRMObject() *goja.Object {
 	setExport(crm, "pipelineBoard", r.v3CRMPipelineBoard)
 	setExport(crm, "recordFields", r.v3CRMRecordFields)
 	setExport(crm, "field", r.v3CRMField)
-	setExport(crm, "activityFeed", r.v3CRMActivityFeed)
 	setExport(crm, "tasksInbox", r.v3CRMTasksInbox)
 	setExport(crm, "stat", r.v3CRMStat)
 	setExport(crm, "funnel", r.v3CRMFunnel)
@@ -194,18 +193,6 @@ func (r *runtime) v3CRMRecordFieldsBuilder(props map[string]any) *goja.Object {
 	setExport(obj, "refs", func(refs goja.Value) *goja.Object { props["refs"] = refs.Export(); return obj })
 	setExport(obj, "onChange", func(action goja.Value) *goja.Object { props["onFieldChangeAction"] = action.Export(); return obj })
 	return obj
-}
-
-func (r *runtime) v3CRMActivityFeed(activities goja.Value, cb ...goja.Value) map[string]any {
-	props := map[string]any{"activities": anySlice(activities.Export()), "styleSet": v3CRMActivityStyleSet(), "glyphs": map[string]any{"note": "📝", "email": "✉", "call": "☎", "meeting": "◎", "task": "□", "stage_change": "→", "field_change": "•"}, "groupByDay": true}
-	obj := r.newV3Builder("crm.activityFeed")
-	setExport(obj, "groupByDay", func(value bool) *goja.Object { props["groupByDay"] = value; return obj })
-	setExport(obj, "onOpen", func(action goja.Value) *goja.Object { props["onOpenAction"] = action.Export(); return obj })
-	setExport(obj, "onLoadMore", func(action goja.Value) *goja.Object { props["onLoadMoreAction"] = action.Export(); return obj })
-	if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
-		r.applyV3BuilderCallback(obj, cb[0], "crm.activityFeed")
-	}
-	return componentNode("ActivityFeed", props)
 }
 
 func (r *runtime) v3CRMTasksInbox(tasks goja.Value, cb ...goja.Value) map[string]any {
@@ -388,16 +375,6 @@ func v3CRMStageStyleSet() map[string]any {
 		"negotiation": map[string]any{"fill": "color-mix(in srgb, var(--mac-accent-2) 24%, var(--mac-surface))", "line": "var(--mac-accent-2)", "labelColor": "var(--mac-text)"},
 		"won":         map[string]any{"fill": "color-mix(in srgb, var(--mac-green) 26%, var(--mac-surface))", "line": "var(--mac-green)", "labelColor": "var(--mac-text)"},
 		"lost":        map[string]any{"fill": "color-mix(in srgb, var(--mac-accent-2) 30%, var(--mac-surface))", "line": "var(--mac-accent-2)", "labelColor": "var(--mac-text)"},
-	}}
-}
-
-func v3CRMActivityStyleSet() map[string]any {
-	return map[string]any{"id": "crm-activities", "styles": map[string]any{
-		"note":    map[string]any{"fill": "color-mix(in srgb, var(--mac-amber) 22%, var(--mac-surface))", "line": "var(--mac-amber)", "labelColor": "var(--mac-text)"},
-		"email":   map[string]any{"fill": "color-mix(in srgb, var(--mac-accent) 20%, var(--mac-surface))", "line": "var(--mac-accent)", "labelColor": "var(--mac-text)"},
-		"call":    map[string]any{"fill": "color-mix(in srgb, var(--mac-green) 22%, var(--mac-surface))", "line": "var(--mac-green)", "labelColor": "var(--mac-text)"},
-		"meeting": map[string]any{"fill": "color-mix(in srgb, var(--mac-accent) 26%, var(--mac-surface))", "line": "var(--mac-accent)", "labelColor": "var(--mac-text)"},
-		"task":    map[string]any{"fill": "color-mix(in srgb, var(--mac-text-dim) 18%, var(--mac-surface))", "line": "var(--mac-text-dim)", "labelColor": "var(--mac-text)"},
 	}}
 }
 

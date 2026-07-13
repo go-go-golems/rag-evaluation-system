@@ -6,7 +6,7 @@ import { SearchField } from "./SearchField";
 
 export const searchFieldWidget = defineWidget<SearchFieldWidgetProps>({
 	type: "SearchField",
-	module: "cms.dsl",
+	module: "data.dsl",
 	render: (props, _children, ctx) => <SearchFieldWidgetHost props={props} ctx={ctx} />,
 });
 
@@ -21,6 +21,7 @@ function SearchFieldWidgetHost({
 }) {
 	const [value, setValue] = useState(props.defaultValue ?? "");
 	const onSubmitAction = props.onSubmitAction;
+	const onClearAction = props.onClearAction;
 	return (
 		<SearchField
 			className={props.className}
@@ -29,6 +30,17 @@ function SearchFieldWidgetHost({
 			onValueChange={setValue}
 			placeholder={props.placeholder}
 			disabled={props.disabled}
+			aria-label={props.resultCount == null ? undefined : `Search, ${props.resultCount} results`}
+			onClear={
+				onClearAction
+					? () =>
+							ctx.dispatchAction(onClearAction, {
+								query: "",
+								value: "",
+								componentType: "SearchField",
+							})
+					: undefined
+			}
 			onSubmit={
 				onSubmitAction
 					? (query) =>

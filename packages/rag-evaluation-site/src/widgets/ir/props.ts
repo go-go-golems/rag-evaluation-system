@@ -48,7 +48,7 @@ import type {
 } from "../../context";
 import type { ActionSpec } from "./actions";
 import type { DataTableColumnSpec, RowKeySpec } from "./cells";
-import type { BaseWidgetProps, JsonObject, RenderableValue, WidgetNode } from "./core";
+import type { BaseWidgetProps, JsonObject, JsonValue, RenderableValue, WidgetNode } from "./core";
 import type {
 	ActivityFeedWidgetProps,
 	BoardEngineWidgetProps,
@@ -451,7 +451,35 @@ export interface DataTableWidgetProps extends BaseWidgetProps {
 	getRowKey: RowKeySpec;
 	selectedKey?: string | null;
 	onRowSelect?: ActionSpec;
+	keyboard?: {
+		mode?: "rows";
+		selection?: "manual" | "followFocus";
+		vimAliases?: boolean;
+		enterSelect?: boolean;
+	};
+	commands?: Array<{
+		id: string;
+		key: string;
+		label: string;
+		danger?: boolean;
+		action: ActionSpec;
+	}>;
+	styleRules?: Array<{
+		field: string;
+		equals: JsonValue;
+		tone: "muted" | "success" | "warning" | "danger" | "accent";
+	}>;
 	emptyMessage?: RenderableValue;
+}
+
+export interface FormDialogWidgetProps extends BaseWidgetProps {
+	id: string;
+	title: RenderableValue;
+	body?: WidgetNode;
+	initialFocus?: string;
+	submitLabel?: RenderableValue;
+	cancelLabel?: RenderableValue;
+	onSubmitAction: ActionSpec;
 }
 
 export interface FormPanelWidgetProps extends BaseWidgetProps {
@@ -684,6 +712,7 @@ export type WidgetProps =
 	| BoardEngineWidgetProps
 	| ActivityFeedWidgetProps
 	| StatTileWidgetProps
+	| FormDialogWidgetProps
 	| FormPanelWidgetProps
 	| FormRowWidgetProps
 	| InlineWidgetProps
@@ -776,7 +805,9 @@ export interface PaginationWidgetProps extends BaseWidgetProps {
 	page: number;
 	pageCount: number;
 	onPageChangeAction?: ActionSpec;
+	onPageSizeChangeAction?: ActionSpec;
 	pageSize?: number;
+	pageSizes?: number[];
 	totalItems?: number;
 }
 
@@ -786,6 +817,8 @@ export interface SearchFieldWidgetProps extends BaseWidgetProps {
 	placeholder?: string;
 	disabled?: boolean;
 	onSubmitAction?: ActionSpec;
+	onClearAction?: ActionSpec;
+	resultCount?: number;
 }
 
 export interface EmptyStateWidgetProps extends BaseWidgetProps {

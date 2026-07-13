@@ -74,14 +74,59 @@ func (s SectionSpec) ToNode() NodeSpec {
 func (s CollectionSpec) ToNode() NodeSpec {
 	keyField := s.keyField()
 	children := []NodeSpec{}
+	if search := s.searchNode(); search.Kind != "" {
+		children = append(children, search)
+	}
 	if create := s.createButtonNode(); create.Kind != "" {
 		children = append(children, create)
 	}
 	children = append(children, s.tableNode(keyField))
+	if pager := s.paginationNode(); pager.Kind != "" {
+		children = append(children, pager)
+	}
 	if s.Arrangement.Kind == ArrangementKindMasterDetail {
 		children = append(children, s.detailNode(keyField))
 	}
 	return NodeSpec{Kind: NodeKindComponent, Type: "Stack", Props: JSONObject{"gap": "md"}, Children: children}
+}
+
+func (s CollectionSpec) searchNode() NodeSpec {
+	search := s.Shaping.Search
+	if search == nil {
+		return NodeSpec{}
+	}
+	props := JSONObject{"name": valueOrDefault(search.Name, "q"), "defaultValue": search.Value, "placeholder": search.Placeholder}
+	if search.Submit != nil {
+		props["onSubmitAction"] = search.Submit.ToWidgetAction()
+	}
+	if search.Clear != nil {
+		props["onClearAction"] = search.Clear.ToWidgetAction()
+	}
+	if search.ResultCount >= 0 {
+		props["resultCount"] = search.ResultCount
+	}
+	return NodeSpec{Kind: NodeKindComponent, Type: "SearchField", Props: props}
+}
+
+func (s CollectionSpec) paginationNode() NodeSpec {
+	pager := s.Shaping.Pagination
+	if pager == nil {
+		return NodeSpec{}
+	}
+	pageSize := pager.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	pageCount := 1
+	if pager.TotalItems > 0 {
+		pageCount = (pager.TotalItems + pageSize - 1) / pageSize
+	}
+	props := JSONObject{"page": intOrDefault(pager.Page, 1), "pageCount": pageCount, "pageSize": pageSize, "totalItems": pager.TotalItems, "pageSizes": pager.Sizes}
+	if pager.OnChange != nil {
+		props["onPageChangeAction"] = pager.OnChange.ToWidgetAction()
+		props["onPageSizeChangeAction"] = pager.OnChange.ToWidgetAction()
+	}
+	return NodeSpec{Kind: NodeKindComponent, Type: "Pagination", Props: props}
 }
 
 func (s CollectionSpec) tableNode(keyField string) NodeSpec {
@@ -95,6 +140,23 @@ func (s CollectionSpec) tableNode(keyField string) NodeSpec {
 	}
 	if s.Empty != "" {
 		props["emptyMessage"] = s.Empty
+	}
+	if s.Table.Keyboard.Enabled {
+		props["keyboard"] = JSONObject{"mode": valueOrDefault(s.Table.Keyboard.Mode, "rows"), "selection": valueOrDefault(s.Table.Keyboard.Selection, "manual"), "vimAliases": s.Table.Keyboard.VimAliases, "enterSelect": s.Table.Keyboard.EnterSelect}
+	}
+	if len(s.Table.Commands) > 0 {
+		commands := make([]JSONValue, 0, len(s.Table.Commands))
+		for _, command := range s.Table.Commands {
+			commands = append(commands, JSONObject{"id": command.ID, "key": command.Key, "label": command.Label, "danger": command.Danger, "action": command.Action.ToWidgetAction()})
+		}
+		props["commands"] = commands
+	}
+	if len(s.Table.StyleRules) > 0 {
+		rules := make([]JSONValue, 0, len(s.Table.StyleRules))
+		for _, rule := range s.Table.StyleRules {
+			rules = append(rules, JSONObject{"field": rule.Field, "equals": rule.Equals, "tone": rule.Tone})
+		}
+		props["styleRules"] = rules
 	}
 	if s.Selection != nil {
 		if s.Selection.Value != "" && s.Selection.Value != "__new" {
@@ -253,6 +315,9 @@ func (s CollectionSpec) recordRows(values JSONObject, newItem bool) []NodeSpec {
 // ToWidgetAction lowers a typed action to the current ActionSpec JSON shape.
 func (s ActionSpec) ToWidgetAction() JSONObject {
 	action := JSONObject{"kind": string(s.Kind)}
+	for key, value := range s.Options {
+		action[key] = value
+	}
 	if s.Name != "" {
 		action["name"] = s.Name
 	}

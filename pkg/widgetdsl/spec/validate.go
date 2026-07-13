@@ -177,8 +177,12 @@ func (s ActionSpec) Validate(path string) []ValidationIssue {
 		if strings.TrimSpace(s.Event) == "" {
 			issues = append(issues, errorIssue("action.event.required", path+".event", "Event action name is required.", "Set the DOM/custom event name."))
 		}
-	case ActionKindCopy:
-		// Copy can use a literal value or a context field in later lowering.
+	case ActionKindOpenOverlay:
+		if strings.TrimSpace(fmt.Sprint(s.Options["target"])) == "" {
+			issues = append(issues, errorIssue("action.overlay.target.required", path+".target", "Overlay target is required.", "Use the id of a declared FormDialog."))
+		}
+	case ActionKindCloseOverlay, ActionKindCopy:
+		// Closing the current overlay and copying from context need no fixed target.
 	case "":
 		issues = append(issues, errorIssue("action.kind.required", path+".kind", "Action kind is required.", "Use navigate, server, download, event, or copy."))
 	default:

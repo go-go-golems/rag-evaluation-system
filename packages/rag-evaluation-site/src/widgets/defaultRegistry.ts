@@ -79,6 +79,7 @@ import { contextUploadDropAreaWidget } from "../components/organisms/ContextUplo
 import { courseLessonPanelWidget } from "../components/organisms/CourseLessonPanel/CourseLessonPanel.widget";
 import { courseSlidePanelWidget } from "../components/organisms/CourseSlidePanel/CourseSlidePanel.widget";
 import { courseStudioShellWidget } from "../components/organisms/CourseStudioShell/CourseStudioShell.widget";
+import { formDialogWidget } from "../components/organisms/FormDialog/FormDialog.widget";
 import { formPanelWidget } from "../components/organisms/FormPanel/FormPanel.widget";
 import { handoutDocumentShellWidget } from "../components/organisms/HandoutDocumentShell/HandoutDocumentShell.widget";
 import { mediaLibraryPanelWidget } from "../components/organisms/MediaLibraryPanel/MediaLibraryPanel.widget";
@@ -97,6 +98,7 @@ export const uiWidgetRegistry = createWidgetRegistry([
 	dashboardGridWidget,
 	dividerWidget,
 	figureBlockWidget,
+	formDialogWidget,
 	formPanelWidget,
 	formRowWidget,
 	inlineWidget,
