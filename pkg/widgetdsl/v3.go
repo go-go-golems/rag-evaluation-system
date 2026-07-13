@@ -1213,8 +1213,8 @@ func (r *runtime) v3CollectionBuilder(collection *widgetspec.CollectionSpec) *go
 		return obj
 	})
 	setExport(obj, "validate", func() []map[string]any { return validationIssuesForJS(collection.Validate("collection")) })
-	setExport(obj, "toNode", func() any { return collection.ToNode().ToWidgetNode() })
-	setExport(obj, "toIR", func() any { return collection.ToNode().ToWidgetNode() })
+	setExport(obj, "toNode", func() widgetspec.JSONObject { return collection.ToNode().ToWidgetNode() })
+	setExport(obj, "toIR", func() widgetspec.JSONObject { return collection.ToNode().ToWidgetNode() })
 	return obj
 }
 

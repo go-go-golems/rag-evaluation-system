@@ -30,10 +30,16 @@ function demo() {
 	app.spaFromAssetsModule("/", assets, "/app/public", {
 		excludePrefixes: ["/api", "/healthz", "/favicon.ico"],
 	});
-	app.get("/favicon.ico", (_req, res) => res.status(204).end());
-	app.get("/healthz", (_req, res) =>
-		res.json({ ok: true, site: "rag-widget-xgoja-site", module: "widget.dsl" }),
-	);
+	app
+		.get("/favicon.ico")
+		.public()
+		.handle((_req, res) => res.status(204).end());
+	app
+		.get("/healthz")
+		.public()
+		.handle((_req, res) =>
+			res.json({ ok: true, site: "rag-widget-xgoja-site", module: "widget.dsl" }),
+		);
 
 	function rows() {
 		return db.query(
@@ -143,7 +149,7 @@ function demo() {
 					.section("Queue", (section) =>
 						section
 							.caption("Arrow keys move; Enter selects; S cycles; R archives; T edits notes.")
-							.view(collection),
+							.view(collection.toNode()),
 					)
 					.view(noteDialog),
 			)
@@ -164,7 +170,12 @@ function demo() {
 		"course",
 		"handout",
 	];
-	pageIds.forEach((id) => app.get(`/api/widget/pages/${id}`, (_req, res) => res.json(page())));
+	pageIds.forEach((id) => {
+		app
+			.get(`/api/widget/pages/${id}`)
+			.public()
+			.handle((_req, res) => res.json(page()));
+	});
 
 	function payload(req) {
 		return (req.body && req.body.payload) || {};
@@ -178,26 +189,39 @@ function demo() {
 					? "failed"
 					: "pending";
 	}
-	app.post("/api/widget/actions/cycle-status", (req, res) => {
-		const id = Number(payload(req).id);
-		const found = db.query("SELECT status FROM queries WHERE id = ?", id);
-		if (!found.length) return res.status(404).json({ ok: false, error: "Query not found" });
-		const status = nextStatus(found[0].status);
-		db.exec("UPDATE queries SET status = ? WHERE id = ?", status, id);
-		return res.json({ ok: true, refresh: true, toast: `Query #${id} → ${status}` });
-	});
-	app.post("/api/widget/actions/archive-query", (req, res) => {
-		const id = Number(payload(req).id);
-		db.exec("DELETE FROM queries WHERE id = ?", id);
-		res.json({ ok: true, refresh: true, toast: `Archived query #${id}` });
-	});
-	app.post("/api/widget/actions/save-note", (req, res) => {
-		const data = payload(req);
-		if (!String(data.notes || "").trim())
-			return res
-				.status(422)
-				.json({ ok: false, error: "A note is required.", fieldErrors: { notes: "Enter a note." } });
-		db.exec("UPDATE queries SET notes = ? WHERE id = ?", String(data.notes), Number(data.id));
-		res.json({ ok: true, refresh: true, toast: "Note saved" });
-	});
+	app
+		.post("/api/widget/actions/cycle-status")
+		.public()
+		.handle((req, res) => {
+			const id = Number(payload(req).id);
+			const found = db.query("SELECT status FROM queries WHERE id = ?", id);
+			if (!found.length) return res.status(404).json({ ok: false, error: "Query not found" });
+			const status = nextStatus(found[0].status);
+			db.exec("UPDATE queries SET status = ? WHERE id = ?", status, id);
+			return res.json({ ok: true, refresh: true, toast: `Query #${id} → ${status}` });
+		});
+	app
+		.post("/api/widget/actions/archive-query")
+		.public()
+		.handle((req, res) => {
+			const id = Number(payload(req).id);
+			db.exec("DELETE FROM queries WHERE id = ?", id);
+			res.json({ ok: true, refresh: true, toast: `Archived query #${id}` });
+		});
+	app
+		.post("/api/widget/actions/save-note")
+		.public()
+		.handle((req, res) => {
+			const data = payload(req);
+			if (!String(data.notes || "").trim())
+				return res
+					.status(422)
+					.json({
+						ok: false,
+						error: "A note is required.",
+						fieldErrors: { notes: "Enter a note." },
+					});
+			db.exec("UPDATE queries SET notes = ? WHERE id = ?", String(data.notes), Number(data.id));
+			res.json({ ok: true, refresh: true, toast: "Note saved" });
+		});
 }

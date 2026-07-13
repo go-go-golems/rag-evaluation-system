@@ -1,65 +1,80 @@
+schema: xgoja/v2
 name: rag-widget-xgoja-site
-appName: rag-widget-xgoja-site
-envPrefix: RAG_WIDGET_SITE
-target:
-  kind: xgoja
-  output: dist/rag-widget-xgoja-site
-packages:
+app:
+  name: rag-widget-xgoja-site
+  envPrefix: RAG_WIDGET_SITE
+go:
+  module: xgoja.generated/rag-widget-xgoja-site
+  version: "1.26"
+workspace:
+  mode: auto
+providers:
   - id: go-go-goja-host
     import: github.com/go-go-golems/go-go-goja/pkg/xgoja/providers/host
+    register: Register
   - id: go-go-goja-http
     import: github.com/go-go-golems/go-go-goja/pkg/xgoja/providers/http
+    register: Register
   - id: rag-widget-site
     import: github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/widgetsite
-    replace: ../../..
-assets:
+    register: Register
+    module:
+      replace: ../../..
+runtime:
+  modules:
+    - provider: go-go-goja-http
+      name: express
+      as: express
+    - provider: go-go-goja-host
+      name: fs
+      as: fs:assets
+      config:
+        embedded:
+          allow: true
+          mounts:
+            - asset: webapp
+              mount: /app
+    - provider: go-go-goja-host
+      name: db
+      as: db
+      config:
+        dataSourceName: ':memory:'
+        driverName: sqlite3
+    - provider: rag-widget-site
+      name: widget.dsl
+      as: widget.dsl
+sources:
+  - id: local-sites
+    kind: jsverbs
+    from:
+      dir: ./verbs
+    language: javascript
+  - id: widget-dsl
+    kind: help
+    from:
+      provider:
+        provider: rag-widget-site
+        source: widget-dsl
   - id: webapp
-    path: ./assets
-    embed: true
-    description: Tiny static app that fetches Widget IR from the generated xgoja server.
-modules:
-  - package: go-go-goja-http
-    name: express
-    as: express
-  - package: go-go-goja-host
-    name: fs
-    as: fs:assets
-    config:
-      embedded:
-        allow: true
-        mounts:
-          - asset: webapp
-            mount: /app
-  - package: go-go-goja-host
-    name: db
-    as: db
-    config:
-      driverName: sqlite3
-      dataSourceName: ':memory:'
-  - package: rag-widget-site
-    name: widget.dsl
-    as: widget.dsl
+    kind: assets
+    from:
+      dir: ./assets
 commands:
-  jsverbs:
-    enabled: true
+  - id: verbs
+    type: builtin.jsverbs
     name: verbs
-  eval:
-    enabled: false
-  run:
-    enabled: false
-  repl:
-    enabled: false
-commandProviders:
+    sources: [local-sites]
   - id: http-serve
-    package: go-go-goja-http
+    type: provider.command-set
     name: serve
     mount: serve
-help:
-  sources:
-    - id: widget-dsl
-      package: rag-widget-site
-      source: widget-dsl
-jsverbs:
-  - id: local-sites
-    path: ./verbs
-    embed: true
+    provider: go-go-goja-http
+    sources: [local-sites]
+artifacts:
+  - id: binary
+    type: binary
+    output: dist/rag-widget-xgoja-site
+    sources: [local-sites]
+  - id: embedded-assets
+    type: embedded-assets
+    sources: [webapp]
