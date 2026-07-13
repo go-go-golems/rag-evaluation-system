@@ -19,12 +19,12 @@ function demo() {
 		["Fast Growing Trees", "succeeded", 3, "botany", "Seeded from the xgoja demo"],
 		["Arborvitae Spacing", "running", 2, "landscape", "Needs another pass"],
 		["Broken Import Example", "failed", 1, "ingest", "Retry after source cleanup"],
-	].forEach((row) =>
+	].forEach((row) => {
 		db.exec(
 			"INSERT INTO queries (name, status, priority, owner, notes) VALUES (?, ?, ?, ?, ?)",
 			...row,
-		),
-	);
+		);
+	});
 
 	const app = express.app();
 	app.spaFromAssetsModule("/", assets, "/app/public", {
@@ -214,13 +214,11 @@ function demo() {
 		.handle((req, res) => {
 			const data = payload(req);
 			if (!String(data.notes || "").trim())
-				return res
-					.status(422)
-					.json({
-						ok: false,
-						error: "A note is required.",
-						fieldErrors: { notes: "Enter a note." },
-					});
+				return res.status(422).json({
+					ok: false,
+					error: "A note is required.",
+					fieldErrors: { notes: "Enter a note." },
+				});
 			db.exec("UPDATE queries SET notes = ? WHERE id = ?", String(data.notes), Number(data.id));
 			res.json({ ok: true, refresh: true, toast: "Note saved" });
 		});
