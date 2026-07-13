@@ -94,6 +94,14 @@ func TestWidgetV3DescriptorMatchesBuilderRuntimeMethods(t *testing.T) {
 				section.actions(capture("ActionsBuilder"));
 			});
 		});
+		widget.app.shell(shell => {
+			capture("AppShellBuilder")(shell);
+			shell.navigation(nav => {
+				capture("NavigationBuilder")(nav);
+				nav.section("probe", "Probe", items => capture("NavigationItemsBuilder")(items));
+			});
+			shell.content(capture("ContentViewportBuilder"));
+		});
 		widget.ui.formDialog("probe", capture("FormDialogBuilder"));
 		capture("FieldSetBuilder")(widget.data.fields());
 		const collection = widget.data.collection([]);
@@ -119,6 +127,7 @@ func TestWidgetV3DescriptorMatchesBuilderRuntimeMethods(t *testing.T) {
 		widget.course.handouts({ docs: [] }, capture("CourseHandoutsBuilder"));
 		widget.course.metadataForm({}, capture("CourseMetadataFormBuilder"));
 		widget.course.materialUploads({}, capture("CourseMaterialUploadsBuilder"));
+		widget.cms.shell({}, capture("CmsShellBuilder"));
 		widget.cms.mediaLibrary([], capture("CmsMediaLibraryBuilder"));
 		widget.cms.articleQueue([], capture("CmsArticleQueueBuilder"));
 		widget.cms.markdownEditor("", capture("CmsMarkdownEditorBuilder"));

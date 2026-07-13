@@ -14,7 +14,8 @@ type v3PageSpec struct {
 	ID            string
 	Title         string
 	Meta          map[string]any
-	Shell         any
+	Shell         *widgetspec.PageShellSpec
+	Root          *v3NodeSpec
 	Density       string
 	Breadcrumbs   []map[string]any
 	Sections      []v3SectionSpec
@@ -88,6 +89,108 @@ func (r *runtime) v3Page(call goja.FunctionCall) goja.Value {
 		r.applyV3BuilderCallback(builder, call.Arguments[1], "page")
 	}
 	return builder
+}
+
+func (r *runtime) v3AppObject() *goja.Object {
+	app := r.vm.NewObject()
+	setExport(app, "shell", r.v3AppShell)
+	setExport(app, "none", func() widgetspec.JSONObject {
+		return widgetspec.PageShellSpec{Kind: widgetspec.PageShellKindNone}.ToJSON()
+	})
+	setExport(app, "rootOwned", func() widgetspec.JSONObject {
+		return widgetspec.PageShellSpec{Kind: widgetspec.PageShellKindRootOwned}.ToJSON()
+	})
+	return app
+}
+
+func (r *runtime) v3AppShell(cb ...goja.Value) widgetspec.JSONObject {
+	spec := &widgetspec.PageShellSpec{
+		Kind: widgetspec.PageShellKindApp,
+		Navigation: &widgetspec.NavigationSpec{
+			Placement: widgetspec.NavigationPlacementTop,
+			AriaLabel: "Primary",
+		},
+		Content: widgetspec.ContentViewportSpec{MaxWidth: "wide", Padding: "md", Scroll: "page"},
+	}
+	builder := r.v3AppShellBuilder(spec)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "app.shell")
+	}
+	return spec.ToJSON()
+}
+
+func (r *runtime) v3AppShellBuilder(spec *widgetspec.PageShellSpec) *goja.Object {
+	obj := r.newV3Builder("app.shell")
+	setExport(obj, "brand", func(value goja.Value) *goja.Object {
+		spec.Navigation.Brand = r.v3Renderable(value)
+		return obj
+	})
+	setExport(obj, "navigation", func(cb goja.Value) *goja.Object {
+		r.applyV3BuilderCallback(r.v3NavigationBuilder(spec.Navigation), cb, "app.shell.navigation")
+		return obj
+	})
+	setExport(obj, "content", func(cb goja.Value) *goja.Object {
+		r.applyV3BuilderCallback(r.v3ContentViewportBuilder(&spec.Content), cb, "app.shell.content")
+		return obj
+	})
+	return obj
+}
+
+func (r *runtime) v3NavigationBuilder(spec *widgetspec.NavigationSpec) *goja.Object {
+	obj := r.newV3Builder("app.shell.navigation")
+	setExport(obj, "placement", func(value string) *goja.Object {
+		spec.Placement = widgetspec.NavigationPlacement(value)
+		return obj
+	})
+	setExport(obj, "active", func(value string) *goja.Object { spec.ActiveItem = value; return obj })
+	setExport(obj, "width", func(value int) *goja.Object { spec.SidebarWidth = value; return obj })
+	setExport(obj, "narrowMode", func(value string) *goja.Object { spec.NarrowMode = value; return obj })
+	setExport(obj, "ariaLabel", func(value string) *goja.Object { spec.AriaLabel = value; return obj })
+	setExport(obj, "section", func(id string, label goja.Value, cb goja.Value) *goja.Object {
+		section := widgetspec.NavigationSectionSpec{ID: id, Label: r.v3Renderable(label)}
+		r.applyV3BuilderCallback(r.v3NavigationItemsBuilder(&section), cb, "app.shell.navigation.section")
+		spec.Sections = append(spec.Sections, section)
+		return obj
+	})
+	return obj
+}
+
+func (r *runtime) v3NavigationItemsBuilder(section *widgetspec.NavigationSectionSpec) *goja.Object {
+	obj := r.newV3Builder("app.shell.navigation.items")
+	setExport(obj, "item", func(id string, label goja.Value, action goja.Value, options ...goja.Value) *goja.Object {
+		item := widgetspec.NavigationItemSpec{ID: id, Label: r.v3Renderable(label)}
+		if action != nil && !goja.IsUndefined(action) && !goja.IsNull(action) {
+			if actionMap, ok := toStringAnyMap(action.Export()); ok {
+				item.Action = widgetspec.JSONObject{}
+				for key, value := range actionMap {
+					item.Action[key] = value
+				}
+			}
+		}
+		if len(options) > 0 {
+			opts := exportObject(options[0])
+			if icon, ok := opts["icon"]; ok {
+				item.Icon = icon
+			}
+			if badge, ok := opts["badge"]; ok {
+				item.Badge = badge
+			}
+			if disabled, ok := opts["disabled"].(bool); ok {
+				item.Disabled = disabled
+			}
+		}
+		section.Items = append(section.Items, item)
+		return obj
+	})
+	return obj
+}
+
+func (r *runtime) v3ContentViewportBuilder(spec *widgetspec.ContentViewportSpec) *goja.Object {
+	obj := r.newV3Builder("app.shell.content")
+	setExport(obj, "maxWidth", func(value string) *goja.Object { spec.MaxWidth = value; return obj })
+	setExport(obj, "padding", func(value string) *goja.Object { spec.Padding = value; return obj })
+	setExport(obj, "scroll", func(value string) *goja.Object { spec.Scroll = value; return obj })
+	return obj
 }
 
 func (r *runtime) v3ScheduleObject() *goja.Object {
@@ -766,11 +869,43 @@ func (r *runtime) v3CourseMaterialUploads(material goja.Value, cb ...goja.Value)
 
 func (r *runtime) v3CMSObject() *goja.Object {
 	cms := r.vm.NewObject()
+	setExport(cms, "shell", r.v3CMSShell)
 	setExport(cms, "mediaLibrary", r.v3CMSMediaLibrary)
 	setExport(cms, "articleQueue", r.v3CMSArticleQueue)
 	setExport(cms, "markdownEditor", r.v3CMSMarkdownEditor)
 	setExport(cms, "intent", r.v3CMSIntentObject())
 	return cms
+}
+
+func (r *runtime) v3CMSShell(definition goja.Value, cb ...goja.Value) map[string]any {
+	def := exportObject(definition)
+	props := map[string]any{
+		"sections": anySlice(valueOrDefault(def["sections"], []any{})),
+		"title":    valueOrDefault(def["title"], "CMS"),
+	}
+	copyIfPresent(props, def, "subtitle")
+	builder := r.v3CMSShellBuilder(props)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "cms.shell")
+	}
+	children := []any{}
+	if main, ok := widgetNodeFromAny(props["main"]); ok {
+		children = append(children, main)
+		delete(props, "main")
+	}
+	return componentNode("CmsShell", props, children...)
+}
+
+func (r *runtime) v3CMSShellBuilder(props map[string]any) *goja.Object {
+	obj := r.newV3Builder("cms.shell")
+	setExport(obj, "active", func(id string) *goja.Object { props["activeItemId"] = id; return obj })
+	setExport(obj, "subtitle", func(value goja.Value) *goja.Object { props["subtitle"] = r.v3Renderable(value); return obj })
+	setExport(obj, "contentPadding", func(value string) *goja.Object { props["contentPadding"] = value; return obj })
+	setExport(obj, "main", func(node goja.Value) *goja.Object { props["main"] = r.v3Renderable(node); return obj })
+	setExport(obj, "header", func(node goja.Value) *goja.Object { props["headerSlot"] = r.v3Renderable(node); return obj })
+	setExport(obj, "footer", func(node goja.Value) *goja.Object { props["sidebarFooter"] = r.v3Renderable(node); return obj })
+	setExport(obj, "onNavigate", func(action goja.Value) *goja.Object { props["onNavigateAction"] = action.Export(); return obj })
+	return obj
 }
 
 func (r *runtime) v3CMSIntentObject() *goja.Object {
@@ -1494,7 +1629,19 @@ func (r *runtime) v3PageBuilder(spec *v3PageSpec) *goja.Object {
 		return obj
 	})
 	setExport(obj, "shell", func(shell goja.Value) *goja.Object {
-		spec.Shell = shell.Export()
+		parsed, err := v3ParsePageShell(shell.Export())
+		if err != nil {
+			panic(r.vm.NewGoError(err))
+		}
+		spec.Shell = parsed
+		return obj
+	})
+	setExport(obj, "root", func(value goja.Value) *goja.Object {
+		nodes := r.v3ExportChild(value)
+		if len(nodes) != 1 {
+			panic(r.vm.NewGoError(fmt.Errorf("widget.dsl page.root(node) requires exactly one widget node")))
+		}
+		spec.Root = &nodes[0]
 		return obj
 	})
 	setExport(obj, "density", func(density string) *goja.Object {
@@ -1744,28 +1891,34 @@ func (r *runtime) v3Renderable(value goja.Value) any {
 }
 
 func (r *runtime) v3PageToIR(spec *v3PageSpec) map[string]any {
-	children := make([]any, 0, len(spec.Sections)+1)
-	if len(spec.Breadcrumbs) > 0 {
-		children = append(children, componentNode("Breadcrumbs", map[string]any{"items": spec.Breadcrumbs}))
-	}
-	for _, section := range spec.Sections {
-		children = append(children, r.v3SectionToNode(section))
-	}
-	rootProps := map[string]any{"gap": "lg"}
-	if spec.Density != "" {
-		rootProps["density"] = spec.Density
+	var root any
+	if spec.Root != nil {
+		root = spec.Root.toIR()
+	} else {
+		children := make([]any, 0, len(spec.Sections)+1)
+		if len(spec.Breadcrumbs) > 0 {
+			children = append(children, componentNode("Breadcrumbs", map[string]any{"items": spec.Breadcrumbs}))
+		}
+		for _, section := range spec.Sections {
+			children = append(children, r.v3SectionToNode(section))
+		}
+		rootProps := map[string]any{"gap": "lg"}
+		if spec.Density != "" {
+			rootProps["density"] = spec.Density
+		}
+		root = componentNode("Stack", rootProps, children...)
 	}
 	out := map[string]any{
 		"schemaVersion": spec.SchemaVersion,
 		"id":            spec.ID,
 		"title":         spec.Title,
-		"root":          componentNode("Stack", rootProps, children...),
+		"root":          root,
 	}
 	if len(spec.Meta) > 0 {
 		out["meta"] = spec.Meta
 	}
 	if spec.Shell != nil {
-		out["shell"] = spec.Shell
+		out["shell"] = spec.Shell.ToJSON()
 	}
 	return out
 }
@@ -1907,6 +2060,71 @@ func isV3EmptySlotResult(value goja.Value) bool {
 	return false
 }
 
+func v3ParsePageShell(value any) (*widgetspec.PageShellSpec, error) {
+	object, ok := toStringAnyMap(value)
+	if !ok {
+		return nil, fmt.Errorf("widget.dsl page.shell requires a PageShellSpec from widget.app")
+	}
+	shell := &widgetspec.PageShellSpec{Kind: widgetspec.PageShellKind(stringFromMap(object, "kind", ""))}
+	if content, ok := toStringAnyMap(object["content"]); ok {
+		shell.Content = widgetspec.ContentViewportSpec{
+			MaxWidth: stringFromMap(content, "maxWidth", ""),
+			Padding:  stringFromMap(content, "padding", ""),
+			Scroll:   stringFromMap(content, "scroll", ""),
+		}
+	}
+	if navigation, ok := toStringAnyMap(object["navigation"]); ok {
+		nav := &widgetspec.NavigationSpec{
+			Placement:    widgetspec.NavigationPlacement(stringFromMap(navigation, "placement", "")),
+			Brand:        navigation["brand"],
+			AriaLabel:    stringFromMap(navigation, "ariaLabel", ""),
+			ActiveItem:   stringFromMap(navigation, "activeItemId", ""),
+			SidebarWidth: intFromAny(navigation["sidebarWidth"]),
+			NarrowMode:   stringFromMap(navigation, "narrowMode", ""),
+		}
+		for _, rawSection := range anySlice(navigation["sections"]) {
+			sectionMap, ok := toStringAnyMap(rawSection)
+			if !ok {
+				continue
+			}
+			section := widgetspec.NavigationSectionSpec{ID: stringFromMap(sectionMap, "id", ""), Label: sectionMap["label"]}
+			for _, rawItem := range anySlice(sectionMap["items"]) {
+				itemMap, ok := toStringAnyMap(rawItem)
+				if !ok {
+					continue
+				}
+				item := widgetspec.NavigationItemSpec{ID: stringFromMap(itemMap, "id", ""), Label: itemMap["label"], Icon: itemMap["icon"], Badge: itemMap["badge"]}
+				if disabled, ok := itemMap["disabled"].(bool); ok {
+					item.Disabled = disabled
+				}
+				if action, ok := toStringAnyMap(itemMap["action"]); ok {
+					item.Action = widgetspec.JSONObject{}
+					for key, actionValue := range action {
+						item.Action[key] = actionValue
+					}
+				}
+				section.Items = append(section.Items, item)
+			}
+			nav.Sections = append(nav.Sections, section)
+		}
+		shell.Navigation = nav
+	}
+	return shell, nil
+}
+
+func intFromAny(value any) int {
+	switch typed := value.(type) {
+	case int:
+		return typed
+	case int64:
+		return int(typed)
+	case float64:
+		return int(typed)
+	default:
+		return 0
+	}
+}
+
 func v3PageValidationIssues(spec *v3PageSpec) []map[string]any {
 	issues := []map[string]any{}
 	if strings.TrimSpace(spec.ID) == "" {
@@ -1914,6 +2132,17 @@ func v3PageValidationIssues(spec *v3PageSpec) []map[string]any {
 	}
 	if strings.TrimSpace(spec.Title) == "" {
 		issues = append(issues, v3ValidationIssue("page_title_required", "page.title", "page title is required"))
+	}
+	if spec.Shell != nil {
+		for _, issue := range spec.Shell.Validate("page.shell") {
+			issues = append(issues, v3ValidationIssue(string(issue.Code), issue.Path, issue.Message))
+		}
+	}
+	if spec.Root != nil && (len(spec.Sections) > 0 || len(spec.Breadcrumbs) > 0) {
+		issues = append(issues, v3ValidationIssue("page_root_sections_conflict", "page.root", "page.root cannot be combined with sections or breadcrumbs"))
+	}
+	if spec.Root != nil {
+		issues = append(issues, v3NodeValidationIssues(*spec.Root, "page.root")...)
 	}
 	for sectionIndex, section := range spec.Sections {
 		sectionPath := fmt.Sprintf("page.sections[%d]", sectionIndex)

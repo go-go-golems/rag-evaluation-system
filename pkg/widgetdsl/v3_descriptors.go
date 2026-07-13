@@ -104,6 +104,13 @@ var widgetV3Module = v3ModuleDescriptor{
 			Members:        v3Members([]string{"field", "path", "map", "template", "context", "const"}),
 		},
 		{
+			ExportName:     "app",
+			TypeName:       "AppNamespace",
+			Description:    "Typed application shell and viewport ownership helpers.",
+			RuntimeFactory: "v3AppObject",
+			Members:        v3Members([]string{"shell", "none", "rootOwned"}),
+		},
+		{
 			ExportName:     "ui",
 			TypeName:       "UINamespace",
 			Description:    "Generic composition widgets.",
@@ -137,7 +144,7 @@ var widgetV3Module = v3ModuleDescriptor{
 			TypeName:       "CmsNamespace",
 			Description:    "CMS media, queue, and markdown editor helpers.",
 			RuntimeFactory: "v3CMSObject",
-			Members:        v3Members([]string{"mediaLibrary", "articleQueue", "markdownEditor"}, "intent"),
+			Members:        v3Members([]string{"shell", "mediaLibrary", "articleQueue", "markdownEditor"}, "intent"),
 		},
 		{
 			ExportName:     "course",
@@ -195,7 +202,11 @@ var widgetV3Module = v3ModuleDescriptor{
 		{Path: "time.intent", TypeName: "TimeIntentNamespace", Members: v3Members([]string{"selectDay", "selectEvent"})},
 	},
 	Builders: []v3BuilderDescriptor{
-		v3Builder("PageBuilder", "id", "title", "meta", "shell", "density", "breadcrumb", "section", "view", "validate", "toPage"),
+		v3Builder("PageBuilder", "id", "title", "meta", "shell", "root", "density", "breadcrumb", "section", "view", "validate", "toPage"),
+		v3Builder("AppShellBuilder", "brand", "navigation", "content"),
+		v3Builder("NavigationBuilder", "placement", "active", "width", "narrowMode", "ariaLabel", "section"),
+		v3Builder("NavigationItemsBuilder", "item"),
+		v3Builder("ContentViewportBuilder", "maxWidth", "padding", "scroll"),
 		v3Builder("SectionBuilder", "caption", "anchor", "tone", "text", "view", "slot", "actions", "metric", "metadata"),
 		v3Builder("ActionsBuilder", "add", "button"),
 		v3Builder("FormDialogBuilder", "title", "body", "initialFocus", "submitLabel", "cancelLabel", "submit"),
@@ -220,6 +231,7 @@ var widgetV3Module = v3ModuleDescriptor{
 		v3Builder("CourseHandoutsBuilder", "selected", "title", "empty", "onSelect", "onDownload", "onPrint"),
 		v3Builder("CourseMetadataFormBuilder", "title", "onSubmit"),
 		v3Builder("CourseMaterialUploadsBuilder", "accept", "onUpload", "onDelete"),
+		v3Builder("CmsShellBuilder", "active", "subtitle", "contentPadding", "main", "header", "footer", "onNavigate"),
 		v3Builder("CmsMediaLibraryBuilder", "selection", "selected", "query", "kindFilter", "page", "empty", "accept", "asset", "details", "toolbar", "onSelect", "onOpen", "onUpload"),
 		v3Builder("CmsArticleQueueBuilder", "selected", "status", "query", "page", "empty", "row", "rowActions", "filters", "onSelect", "onCreate", "onRowAction", "onPublish", "onArchive", "onPreview"),
 		v3Builder("CmsMarkdownEditorBuilder", "title", "placeholder", "onChange", "onSubmit"),
@@ -230,6 +242,7 @@ var widgetV3Module = v3ModuleDescriptor{
 		v3Builder("ActivityFeedBuilder", "groupByDay", "glyph", "glyphs", "styleSet", "onOpen", "onLoadMore"),
 	},
 	ActionContexts: []v3ActionContextDescriptor{
+		{Name: "app.navigate", Component: "SidebarNav", Fields: []string{"itemId", "value", "componentType"}, Description: "Context dispatched by typed application navigation."},
 		{Name: "table.rowSelect", Component: "DataTable", Fields: []string{"row", "rowKey", "componentType"}, Description: "Context dispatched when a collection row is selected."},
 		{Name: "table.cellAction", Component: "DataTableCell", Fields: []string{"row", "rowKey", "componentType"}, Description: "Context dispatched by an action-button cell."},
 		{Name: "matrix.cellAction", Component: "MatrixGrid", Fields: []string{"row", "column", "rowKey", "colId", "value", "componentType"}, Description: "Context dispatched when a matrix cell is activated."},

@@ -13,6 +13,9 @@ func (s PageSpec) ToWidgetPage() JSONObject {
 	if s.Meta != nil {
 		page["meta"] = s.Meta
 	}
+	if s.Shell != nil {
+		page["shell"] = s.Shell.ToJSON()
+	}
 	if s.Root.Kind != "" {
 		page["root"] = s.Root.ToWidgetNode()
 	}
@@ -20,6 +23,81 @@ func (s PageSpec) ToWidgetPage() JSONObject {
 		page["diagnostics"] = validationIssuesToJSON(s.Diagnostics)
 	}
 	return page
+}
+
+// ToJSON lowers a typed shell into the browser transport shape.
+func (s PageShellSpec) ToJSON() JSONObject {
+	out := JSONObject{"kind": string(s.Kind)}
+	if s.Navigation != nil {
+		out["navigation"] = s.Navigation.ToJSON()
+	}
+	content := s.Content.ToJSON()
+	if len(content) > 0 {
+		out["content"] = content
+	}
+	return out
+}
+
+func (s NavigationSpec) ToJSON() JSONObject {
+	out := JSONObject{
+		"placement": string(s.Placement),
+		"sections":  navigationSectionsToJSON(s.Sections),
+	}
+	if s.Brand != nil {
+		out["brand"] = s.Brand
+	}
+	if s.AriaLabel != "" {
+		out["ariaLabel"] = s.AriaLabel
+	}
+	if s.ActiveItem != "" {
+		out["activeItemId"] = s.ActiveItem
+	}
+	if s.SidebarWidth != 0 {
+		out["sidebarWidth"] = s.SidebarWidth
+	}
+	if s.NarrowMode != "" {
+		out["narrowMode"] = s.NarrowMode
+	}
+	return out
+}
+
+func navigationSectionsToJSON(sections []NavigationSectionSpec) []any {
+	out := make([]any, 0, len(sections))
+	for _, section := range sections {
+		items := make([]any, 0, len(section.Items))
+		for _, item := range section.Items {
+			entry := JSONObject{"id": item.ID, "label": item.Label}
+			if item.Icon != nil {
+				entry["icon"] = item.Icon
+			}
+			if item.Badge != nil {
+				entry["badge"] = item.Badge
+			}
+			if item.Disabled {
+				entry["disabled"] = true
+			}
+			if item.Action != nil {
+				entry["action"] = item.Action
+			}
+			items = append(items, entry)
+		}
+		out = append(out, JSONObject{"id": section.ID, "label": section.Label, "items": items})
+	}
+	return out
+}
+
+func (s ContentViewportSpec) ToJSON() JSONObject {
+	out := JSONObject{}
+	if s.MaxWidth != "" {
+		out["maxWidth"] = s.MaxWidth
+	}
+	if s.Padding != "" {
+		out["padding"] = s.Padding
+	}
+	if s.Scroll != "" {
+		out["scroll"] = s.Scroll
+	}
+	return out
 }
 
 // ToWidgetNode lowers a typed node into the current Widget IR node shape.

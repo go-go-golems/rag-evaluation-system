@@ -1,10 +1,15 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { ErrorCallout } from "../components/atoms";
 import { Caption } from "../components/foundation";
-import { AppShell, Panel } from "../components/layout";
-import { AppNav } from "../components/molecules";
+import { AppShell, Panel, SidebarShell } from "../components/layout";
+import { AppNav, SidebarNav } from "../components/molecules";
 import { CourseStudioShell } from "../components/organisms";
-import { useWidgetPage, type WidgetPageResponse } from "../hooks/useWidgetPage";
+import {
+	type PageNavigationItemSpec,
+	type PageShellSpec,
+	useWidgetPage,
+	type WidgetPageResponse,
+} from "../hooks/useWidgetPage";
 import {
 	confirmWidgetAction,
 	dispatchWidgetAction,
@@ -164,17 +169,19 @@ function renderPage(
 	onAction: (action: ActionSpec, context: WidgetActionContext) => void,
 ): ReactNode {
 	const meta = normalizeMeta(page.meta);
+	const shell = resolvePageShell(page, pageId, meta);
+	const usesFramedAppShell = shell.kind === "app" && shell.navigation.placement === "top";
 	const rootClassName = [
 		"rag-evaluation-site-root",
-		shouldUseDefaultShell(page, meta)
-			? "rag-evaluation-site-root--shell"
-			: "rag-evaluation-site-root--raw",
+		usesFramedAppShell ? "rag-evaluation-site-root--shell" : "rag-evaluation-site-root--raw",
 	]
 		.filter(Boolean)
 		.join(" ");
 
-	const courseShellNode = findRootCourseStudioShellNode(page.root);
-	if (courseShellNode) {
+	// Preserve historical course pages while typed root-owned pages use the
+	// ordinary registry path shared by every other full-viewport organism.
+	const legacyCourseShellNode = page.shell ? null : findRootCourseStudioShellNode(page.root);
+	if (legacyCourseShellNode) {
 		return (
 			<div
 				className={rootClassName}
@@ -182,7 +189,7 @@ function renderPage(
 				data-page-id={page.id}
 				data-rag-shell="course-studio"
 			>
-				{renderCourseStudioShellPage(courseShellNode, onAction)}
+				{renderCourseStudioShellPage(legacyCourseShellNode, onAction)}
 			</div>
 		);
 	}
@@ -191,28 +198,90 @@ function renderPage(
 		<WidgetRenderer node={page.root} registry={defaultWidgetRegistry} onAction={onAction} />
 	);
 
-	if (!shouldUseDefaultShell(page, meta)) {
+	if (shell.kind !== "app") {
 		return (
 			<div
 				className={rootClassName}
 				data-rag-page="RagEvaluationSiteApp"
 				data-page-id={page.id}
-				data-rag-shell="none"
+				data-rag-shell={shell.kind}
 			>
 				{renderedRoot}
 			</div>
 		);
 	}
 
-	const navItems = meta.navItems?.length ? meta.navItems : DEFAULT_NAV_ITEMS;
-	const activeNavItemId = meta.activeNavItemId ?? pageId;
+	const navigation = shell.navigation;
+	const activeItemId = navigation.activeItemId ?? pageId;
+	const dispatchNavigation = (itemId: string, componentType: "AppNav" | "SidebarNav") => {
+		const item = navigation.sections
+			.flatMap((section) => section.items)
+			.find((candidate) => candidate.id === itemId);
+		if (item?.action) {
+			dispatchWidgetAction(item.action, { itemId, value: itemId, componentType }, onAction);
+			return;
+		}
+		navigateToPage(itemId);
+	};
+	const content = (
+		<div
+			className={contentClassName(shell.content?.maxWidth)}
+			data-rag-layout="PageContent"
+			data-rag-scroll={shell.content?.scroll ?? "page"}
+		>
+			{renderedRoot}
+		</div>
+	);
 
+	if (navigation.placement === "sidebar") {
+		return (
+			<div
+				className={rootClassName}
+				data-rag-page="RagEvaluationSiteApp"
+				data-page-id={page.id}
+				data-rag-shell="app-sidebar"
+			>
+				<SidebarShell
+					sidebarWidth={navigation.sidebarWidth ?? 188}
+					sidebarAriaLabel={navigation.ariaLabel ?? "Primary navigation"}
+					narrowMode={navigation.narrowMode ?? "stack"}
+					contentPadding={shell.content?.padding ?? "md"}
+					header={
+						<span className="rag-evaluation-site-brand">
+							{renderRenderableValue(navigation.brand ?? page.title, onAction)}
+						</span>
+					}
+					sidebar={
+						<SidebarNav
+							ariaLabel={navigation.ariaLabel ?? "Primary navigation"}
+							sections={navigation.sections.map((section) => ({
+								...section,
+								label: renderRenderableValue(section.label, onAction),
+								items: section.items.map((item) => ({
+									...item,
+									label: renderRenderableValue(item.label, onAction),
+									icon: renderRenderableValue(item.icon, onAction),
+									badge: renderRenderableValue(item.badge, onAction),
+								})),
+							}))}
+							activeItemId={activeItemId}
+							onItemSelect={(itemId) => dispatchNavigation(itemId, "SidebarNav")}
+						/>
+					}
+				>
+					{content}
+				</SidebarShell>
+			</div>
+		);
+	}
+
+	const items = navigation.sections.flatMap((section) => section.items);
 	return (
 		<div
 			className={rootClassName}
 			data-rag-page="RagEvaluationSiteApp"
 			data-page-id={page.id}
-			data-rag-shell="default"
+			data-rag-shell="app-top"
 		>
 			<AppShell
 				className="rag-evaluation-site-shell"
@@ -220,32 +289,45 @@ function renderPage(
 					<AppNav
 						brand={
 							<span className="rag-evaluation-site-brand">
-								{page.title || "RAG Evaluation Site"}
+								{renderRenderableValue(navigation.brand ?? page.title, onAction)}
 							</span>
 						}
-						items={navItems.map((item) => ({ id: item.id, label: renderNavLabel(item.label) }))}
-						activeItemId={activeNavItemId}
-						onItemSelect={(itemId) => {
-							const item = navItems.find((candidate) => candidate.id === itemId);
-							if (item?.action) {
-								dispatchWidgetAction(
-									item.action,
-									{ value: itemId, componentType: "AppNav" },
-									onAction,
-								);
-								return;
-							}
-							navigateToPage(itemId);
-						}}
+						items={items.map((item) => ({
+							id: item.id,
+							label: renderPageNavigationLabel(item, onAction),
+							disabled: item.disabled,
+						}))}
+						activeItemId={activeItemId}
+						onItemSelect={(itemId) => dispatchNavigation(itemId, "AppNav")}
 					/>
 				}
 			>
-				<div className={contentClassName(meta.maxWidth)} data-rag-layout="PageContent">
-					{renderedRoot}
-				</div>
+				{content}
 			</AppShell>
 		</div>
 	);
+}
+
+function resolvePageShell(
+	page: WidgetPageResponse,
+	pageId: string,
+	meta: WidgetPageMeta,
+): PageShellSpec {
+	if (page.shell) return page.shell;
+	if (meta.shell === "none" || isAppShellNode(page.root)) return { kind: "none" };
+	if (findRootCourseStudioShellNode(page.root)) return { kind: "root-owned" };
+	const items = meta.navItems?.length ? meta.navItems : DEFAULT_NAV_ITEMS;
+	return {
+		kind: "app",
+		navigation: {
+			placement: "top",
+			brand: page.title || "RAG Evaluation Site",
+			activeItemId: meta.activeNavItemId ?? pageId,
+			ariaLabel: "Primary",
+			sections: [{ id: "primary", label: "Primary", items }],
+		},
+		content: { maxWidth: meta.maxWidth ?? "wide", padding: "none", scroll: "page" },
+	};
 }
 
 function renderCourseStudioShellPage(
@@ -305,13 +387,6 @@ function renderCourseStudioShellPage(
 	);
 }
 
-function shouldUseDefaultShell(page: WidgetPageResponse, meta: WidgetPageMeta): boolean {
-	if (meta.shell === "none") return false;
-	if (isAppShellNode(page.root)) return false;
-	if (findRootCourseStudioShellNode(page.root)) return false;
-	return true;
-}
-
 function isAppShellNode(node: WidgetNode): boolean {
 	return node.kind === "component" && node.type === "AppShell";
 }
@@ -353,8 +428,19 @@ function isAppNavItemSpec(value: unknown): value is AppNavItemSpec {
 	return typeof candidate.id === "string" && candidate.label !== undefined;
 }
 
-function renderNavLabel(label: RenderableValue): ReactNode {
-	return renderRenderableValue(label);
+function renderPageNavigationLabel(
+	item: PageNavigationItemSpec,
+	onAction: (action: ActionSpec, context: WidgetActionContext) => void,
+): ReactNode {
+	return (
+		<>
+			{item.icon ? (
+				<span aria-hidden="true">{renderRenderableValue(item.icon, onAction)}</span>
+			) : null}
+			{renderRenderableValue(item.label, onAction)}
+			{item.badge ? <span>{renderRenderableValue(item.badge, onAction)}</span> : null}
+		</>
+	);
 }
 
 function renderRenderableValue(

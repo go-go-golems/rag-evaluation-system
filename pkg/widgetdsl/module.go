@@ -301,6 +301,7 @@ func (r *runtime) installWidgetV3(exports *goja.Object) {
 	setExport(exports, "raw", r.v3RawObject())
 	setExport(exports, "act", r.actionObject())
 	setExport(exports, "bind", r.bindingObject())
+	setExport(exports, "app", r.v3AppObject())
 	setExport(exports, "ui", r.v3UIObject())
 	setExport(exports, "data", r.v3DataObject())
 	setExport(exports, "crm", r.v3CRMObject())

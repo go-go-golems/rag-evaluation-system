@@ -206,6 +206,9 @@ func ScanFile(root, filename string) ([]Finding, error) {
 	for _, moduleName := range LegacyModules {
 		legacy[moduleName] = true
 	}
+	legacyShellMeta := map[string]bool{
+		"shell": true, "navItems": true, "activeNavItemId": true, "maxWidth": true,
+	}
 
 	findings := []Finding{}
 	add := func(n *tree_sitter.Node, kind, value string) {
@@ -235,12 +238,17 @@ func ScanFile(root, filename string) ([]Finding, error) {
 				return
 			}
 			functionText := strings.TrimSpace(functionNode.Utf8Text(source))
+			args := n.ChildByFieldName("arguments")
 			if functionText == "require" || functionText == "import" {
-				args := n.ChildByFieldName("arguments")
 				if specifier, ok := firstArgumentStringLiteral(args, source); ok && legacy[specifier] {
 					add(n, "legacy-module-import", specifier)
 				}
 				return
+			}
+			if strings.HasSuffix(functionText, ".meta") {
+				if key, ok := firstArgumentStringLiteral(args, source); ok && legacyShellMeta[key] {
+					add(n, "legacy-shell-metadata", key)
+				}
 			}
 			if functionText == "raw.component" || functionText == "widget.raw.component" {
 				add(n, "raw-component-escape-hatch", "raw.component")

@@ -6,6 +6,8 @@ export interface SidebarShellProps extends HTMLAttributes<HTMLDivElement> {
 	children?: ReactNode;
 	sidebarWidth?: number | string;
 	contentPadding?: "none" | "md" | "lg";
+	sidebarAriaLabel?: string;
+	narrowMode?: "stack";
 	header?: ReactNode;
 	footer?: ReactNode;
 }
@@ -19,6 +21,8 @@ export function SidebarShell({
 	sidebar,
 	sidebarWidth = 188,
 	contentPadding = "none",
+	sidebarAriaLabel = "Sidebar navigation",
+	narrowMode = "stack",
 	header,
 	footer,
 	className,
@@ -36,9 +40,10 @@ export function SidebarShell({
 			className={[styles.root, className ?? ""].filter(Boolean).join(" ")}
 			style={shellStyle}
 			data-rag-layout="SidebarShell"
+			data-rag-narrow-mode={narrowMode}
 			{...rest}
 		>
-			<aside className={styles.sidebar} aria-label="Course navigation">
+			<aside className={styles.sidebar} aria-label={sidebarAriaLabel}>
 				{header && <div className={styles.sidebarHeader}>{header}</div>}
 				<div className={styles.sidebarBody}>{sidebar}</div>
 				{footer && <div className={styles.sidebarFooter}>{footer}</div>}

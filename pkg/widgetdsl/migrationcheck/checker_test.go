@@ -43,6 +43,33 @@ raw.component("FieldRenderer", {});
 	}
 }
 
+func TestScanFileFindsLegacyStructuralShellMetadata(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "page.js")
+	source := []byte(`widget.page("Legacy", p => p
+  .meta("navItems", items)
+  .meta("activeNavItemId", "index")
+  .meta("maxWidth", "wide")
+  .meta("description", "allowed")
+);`)
+	if err := os.WriteFile(path, source, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	findings, err := ScanFile(dir, path)
+	if err != nil {
+		t.Fatalf("scan file: %v", err)
+	}
+	if len(findings) != 3 {
+		t.Fatalf("findings = %#v, want three shell metadata findings", findings)
+	}
+	for _, finding := range findings {
+		if finding.Kind != "legacy-shell-metadata" {
+			t.Fatalf("finding = %#v", finding)
+		}
+	}
+}
+
 func TestScanPathsSkipsBuildAndGeneratedDirectories(t *testing.T) {
 	dir := t.TempDir()
 	goodDir := filepath.Join(dir, "src")

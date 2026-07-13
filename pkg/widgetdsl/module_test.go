@@ -189,9 +189,22 @@ func TestWidgetV3UICompositionHelpersEmitPageIR(t *testing.T) {
 	value, err := vm.RunString(`
 		const widget = require("widget.dsl");
 		const branded = p => p.density("compact").breadcrumb("Home", "/");
+		const pageShell = widget.app.shell(s => s
+			.brand("Widget Site")
+			.navigation(n => n
+				.placement("sidebar")
+				.active("overview")
+				.width(188)
+				.ariaLabel("Workspace")
+				.section("main", "Workspace", items => items
+					.item("overview", "Overview", widget.act.navigate("/pages/overview"))
+				)
+			)
+			.content(c => c.maxWidth("none").padding("md").scroll("main"))
+		);
 		const page = widget.page("UI Page", p => p
 			.use(branded)
-			.shell({ kind: "app" })
+			.shell(pageShell)
 			.section("Overview", s => s
 				.actions(a => a.button("Refresh", widget.act.event("refresh")))
 				.caption("Built only with widget.dsl")
@@ -211,7 +224,8 @@ func TestWidgetV3UICompositionHelpersEmitPageIR(t *testing.T) {
 		t.Fatalf("build widget.dsl UI page: %v", err)
 	}
 	page := value.Export().(map[string]any)
-	if page["shell"].(map[string]any)["kind"] != "app" {
+	shell := anyMap(page["shell"])
+	if shell["kind"] != "app" || anyMap(shell["navigation"])["placement"] != "sidebar" {
 		t.Fatalf("page shell = %#v", page["shell"])
 	}
 	root := page["root"].(map[string]any)
@@ -235,6 +249,52 @@ func TestWidgetV3UICompositionHelpersEmitPageIR(t *testing.T) {
 	}
 	if children[0].(map[string]any)["type"] != "KeyValueStrip" || children[1].(map[string]any)["type"] != "MetadataGrid" || children[2].(map[string]any)["type"] != "Stack" {
 		t.Fatalf("unexpected UI composition children: %#v", children)
+	}
+}
+
+func TestWidgetV3RootOwnedPageLowersWorkspaceAsDirectRoot(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	registerLegacyModulesForTests(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		widget.page("Course", p => p
+			.shell(widget.app.rootOwned())
+			.root(widget.course.shell({ title: "Course", sections: [] }, s =>
+				s.main(widget.ui.card({ title: "Lesson" }, "Body"))
+			))
+		).toPage();
+	`)
+	if err != nil {
+		t.Fatalf("build root-owned page: %v", err)
+	}
+	page := value.Export().(map[string]any)
+	if anyMap(page["shell"])["kind"] != "root-owned" {
+		t.Fatalf("shell = %#v", page["shell"])
+	}
+	root := anyMap(page["root"])
+	if root["type"] != "CourseStudioShell" {
+		t.Fatalf("root = %#v, want direct CourseStudioShell", root)
+	}
+}
+
+func TestWidgetV3RootAndSectionsAreMutuallyExclusive(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	registerLegacyModulesForTests(reg)
+	reg.Enable(vm)
+
+	_, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		widget.page("Invalid", p => p
+			.root(widget.ui.card({ title: "Root" }, "Body"))
+			.section("Extra", s => s.text("not allowed"))
+		).toPage();
+	`)
+	if err == nil || !strings.Contains(err.Error(), "page.root cannot be combined") {
+		t.Fatalf("error = %v, want root/sections conflict", err)
 	}
 }
 

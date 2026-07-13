@@ -57,6 +57,16 @@ Runtime factory: `bindingObject`.
 - `context` (function)
 - `const` (function)
 
+## `app` — AppNamespace
+
+Typed application shell and viewport ownership helpers.
+
+Runtime factory: `v3AppObject`.
+
+- `shell` (function)
+- `none` (function)
+- `rootOwned` (function)
+
 ## `ui` — UINamespace
 
 Generic composition widgets.
@@ -128,6 +138,7 @@ CMS media, queue, and markdown editor helpers.
 
 Runtime factory: `v3CMSObject`.
 
+- `shell` (function)
 - `mediaLibrary` (function)
 - `articleQueue` (function)
 - `markdownEditor` (function)
@@ -207,7 +218,11 @@ Runtime factory: `NewObject`.
 
 All builders below expose `use(fragment)` in addition to their listed methods.
 
-- `PageBuilder`: [id title meta shell density breadcrumb section view validate toPage use]
+- `PageBuilder`: [id title meta shell root density breadcrumb section view validate toPage use]
+- `AppShellBuilder`: [brand navigation content use]
+- `NavigationBuilder`: [placement active width narrowMode ariaLabel section use]
+- `NavigationItemsBuilder`: [item use]
+- `ContentViewportBuilder`: [maxWidth padding scroll use]
 - `SectionBuilder`: [caption anchor tone text view slot actions metric metadata use]
 - `ActionsBuilder`: [add button use]
 - `FormDialogBuilder`: [title body initialFocus submitLabel cancelLabel submit use]
@@ -232,6 +247,7 @@ All builders below expose `use(fragment)` in addition to their listed methods.
 - `CourseHandoutsBuilder`: [selected title empty onSelect onDownload onPrint use]
 - `CourseMetadataFormBuilder`: [title onSubmit use]
 - `CourseMaterialUploadsBuilder`: [accept onUpload onDelete use]
+- `CmsShellBuilder`: [active subtitle contentPadding main header footer onNavigate use]
 - `CmsMediaLibraryBuilder`: [selection selected query kindFilter page empty accept asset details toolbar onSelect onOpen onUpload use]
 - `CmsArticleQueueBuilder`: [selected status query page empty row rowActions filters onSelect onCreate onRowAction onPublish onArchive onPreview use]
 - `CmsMarkdownEditorBuilder`: [title placeholder onChange onSubmit use]
@@ -243,6 +259,7 @@ All builders below expose `use(fragment)` in addition to their listed methods.
 
 ## Action contexts
 
+- `app.navigate` (`SidebarNav`): `[itemId value componentType]`. Context dispatched by typed application navigation.
 - `table.rowSelect` (`DataTable`): `[row rowKey componentType]`. Context dispatched when a collection row is selected.
 - `table.cellAction` (`DataTableCell`): `[row rowKey componentType]`. Context dispatched by an action-button cell.
 - `matrix.cellAction` (`MatrixGrid`): `[row column rowKey colId value componentType]`. Context dispatched when a matrix cell is activated.

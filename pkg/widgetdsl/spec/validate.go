@@ -21,8 +21,81 @@ func (s PageSpec) Validate() []ValidationIssue {
 	if strings.TrimSpace(s.ID) == "" {
 		issues = append(issues, errorIssue("page.id.required", "id", "Page id is required.", "Set a stable page id before calling toIR()."))
 	}
+	if s.Shell != nil {
+		issues = append(issues, s.Shell.Validate("shell")...)
+	}
 	if s.Root.Kind != "" {
 		issues = append(issues, s.Root.Validate("root")...)
+	}
+	return issues
+}
+
+// Validate checks the shell and navigation contract before browser transport.
+func (s PageShellSpec) Validate(path string) []ValidationIssue {
+	issues := []ValidationIssue{}
+	switch s.Kind {
+	case PageShellKindNone, PageShellKindRootOwned:
+		if s.Navigation != nil {
+			issues = append(issues, errorIssue("page.shell.navigation.unexpected", path+".navigation", "Only app shells accept navigation.", "Remove navigation or use shell kind app."))
+		}
+	case PageShellKindApp:
+		if s.Navigation == nil {
+			issues = append(issues, errorIssue("page.shell.navigation.required", path+".navigation", "App shell navigation is required.", "Configure top or sidebar navigation."))
+		} else {
+			issues = append(issues, s.Navigation.Validate(path+".navigation")...)
+		}
+		issues = append(issues, s.Content.Validate(path+".content")...)
+	default:
+		issues = append(issues, errorIssue("page.shell.kind.invalid", path+".kind", fmt.Sprintf("Unknown page shell kind %q.", s.Kind), "Use none, app, or root-owned."))
+	}
+	return issues
+}
+
+// Validate checks semantic navigation invariants.
+func (s NavigationSpec) Validate(path string) []ValidationIssue {
+	issues := []ValidationIssue{}
+	if s.Placement != NavigationPlacementTop && s.Placement != NavigationPlacementSidebar {
+		issues = append(issues, errorIssue("page.shell.navigation.placement.invalid", path+".placement", fmt.Sprintf("Unknown navigation placement %q.", s.Placement), "Use top or sidebar."))
+	}
+	if s.SidebarWidth != 0 && (s.SidebarWidth < 160 || s.SidebarWidth > 320) {
+		issues = append(issues, errorIssue("page.shell.navigation.width.invalid", path+".sidebarWidth", "Sidebar width must be between 160 and 320 pixels.", "Use a compact, readable navigation rail width."))
+	}
+	if s.NarrowMode != "" && s.NarrowMode != "stack" {
+		issues = append(issues, errorIssue("page.shell.navigation.narrow_mode.invalid", path+".narrowMode", fmt.Sprintf("Unknown narrow navigation mode %q.", s.NarrowMode), "Use stack; drawer and top-scroll are not implemented."))
+	}
+	seen := map[string]bool{}
+	for sectionIndex, section := range s.Sections {
+		sectionPath := fmt.Sprintf("%s.sections[%d]", path, sectionIndex)
+		if strings.TrimSpace(section.ID) == "" {
+			issues = append(issues, errorIssue("page.shell.navigation.section.id.required", sectionPath+".id", "Navigation section id is required.", "Set a stable section id."))
+		}
+		for itemIndex, item := range section.Items {
+			itemPath := fmt.Sprintf("%s.items[%d]", sectionPath, itemIndex)
+			if strings.TrimSpace(item.ID) == "" {
+				issues = append(issues, errorIssue("page.shell.navigation.item.id.required", itemPath+".id", "Navigation item id is required.", "Set a stable item id."))
+			} else if seen[item.ID] {
+				issues = append(issues, errorIssue("page.shell.navigation.item.id.duplicate", itemPath+".id", fmt.Sprintf("Duplicate navigation item id %q.", item.ID), "Use unique item ids across all sections."))
+			}
+			seen[item.ID] = true
+			if !item.Disabled && item.Action == nil {
+				issues = append(issues, errorIssue("page.shell.navigation.item.action.required", itemPath+".action", "Enabled navigation item action is required.", "Provide a serializable navigation action."))
+			}
+		}
+	}
+	return issues
+}
+
+// Validate checks content viewport tokens.
+func (s ContentViewportSpec) Validate(path string) []ValidationIssue {
+	issues := []ValidationIssue{}
+	if s.MaxWidth != "" && s.MaxWidth != "none" && s.MaxWidth != "wide" && s.MaxWidth != "content" {
+		issues = append(issues, errorIssue("page.shell.content.max_width.invalid", path+".maxWidth", fmt.Sprintf("Unknown content max width %q.", s.MaxWidth), "Use none, wide, or content."))
+	}
+	if s.Padding != "" && s.Padding != "none" && s.Padding != "md" && s.Padding != "lg" {
+		issues = append(issues, errorIssue("page.shell.content.padding.invalid", path+".padding", fmt.Sprintf("Unknown content padding %q.", s.Padding), "Use none, md, or lg."))
+	}
+	if s.Scroll != "" && s.Scroll != "page" && s.Scroll != "main" {
+		issues = append(issues, errorIssue("page.shell.content.scroll.invalid", path+".scroll", fmt.Sprintf("Unknown content scroll mode %q.", s.Scroll), "Use page or main."))
 	}
 	return issues
 }

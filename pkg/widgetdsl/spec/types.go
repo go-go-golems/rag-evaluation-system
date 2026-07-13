@@ -8,14 +8,74 @@ type JSONValue any
 // JSONObject is a convenience alias for JSON object payloads.
 type JSONObject map[string]JSONValue
 
-// PageSpec is the typed v2 authoring model for a Widget page.
+// PageSpec is the shared typed authoring model for a Widget page.
 type PageSpec struct {
 	SchemaVersion string
 	ID            string
 	Title         string
 	Meta          JSONObject
+	Shell         *PageShellSpec
 	Root          NodeSpec
 	Diagnostics   []ValidationIssue
+}
+
+// PageShellKind determines which layer owns viewport chrome.
+type PageShellKind string
+
+const (
+	PageShellKindNone      PageShellKind = "none"
+	PageShellKindApp       PageShellKind = "app"
+	PageShellKindRootOwned PageShellKind = "root-owned"
+)
+
+// NavigationPlacement chooses the reusable primary-navigation treatment.
+type NavigationPlacement string
+
+const (
+	NavigationPlacementTop     NavigationPlacement = "top"
+	NavigationPlacementSidebar NavigationPlacement = "sidebar"
+)
+
+// PageShellSpec is the serialized viewport contract consumed by the React host.
+type PageShellSpec struct {
+	Kind       PageShellKind
+	Navigation *NavigationSpec
+	Content    ContentViewportSpec
+}
+
+// NavigationSpec configures stable application branding and primary navigation.
+type NavigationSpec struct {
+	Placement    NavigationPlacement
+	Brand        JSONValue
+	AriaLabel    string
+	ActiveItem   string
+	SidebarWidth int
+	NarrowMode   string
+	Sections     []NavigationSectionSpec
+}
+
+// NavigationSectionSpec groups related application destinations.
+type NavigationSectionSpec struct {
+	ID    string
+	Label JSONValue
+	Items []NavigationItemSpec
+}
+
+// NavigationItemSpec is one serializable navigation destination.
+type NavigationItemSpec struct {
+	ID       string
+	Label    JSONValue
+	Icon     JSONValue
+	Badge    JSONValue
+	Disabled bool
+	Action   JSONObject
+}
+
+// ContentViewportSpec controls main-region width, padding, and scroll ownership.
+type ContentViewportSpec struct {
+	MaxWidth string
+	Padding  string
+	Scroll   string
 }
 
 // NodeSpec is the common typed representation used before lowering to the

@@ -48,7 +48,7 @@ function renderPage(query = {}) {
 				.onNavigate(widget.course.intent.navigate(widget.bind.context("item.id")))
 				.main(mainFor(active)),
 	);
-	return widget.page("Course shell layout", (p) => p.section("Shell", (s) => s.view(shell)));
+	return widget.page("Course shell layout", (p) => p.shell(widget.app.rootOwned()).root(shell));
 }
 
 const page = renderPage({});

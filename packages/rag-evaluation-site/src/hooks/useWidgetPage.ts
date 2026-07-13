@@ -1,9 +1,45 @@
 import { useCallback, useEffect, useState } from "react";
-import type { WidgetNode } from "../widgets/ir";
+import type { ActionSpec, RenderableValue, WidgetNode } from "../widgets/ir";
+
+export interface PageNavigationItemSpec {
+	id: string;
+	label: RenderableValue;
+	action?: ActionSpec;
+	icon?: RenderableValue;
+	badge?: RenderableValue;
+	disabled?: boolean;
+}
+
+export interface PageNavigationSectionSpec {
+	id: string;
+	label: RenderableValue;
+	items: PageNavigationItemSpec[];
+}
+
+export interface PageNavigationSpec {
+	placement: "top" | "sidebar";
+	brand?: RenderableValue;
+	ariaLabel?: string;
+	activeItemId?: string;
+	sidebarWidth?: number;
+	narrowMode?: "stack";
+	sections: PageNavigationSectionSpec[];
+}
+
+export interface PageContentViewportSpec {
+	maxWidth?: "none" | "content" | "wide";
+	padding?: "none" | "md" | "lg";
+	scroll?: "page" | "main";
+}
+
+export type PageShellSpec =
+	| { kind: "none" | "root-owned" }
+	| { kind: "app"; navigation: PageNavigationSpec; content?: PageContentViewportSpec };
 
 export interface WidgetPageResponse {
 	id: string;
 	title: string;
+	shell?: PageShellSpec;
 	root: WidgetNode;
 	meta?: Record<string, unknown>;
 }

@@ -42,6 +42,7 @@ export function CmsShell({
 		<SidebarShell
 			className={className}
 			sidebarWidth={188}
+			sidebarAriaLabel="CMS navigation"
 			header={header}
 			footer={sidebarFooter}
 			sidebar={
