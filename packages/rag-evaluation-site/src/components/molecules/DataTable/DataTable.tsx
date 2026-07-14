@@ -7,6 +7,9 @@ export interface DataTableColumn<T> {
 	cell: (row: T) => ReactNode;
 	align?: "start" | "end" | "center";
 	maxWidth?: number | string;
+	sortable?: boolean;
+	sortDirection?: "ascending" | "descending";
+	onSort?: () => void;
 }
 
 export interface DataTableKeyboard {
@@ -126,10 +129,24 @@ export function DataTable<T>({
 					{columns.map((column) => (
 						<th
 							key={column.id}
+							aria-sort={column.sortDirection ?? "none"}
 							className={styles[column.align ?? "start"]}
 							style={column.maxWidth ? { maxWidth: column.maxWidth } : undefined}
 						>
-							{column.header}
+							{column.sortable ? (
+								<button className={styles.sortButton} onClick={column.onSort} type="button">
+									{column.header}
+									<span aria-hidden="true" className={styles.sortIndicator}>
+										{column.sortDirection === "ascending"
+											? "↑"
+											: column.sortDirection === "descending"
+												? "↓"
+												: "↕"}
+									</span>
+								</button>
+							) : (
+								column.header
+							)}
 						</th>
 					))}
 				</tr>

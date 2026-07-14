@@ -223,6 +223,7 @@ func widgetV3TypeScriptLines() []string {
 		"className(className: string): this;",
 		"rowSelect(action: ActionSpec): this;",
 		"actionColumn(id: string, header: string, label: string, action: ActionSpec, options?: { maxWidth?: string }): this;",
+		"sortable(field: string, action: ActionSpec, options?: { direction?: 'ascending' | 'descending' }): this;",
 		"keyboard(configure?: Fragment<TableKeyboardBuilder>): this;",
 		"command(id: string, configure: Fragment<RowCommandBuilder>): this;",
 		"styleWhen(field: string, equals: JsonValue, tone: 'muted' | 'success' | 'warning' | 'danger' | 'accent'): this;",

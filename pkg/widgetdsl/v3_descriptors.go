@@ -214,7 +214,7 @@ var widgetV3Module = v3ModuleDescriptor{
 		v3Builder("CollectionBuilder", "id", "schema", "empty", "select", "search", "paginate", "table", "edit", "masterDetail", "validate", "toNode", "toIR"),
 		v3Builder("SearchBuilder", "value", "query", "placeholder", "resultCount", "submit", "clear"),
 		v3Builder("PaginationBuilder", "current", "size", "total", "sizes", "position", "onChange"),
-		v3Builder("TableBuilder", "className", "rowSelect", "actionColumn", "keyboard", "command", "styleWhen"),
+		v3Builder("TableBuilder", "className", "rowSelect", "actionColumn", "sortable", "keyboard", "command", "styleWhen"),
 		v3Builder("TableKeyboardBuilder", "mode", "selection", "vimAliases", "enterSelect"),
 		v3Builder("RowCommandBuilder", "key", "label", "danger", "action"),
 		v3Builder("EditorBuilder", "create", "submit", "submitPost", "reorder", "remove", "actions"),

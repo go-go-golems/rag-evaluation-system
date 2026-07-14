@@ -231,7 +231,7 @@ All builders below expose `use(fragment)` in addition to their listed methods.
 - `CollectionBuilder`: [id schema empty select search paginate table edit masterDetail validate toNode toIR use]
 - `SearchBuilder`: [value query placeholder resultCount submit clear use]
 - `PaginationBuilder`: [current size total sizes position onChange use]
-- `TableBuilder`: [className rowSelect actionColumn keyboard command styleWhen use]
+- `TableBuilder`: [className rowSelect actionColumn sortable keyboard command styleWhen use]
 - `TableKeyboardBuilder`: [mode selection vimAliases enterSelect use]
 - `RowCommandBuilder`: [key label danger action use]
 - `EditorBuilder`: [create submit submitPost reorder remove actions use]

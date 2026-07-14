@@ -255,6 +255,10 @@ func (s CollectionSpec) tableNode(keyField string) NodeSpec {
 
 func (s CollectionSpec) tableColumns() []JSONValue {
 	columns := []JSONValue{}
+	sortColumns := map[string]TableSortColumnSpec{}
+	for _, sortColumn := range s.Table.SortColumns {
+		sortColumns[sortColumn.Field] = sortColumn
+	}
 	for _, field := range s.Schema.Fields {
 		if field.Summary.Elide || field.Semantic == FieldSemanticProse || field.Kind == FieldKindMedia {
 			continue
@@ -266,6 +270,13 @@ func (s CollectionSpec) tableColumns() []JSONValue {
 		column := JSONObject{"id": field.Name, "header": fieldLabel(field), "cell": cell}
 		if field.Layout.Width != "" {
 			column["maxWidth"] = field.Layout.Width
+		}
+		if sortColumn, ok := sortColumns[field.Name]; ok {
+			column["sortable"] = true
+			column["onSort"] = sortColumn.Action.ToWidgetAction()
+			if sortColumn.Direction != "" {
+				column["sortDirection"] = sortColumn.Direction
+			}
 		}
 		columns = append(columns, column)
 	}

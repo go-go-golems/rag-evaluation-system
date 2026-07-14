@@ -1419,6 +1419,15 @@ func (r *runtime) v3TableBuilder(collection *widgetspec.CollectionSpec) *goja.Ob
 		collection.Table.ActionColumns = append(collection.Table.ActionColumns, column)
 		return obj
 	})
+	setExport(obj, "sortable", func(field string, actionValue goja.Value, options ...goja.Value) *goja.Object {
+		if strings.TrimSpace(field) == "" {
+			panic(r.vm.NewGoError(fmt.Errorf("widget.dsl data.collection.table.sortable field must not be empty")))
+		}
+		sortColumn := widgetspec.TableSortColumnSpec{Field: field, Action: v3ActionFromAny(actionValue.Export())}
+		sortColumn.Direction = stringFromMap(exportOptions(options), "direction", "")
+		collection.Table.SortColumns = append(collection.Table.SortColumns, sortColumn)
+		return obj
+	})
 	setExport(obj, "keyboard", func(cb ...goja.Value) *goja.Object {
 		collection.Table.Keyboard = widgetspec.TableKeyboardSpec{Enabled: true, Mode: "rows", Selection: "manual", EnterSelect: true}
 		if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {

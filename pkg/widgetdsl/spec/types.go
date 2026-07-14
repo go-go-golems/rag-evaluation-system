@@ -265,11 +265,18 @@ type PaginationSpec struct {
 
 type TableSpec struct {
 	ActionColumns []TableActionColumnSpec
+	SortColumns   []TableSortColumnSpec
 	RowSelect     *ActionSpec
 	ClassName     string
 	Keyboard      TableKeyboardSpec
 	Commands      []RowCommandSpec
 	StyleRules    []SemanticStyleRule
+}
+
+type TableSortColumnSpec struct {
+	Field     string
+	Action    ActionSpec
+	Direction string
 }
 
 type TableKeyboardSpec struct {
