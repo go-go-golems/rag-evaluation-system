@@ -56,6 +56,8 @@ func Migrate(db *sql.DB) error {
 		migrationV2CorpusSnapshots,
 		migrationV2ChunkPlans,
 		migrationV2ChunkSets,
+		migrationV2EmbeddingPlans,
+		migrationV2EmbeddingSets,
 	}
 
 	for i, m := range migrations {
@@ -341,4 +343,36 @@ CREATE TABLE IF NOT EXISTS immutable_chunks (
 
 CREATE INDEX IF NOT EXISTS idx_immutable_chunks_set_document
     ON immutable_chunks(chunk_set_id, document_revision_id, chunk_index);
+`
+
+const migrationV2EmbeddingPlans = `
+CREATE TABLE IF NOT EXISTS embedding_plans (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    provider_type TEXT NOT NULL,
+    model TEXT NOT NULL,
+    dimensions INTEGER NOT NULL,
+    normalization TEXT NOT NULL,
+    implementation_version TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`
+
+const migrationV2EmbeddingSets = `
+CREATE TABLE IF NOT EXISTS embedding_sets (
+    id TEXT PRIMARY KEY,
+    chunk_set_id TEXT NOT NULL REFERENCES chunk_sets(id),
+    embedding_plan_id TEXT NOT NULL REFERENCES embedding_plans(id),
+    manifest_json TEXT NOT NULL,
+    embedding_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(chunk_set_id, embedding_plan_id)
+);
+
+CREATE TABLE IF NOT EXISTS immutable_embeddings (
+    embedding_set_id TEXT NOT NULL REFERENCES embedding_sets(id),
+    chunk_id TEXT NOT NULL REFERENCES immutable_chunks(id),
+    vector BLOB NOT NULL,
+    PRIMARY KEY (embedding_set_id, chunk_id)
+);
 `
