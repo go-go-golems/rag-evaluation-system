@@ -854,3 +854,7 @@ Review `scripts/02-geppetto-ollama-embedding-probe.go`, then `internal/services/
 single GenerateEmbedding -> succeeds (768D)
 GenerateBatchEmbeddings inside immutable Build -> silent termination, no DB rows
 ```
+
+### Correction after process inspection
+
+The apparent termination was an observation error. The foreground execution wrapper returned after roughly thirty-five seconds but left the `go run` child and compiled `rag-eval` process alive; multiple foreground retries therefore created duplicate full builds. Process inspection confirmed the behavior. I terminated the stale foreground attempts, retained one `tmux`-managed batch-15 build, and verified the Ollama runner was active. The conclusion is now: use `tmux` for this long-running corpus operation and do not infer process exit from the foreground tool wrapper returning without output.

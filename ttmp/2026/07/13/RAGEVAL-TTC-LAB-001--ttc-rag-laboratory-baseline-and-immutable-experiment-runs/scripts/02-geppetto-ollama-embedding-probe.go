@@ -19,6 +19,7 @@ import (
 func main() {
 	logLevel := flag.String("log-level", "info", "zerolog level")
 	engine := flag.String("engine", "nomic-embed-text", "Ollama embedding model")
+	batchSize := flag.Int("batch-size", 1, "number of texts for GenerateBatchEmbeddings; 1 uses GenerateEmbedding")
 	databasePath := flag.String("db", "", "RAG SQLite database; requires --chunk-set-id")
 	chunkSetID := flag.String("chunk-set-id", "", "immutable chunk set ID; requires --db")
 	flag.Parse()
@@ -34,11 +35,30 @@ func main() {
 	if resolved.Close != nil {
 		defer func() { _ = resolved.Close() }()
 	}
-	vector, err := resolved.Provider.GenerateEmbedding(context.Background(), "TTC Geppetto embedding probe")
-	if err != nil {
-		log.Fatal().Err(err).Msg("generate embedding")
+	if *batchSize <= 0 {
+		log.Fatal().Msg("batch size must be positive")
 	}
-	result := map[string]any{"provider_type": resolved.ProviderType, "model": resolved.Model.Name, "model_dimensions": resolved.Model.Dimensions, "vector_dimensions": len(vector)}
+	texts := make([]string, *batchSize)
+	for i := range texts {
+		texts[i] = "TTC Geppetto embedding probe"
+	}
+	var vectors [][]float32
+	if *batchSize == 1 {
+		vector, err := resolved.Provider.GenerateEmbedding(context.Background(), texts[0])
+		if err != nil {
+			log.Fatal().Err(err).Msg("generate embedding")
+		}
+		vectors = [][]float32{vector}
+	} else {
+		vectors, err = resolved.Provider.GenerateBatchEmbeddings(context.Background(), texts)
+		if err != nil {
+			log.Fatal().Err(err).Msg("generate embedding batch")
+		}
+	}
+	if len(vectors) != *batchSize || len(vectors[0]) != resolved.Model.Dimensions {
+		log.Fatal().Int("vectors", len(vectors)).Int("first_dimensions", len(vectors[0])).Msg("provider returned unexpected batch shape")
+	}
+	result := map[string]any{"provider_type": resolved.ProviderType, "model": resolved.Model.Name, "model_dimensions": resolved.Model.Dimensions, "batch_size": *batchSize, "vector_dimensions": len(vectors[0])}
 	if *databasePath != "" || *chunkSetID != "" {
 		if *databasePath == "" || *chunkSetID == "" {
 			log.Fatal().Msg("--db and --chunk-set-id must be supplied together")
