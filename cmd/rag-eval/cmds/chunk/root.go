@@ -15,6 +15,7 @@ func NewCommand() *cobra.Command {
 	cmd.AddCommand(newApplyCommand())
 	cmd.AddCommand(newStrategiesCommand())
 	cmd.AddCommand(newEnrichCommand())
+	cmd.AddCommand(newBuildImmutableCommand())
 
 	return cmd
 }
