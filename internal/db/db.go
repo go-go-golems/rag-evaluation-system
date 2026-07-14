@@ -54,6 +54,8 @@ func Migrate(db *sql.DB) error {
 		migrationV2SourceArtifacts,
 		migrationV2DocumentRevisions,
 		migrationV2CorpusSnapshots,
+		migrationV2ChunkPlans,
+		migrationV2ChunkSets,
 	}
 
 	for i, m := range migrations {
@@ -299,4 +301,44 @@ CREATE TABLE IF NOT EXISTS corpus_snapshot_documents (
     PRIMARY KEY (snapshot_id, ordinal),
     UNIQUE (snapshot_id, document_revision_id)
 );
+`
+
+const migrationV2ChunkPlans = `
+CREATE TABLE IF NOT EXISTS chunk_plans (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    strategy TEXT NOT NULL,
+    input_variant TEXT NOT NULL,
+    config_json TEXT NOT NULL,
+    implementation_version TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`
+
+const migrationV2ChunkSets = `
+CREATE TABLE IF NOT EXISTS chunk_sets (
+    id TEXT PRIMARY KEY,
+    corpus_snapshot_id TEXT NOT NULL REFERENCES corpus_snapshots(id),
+    chunk_plan_id TEXT NOT NULL REFERENCES chunk_plans(id),
+    manifest_json TEXT NOT NULL,
+    chunk_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(corpus_snapshot_id, chunk_plan_id)
+);
+
+CREATE TABLE IF NOT EXISTS immutable_chunks (
+    id TEXT PRIMARY KEY,
+    chunk_set_id TEXT NOT NULL REFERENCES chunk_sets(id),
+    document_revision_id TEXT NOT NULL REFERENCES document_revisions(id),
+    chunk_index INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    token_count INTEGER NOT NULL,
+    source_start_runes INTEGER NOT NULL,
+    source_end_runes INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(chunk_set_id, document_revision_id, chunk_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_immutable_chunks_set_document
+    ON immutable_chunks(chunk_set_id, document_revision_id, chunk_index);
 `
