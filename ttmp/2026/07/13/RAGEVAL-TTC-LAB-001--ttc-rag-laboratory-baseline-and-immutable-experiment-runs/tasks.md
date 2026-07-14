@@ -9,7 +9,7 @@
 - [x] Replace mutable document text inputs with content-addressed document revisions and corpus snapshots <!-- t:3ydv -->
 - [x] Define canonical JSON normalization and SHA-256 fingerprints for corpus, chunking, embedding, index, retrieval, and evaluation plans <!-- t:26xz -->
 - [x] Implement immutable chunk plans, chunk sets, and exact source-range validation for fixed, sentence, and Markdown-heading chunkers <!-- t:rggc -->
-- [ ] Implement immutable embedding sets using one real Ollama 768D baseline profile and an offline deterministic test provider <!-- t:lbwm -->
+- [x] Implement immutable embedding sets using one real Ollama 768D baseline profile and an offline deterministic test provider <!-- t:lbwm -->
 - [ ] Implement content-addressed BM25 artifacts plus exhaustive vector retrieval and document-collapsed RRF hybrid retrieval <!-- t:crkp -->
 - [ ] Create TTC baseline evaluation dataset v1 with at least 20 intent-stratified queries and named relevance judgments <!-- t:blhh -->
 - [ ] Implement append-only experiment run events, terminal summaries, per-query traces, metrics, latency, cost, and storage accounting <!-- t:e15p -->

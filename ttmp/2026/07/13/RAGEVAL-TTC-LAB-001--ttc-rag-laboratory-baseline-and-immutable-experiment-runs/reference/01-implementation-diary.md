@@ -53,7 +53,7 @@ RelatedFiles:
         Supports explicitly tunneled Mac Ollama probe via --base-url
 ExternalSources: []
 Summary: Chronological record of workspace discovery, TTC source reconstruction, ticket setup, architecture research, design decisions, validation, and delivery.
-LastUpdated: 2026-07-14T20:40:00-04:00
+LastUpdated: 2026-07-14T22:35:00-04:00
 WhatFor: Preserve the exact evidence, commands, failures, corrections, and reasoning used to create the TTC baseline and immutable-run implementation plan.
 WhenToUse: Read when reviewing the ticket, reproducing the TTC export, continuing implementation, or diagnosing assumptions in the design guide.
 ---
@@ -964,7 +964,7 @@ The direct tunneled Ollama API embedded one actual stored TTC chunk and returned
 
 **Inferred user intent:** Complete the real embedding baseline on suitable local hardware while keeping the RAG workspace’s provenance, artifact IDs, and network exposure controlled.
 
-**Commit (code):** Pending — operational run in progress; the ticket-local probe will be committed with the final run evidence.
+**Commit (code):** `1c23f03` — "docs: record Mac embedding execution"
 
 ### What I did
 
@@ -989,6 +989,16 @@ sqlite3 data/rag-eval.db "SELECT text FROM immutable_chunks ... LIMIT 1" | jq -R
 
 The model download completed successfully and the direct real-chunk API call returned `768`.
 
+The tmux-managed full run completed successfully. SQLite recorded:
+
+```text
+embedding_set_id  sha256:2665c5249b8352ce6904fc00c934534dd179f3eeef0a6a75429a9034be0e03e0
+embedding_plan_id sha256:e785a67c58cf9617c3215ad4690002fd37303eb05fcd5ad457da1ab789bee5e5
+chunk_set_id      sha256:ef7bdab76583f092d7bc50c9f501fe8c17739d395fcb37d0eaaba5a09c7c9392
+embedding_count   2024
+vector_bytes      3072 per vector (768 float32 values)
+```
+
 ### What didn't work
 
 The Mac’s shell PATH did not contain `ollama`, `lms`, or `tmux`, although Ollama.app was already running. The bundled CLI path was discovered under the application resources. The remote service is persistent; tmux is needed locally for the tunnel and long workspace command.
@@ -1010,7 +1020,6 @@ The operational topology has two independent long-lived components: the local `r
 
 ### What should be done in the future
 
-- Capture tmux completion output, wall time, vector count, final set ID, cache behavior, and storage after the run completes.
 - Use that real embedding set for exhaustive vector, BM25, and RRF retrieval comparison.
 
 ### Code review instructions

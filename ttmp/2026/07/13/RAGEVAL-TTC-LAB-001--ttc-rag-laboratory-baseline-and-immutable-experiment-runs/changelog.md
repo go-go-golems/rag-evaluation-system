@@ -65,3 +65,12 @@ Audited and completed the retroactive embedding diary: corrected foreground-wrap
 ### Related Files
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/01-implementation-diary.md — Step 10 operational diary audit
+
+## 2026-07-14
+
+Completed lbwm: built and verified the real Mac-backed Ollama 768D immutable embedding set (2,024 vectors; set sha256:2665c524...e03e0) alongside offline deterministic coverage.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/services/immutableembedding/service.go — Immutable embedding artifact persistence
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/01-implementation-diary.md — Mac-backed execution evidence
