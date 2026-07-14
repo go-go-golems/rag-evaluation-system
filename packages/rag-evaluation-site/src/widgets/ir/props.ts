@@ -564,7 +564,7 @@ export interface SplitPaneWidgetProps extends BaseWidgetProps {
 	right: WidgetNode;
 	ratio?: "balanced" | "leftNarrow" | "rightNarrow" | "course" | "sidebar";
 	divider?: boolean;
-	gutter?: "none" | "md" | "lg";
+	gutter?: "none" | "divider" | "md" | "lg";
 }
 
 export interface SidebarShellWidgetProps extends BaseWidgetProps {

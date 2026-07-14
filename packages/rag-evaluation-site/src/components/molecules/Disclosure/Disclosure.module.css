@@ -1,5 +1,5 @@
 .root {
-	border-block: 1px solid var(--mac-border);
+	margin-block: 0.35rem;
 }
 
 .summary {
