@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/go-go-golems/glazed/pkg/cmds/logging"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/chunk"
+	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/corpus"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/document"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/embedding"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/search"
@@ -30,6 +31,7 @@ func main() {
 
 	// Add command groups
 	rootCmd.AddCommand(source.NewCommand())
+	rootCmd.AddCommand(corpus.NewCommand())
 	rootCmd.AddCommand(chunk.NewCommand())
 	rootCmd.AddCommand(document.NewCommand())
 	rootCmd.AddCommand(embedding.NewCommand())
