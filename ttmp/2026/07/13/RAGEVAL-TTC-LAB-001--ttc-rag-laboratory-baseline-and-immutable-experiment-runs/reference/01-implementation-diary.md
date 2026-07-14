@@ -858,3 +858,9 @@ GenerateBatchEmbeddings inside immutable Build -> silent termination, no DB rows
 ### Correction after process inspection
 
 The apparent termination was an observation error. The foreground execution wrapper returned after roughly thirty-five seconds but left the `go run` child and compiled `rag-eval` process alive; multiple foreground retries therefore created duplicate full builds. Process inspection confirmed the behavior. I terminated the stale foreground attempts, retained one `tmux`-managed batch-15 build, and verified the Ollama runner was active. The conclusion is now: use `tmux` for this long-running corpus operation and do not infer process exit from the foreground tool wrapper returning without output.
+
+### Follow-up payload and runtime measurement
+
+The short-text batch sweep was not representative. It passed at 2, 4, 8, 12, and 15 texts, but the immutable TTC chunks are 5–1,200 characters long (average 1,143). A single actual 1,200-character chunk remained connected to the CPU-only Ollama runner for more than two minutes. The runner reported `100% CPU`, and process/socket inspection showed active local HTTP connections rather than an immediate provider configuration error.
+
+The embedding command now accepts `--request-timeout-seconds`. A positive value applies a context deadline to provider resolution and the artifact build, making bounded smoke tests fail visibly with a context error instead of relying on the foreground observation wrapper. The full 2,024-chunk real run is operationally a long-running batch job on this CPU-only host; continue lab development using the offline deterministic embedding provider and bounded live smoke subsets until a suitable longer compute session is available.

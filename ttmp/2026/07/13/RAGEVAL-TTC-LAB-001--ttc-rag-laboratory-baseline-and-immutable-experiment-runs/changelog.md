@@ -48,3 +48,12 @@ Recorded Geppetto/Ollama embedding investigation: single 768D provider calls suc
 ### Related Files
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/02-geppetto-ollama-embedding-probe.go — Reproduction probe
+
+## 2026-07-14
+
+Measured real TTC payload behavior: CPU-only Ollama takes over two minutes for one 1,200-character chunk; added --request-timeout-seconds to surface bounded live-run failures.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-eval/cmds/embedding/build_immutable.go — Command-level provider deadline
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/02-geppetto-ollama-embedding-probe.go — Real payload probe

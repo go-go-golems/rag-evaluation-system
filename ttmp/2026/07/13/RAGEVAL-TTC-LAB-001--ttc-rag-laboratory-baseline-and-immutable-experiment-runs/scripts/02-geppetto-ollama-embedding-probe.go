@@ -22,6 +22,7 @@ func main() {
 	batchSize := flag.Int("batch-size", 1, "number of texts for GenerateBatchEmbeddings; 1 uses GenerateEmbedding")
 	databasePath := flag.String("db", "", "RAG SQLite database; requires --chunk-set-id")
 	chunkSetID := flag.String("chunk-set-id", "", "immutable chunk set ID; requires --db")
+	realChunks := flag.Bool("real-chunks", false, "use the first --batch-size texts from --chunk-set-id instead of probe text")
 	flag.Parse()
 	level, err := zerolog.ParseLevel(*logLevel)
 	if err != nil {
@@ -41,6 +42,35 @@ func main() {
 	texts := make([]string, *batchSize)
 	for i := range texts {
 		texts[i] = "TTC Geppetto embedding probe"
+	}
+	if *realChunks {
+		if *databasePath == "" || *chunkSetID == "" {
+			log.Fatal().Msg("--real-chunks requires --db and --chunk-set-id")
+		}
+		queries, err := cmdhelpers.OpenDBAtPath(*databasePath)
+		if err != nil {
+			log.Fatal().Err(err).Msg("open RAG database for real chunks")
+		}
+		rows, err := queries.DB().QueryContext(context.Background(), `SELECT text FROM immutable_chunks WHERE chunk_set_id = ? ORDER BY document_revision_id, chunk_index LIMIT ?`, *chunkSetID, *batchSize)
+		if err != nil {
+			_ = queries.Close()
+			log.Fatal().Err(err).Msg("load real chunks")
+		}
+		texts = texts[:0]
+		for rows.Next() {
+			var text string
+			if err := rows.Scan(&text); err != nil {
+				_ = rows.Close()
+				_ = queries.Close()
+				log.Fatal().Err(err).Msg("scan real chunk")
+			}
+			texts = append(texts, text)
+		}
+		_ = rows.Close()
+		_ = queries.Close()
+		if len(texts) != *batchSize {
+			log.Fatal().Int("chunks", len(texts)).Msg("not enough real chunks")
+		}
 	}
 	var vectors [][]float32
 	if *batchSize == 1 {
