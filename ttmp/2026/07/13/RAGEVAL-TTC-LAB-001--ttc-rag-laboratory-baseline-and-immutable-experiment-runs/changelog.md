@@ -40,3 +40,11 @@ Completed 26xz and rggc: added canonical artifact fingerprints, exact source-ran
 ### Related Files
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/services/immutablechunk/service.go — Chunk artifact builder
+
+## 2026-07-14
+
+Recorded Geppetto/Ollama embedding investigation: single 768D provider calls succeed, while the batch immutable-set path reproduces a silent no-artifact exit; added ticket probe script.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/02-geppetto-ollama-embedding-probe.go — Reproduction probe

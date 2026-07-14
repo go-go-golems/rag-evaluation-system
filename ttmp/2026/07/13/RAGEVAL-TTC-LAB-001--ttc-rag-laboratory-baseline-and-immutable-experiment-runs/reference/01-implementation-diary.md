@@ -33,6 +33,8 @@ RelatedFiles:
       Note: Immutable creation, reuse, change, and conflict coverage (commit c846043)
     - Path: repo://internal/services/immutablechunk/service.go
       Note: Immutable chunk-plan and chunk-set builder (commit 425412e)
+    - Path: repo://internal/services/immutableembedding/service.go
+      Note: Batch artifact construction path under investigation
     - Path: repo://internal/services/ttcimport/service.go
       Note: Deterministic TTC selection, operational import, and atomic manifest implementation (commit 2fcf2bc)
     - Path: repo://internal/services/ttcimport/service_test.go
@@ -43,12 +45,15 @@ RelatedFiles:
       Note: Consolidated 20-card source-validated draft described in Step 5
     - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/01-validate-ttc-baseline-evaluation-cards.sh
       Note: Validation command and initial failures recorded in Step 5
+    - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/02-geppetto-ollama-embedding-probe.go
+      Note: Reproduces provider-only and immutable-service embedding paths
 ExternalSources: []
 Summary: Chronological record of workspace discovery, TTC source reconstruction, ticket setup, architecture research, design decisions, validation, and delivery.
-LastUpdated: 2026-07-14T18:55:00-04:00
+LastUpdated: 2026-07-14T19:35:00-04:00
 WhatFor: Preserve the exact evidence, commands, failures, corrections, and reasoning used to create the TTC baseline and immutable-run implementation plan.
 WhenToUse: Read when reviewing the ticket, reproducing the TTC export, continuing implementation, or diagnosing assumptions in the design guide.
 ---
+
 
 
 
@@ -767,4 +772,85 @@ Read `internal/experiments/canonical.go`, then `internal/services/immutablechunk
 corpus snapshot -> chunk plan fingerprint -> chunk set fingerprint
        |                   |                       |
 document revisions   strategy/input/version    immutable chunks + rune ranges
+```
+
+## Step 9: Geppetto/Ollama immutable embedding investigation
+
+This step committed the Glazed commands required to materialize immutable chunk and embedding artifacts, upgraded Geppetto to the released v0.13.5 cache-decoding fix, and attempted the first real local Ollama embedding run. The corpus snapshot and fixed chunk set are valid: the real TTC baseline contains 2,024 immutable chunks under `sha256:ef7bdab76583f092d7bc50c9f501fe8c17739d395fcb37d0eaaba5a09c7c9392`.
+
+The live provider itself works. A ticket-local probe resolves Geppetto's Ollama provider for `nomic-embed-text`, then generates a 768-dimensional vector. However, both the Glazed embedding command and a direct invocation of the immutable embedding service terminate without a visible error and without inserting `embedding_sets` or `immutable_embeddings` rows. The issue is therefore narrowed beyond profile decoding and single-request provider connectivity.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Ok, commit, and then debug the geppetto ollama stuff. Keep a detailed diary as you work"
+
+**Assistant interpretation:** Commit the operator command work first, then diagnose why the first real immutable TTC embedding build does not produce its expected artifact, preserving reproducible evidence.
+
+**Inferred user intent:** Make the RAG laboratory's real 768D embedding baseline operational without hiding provider or cache failures behind repeated work.
+
+**Commit (code):** `be83d09` — "feat: add immutable artifact commands"
+
+### What I did
+
+- Committed the immutable chunk and embedding Glazed commands.
+- Upgraded Geppetto to `v0.13.5` in `182e786`, including the previously released embedding-cache YAML decoding fix.
+- Confirmed `nomic-embed-text:latest` is installed and that the local Ollama HTTP API reports 768 dimensions.
+- Added `scripts/02-geppetto-ollama-embedding-probe.go`, with zerolog logging and an optional direct immutable-service path.
+- Ran the provider-only probe successfully; it returned model `nomic-embed-text`, configured dimensions 768, and vector dimensions 768.
+- Ran the full command and the direct service probe against the 2,024-chunk set. Both created zero embedding rows and emitted no actionable error.
+
+### Why
+
+The immutable embedding set is the boundary between fixed chunk evidence and vector retrieval. It must be established with a real provider before latency, storage, and retrieval quality comparisons can be trusted.
+
+### What worked
+
+```bash
+ollama list
+curl -sS http://127.0.0.1:11434/api/embed ...
+GOWORK=off go run ./ttmp/.../scripts/02-geppetto-ollama-embedding-probe.go --log-level debug
+```
+
+The last command produced a valid 768D vector through Geppetto, proving the provider configuration and single-item inference route are healthy.
+
+### What didn't work
+
+The following full-build attempts ended after roughly 23 seconds with no result row, no stored `embedding_sets` row, and no stored `immutable_embeddings` row:
+
+```bash
+GOWORK=off go run ./cmd/rag-eval embedding build-immutable ...
+GOWORK=off go run ./ttmp/.../scripts/02-geppetto-ollama-embedding-probe.go --db data/rag-eval.db --chunk-set-id sha256:ef7...c9392
+```
+
+`SELECT COUNT(*) FROM embedding_sets;` and `SELECT COUNT(*) FROM immutable_embeddings;` both returned `0` after each run. The narrower direct-service reproduction rules out the Glazed command decoder as the primary cause.
+
+### What I learned
+
+- Geppetto v0.13.5 resolves this direct Ollama configuration and returns a valid single embedding.
+- The failure appears in the batch/artifact-build path, before transaction commit. It is not evidence that the Ollama model is missing or has the wrong dimension.
+
+### What was tricky to build
+
+The service invokes `GenerateBatchEmbeddings` across all chunk batches before opening its persistence transaction. That design ensures no partial immutable set is published, but it also means a silent batch-path exit leaves no database artifact to inspect. The next diagnostic must isolate batch generation (one batch, then increasing batches) and capture process exit status/stderr externally.
+
+### What warrants a second pair of eyes
+
+- Inspect Geppetto's `GenerateBatchEmbeddings` behavior for the Ollama provider at v0.13.5, especially its behavior on a 16-text batch.
+- Confirm whether the process is receiving a non-zero signal/exit status that the current tool wrapper did not display.
+- Decide whether immutable embedding construction should persist batch progress as non-semantic run events while keeping the final set atomic.
+
+### What should be done in the future
+
+- Do not retry the full 2,024-chunk build blindly. First run a ticket-local batch-size sweep with externally captured exit status and provider-call logging.
+- If a Geppetto batch defect is confirmed, create a focused ticket/issue with the probe and version evidence rather than adding a local retry shim.
+
+### Code review instructions
+
+Review `scripts/02-geppetto-ollama-embedding-probe.go`, then `internal/services/immutableembedding/service.go`. Confirm the direct provider-only path works and that no embedding-set rows exist after the reproduced failing build.
+
+### Technical details
+
+```text
+single GenerateEmbedding -> succeeds (768D)
+GenerateBatchEmbeddings inside immutable Build -> silent termination, no DB rows
 ```
