@@ -23,10 +23,16 @@ RelatedFiles:
       Note: Glazed corpus import command and dry-run contract (commit 2fcf2bc)
     - Path: repo://cmd/rag-eval/cmds/corpus/snapshot_ttc.go
       Note: Glazed immutable TTC snapshot command (commit c846043)
+    - Path: repo://internal/chunking/chunker.go
+      Note: Exact source-range implementation correction (commit ecd8f2a)
+    - Path: repo://internal/experiments/canonical.go
+      Note: Canonical JSON and schema-scoped IDs (commit 0f5a4a0)
     - Path: repo://internal/services/corpussnapshot/service.go
       Note: Content-addressed revision and immutable snapshot implementation (commit c846043)
     - Path: repo://internal/services/corpussnapshot/service_test.go
       Note: Immutable creation, reuse, change, and conflict coverage (commit c846043)
+    - Path: repo://internal/services/immutablechunk/service.go
+      Note: Immutable chunk-plan and chunk-set builder (commit 425412e)
     - Path: repo://internal/services/ttcimport/service.go
       Note: Deterministic TTC selection, operational import, and atomic manifest implementation (commit 2fcf2bc)
     - Path: repo://internal/services/ttcimport/service_test.go
@@ -39,10 +45,11 @@ RelatedFiles:
       Note: Validation command and initial failures recorded in Step 5
 ExternalSources: []
 Summary: Chronological record of workspace discovery, TTC source reconstruction, ticket setup, architecture research, design decisions, validation, and delivery.
-LastUpdated: 2026-07-14T18:10:00-04:00
+LastUpdated: 2026-07-14T18:55:00-04:00
 WhatFor: Preserve the exact evidence, commands, failures, corrections, and reasoning used to create the TTC baseline and immutable-run implementation plan.
 WhenToUse: Read when reviewing the ticket, reproducing the TTC export, continuing implementation, or diagnosing assumptions in the design guide.
 ---
+
 
 
 
@@ -695,3 +702,69 @@ rich TTC SQLite export
 ```
 
 No `ON CONFLICT DO UPDATE` exists in this immutable path. Reuse first reads the existing rows, compares their semantic fields and membership, and only then reports success.
+
+## Step 8: Canonical artifact identities and immutable chunk sets
+
+This step completes the two artifact layers after immutable corpus snapshots: a reusable canonical JSON fingerprint utility and the first immutable chunk artifact builder. The builder starts only from `corpus_snapshot_documents`; it does not consult the mutable operational documents table.
+
+During implementation, a new exact-source test found an older correctness defect: sentence and Markdown chunkers could reconstruct whitespace/newlines differently from their recorded rune ranges. That would make citations unverifiable. The chunkers now preserve the source text exactly, and the immutable builder rejects any chunk whose text does not equal its stored range.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead, don't stop"
+
+**Assistant interpretation:** Continue beyond preliminary identity work and implement the actual immutable chunk artifact path rather than pausing at a design or prerequisite.
+
+**Inferred user intent:** Produce a usable, rigorously traceable RAG laboratory substrate with continuous task-by-task progress.
+
+**Commit (code):** `0f5a4a0` — "feat: add canonical artifact fingerprints"; `ecd8f2a` — "fix: preserve exact chunk source ranges"; `425412e` — "feat: build immutable chunk sets"
+
+### What I did
+
+- Added `internal/experiments.CanonicalJSON` and schema-namespaced `Fingerprint` using recursively sorted object keys and ordered arrays.
+- Corrected sentence and Markdown chunker whitespace/newline handling and added fixed/sentence/Markdown range-invariant coverage.
+- Added immutable `chunk_plans`, `chunk_sets`, and `immutable_chunks` tables.
+- Added `internal/services/immutablechunk.Build`, which loads an ordered immutable snapshot, creates a canonical plan ID, validates ranges, persists immutable chunks, and verifies/reuses an identical chunk set.
+
+### Why
+
+Chunk text is the direct retrieval evidence. It must name both the exact source revision and the exact rune interval. Upsertable chunks or trimmed text would make a later score, answer, or citation non-reproducible.
+
+### What worked
+
+`GOWORK=off go test ./...` passed after the change. The focused immutable chunk test creates a snapshot, builds a sentence chunk set, verifies stored source ranges, then rebuilds and observes `Reused = true`.
+
+### What didn't work
+
+The first source-range invariant test failed for sentence chunks: whitespace-only fragments had been discarded while offsets were advanced from retained text. Markdown splitting also appended a newline even when the source had none. Both bugs were repaired before immutable persistence was added.
+
+### What I learned
+
+- Canonicalization must distinguish object-key order from array order: configuration objects are unordered; snapshot membership and chunk order are semantic sequences.
+- Exact citation validation belongs at artifact construction time, not only at API rendering time.
+
+### What was tricky to build
+
+The chunk plan is immutable even though its output is derived. The builder fingerprints strategy, input variant, size, overlap, and implementation version; the chunk-set identity additionally includes ordered chunk IDs. Existing IDs are reused only when the manifest matches, so future implementation changes require a new implementation/schema version.
+
+### What warrants a second pair of eyes
+
+- Review whether Markdown-heading should expose its fallback overlap as an explicit plan parameter rather than retaining the current chunker default.
+- The initial builder is service-level only. A Glazed command and API/UI route are intentionally deferred to the subsequent operator/API tasks.
+
+### What should be done in the future
+
+- Add the operator command/API that builds and inspects immutable chunk sets.
+- Implement the embedding set against `immutable_chunks`, then build BM25/vector/RRF retrieval artifacts.
+
+### Code review instructions
+
+Read `internal/experiments/canonical.go`, then `internal/services/immutablechunk/service.go`, and finally `internal/chunking/chunker_test.go`. Validate with `GOWORK=off go test ./...`.
+
+### Technical details
+
+```text
+corpus snapshot -> chunk plan fingerprint -> chunk set fingerprint
+       |                   |                       |
+document revisions   strategy/input/version    immutable chunks + rune ranges
+```

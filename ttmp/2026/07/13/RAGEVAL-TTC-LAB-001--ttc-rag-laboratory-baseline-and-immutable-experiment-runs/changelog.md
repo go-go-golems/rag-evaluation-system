@@ -32,3 +32,11 @@ Completed 3ydv: added append-only TTC source artifacts, document revisions, orde
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/db/db.go — Immutable corpus schema
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/services/corpussnapshot/service.go — Immutable corpus persistence
+
+## 2026-07-14
+
+Completed 26xz and rggc: added canonical artifact fingerprints, exact source-range chunking, immutable chunk plans, chunk sets, and persisted immutable chunks (commits 0f5a4a0, ecd8f2a, 425412e).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/services/immutablechunk/service.go — Chunk artifact builder
