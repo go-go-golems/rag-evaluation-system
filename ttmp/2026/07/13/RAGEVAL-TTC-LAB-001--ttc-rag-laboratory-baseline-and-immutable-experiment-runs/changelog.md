@@ -57,3 +57,11 @@ Measured real TTC payload behavior: CPU-only Ollama takes over two minutes for o
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-eval/cmds/embedding/build_immutable.go — Command-level provider deadline
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/02-geppetto-ollama-embedding-probe.go — Real payload probe
+
+## 2026-07-14
+
+Audited and completed the retroactive embedding diary: corrected foreground-wrapper interpretation, recorded payload/runtime evidence, and documented timeout/long-job operation.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/01-implementation-diary.md — Step 10 operational diary audit

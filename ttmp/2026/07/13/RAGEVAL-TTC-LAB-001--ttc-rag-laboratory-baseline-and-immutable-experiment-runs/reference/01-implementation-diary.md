@@ -23,6 +23,8 @@ RelatedFiles:
       Note: Glazed corpus import command and dry-run contract (commit 2fcf2bc)
     - Path: repo://cmd/rag-eval/cmds/corpus/snapshot_ttc.go
       Note: Glazed immutable TTC snapshot command (commit c846043)
+    - Path: repo://cmd/rag-eval/cmds/embedding/build_immutable.go
+      Note: Deadline control and operator-facing long-run behavior (commit 4c7d448)
     - Path: repo://internal/chunking/chunker.go
       Note: Exact source-range implementation correction (commit ecd8f2a)
     - Path: repo://internal/experiments/canonical.go
@@ -49,10 +51,11 @@ RelatedFiles:
       Note: Reproduces provider-only and immutable-service embedding paths
 ExternalSources: []
 Summary: Chronological record of workspace discovery, TTC source reconstruction, ticket setup, architecture research, design decisions, validation, and delivery.
-LastUpdated: 2026-07-14T19:35:00-04:00
+LastUpdated: 2026-07-14T20:20:00-04:00
 WhatFor: Preserve the exact evidence, commands, failures, corrections, and reasoning used to create the TTC baseline and immutable-run implementation plan.
 WhenToUse: Read when reviewing the ticket, reproducing the TTC export, continuing implementation, or diagnosing assumptions in the design guide.
 ---
+
 
 
 
@@ -864,3 +867,82 @@ The apparent termination was an observation error. The foreground execution wrap
 The short-text batch sweep was not representative. It passed at 2, 4, 8, 12, and 15 texts, but the immutable TTC chunks are 5–1,200 characters long (average 1,143). A single actual 1,200-character chunk remained connected to the CPU-only Ollama runner for more than two minutes. The runner reported `100% CPU`, and process/socket inspection showed active local HTTP connections rather than an immediate provider configuration error.
 
 The embedding command now accepts `--request-timeout-seconds`. A positive value applies a context deadline to provider resolution and the artifact build, making bounded smoke tests fail visibly with a context error instead of relying on the foreground observation wrapper. The full 2,024-chunk real run is operationally a long-running batch job on this CPU-only host; continue lab development using the offline deterministic embedding provider and bounded live smoke subsets until a suitable longer compute session is available.
+
+## Step 10: Retroactive diary audit and operational correction
+
+This step audited the recent embedding entries against the ticket diary contract. The implementation work was committed in focused increments, but the first live-run notes mixed an observation-wrapper timeout with a process exit. This retrospective entry preserves the corrected causal sequence and makes the next contributor’s operating procedure explicit.
+
+The durable outcome is a reproducible distinction between three layers: Geppetto provider configuration works, real CPU-only embedding throughput is slow for TTC-sized chunks, and foreground command observation is unsuitable for long jobs. The ticket now documents the exact commands, artifacts, cleanup, and safe execution mode.
+
+### Prompt Context
+
+**User prompt (verbatim):** "keep a detailed diary as you work (fill retroactively if necessary, see skill for diary format)"
+
+**Assistant interpretation:** Audit the existing diary against the prescribed section structure, add retrospective context where it was incomplete or misleading, and continue maintaining the diary at each meaningful checkpoint.
+
+**Inferred user intent:** Make the implementation trail usable by an intern or reviewer without relying on chat history, especially for live-provider debugging and operational decisions.
+
+**Commit (code):** `182e786` — "feat: add immutable embedding sets"; `be83d09` — "feat: add immutable artifact commands"; `4c7d448` — "fix: bound immutable embedding runs"
+
+### What I did
+
+- Re-read the diary skill and its long-form reference before editing this ticket record.
+- Audited Steps 8 and 9 for prompt context, prose introduction, failures, review risks, follow-ups, validation commands, and technical detail.
+- Added the process-inspection correction, real-payload measurement, batch-size sweep results, duplicate-process cleanup decision, and command-level timeout behavior.
+- Kept scripts in the ticket’s `scripts/` directory and related the probe to the diary with docmgr.
+
+### Why
+
+The earlier phrase “silent termination” could mislead a future investigator into changing Geppetto or Ollama. Process inspection proved that the foreground tool had stopped observing the child while the work continued. A diary is useful only when it records this correction directly beside the original symptom.
+
+### What worked
+
+- `GOWORK=off go test ./cmd/rag-eval/cmds/embedding ./internal/services/immutableembedding`
+- `ollama list` confirmed `nomic-embed-text:latest` is installed.
+- The ticket-local provider probe generated a real 768-dimensional vector.
+- Short-text batch probes succeeded at batch sizes 2, 4, 8, 12, and 15.
+- `ps`, `pgrep`, `ss`, `tmux`, and `ollama ps` established that foreground observation, process lifetime, active local HTTP connections, and CPU-only execution were distinct facts.
+
+### What didn't work
+
+- Foreground `go run` calls returned after roughly thirty-five seconds without returning the child process’s final status. Repeating them created duplicate full builds.
+- A representative 1,200-character TTC chunk remained active for more than two minutes on the CPU-only runner, so the full 2,024-chunk job is not an interactive validation operation.
+- The immutable service’s final transaction is intentionally deferred until all vectors exist, so `embedding_sets` and `immutable_embeddings` remain empty while a full build is still in progress.
+
+### What I learned
+
+- “No command output” is not evidence of a provider failure; inspect the child process before diagnosing application code.
+- A synthetic short-text batch test cannot establish performance for real chunk payloads.
+- An atomic semantic artifact should not be partially published, but its command requires explicit deadline/progress controls for operations.
+
+### What was tricky to build
+
+The operational symptom combined two independent behaviors: the command runner stopped observing foreground work early, while Ollama continued CPU-bound inference. The resolution was not a retry shim. It required process inspection, duplicate cleanup, `tmux` for long-running jobs, a representative-payload probe, and `--request-timeout-seconds` for bounded command execution.
+
+### What warrants a second pair of eyes
+
+- Review whether immutable embedding construction should emit non-semantic progress events per batch while retaining a single final immutable commit.
+- Review the intended runtime environment for the 200-document TTC baseline: CPU-only execution is valid but should be scheduled as a long job, not used as an interactive UI action.
+- Review the timeout scope: it currently covers provider resolution and the entire build, not individual batches.
+
+### What should be done in the future
+
+- Add durable run-event progress before exposing the full live build through the web UI.
+- Run the full Ollama corpus build in a deliberately supervised long compute session, then record wall time, cache behavior, and storage in the experiment run.
+- Continue retrieval-artifact correctness work using the offline deterministic embedding provider in the meantime.
+
+### Code review instructions
+
+Read `scripts/02-geppetto-ollama-embedding-probe.go`, `cmd/rag-eval/cmds/embedding/build_immutable.go`, and `internal/services/immutableembedding/service.go` in that order. Verify the provider-only probe first, then inspect `--request-timeout-seconds`, then review why embedding persistence is atomic.
+
+### Technical details
+
+```text
+foreground tool observation ends early
+    != child process exit
+
+short synthetic batch succeeds
+    != representative TTC payload throughput
+
+all vectors generated -> one immutable embedding-set transaction
+```
