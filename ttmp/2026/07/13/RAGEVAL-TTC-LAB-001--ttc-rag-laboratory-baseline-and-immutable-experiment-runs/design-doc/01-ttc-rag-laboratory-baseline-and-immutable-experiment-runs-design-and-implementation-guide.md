@@ -18,13 +18,18 @@ Topics:
 DocType: design-doc
 Intent: long-term
 Owners: []
-RelatedFiles: []
+RelatedFiles:
+    - Path: repo://cmd/rag-eval/cmds/corpus/import_ttc.go
+      Note: Provides the documented Glazed import-ttc operator interface
+    - Path: repo://internal/services/ttcimport/service.go
+      Note: Implements the first deterministic TTC corpus-selection phase described by the guide
 ExternalSources: []
 Summary: Intern-oriented architecture and implementation plan for a bounded TTC retrieval baseline and content-addressed, immutable experiment runs in the RAG Evaluation System.
 LastUpdated: 2026-07-13T21:20:00-04:00
 WhatFor: Implement the first reproducible TTC RAG laboratory slice without losing corpus, configuration, retrieval-trace, metric, or artifact identity.
 WhenToUse: Read before changing TTC ingestion, chunk persistence, search indexing, evaluation storage, experiment workflows, or the RAG laboratory web UI.
 ---
+
 
 # TTC RAG laboratory baseline and immutable experiment runs
 

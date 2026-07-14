@@ -5,7 +5,7 @@
 - [x] Confirm the multi-repository workspace layout and preserve clean worktree boundaries <!-- t:p9zb -->
 - [x] Rebuild and validate data/ttc-wordpress-rag.sqlite and record source/output fingerprints <!-- t:cicz -->
 - [x] Complete the intern-oriented baseline and immutable-run design package <!-- t:8031 -->
-- [ ] Implement a Glazed TTC corpus import command with deterministic source-balanced snapshot manifests <!-- t:shi3 -->
+- [x] Implement a Glazed TTC corpus import command with deterministic source-balanced snapshot manifests <!-- t:shi3 -->
 - [ ] Replace mutable document text inputs with content-addressed document revisions and corpus snapshots <!-- t:3ydv -->
 - [ ] Define canonical JSON normalization and SHA-256 fingerprints for corpus, chunking, embedding, index, retrieval, and evaluation plans <!-- t:26xz -->
 - [ ] Implement immutable chunk plans, chunk sets, and exact source-range validation for fixed, sentence, and Markdown-heading chunkers <!-- t:rggc -->
