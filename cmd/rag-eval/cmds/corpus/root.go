@@ -10,5 +10,6 @@ func NewCommand() *cobra.Command {
 		Long:  "Create deterministic corpus selections that later chunking and experiment runs can reference.",
 	}
 	command.AddCommand(newImportTTCCommand())
+	command.AddCommand(newSnapshotTTCCommand())
 	return command
 }

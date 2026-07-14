@@ -51,6 +51,9 @@ func Migrate(db *sql.DB) error {
 		migrationV1EvalQueries,
 		migrationV1EvalRuns,
 		migrationV1EvalResults,
+		migrationV2SourceArtifacts,
+		migrationV2DocumentRevisions,
+		migrationV2CorpusSnapshots,
 	}
 
 	for i, m := range migrations {
@@ -238,5 +241,62 @@ CREATE TABLE IF NOT EXISTS eval_results (
     ndcg_at_k REAL DEFAULT 0,
     latency_ms INTEGER DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`
+
+// Immutable corpus objects deliberately live alongside the earlier mutable
+// operational tables. New experiment code must use these tables directly;
+// they are not a cache or an adapter over documents/sources.
+const migrationV2SourceArtifacts = `
+CREATE TABLE IF NOT EXISTS source_artifacts (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    checksum_sha256 TEXT NOT NULL,
+    byte_size INTEGER NOT NULL,
+    manifest_json TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(kind, checksum_sha256)
+);
+`
+
+const migrationV2DocumentRevisions = `
+CREATE TABLE IF NOT EXISTS document_revisions (
+    id TEXT PRIMARY KEY,
+    stable_document_id TEXT NOT NULL,
+    source_artifact_id TEXT NOT NULL REFERENCES source_artifacts(id),
+    kind TEXT NOT NULL,
+    title TEXT NOT NULL,
+    url TEXT NOT NULL,
+    content_text TEXT NOT NULL,
+    content_markdown TEXT NOT NULL,
+    search_text TEXT NOT NULL,
+    search_markdown TEXT NOT NULL,
+    metadata_json TEXT NOT NULL,
+    content_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_document_revisions_stable_document
+    ON document_revisions(stable_document_id);
+`
+
+const migrationV2CorpusSnapshots = `
+CREATE TABLE IF NOT EXISTS corpus_snapshots (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    source_artifact_id TEXT NOT NULL REFERENCES source_artifacts(id),
+    selection_json TEXT NOT NULL,
+    manifest_json TEXT NOT NULL,
+    document_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS corpus_snapshot_documents (
+    snapshot_id TEXT NOT NULL REFERENCES corpus_snapshots(id),
+    ordinal INTEGER NOT NULL,
+    document_revision_id TEXT NOT NULL REFERENCES document_revisions(id),
+    PRIMARY KEY (snapshot_id, ordinal),
+    UNIQUE (snapshot_id, document_revision_id)
 );
 `
