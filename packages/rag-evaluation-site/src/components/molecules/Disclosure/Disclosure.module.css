@@ -3,10 +3,11 @@
 }
 
 .summary {
+	color: var(--mac-accent);
 	cursor: pointer;
 	font: var(--rag-font-role-panel-heading);
 	letter-spacing: 0.04em;
-	padding-block: 0.45rem;
+	padding-block: 0.3rem;
 	text-transform: uppercase;
 	user-select: none;
 }
@@ -21,5 +22,5 @@
 }
 
 .content {
-	padding-block: 0.25rem 0.5rem;
+	padding-block: 0 0.3rem;
 }
