@@ -23,3 +23,12 @@ Completed shi3: added and validated the deterministic TTC baseline importer, 200
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-eval/cmds/corpus/import_ttc.go — Operator-facing command
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/services/ttcimport/service.go — Deterministic importer implementation
+
+## 2026-07-14
+
+Completed 3ydv: added append-only TTC source artifacts, document revisions, ordered corpus snapshots, and the snapshot-ttc command (commit c846043).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/db/db.go — Immutable corpus schema
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/services/corpussnapshot/service.go — Immutable corpus persistence

@@ -21,6 +21,12 @@ Owners: []
 RelatedFiles:
     - Path: repo://cmd/rag-eval/cmds/corpus/import_ttc.go
       Note: Glazed corpus import command and dry-run contract (commit 2fcf2bc)
+    - Path: repo://cmd/rag-eval/cmds/corpus/snapshot_ttc.go
+      Note: Glazed immutable TTC snapshot command (commit c846043)
+    - Path: repo://internal/services/corpussnapshot/service.go
+      Note: Content-addressed revision and immutable snapshot implementation (commit c846043)
+    - Path: repo://internal/services/corpussnapshot/service_test.go
+      Note: Immutable creation, reuse, change, and conflict coverage (commit c846043)
     - Path: repo://internal/services/ttcimport/service.go
       Note: Deterministic TTC selection, operational import, and atomic manifest implementation (commit 2fcf2bc)
     - Path: repo://internal/services/ttcimport/service_test.go
@@ -33,10 +39,11 @@ RelatedFiles:
       Note: Validation command and initial failures recorded in Step 5
 ExternalSources: []
 Summary: Chronological record of workspace discovery, TTC source reconstruction, ticket setup, architecture research, design decisions, validation, and delivery.
-LastUpdated: 2026-07-14T17:05:00-04:00
+LastUpdated: 2026-07-14T18:10:00-04:00
 WhatFor: Preserve the exact evidence, commands, failures, corrections, and reasoning used to create the TTC baseline and immutable-run implementation plan.
 WhenToUse: Read when reviewing the ticket, reproducing the TTC export, continuing implementation, or diagnosing assumptions in the design guide.
 ---
+
 
 
 
@@ -590,3 +597,101 @@ rag-eval corpus import-ttc \
 ```
 
 `--dry-run` builds the plan but writes neither the operational database nor the manifest. `--seed-document-ids` accepts additional comma-separated source document IDs. Imported operational document IDs are currently namespaced as `ttc:wp:<id>` and retain the original `wp:<id>` as `external_id`.
+
+## Step 7: Create immutable TTC document revisions and corpus snapshots
+
+The deterministic importer from Step 6 established membership but intentionally used the existing mutable operational table. This step creates the independent immutable corpus path required for reproducible chunking, retrieval, and evaluation. A source export now produces a source-artifact identity, one content-addressed revision per source document, and an ordered snapshot identity.
+
+The command was exercised against the real rebuilt TTC export. Its first execution created 200 revisions; its second execution reused the exact same immutable snapshot. It never updates the legacy `documents` table, which remains an earlier operational path rather than the source of scientific experiment identity.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 6)
+
+**Assistant interpretation:** Continue from the deterministic importer to implement the next documented task: append-only document revisions and corpus snapshots.
+
+**Inferred user intent:** Ensure that later RAG laboratory comparisons have an exact, durable corpus boundary and cannot silently observe updated document text.
+
+**Commit (code):** `c846043` — "feat: add immutable TTC corpus snapshots"
+
+### What I did
+
+- Added immutable SQLite tables: `source_artifacts`, `document_revisions`, `corpus_snapshots`, and ordered `corpus_snapshot_documents` membership.
+- Added `internal/services/corpussnapshot`, which computes domain-separated SHA-256 identifiers, verifies existing semantic rows before reuse, and rejects conflicts rather than updating them.
+- Added `rag-eval corpus snapshot-ttc`, a Glazed command that repeats the deterministic source selection and writes only the immutable corpus tables.
+- Added focused tests for first creation, exact reuse, changed-content identity creation, and a conflicting physical source-artifact record.
+- Ran the command twice on the real source export. It returned snapshot ID `sha256:be434a1422487d33e324b5f3833067dcc530efab2df0fea2f7e7bfa9ca86f409`; the second execution returned `reused: true`.
+
+### Why
+
+The current `documents` table intentionally supports upsert-based ingestion. It cannot answer which exact TTC text a historical chunk or retrieval experiment observed. A corpus snapshot must instead name immutable revisions in a fixed ordinal sequence so every later derived artifact can cite its upstream input precisely.
+
+### What worked
+
+Focused validation passed:
+
+```bash
+GOWORK=off go test ./internal/services/corpussnapshot ./internal/db ./cmd/rag-eval/cmds/corpus
+```
+
+The entire repository also passed:
+
+```bash
+GOWORK=off go test ./...
+```
+
+The real command proved create-then-reuse behavior:
+
+```bash
+GOWORK=off go run ./cmd/rag-eval corpus snapshot-ttc \
+  --source-db data/ttc-wordpress-rag.sqlite \
+  --db data/rag-eval.db --output json
+```
+
+SQLite inspection reported 200 `document_revisions` and one `corpus_snapshots` row with `document_count = 200`.
+
+### What didn't work
+
+No new implementation failure occurred. As in Step 6, all Go validation requires `GOWORK=off` because the parent workspace's `go.work` has an incompatible Go version declaration. The shared workspace file was deliberately not changed.
+
+### What I learned
+
+- Physical provenance and semantic identity are separate: source byte size is retained in the source-artifact record, while the identity derives from source kind and checksum.
+- Snapshot membership must include the ordered revision sequence, not only a set of documents. Ordering is part of the selection contract and makes reconstruction and review deterministic.
+- “Reuse” is an assertion that stored fields and membership are equal, not a convenient `ON CONFLICT` update. A collision or corrupted row becomes a visible error.
+
+### What was tricky to build
+
+The canonical JSON task is still explicitly pending (`26xz`), but immutable IDs are needed before chunking can start. The implementation therefore uses a domain-separated, length-prefixed SHA-256 format and JSON generated from explicit ordered structs. This avoids separator ambiguity and unordered map dependence for the initial corpus contracts. The later shared canonicalizer must retain these schema-versioned identities or publish a new schema identity; it must not rewrite existing rows.
+
+### What warrants a second pair of eyes
+
+- Review whether revision `content_text` should remain equal to `search_text` for the initial TTC source. Both are preserved separately, but future non-TTC importers may require a distinct plain-text extraction.
+- Review source-artifact uniqueness policy: identical checksums necessarily imply identical byte sizes, so the conflict test detects database corruption rather than a plausible second input.
+- Review the decision to retain the Step 6 mutable importer temporarily for the older browser path. The new snapshot command itself does not dual-write; later laboratory work must use the immutable tables directly.
+
+### What should be done in the future
+
+- Implement `26xz`, extracting canonical JSON and artifact fingerprints into a shared package before chunk-plan identities are created.
+- Implement immutable chunk plans and chunk sets against `corpus_snapshot_documents`, never against mutable `documents`.
+- Expose snapshot membership through the planned `/api/v1/corpus-snapshots` API and UI view.
+
+### Code review instructions
+
+Start with `internal/services/corpussnapshot/service.go`: `Persist` compiles the source artifact, revisions, selection contract, and snapshot, while `ensure*` functions enforce immutable reuse. Then read `internal/db/db.go` for table constraints and `cmd/rag-eval/cmds/corpus/snapshot_ttc.go` for the operator command.
+
+Validate with the focused tests above, then execute `snapshot-ttc` twice and confirm the same ID and `reused: true` response.
+
+### Technical details
+
+The data flow is:
+
+```text
+rich TTC SQLite export
+  -> ttcimport.BuildPlan (fixed membership)
+  -> source_artifacts (checksum provenance)
+  -> document_revisions (content-addressed source variants)
+  -> corpus_snapshots + corpus_snapshot_documents (ordered membership)
+```
+
+No `ON CONFLICT DO UPDATE` exists in this immutable path. Reuse first reads the existing rows, compares their semantic fields and membership, and only then reports success.

@@ -21,14 +21,19 @@ Owners: []
 RelatedFiles:
     - Path: repo://cmd/rag-eval/cmds/corpus/import_ttc.go
       Note: Provides the documented Glazed import-ttc operator interface
+    - Path: repo://internal/db/db.go
+      Note: Defines immutable corpus schema tables
+    - Path: repo://internal/services/corpussnapshot/service.go
+      Note: Implements the guide's revision and snapshot persistence contract
     - Path: repo://internal/services/ttcimport/service.go
       Note: Implements the first deterministic TTC corpus-selection phase described by the guide
 ExternalSources: []
 Summary: Intern-oriented architecture and implementation plan for a bounded TTC retrieval baseline and content-addressed, immutable experiment runs in the RAG Evaluation System.
-LastUpdated: 2026-07-13T21:20:00-04:00
+LastUpdated: 2026-07-14T18:05:00-04:00
 WhatFor: Implement the first reproducible TTC RAG laboratory slice without losing corpus, configuration, retrieval-trace, metric, or artifact identity.
 WhenToUse: Read before changing TTC ingestion, chunk persistence, search indexing, evaluation storage, experiment workflows, or the RAG laboratory web UI.
 ---
+
 
 
 # TTC RAG laboratory baseline and immutable experiment runs
@@ -514,6 +519,34 @@ CREATE TABLE corpus_snapshot_documents (
 ```
 
 Insert these rows once. If an ID already exists, compare the canonical bytes and return “reused” only when they are identical. Never issue `ON CONFLICT DO UPDATE` for semantic objects.
+
+### 10.1 Initial implementation status (2026-07-14)
+
+The first implementation is available through `rag-eval corpus snapshot-ttc`. It recreates the deterministic TTC selection, derives a source-artifact ID, creates content-addressed document revisions, and creates an ordered immutable snapshot. It writes only `source_artifacts`, `document_revisions`, `corpus_snapshots`, and `corpus_snapshot_documents`; it does not write the older mutable `sources` or `documents` tables.
+
+```text
+TTC export + fixed selection
+        |
+        v
+source artifact SHA-256
+        |
+        +--> one revision SHA-256 per selected source document
+        |
+        +--> ordered snapshot SHA-256 over selection + revision IDs
+```
+
+The current implementation uses a length-prefixed SHA-256 input format and explicit ordered structs for the corpus contracts. Task `26xz` remains responsible for extracting the shared canonical-JSON normalizer and applying it consistently to all future artifact classes. The implementation must preserve already published IDs when that extraction happens; a changed semantic contract requires a new schema version rather than mutation.
+
+Use:
+
+```bash
+GOWORK=off go run ./cmd/rag-eval corpus snapshot-ttc \
+  --source-db data/ttc-wordpress-rag.sqlite \
+  --db data/rag-eval.db \
+  --output json
+```
+
+The first invocation writes the immutable objects. An identical second invocation returns `reused: true`; any changed source content creates a new revision and snapshot identity.
 
 ### 10.2 Chunk tables
 
