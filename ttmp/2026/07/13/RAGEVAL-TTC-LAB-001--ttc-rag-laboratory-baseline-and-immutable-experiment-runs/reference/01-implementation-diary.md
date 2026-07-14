@@ -48,13 +48,16 @@ RelatedFiles:
     - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/01-validate-ttc-baseline-evaluation-cards.sh
       Note: Validation command and initial failures recorded in Step 5
     - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/02-geppetto-ollama-embedding-probe.go
-      Note: Reproduces provider-only and immutable-service embedding paths
+      Note: |-
+        Reproduces provider-only and immutable-service embedding paths
+        Supports explicitly tunneled Mac Ollama probe via --base-url
 ExternalSources: []
 Summary: Chronological record of workspace discovery, TTC source reconstruction, ticket setup, architecture research, design decisions, validation, and delivery.
-LastUpdated: 2026-07-14T20:20:00-04:00
+LastUpdated: 2026-07-14T20:40:00-04:00
 WhatFor: Preserve the exact evidence, commands, failures, corrections, and reasoning used to create the TTC baseline and immutable-run implementation plan.
 WhenToUse: Read when reviewing the ticket, reproducing the TTC export, continuing implementation, or diagnosing assumptions in the design guide.
 ---
+
 
 
 
@@ -945,4 +948,80 @@ short synthetic batch succeeds
     != representative TTC payload throughput
 
 all vectors generated -> one immutable embedding-set transaction
+```
+
+## Step 11: Move the live Ollama baseline to mimimi-2.local
+
+This step moved the real 768D embedding workload off the CPU-only local host without exposing a model API on the LAN. The Mac already ran Ollama and LM Studio, but its Ollama registry was empty; `nomic-embed-text` was installed, confirmed as a 768-dimensional embedding model, and reached only through an SSH loopback tunnel.
+
+The direct tunneled Ollama API embedded one actual stored TTC chunk and returned 768 dimensions within the bounded request. This established that the Mac route is viable even though the original local host was unsuitable for interactive full-corpus inference. The full 2,024-chunk immutable embedding build is running in a local tmux session against that tunnel.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead."
+
+**Assistant interpretation:** Use the provided SSH access to make a faster Mac-hosted Ollama or LM Studio service available for the TTC embedding workload.
+
+**Inferred user intent:** Complete the real embedding baseline on suitable local hardware while keeping the RAG workspace’s provenance, artifact IDs, and network exposure controlled.
+
+**Commit (code):** Pending — operational run in progress; the ticket-local probe will be committed with the final run evidence.
+
+### What I did
+
+- Connected to `mimimi-2.local` through SSH and inspected model-server applications, processes, and local API state.
+- Found an existing Ollama server and LM Studio application; Ollama initially had no models.
+- Used `/Applications/Ollama.app/Contents/Resources/ollama pull nomic-embed-text` remotely to install the 274 MB embedding model.
+- Created a local tmux tunnel: `ssh -N -L 11435:127.0.0.1:11434 mimimi-2.local`.
+- Verified `http://127.0.0.1:11435/api/tags` reports `nomic-embed-text:latest`, capability `embedding`, and `embedding_length: 768`.
+- Probed a real `immutable_chunks` text through the tunnel directly with `/api/embed`; it returned a 768D vector.
+- Started `rag-eval embedding build-immutable` in tmux with `--base-url http://127.0.0.1:11435` and batch size 15.
+
+### Why
+
+The local host’s Ollama runner was CPU-only and a representative TTC chunk exceeded two minutes. The Mac reports `size_vram: 370031984` for the loaded nomic model, so its remote endpoint provides a hardware-accelerated alternative while SSH preserves a local-only trust boundary.
+
+### What worked
+
+```bash
+curl -sS http://127.0.0.1:11435/api/tags
+sqlite3 data/rag-eval.db "SELECT text FROM immutable_chunks ... LIMIT 1" | jq -Rs ... | curl .../api/embed
+```
+
+The model download completed successfully and the direct real-chunk API call returned `768`.
+
+### What didn't work
+
+The Mac’s shell PATH did not contain `ollama`, `lms`, or `tmux`, although Ollama.app was already running. The bundled CLI path was discovered under the application resources. The remote service is persistent; tmux is needed locally for the tunnel and long workspace command.
+
+### What I learned
+
+- SSH forwarding is sufficient for this laboratory: the remote model server remains on `127.0.0.1`, while the workspace sees a local endpoint at port 11435.
+- Geppetto must receive `--base-url http://127.0.0.1:11435`; an initial probe without that flag used the slow local default endpoint instead.
+
+### What was tricky to build
+
+The operational topology has two independent long-lived components: the local `rag-eval-mac-tunnel` tmux session and the local `rag-eval-mac-embedding` tmux session. The tunnel is a prerequisite for the embedding command, and neither session changes the remote server’s bind address. The full artifact still commits atomically only after all vectors finish.
+
+### What warrants a second pair of eyes
+
+- Confirm the Mac’s Ollama service remains loopback-bound after OS/application updates.
+- Review whether remote provider profile identity should be reflected explicitly in the future immutable embedding plan rather than only the resolved model/provider identity.
+- Verify the final embedding set has exactly 2,024 vectors and is associated with the expected chunk-set ID.
+
+### What should be done in the future
+
+- Capture tmux completion output, wall time, vector count, final set ID, cache behavior, and storage after the run completes.
+- Use that real embedding set for exhaustive vector, BM25, and RRF retrieval comparison.
+
+### Code review instructions
+
+Review `scripts/02-geppetto-ollama-embedding-probe.go` for the `--base-url` route and `cmd/rag-eval/cmds/embedding/build_immutable.go` for the real build invocation. Check both tmux sessions with `tmux capture-pane` before assuming a run stopped.
+
+### Technical details
+
+```text
+rag-eval process --base-url 127.0.0.1:11435
+     -> local SSH tunnel (tmux)
+     -> mimimi-2.local:127.0.0.1:11434
+     -> GPU-loaded nomic-embed-text (768D)
 ```

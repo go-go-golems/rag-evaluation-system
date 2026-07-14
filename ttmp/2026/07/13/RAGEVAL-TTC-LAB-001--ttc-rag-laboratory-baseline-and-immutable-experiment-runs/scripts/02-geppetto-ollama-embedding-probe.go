@@ -19,6 +19,7 @@ import (
 func main() {
 	logLevel := flag.String("log-level", "info", "zerolog level")
 	engine := flag.String("engine", "nomic-embed-text", "Ollama embedding model")
+	baseURL := flag.String("base-url", "", "optional Ollama base URL, for example http://127.0.0.1:11435 through an SSH tunnel")
 	batchSize := flag.Int("batch-size", 1, "number of texts for GenerateBatchEmbeddings; 1 uses GenerateEmbedding")
 	databasePath := flag.String("db", "", "RAG SQLite database; requires --chunk-set-id")
 	chunkSetID := flag.String("chunk-set-id", "", "immutable chunk set ID; requires --db")
@@ -29,7 +30,7 @@ func main() {
 		log.Fatal().Err(err).Msg("parse log level")
 	}
 	zerolog.SetGlobalLevel(level)
-	resolved, err := embedding.ResolveProvider(context.Background(), embedding.ProviderConfig{Type: "ollama", Engine: *engine, Dimensions: 768, CacheType: "none"})
+	resolved, err := embedding.ResolveProvider(context.Background(), embedding.ProviderConfig{Type: "ollama", Engine: *engine, Dimensions: 768, BaseURL: *baseURL, CacheType: "none"})
 	if err != nil {
 		log.Fatal().Err(err).Msg("resolve Geppetto Ollama embedding provider")
 	}
