@@ -57,8 +57,8 @@ func OpenSQLite(options OpenOptions) (*Laboratory, error) {
 	queries := db.NewQueries(database)
 	service := experimentrun.NewService(queries)
 	lab := NewLaboratory(NewSQLiteCatalog(queries), service, options.AllowRuns)
+	lab.executor = NewExecutor(NewSQLiteChannelRetriever(queries), service)
 	if options.QueryEmbedder != nil {
-		lab.executor = NewExecutor(NewSQLiteChannelRetriever(queries), service)
 		lab.embedder = options.QueryEmbedder
 	}
 	lab.close = database.Close
