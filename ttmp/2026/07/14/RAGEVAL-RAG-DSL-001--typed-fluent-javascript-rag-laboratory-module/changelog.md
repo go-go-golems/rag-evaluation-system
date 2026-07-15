@@ -49,3 +49,13 @@ Implemented native JavaScript RAG module, explicit laboratory persistence/start,
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/gojamodules/rag/module.go — Public require(rag) API
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/laboratory.go — Append-only persistence/start boundary
 
+
+## 2026-07-15
+
+Migrated rag-eval-js to xgoja/v2, packaged the RAG provider, generated declarations, and added runnable RAG scripts (commit 7b74539).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/examples/rag-lab-js/README.md — Operator example instructions
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/xgoja/providers/rag/provider.go — Generated runtime provider
+

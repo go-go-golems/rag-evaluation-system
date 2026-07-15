@@ -17,6 +17,12 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: repo://cmd/rag-eval/jsverbs/capabilities.js
+      Note: Static module probe updated for xgoja v2 in Step 7 commit 7b74539
+    - Path: repo://cmd/rag-eval/xgoja.yaml
+      Note: Native xgoja v2 RAG runtime selection and declaration artifact in Step 7 commit 7b74539
+    - Path: repo://examples/rag-lab-js/01-plan-only.js
+      Note: Copy-paste pure JS RAG plan example in Step 7 commit 7b74539
     - Path: repo://internal/db/db.go
       Note: Migration V4 evaluation and representation artifact tables added in Step 5 commit 3b6dc55
     - Path: repo://internal/experimentspec/specification.go
@@ -41,12 +47,15 @@ RelatedFiles:
       Note: Explicit persisted/run laboratory boundary added in Step 6 commit c46485e
     - Path: repo://pkg/raglab/types.go
       Note: Typed RAG laboratory domain model added in Step 4 commit 31a3c93
+    - Path: repo://pkg/xgoja/providers/rag/provider.go
+      Note: xgoja v2 provider registration added in Step 7 commit 7b74539
 ExternalSources: []
 Summary: Chronological record of the contract-first design work for the typed RAG laboratory JavaScript module.
 LastUpdated: 2026-07-14T22:09:50.352697004-04:00
 WhatFor: Preserve decisions, evidence, and the next implementation steps for the ticket.
 WhenToUse: Read before resuming implementation or reviewing why a public API decision was made.
 ---
+
 
 
 
@@ -465,7 +474,7 @@ append-only event ordering, or terminal-summary restrictions.
 
 ### Prompt Context
 
-**User prompt (verbatim):** "commit, do 1 - 5 and implement. 
+**User prompt (verbatim):** "commit, do 1 - 5 and implement.
 
 Keep a detailed diary as you work (se skill) and commit at appropriate intervals."
 
@@ -590,4 +599,157 @@ const plan = rag.experiment("hybrid", (e) => e
 
 const report = plan.validate(lab); // no writes
 if (report.ok) lab.start(plan);    // creates immutable spec + append-only run
+```
+
+## Step 7: Package the RAG module for generated xgoja binaries
+
+This checkpoint moves the JavaScript API from a direct-Goja test fixture to a
+generated `rag-eval-js` binary. A provider package selects `require("rag")`
+in xgoja/v2, carries its TypeScript descriptor, and has a generated-runtime
+test. The command specification is now a native v2 plan instead of the legacy
+runtime-profile format that current xgoja commands reject.
+
+The work also made the public projection honest. An end-to-end example showed
+that `toSpec()` was returning Go's PascalCase struct fields even though the API
+and TypeScript declaration promise lower-camel keys. The adapter now constructs
+the JavaScript projection explicitly and a runtime test prevents a regression.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 6)
+
+**Assistant interpretation:** Complete the generated-runtime, example, and
+validation portion of the requested implementation in small committed steps.
+
+**Inferred user intent:** Be able to build `rag-eval-js` and immediately try
+the fluent RAG authoring API without relying on a hand-wired Go test runtime.
+
+**Commit (code):** `7b74539f8629f01b996d388f1817b1a328d72b7f` — "feat: package RAG module for xgoja runtime"
+
+### What I did
+
+- Added `pkg/xgoja/providers/rag`, which registers the native module,
+  TypeScript descriptor, and a generated `app.RuntimePlan` smoke test.
+- Replaced `cmd/rag-eval/xgoja.yaml` with a native `schema: xgoja/v2` plan:
+  providers, top-level runtime modules, jsverb source, built-in commands,
+  binary artifact, and `.d.ts` artifact are now explicit.
+- Added `rag` to the runtime selection and migrated the old dynamic
+  `require(name)` capability probe to a closed list of literal requires,
+  required by xgoja/v2 source-graph validation.
+- Removed obsolete `allowRegistryLoad` and `allowNetwork` provider config from
+  the Geppetto selection; the current provider schema exposes profile and turn
+  store fields instead.
+- Added two copy/paste examples under `examples/rag-lab-js/`: a pure
+  canonical-plan script and an explicit validate/persist/start script with
+  unmistakable immutable-ID placeholders.
+- Changed `specValue` to produce lower-camel plain JavaScript maps for nested
+  artifacts, filters, retrieval channels/fusion, representations, metrics,
+  and provenance. Added a test that rejects leaked `CorpusSnapshot` keys.
+- Ran provider/module tests, `xgoja doctor`, `xgoja gen-dts`, an xgoja binary
+  build, a `require("rag")` eval smoke test, and the pure example script.
+
+### Why
+
+`modules.Register` alone only helps direct Go embedding. The operator-facing
+binary must use an xgoja provider and runtime selection so its module set,
+declaration output, command surface, and generated imports are all derived
+from one plan. The same rule requires a static source graph: a dynamic module
+name makes it impossible for xgoja to prove which native modules the binary
+needs.
+
+### What worked
+
+- `xgoja doctor -f cmd/rag-eval/xgoja.yaml` validates the v2 plan and resolves
+  the local Goja, Geppetto, and rag-evaluation modules through the workspace;
+  it resolves released goja-text `v0.1.2` by version.
+- `xgoja gen-dts ... --out /tmp/rag-eval-js.d.ts` emits `declare module "rag"`
+  with the expected `Experiment` and `experiment` declarations.
+- `xgoja build ... --output /tmp/rag-eval-js` succeeds. The generated binary
+  reports `{ "experiment":"function", "version":"v1" }` for
+  `require("rag")`, and runs the pure plan example successfully.
+- The example now displays `corpusSnapshot`, `topK`, `rankConstant`, and
+  `relevanceAt` in lower camel case, matching the normative API and DTS.
+
+### What didn't work
+
+- Initial v2 doctor validation failed with:
+  `capabilities.js contains dynamic non-literal require import`.
+  `cmd/rag-eval/jsverbs/capabilities.js` used `require(name)` inside a loop.
+  Replacing the loop values with literal loader lambdas retained the probe
+  while satisfying the closed dependency graph.
+- Strict declaration generation failed because the already-selected Geppetto
+  provider has no TypeScript descriptor:
+  `runtime module geppetto.geppetto as "geppetto" has no TypeScript descriptor`.
+  The RAG module has a descriptor. The runtime's dts artifact is deliberately
+  non-strict until Geppetto supplies one; Geppetto was not removed or hidden.
+- The first built binary failed at startup because legacy xgoja config fields
+  remained: `unknown xgoja config field "allowNetwork" in section
+  "geppetto-xgoja"`. Removing the obsolete fields made the binary start.
+- The first plan-only smoke output revealed Go field names such as
+  `CorpusSnapshot` and `TopK`. This was a projection bug in `specValue`, not a
+  hash or builder bug; the explicit map projection and test fixed it.
+
+### What I learned
+
+- xgoja/v2 uses one top-level runtime module selection; legacy per-command
+  runtime profiles and package arrays are migration input only.
+- A provider descriptor is a runtime capability contract as well as editor
+  metadata. Strict declaration completeness cannot succeed until every
+  selected provider provides one.
+- Goja's default export of Go structs does not respect JSON tags for the
+  plain-object contract expected here. Public JavaScript projections must be
+  deliberately encoded.
+
+### What was tricky to build
+
+The workspace no longer contains goja-text as a sibling module, while its
+released `v0.1.2` API is intended for this generated runtime. The v2 plan uses
+the released version rather than a broken relative replacement, while the
+workspace resolves current local Goja and Geppetto checkouts. Separately, the
+RAG spec has a Go JSON/storage representation and a JavaScript representation;
+using Go structs directly blurred that boundary. The adapter now has a clear,
+testable JavaScript codec without changing the canonical persisted model.
+
+### What warrants a second pair of eyes
+
+- Review whether all desired Geppetto JavaScript exports should receive a
+  TypeScript descriptor in the Geppetto repository, then restore `strict: true`
+  on the dts artifact. This is an existing runtime-wide declaration gap.
+- Review the public `toSpec()` map for the desired omission policy for empty
+  optional arrays/maps. The keys and casing now match the contract; values are
+  intentionally explicit so scripts can inspect the complete plan.
+
+### What should be done in the future
+
+- Add Geppetto TypeScript declaration support and turn the generated runtime's
+  declaration artifact back to strict mode.
+- Implement executor task 11: run the selected lexical/vector channels,
+  persist every query trace, and complete a terminal run summary.
+
+### Code review instructions
+
+- Start with `pkg/xgoja/providers/rag/provider.go` and its generated-runtime
+  test, then inspect `cmd/rag-eval/xgoja.yaml` as the operator-facing module
+  selection.
+- Compare `specValue` and its helpers in `pkg/gojamodules/rag/module.go` with
+  the API reference's canonical-specification section.
+- Run:
+
+  ```bash
+  GOWORK=off go test ./pkg/gojamodules/rag ./pkg/xgoja/providers/rag -count=1
+  xgoja doctor -f cmd/rag-eval/xgoja.yaml
+  xgoja gen-dts -f cmd/rag-eval/xgoja.yaml --out /tmp/rag-eval-js.d.ts
+  xgoja build -f cmd/rag-eval/xgoja.yaml --output /tmp/rag-eval-js
+  /tmp/rag-eval-js run examples/rag-lab-js/01-plan-only.js
+  ```
+
+### Technical details
+
+```text
+cmd/rag-eval/xgoja.yaml
+  └── provider rag-evaluation-system
+        └── runtime module rag as "rag"
+              └── require("rag") in generated rag-eval-js
+                    ├── plan-only authoring / validation
+                    └── explicit laboratory persistence / submission
 ```
