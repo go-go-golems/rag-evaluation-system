@@ -87,6 +87,20 @@ func RegisterHandlersWithOptions(mux *http.ServeMux, database *sql.DB, opts Opti
 	mux.HandleFunc("GET /api/v1/corpus/sources", h.handleCorpusSources)
 	mux.HandleFunc("GET /api/v1/corpus/documents", h.handleCorpusDocuments)
 	mux.HandleFunc("GET /api/v1/corpus/documents/{id}", h.handleCorpusDocumentDetail)
+
+	// Immutable experiment laboratory
+	mux.HandleFunc("GET /api/v1/lab/catalog", h.handleLabCatalog)
+	mux.HandleFunc("GET /api/v1/lab/specifications", h.handleListExperimentSpecifications)
+	mux.HandleFunc("POST /api/v1/lab/specifications", h.handleCreateExperimentSpecification)
+	mux.HandleFunc("GET /api/v1/lab/specifications/{id}", h.handleGetExperimentSpecification)
+	mux.HandleFunc("GET /api/v1/lab/runs", h.handleListExperimentRuns)
+	mux.HandleFunc("POST /api/v1/lab/specifications/{id}/runs", h.handleCreateExperimentRun)
+	mux.HandleFunc("GET /api/v1/lab/runs/{id}", h.handleGetExperimentRun)
+	mux.HandleFunc("GET /api/v1/lab/runs/{id}/traces", h.handleListExperimentRunTraces)
+	mux.HandleFunc("POST /api/v1/lab/runs/{id}/events", h.handleAppendExperimentRunEvent)
+	mux.HandleFunc("POST /api/v1/lab/runs/{id}/traces", h.handleRecordExperimentQueryTrace)
+	mux.HandleFunc("POST /api/v1/lab/runs/{id}/complete", h.handleCompleteExperimentRun)
+	mux.HandleFunc("GET /api/v1/lab/comparison", h.handleCompareExperimentRuns)
 }
 
 type handler struct {

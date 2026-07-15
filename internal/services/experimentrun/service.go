@@ -159,19 +159,29 @@ func (s *Service) ListSpecifications(ctx context.Context) ([]Specification, erro
 		return nil, errors.Wrap(err, "list experiment specifications")
 	}
 	defer rows.Close()
-	var result []Specification
+	var ids []string
 	for rows.Next() {
 		var id string
 		if err := rows.Scan(&id); err != nil {
 			return nil, err
 		}
+		ids = append(ids, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	result := make([]Specification, 0, len(ids))
+	for _, id := range ids {
 		item, err := s.GetSpecification(ctx, id)
 		if err != nil {
 			return nil, err
 		}
 		result = append(result, *item)
 	}
-	return result, rows.Err()
+	return result, nil
 }
 
 func (s *Service) CreateRun(ctx context.Context, specificationID string) (*Run, error) {
@@ -335,19 +345,29 @@ func (s *Service) ListRuns(ctx context.Context, specificationID string) ([]Run, 
 		return nil, errors.Wrap(err, "list experiment runs")
 	}
 	defer rows.Close()
-	var result []Run
+	var ids []string
 	for rows.Next() {
 		var id string
 		if err := rows.Scan(&id); err != nil {
 			return nil, err
 		}
+		ids = append(ids, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	result := make([]Run, 0, len(ids))
+	for _, id := range ids {
 		run, err := s.GetRun(ctx, id)
 		if err != nil {
 			return nil, err
 		}
 		result = append(result, *run)
 	}
-	return result, rows.Err()
+	return result, nil
 }
 
 func (s *Service) ListQueryTraces(ctx context.Context, runID string) ([]QueryTrace, error) {

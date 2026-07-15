@@ -25,6 +25,10 @@ RelatedFiles:
       Note: Glazed immutable TTC snapshot command (commit c846043)
     - Path: repo://cmd/rag-eval/cmds/embedding/build_immutable.go
       Note: Deadline control and operator-facing long-run behavior (commit 4c7d448)
+    - Path: repo://docs/guides/ttc-rag-laboratory.md
+      Note: Operator workflow and API reference
+    - Path: repo://internal/api/experiment_handlers.go
+      Note: Immutable laboratory REST API endpoints
     - Path: repo://internal/chunking/chunker.go
       Note: Exact source-range implementation correction (commit ecd8f2a)
     - Path: repo://internal/db/db.go
@@ -59,6 +63,8 @@ RelatedFiles:
       Note: New evaluation authoring and adjudication decision record
     - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/02-ttc-baseline-evaluation-dataset-v1-candidate-cards.md
       Note: Consolidated 20-card source-validated draft described in Step 5
+    - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/03-ttc-baseline-v1-human-adjudication-packet.md
+      Note: Human authority gate for candidate cards
     - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/01-validate-ttc-baseline-evaluation-cards.sh
       Note: Validation command and initial failures recorded in Step 5
     - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/02-geppetto-ollama-embedding-probe.go
@@ -69,12 +75,19 @@ RelatedFiles:
       Note: Runs hydrated immutable BM25/vector/RRF traces with measured timings
     - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/05-score-candidate-retrieval-traces.go
       Note: Exports candidate named judgments and scores quality latency cost and storage
+    - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/06-import-candidate-baseline-run.go
+      Note: Imports real 20-card candidate baseline as append-only run
+    - Path: repo://web/src/components/pages/EvaluationPage/EvaluationPage.tsx
+      Note: Laboratory specification run and trace inspector UI
+    - Path: repo://web/src/services/api.ts
+      Note: RTK Query laboratory contracts and hooks
 ExternalSources: []
 Summary: Chronological record of workspace discovery, TTC source reconstruction, ticket setup, architecture research, design decisions, validation, and delivery.
 LastUpdated: 2026-07-14T21:29:00-04:00
 WhatFor: Preserve the exact evidence, commands, failures, corrections, and reasoning used to create the TTC baseline and immutable-run implementation plan.
 WhenToUse: Read when reviewing the ticket, reproducing the TTC export, continuing implementation, or diagnosing assumptions in the design guide.
 ---
+
 
 
 
@@ -1456,4 +1469,110 @@ immutable inputs + canonical config
   -> [created, progress*, terminal] append-only event stream
   -> one immutable query trace per card
   -> one immutable terminal metrics/cost/storage summary
+```
+
+## Step 17: Expose the laboratory through the API, React UI, and real baseline run
+
+This checkpoint connects the append-only persistence model to a usable local application. The API exposes a read-only artifact catalog, specification creation, run creation, run/event/trace reading, and two-run comparison. The Evaluation view is now the RAG Laboratory: it selects compatible immutable inputs, creates a canonical specification, starts an append-only run, and inspects persisted per-query traces. A completed real 20-card TTC baseline was imported into the local database so the page has actual evidence to inspect rather than placeholder data.
+
+The implementation also adds a human adjudication packet. It does not convert the model- and source-assisted candidate cards into false ground truth. It gives a TTC reviewer a concrete card-by-card decision sheet, evidence requirements, an abstention rule, and a separate source-precedence gate for the cancellation-policy contradiction.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue, don't stop unless you legitimately don't know how to go forward"
+
+**Assistant interpretation:** Continue autonomous implementation and validation through the remaining API, UI, documentation, and testable baseline milestones.
+
+**Inferred user intent:** Leave a real laboratory application and reproducible evidence trail, not merely service-layer code.
+
+**Commit (code and ticket work):** pending at time of this diary entry.
+
+### What I did
+
+- Added `/api/v1/lab/...` endpoints for artifact catalog, specifications, runs, events, traces, terminal completion, and comparison.
+- Added RTK Query types and hooks, including explicit representation of immutable IDs, run events, terminal summaries, and query traces.
+- Replaced the Evaluation placeholder with a form-driven RAG Laboratory view, a specification/run list, trace inspector, and comparison selector.
+- Added a Storybook `BaselineRunInspector` state backed by the shared mock API provider.
+- Added ticket script `06-import-candidate-baseline-run.go`, which creates a canonical specification and imports the measured 20-card trace/metric artifacts as an append-only completed run.
+- Executed that script. It created specification `sha256:eb5394310850984ace1179968cbf8c0e2961c0f6d73699c4ec40eff1ff5bc751` and run `run_56ba7b2a9cac6486a65cc21a77251239`, with 20 immutable query traces.
+- Added the concrete human adjudication packet and `docs/guides/ttc-rag-laboratory.md` operator/API guide.
+- Fixed two bugs found by the new validation path: RRF final scores had been contaminated by raw channel score, and SQLite list methods attempted nested queries while holding the only database cursor open.
+
+### Why
+
+The user’s goal is an environment for gaining intuition about RAG quality. That requires seeing the selected corpus/index identities, changing a retrieval plan deliberately, and drilling from a run metric down to source-backed evidence. It also requires a clear distinction between a candidate evaluation set and a human-approved benchmark; otherwise a polished UI can conceal uncertain truth.
+
+### What worked
+
+The real server smoke test ran in `tmux` at `127.0.0.1:8772` and returned:
+
+```json
+{
+  "runs": [{
+    "id": "run_56ba7b2a9cac6486a65cc21a77251239",
+    "status": "succeeded",
+    "event_count": 4
+  }]
+}
+```
+
+The trace endpoint returned 20 items beginning with `ttc-eval-001`, and the SPA served the current JavaScript bundle. The following validations passed:
+
+```bash
+GOWORK=off go test ./internal/services/experimentrun ./internal/api -count=1
+pnpm --dir web typecheck
+pnpm --dir web build
+```
+
+The final validation sweep also passed `GOWORK=off go test ./... -count=1`, `GOWORK=off go build ./...`, and `pnpm --dir web build-storybook`. The existing pinned Go linter remains unavailable because it was built with Go 1.25.5 while the repository targets Go 1.26.5; this known toolchain mismatch is recorded in Step 15 and is not represented as a passing lint result.
+
+The shared component workspace initially lacked installed dependencies. A lockfile-pinned `pnpm install --frozen-lockfile` resolved that environment issue. TypeScript then identified a stale `ir.ts` workspace path and a required `ContextDiagramPanel.styleSet` prop, both corrected before the successful build.
+
+### What didn't work
+
+The first live run-list smoke test timed out. The cause was SQLite’s deliberate one-connection configuration: `ListRuns` and `ListSpecifications` held an open ID cursor and called a hydration method that needed a second query. With one connection, that deadlocked. The service now collects IDs, closes the cursor, then hydrates each item. A regression assertion covers both list methods, and the restarted server returned the real run and traces.
+
+The current web bundle is approximately 512 kB minified and Vite reports its standard chunk-size warning. This does not block local operation, but future UI work should split reference/visualizer pages from the laboratory entry path.
+
+### What I learned
+
+- The precise point at which immutable data becomes useful is trace inspection: a metric summary alone cannot show title, URL, source range, or RRF component evidence.
+- The correct API unit is a specification plus a run. Creating another run from an unchanged specification is valid because it records a new execution observation; recreating a specification is reuse, not a duplicate.
+- SQLite cursor lifetime is part of application architecture when `SetMaxOpenConns(1)` is intentional. Service list operations must not nest hydration queries before closing rows.
+- A reviewer packet can be actionable without pretending that review has occurred. The packet is now the explicit authority gate for `blhh`.
+
+### What was tricky to build
+
+The form filters chunk sets, BM25 artifacts, and embedding sets by their immutable parent IDs. This is not merely a convenience: it prevents a UI user from assembling an invalid experiment where an index or embedding set belongs to a different chunk set than the selected corpus.
+
+The baseline importer is intentionally append-only. Re-running it reuses the same specification but creates a new run, preserving the historical observation rather than replacing it. The import’s summary contains the measured retrieval metrics, latency, provider-billed cost statement, and storage accounting already recorded by the ticket scripts.
+
+### What warrants a second pair of eyes
+
+- Review whether a future API should run retrieval directly or retain the present boundary where a controlled executor/importer records immutable traces.
+- Review UI copy that says “Start append-only run”: a newly created run has no traces until an executor records them. This is stated in the trace inspector but could later be made a more prominent workflow state.
+- Review API authorization if this local-only server becomes network-accessible; the current scope assumes trusted local use.
+
+### What should be done in the future
+
+- Obtain TTC human review and then persist a new immutable, `human-reviewed-published` evaluation dataset instead of changing candidate data.
+- Add a real executor endpoint or queue that executes a specification against a selected local/remote embedding provider and appends traces automatically.
+- Add experiment comparison visualizations that compute metric deltas and rank/citation differences, rather than only returning both traces.
+- Code-split the SPA if production bundle size becomes material.
+
+### Code review instructions
+
+1. Start at `internal/api/experiment_handlers.go` and match each route to `experimentrun.Service`.
+2. Read the UI’s `EvaluationPage.tsx` and confirm artifact compatibility filtering and explicit candidate-dataset labeling.
+3. Run ticket script 06, then query `/api/v1/lab/runs` and `/api/v1/lab/runs/{id}/traces`.
+4. Read the human adjudication packet before interpreting the candidate baseline metrics as benchmark quality.
+
+### Technical details
+
+```text
+artifact catalog -> compatible-input specification form -> SHA-256 specification
+     -> append-only run -> events + immutable per-card traces -> terminal summary
+     -> API/RTK Query -> trace inspector and two-run comparison
+
+candidate cards --human reviewer packet--> future published evaluation dataset
 ```

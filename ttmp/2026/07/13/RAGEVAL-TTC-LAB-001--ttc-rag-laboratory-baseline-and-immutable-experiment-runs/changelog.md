@@ -82,3 +82,7 @@ Executed and scored the first 20-card immutable TTC retrieval comparison; added 
 ## 2026-07-14
 
 Added append-only experiment specifications, run events, query traces, terminal summaries, and offline lifecycle coverage; corrected RRF score initialization nondeterminism.
+
+## 2026-07-14
+
+Exposed immutable experiment laboratory APIs and React trace-inspection UI; imported the real 20-card baseline run; added human adjudication packet and operator guide.

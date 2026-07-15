@@ -83,4 +83,14 @@ func TestAppendOnlySpecificationRunEventsTraceAndSummary(t *testing.T) {
 	if _, err := database.Exec(`UPDATE experiment_runs SET experiment_spec_id = ? WHERE id = ?`, spec.ID, run.ID); err == nil {
 		t.Fatal("expected immutable-run update trigger to reject update")
 	}
+	// The database deliberately has one connection. List methods must close
+	// their ID cursor before hydrating each item through a second query.
+	specifications, err := service.ListSpecifications(context.Background())
+	if err != nil || len(specifications) != 1 || specifications[0].ID != spec.ID {
+		t.Fatalf("specifications = %#v err=%v", specifications, err)
+	}
+	runs, err := service.ListRuns(context.Background(), spec.ID)
+	if err != nil || len(runs) != 1 || runs[0].ID != run.ID || runs[0].Status != "succeeded" {
+		t.Fatalf("runs = %#v err=%v", runs, err)
+	}
 }
