@@ -561,11 +561,13 @@ discard hard queries.
 ### 8.1 Canonical JSON contract
 
 `.toSpec()` returns a plain object which is JSON serializable without special
-handling. The exact schema version is `rag-eval.experiment/v1`.
+handling. Its persisted immutable-contract schema version is
+`rag-eval-experiment-spec/v1`. The JavaScript projection uses lower-camel keys;
+the storage manifest uses the equivalent snake-case Go JSON fields.
 
 ```ts
 interface ExperimentSpecification {
-  schemaVersion: "rag-eval.experiment/v1";
+  schemaVersion: "rag-eval-experiment-spec/v1";
   fingerprint: string;                  // sha256:<hex>, computed from canonical payload
   name: string;
   provenance: { fragments: string[]; notes: string[]; tags: Record<string, string> };
@@ -592,7 +594,7 @@ An abbreviated shape is:
 
 ```json
 {
-  "schemaVersion": "rag-eval.experiment/v1",
+  "schemaVersion": "rag-eval-experiment-spec/v1",
   "fingerprint": "sha256:...",
   "name": "ttc-vector-and-rrf",
   "inputs": {

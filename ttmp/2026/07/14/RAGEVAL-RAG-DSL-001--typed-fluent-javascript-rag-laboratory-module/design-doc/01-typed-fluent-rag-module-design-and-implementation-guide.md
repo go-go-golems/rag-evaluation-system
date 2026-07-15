@@ -740,6 +740,7 @@ correctness.
 | `cmd/rag-eval/jsverbs/explorer.js` | Current corpus exploration verbs. |
 | `docs/howtos/how-to-write-rag-eval-js-scripts.md` | Operator-facing xgoja/jsverb explanation. |
 | `internal/services/experimentrun/service.go` | Immutable specification/run persistence authority. |
+| `internal/experimentspec/specification.go` | Shared schema, manifest, normalization, and fingerprint contract. |
 | `internal/services/immutableretrieval/bm25.go` | Lexical retrieval implementation. |
 | `internal/services/immutableretrieval/vector.go` | Vector/RRF/collapse baseline behavior. |
 | `internal/db/db.go` | Schema and append-only database constraints. |
