@@ -2,6 +2,7 @@ package experimentrun
 
 import (
 	"context"
+	"encoding/json"
 	"path/filepath"
 	"testing"
 
@@ -42,6 +43,13 @@ func TestAppendOnlySpecificationRunEventsTraceAndSummary(t *testing.T) {
 	spec, reused, err := service.CreateSpecification(context.Background(), input)
 	if err != nil || reused {
 		t.Fatalf("first specification = %#v reused=%v err=%v", spec, reused, err)
+	}
+	var manifest map[string]any
+	if err := json.Unmarshal(spec.Manifest, &manifest); err != nil {
+		t.Fatalf("decode exported manifest: %v", err)
+	}
+	if manifest["schema_version"] != "rag-eval-experiment-spec/v1" {
+		t.Fatalf("exported manifest schema_version = %#v", manifest["schema_version"])
 	}
 	second, reused, err := service.CreateSpecification(context.Background(), input)
 	if err != nil || !reused || second.ID != spec.ID {

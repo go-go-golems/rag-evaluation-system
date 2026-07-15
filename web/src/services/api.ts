@@ -339,6 +339,7 @@ export interface ExperimentSpecificationInput {
 export interface ExperimentSpecification extends ExperimentSpecificationInput {
 	id: string;
 	schema_version: string;
+	manifest: Record<string, unknown>;
 	created_at: string;
 }
 
@@ -595,6 +596,10 @@ export const ragApi = createApi({
 		listExperimentSpecifications: builder.query<ExperimentSpecification[], void>({
 			query: () => "lab/specifications",
 			transformResponse: (response: { items: ExperimentSpecification[] }) => response.items ?? [],
+			providesTags: ["Lab"],
+		}),
+		getExperimentSpecification: builder.query<ExperimentSpecification, string>({
+			query: (id) => `lab/specifications/${encodeURIComponent(id)}`,
 			providesTags: ["Lab"],
 		}),
 		createExperimentSpecification: builder.mutation<
@@ -922,6 +927,7 @@ export const {
 	// Immutable experiment laboratory
 	useGetLabCatalogQuery,
 	useListExperimentSpecificationsQuery,
+	useGetExperimentSpecificationQuery,
 	useCreateExperimentSpecificationMutation,
 	useListExperimentRunsQuery,
 	useCreateExperimentRunMutation,

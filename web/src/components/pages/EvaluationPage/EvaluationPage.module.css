@@ -95,3 +95,19 @@
 	white-space: pre-wrap;
 	font-size: 11px;
 }
+
+.specificationLink {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	border: 1px solid var(--rag-color-border, #c9ccd1);
+	border-radius: 6px;
+	padding: 10px;
+}
+
+.specificationLink a {
+	color: var(--rag-color-primary, #0d6efd);
+	font: var(--rag-font-role-body);
+	font-weight: 600;
+}

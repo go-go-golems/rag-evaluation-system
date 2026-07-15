@@ -232,6 +232,15 @@ const labSpecification = {
 	embedding_set_id: "sha256:embeddings-001",
 	evaluation_dataset_id: "candidate:ttc-baseline-v1",
 	config: { channels: ["bm25", "vector"], rrf_k: 60, limit: 10 },
+	manifest: {
+		schema_version: "rag-eval-experiment-spec/v1",
+		corpus_snapshot_id: "sha256:corpus-001",
+		chunk_set_id: "sha256:chunks-001",
+		bm25_artifact_id: "sha256:bm25-001",
+		embedding_set_id: "sha256:embeddings-001",
+		evaluation_dataset_id: "candidate:ttc-baseline-v1",
+		config: { channels: ["bm25", "vector"], rrf_k: 60, limit: 10 },
+	},
 	created_at: now,
 };
 
@@ -242,17 +251,35 @@ const labRun = {
 	status: "succeeded",
 	events: [
 		{ sequence: 1, type: "created", occurred_at: now, payload: {} },
-		{ sequence: 2, type: "candidate_trace_imported", occurred_at: now, payload: { query_count: 20 } },
+		{
+			sequence: 2,
+			type: "candidate_trace_imported",
+			occurred_at: now,
+			payload: { query_count: 20 },
+		},
 		{ sequence: 3, type: "terminal", occurred_at: now, payload: { status: "succeeded" } },
 	],
-	summary: { status: "succeeded", finished_at: now, metrics: { mrr: 0.8 }, cost: { billed: 0 }, storage: { trace_bytes: 3436858 }, error: {} },
+	summary: {
+		status: "succeeded",
+		finished_at: now,
+		metrics: { mrr: 0.8 },
+		cost: { billed: 0 },
+		storage: { trace_bytes: 3436858 },
+		error: {},
+	},
 };
 
 const labTraces = [
 	{
 		query_card_id: "ttc-eval-001",
-		trace: { query: "What mature height does Thuja Green Giant have?", hybrid: [{ title: "Thuja Green Giant", rank: 1 }] },
-		metrics: { recall_at_10: 1 }, timing: { total_ms: 216 }, cost: { billed_usd: 0 }, storage: {},
+		trace: {
+			query: "What mature height does Thuja Green Giant have?",
+			hybrid: [{ title: "Thuja Green Giant", rank: 1 }],
+		},
+		metrics: { recall_at_10: 1 },
+		timing: { total_ms: 216 },
+		cost: { billed_usd: 0 },
+		storage: {},
 	},
 ];
 
@@ -314,17 +341,43 @@ function mockPayload(url: URL, method: string): unknown {
 	}
 
 	if (path === "sources") return { items: sources };
-	if (path === "lab/catalog") return {
-		snapshots: [{ id: "sha256:corpus-001", document_count: 200, created_at: now }],
-		chunk_sets: [{ id: "sha256:chunks-001", corpus_snapshot_id: "sha256:corpus-001", chunk_plan_id: "sha256:plan-001", chunk_count: 2024, created_at: now }],
-		embedding_sets: [{ id: "sha256:embeddings-001", chunk_set_id: "sha256:chunks-001", embedding_plan_id: "sha256:embedding-plan-001", embedding_count: 2024, created_at: now }],
-		bm25_artifacts: [{ id: "sha256:bm25-001", chunk_set_id: "sha256:chunks-001", chunk_count: 2024, created_at: now }],
-	};
+	if (path === "lab/catalog")
+		return {
+			snapshots: [{ id: "sha256:corpus-001", document_count: 200, created_at: now }],
+			chunk_sets: [
+				{
+					id: "sha256:chunks-001",
+					corpus_snapshot_id: "sha256:corpus-001",
+					chunk_plan_id: "sha256:plan-001",
+					chunk_count: 2024,
+					created_at: now,
+				},
+			],
+			embedding_sets: [
+				{
+					id: "sha256:embeddings-001",
+					chunk_set_id: "sha256:chunks-001",
+					embedding_plan_id: "sha256:embedding-plan-001",
+					embedding_count: 2024,
+					created_at: now,
+				},
+			],
+			bm25_artifacts: [
+				{
+					id: "sha256:bm25-001",
+					chunk_set_id: "sha256:chunks-001",
+					chunk_count: 2024,
+					created_at: now,
+				},
+			],
+		};
 	if (path === "lab/specifications") return { items: [labSpecification] };
+	if (path === `lab/specifications/${labSpecification.id}`) return labSpecification;
 	if (path === "lab/runs") return { items: [labRun] };
 	if (path === `lab/runs/${labRun.id}`) return labRun;
 	if (path === `lab/runs/${labRun.id}/traces`) return { items: labTraces };
-	if (path === "lab/comparison") return { left: labRun, right: labRun, left_traces: labTraces, right_traces: labTraces };
+	if (path === "lab/comparison")
+		return { left: labRun, right: labRun, left_traces: labTraces, right_traces: labTraces };
 	if (path === "documents") return { items: documents };
 	if (path.endsWith("/chunks")) return { items: chunks };
 	if (path === "chunking-strategies") return { items: strategies };

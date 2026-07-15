@@ -6,6 +6,7 @@ import {
 	useCreateExperimentRunMutation,
 	useCreateExperimentSpecificationMutation,
 	useGetExperimentComparisonQuery,
+	useGetExperimentSpecificationQuery,
 	useGetLabCatalogQuery,
 	useListExperimentRunTracesQuery,
 	useListExperimentRunsQuery,
@@ -23,13 +24,16 @@ export function EvaluationPage() {
 	const catalog = useGetLabCatalogQuery();
 	const specifications = useListExperimentSpecificationsQuery();
 	const runs = useListExperimentRunsQuery();
-	const [createSpecification, createSpecificationState] = useCreateExperimentSpecificationMutation();
+	const [createSpecification, createSpecificationState] =
+		useCreateExperimentSpecificationMutation();
 	const [createRun, createRunState] = useCreateExperimentRunMutation();
 	const [snapshotID, setSnapshotID] = useState("");
 	const [chunkSetID, setChunkSetID] = useState("");
 	const [bm25ArtifactID, setBM25ArtifactID] = useState("");
 	const [embeddingSetID, setEmbeddingSetID] = useState("");
-	const [configText, setConfigText] = useState('{"limit":10,"rrf_k":60,"channels":["bm25","vector"]}');
+	const [configText, setConfigText] = useState(
+		'{"limit":10,"rrf_k":60,"channels":["bm25","vector"]}',
+	);
 	const [selectedRunID, setSelectedRunID] = useState("");
 	const [compareRunID, setCompareRunID] = useState("");
 	const [formError, setFormError] = useState("");
@@ -54,13 +58,22 @@ export function EvaluationPage() {
 		if (!chunkSets.some((item) => item.id === chunkSetID)) setChunkSetID(chunkSets[0]?.id ?? "");
 	}, [chunkSets, chunkSetID]);
 	useEffect(() => {
-		if (!bm25Artifacts.some((item) => item.id === bm25ArtifactID)) setBM25ArtifactID(bm25Artifacts[0]?.id ?? "");
+		if (!bm25Artifacts.some((item) => item.id === bm25ArtifactID))
+			setBM25ArtifactID(bm25Artifacts[0]?.id ?? "");
 	}, [bm25Artifacts, bm25ArtifactID]);
 	useEffect(() => {
-		if (!embeddingSets.some((item) => item.id === embeddingSetID)) setEmbeddingSetID(embeddingSets[0]?.id ?? "");
+		if (!embeddingSets.some((item) => item.id === embeddingSetID))
+			setEmbeddingSetID(embeddingSets[0]?.id ?? "");
 	}, [embeddingSets, embeddingSetID]);
 
 	const traces = useListExperimentRunTracesQuery(selectedRunID, { skip: !selectedRunID });
+	const selectedRun = runs.data?.find((run) => run.id === selectedRunID);
+	const selectedSpecification = useGetExperimentSpecificationQuery(
+		selectedRun?.experiment_spec_id ?? "",
+		{
+			skip: !selectedRun,
+		},
+	);
 	const comparison = useGetExperimentComparisonQuery(
 		{ left: selectedRunID, right: compareRunID },
 		{ skip: !selectedRunID || !compareRunID },
@@ -87,7 +100,9 @@ export function EvaluationPage() {
 		try {
 			await createSpecification(input).unwrap();
 		} catch (error) {
-			setFormError(error instanceof Error ? error.message : "Could not create experiment specification.");
+			setFormError(
+				error instanceof Error ? error.message : "Could not create experiment specification.",
+			);
 		}
 	}
 
@@ -106,8 +121,8 @@ export function EvaluationPage() {
 				<Stack gap="sm">
 					<Text>
 						Create immutable retrieval specifications, inspect append-only runs, and compare
-						query-level evidence. The TTC baseline cards are source-validated candidates;
-						they are not labeled as human-frozen truth.
+						query-level evidence. The TTC baseline cards are source-validated candidates; they are
+						not labeled as human-frozen truth.
 					</Text>
 					<Caption>
 						A specification identifies immutable artifacts. A run records events, traces, and a
@@ -123,7 +138,9 @@ export function EvaluationPage() {
 						<select value={snapshotID} onChange={(event) => setSnapshotID(event.target.value)}>
 							<option value="">Choose snapshot</option>
 							{catalog.data?.snapshots.map((item) => (
-								<option value={item.id} key={item.id}>{shortID(item.id)} · {item.document_count} documents</option>
+								<option value={item.id} key={item.id}>
+									{shortID(item.id)} · {item.document_count} documents
+								</option>
 							))}
 						</select>
 					</label>
@@ -131,29 +148,59 @@ export function EvaluationPage() {
 						Chunk set
 						<select value={chunkSetID} onChange={(event) => setChunkSetID(event.target.value)}>
 							<option value="">Choose chunk set</option>
-							{chunkSets.map((item) => <option value={item.id} key={item.id}>{shortID(item.id)} · {item.chunk_count} chunks</option>)}
+							{chunkSets.map((item) => (
+								<option value={item.id} key={item.id}>
+									{shortID(item.id)} · {item.chunk_count} chunks
+								</option>
+							))}
 						</select>
 					</label>
 					<label>
 						BM25 artifact (optional)
-						<select value={bm25ArtifactID} onChange={(event) => setBM25ArtifactID(event.target.value)}>
+						<select
+							value={bm25ArtifactID}
+							onChange={(event) => setBM25ArtifactID(event.target.value)}
+						>
 							<option value="">No lexical channel</option>
-							{bm25Artifacts.map((item) => <option value={item.id} key={item.id}>{shortID(item.id)} · {item.chunk_count} chunks</option>)}
+							{bm25Artifacts.map((item) => (
+								<option value={item.id} key={item.id}>
+									{shortID(item.id)} · {item.chunk_count} chunks
+								</option>
+							))}
 						</select>
 					</label>
 					<label>
 						Embedding set (optional)
-						<select value={embeddingSetID} onChange={(event) => setEmbeddingSetID(event.target.value)}>
+						<select
+							value={embeddingSetID}
+							onChange={(event) => setEmbeddingSetID(event.target.value)}
+						>
 							<option value="">No vector channel</option>
-							{embeddingSets.map((item) => <option value={item.id} key={item.id}>{shortID(item.id)} · {item.embedding_count} vectors</option>)}
+							{embeddingSets.map((item) => (
+								<option value={item.id} key={item.id}>
+									{shortID(item.id)} · {item.embedding_count} vectors
+								</option>
+							))}
 						</select>
 					</label>
 					<label className={styles.wide}>
 						Retrieval configuration JSON
-						<textarea rows={3} value={configText} onChange={(event) => setConfigText(event.target.value)} />
+						<textarea
+							rows={3}
+							value={configText}
+							onChange={(event) => setConfigText(event.target.value)}
+						/>
 					</label>
 					<div className={styles.actions}>
-						<button type="submit" disabled={!snapshotID || !chunkSetID || (!bm25ArtifactID && !embeddingSetID) || createSpecificationState.isLoading}>
+						<button
+							type="submit"
+							disabled={
+								!snapshotID ||
+								!chunkSetID ||
+								(!bm25ArtifactID && !embeddingSetID) ||
+								createSpecificationState.isLoading
+							}
+						>
 							{createSpecificationState.isLoading ? "Creating…" : "Create immutable specification"}
 						</button>
 						<Caption>Dataset: {candidateDatasetID}</Caption>
@@ -169,18 +216,39 @@ export function EvaluationPage() {
 						{specifications.data?.map((specification) => (
 							<div className={styles.card} key={specification.id}>
 								<strong title={specification.id}>{shortID(specification.id)}</strong>
-								<Caption>{shortID(specification.chunk_set_id)} · {specification.config.channels ? String(specification.config.channels) : "configured retrieval"}</Caption>
-								<button type="button" onClick={() => startRun(specification.id)} disabled={createRunState.isLoading}>Start append-only run</button>
+								<Caption>
+									{shortID(specification.chunk_set_id)} ·{" "}
+									{specification.config.channels
+										? String(specification.config.channels)
+										: "configured retrieval"}
+								</Caption>
+								<button
+									type="button"
+									onClick={() => startRun(specification.id)}
+									disabled={createRunState.isLoading}
+								>
+									Start append-only run
+								</button>
 							</div>
 						)) ?? <Caption>No immutable specifications yet.</Caption>}
 					</section>
 					<section>
 						<h3>Runs</h3>
 						{runs.data?.map((run) => (
-							<div className={`${styles.card} ${selectedRunID === run.id ? styles.selected : ""}`} key={run.id}>
-								<button type="button" className={styles.runButton} onClick={() => setSelectedRunID(run.id)}>
-									<strong title={run.id}>{shortID(run.id)}</strong><br />
-									<Caption>{run.status} · {run.events.length} event(s)</Caption>
+							<div
+								className={`${styles.card} ${selectedRunID === run.id ? styles.selected : ""}`}
+								key={run.id}
+							>
+								<button
+									type="button"
+									className={styles.runButton}
+									onClick={() => setSelectedRunID(run.id)}
+								>
+									<strong title={run.id}>{shortID(run.id)}</strong>
+									<br />
+									<Caption>
+										{run.status} · {run.events.length} event(s)
+									</Caption>
 								</button>
 							</div>
 						)) ?? <Caption>No runs yet.</Caption>}
@@ -191,7 +259,25 @@ export function EvaluationPage() {
 			{selectedRunID && (
 				<Panel title={`Trace inspector — ${shortID(selectedRunID)}`}>
 					<Stack gap="sm">
-						<Caption>One immutable trace per query card. A newly created run will be empty until an executor/importer records its traces.</Caption>
+						<Caption>
+							One immutable trace per query card. A newly created run will be empty until an
+							executor/importer records its traces.
+						</Caption>
+						{selectedRun && (
+							<div className={styles.specificationLink}>
+								<Caption>
+									Specification {shortID(selectedRun.experiment_spec_id)} ·{" "}
+									{selectedSpecification.data?.schema_version ?? "loading exported manifest…"}
+								</Caption>
+								<a
+									href={`/api/v1/lab/specifications/${encodeURIComponent(selectedRun.experiment_spec_id)}`}
+									target="_blank"
+									rel="noreferrer"
+								>
+									Open exported immutable specification JSON
+								</a>
+							</div>
+						)}
 						<div className={styles.traceGrid}>
 							{traces.data?.map((trace) => (
 								<article className={styles.card} key={trace.query_card_id}>
@@ -203,12 +289,26 @@ export function EvaluationPage() {
 						</div>
 						<label className={styles.compare}>
 							Compare selected run with
-							<select value={compareRunID} onChange={(event) => setCompareRunID(event.target.value)}>
+							<select
+								value={compareRunID}
+								onChange={(event) => setCompareRunID(event.target.value)}
+							>
 								<option value="">Choose another run</option>
-								{runs.data?.filter((run) => run.id !== selectedRunID).map((run) => <option value={run.id} key={run.id}>{shortID(run.id)} · {run.status}</option>)}
+								{runs.data
+									?.filter((run) => run.id !== selectedRunID)
+									.map((run) => (
+										<option value={run.id} key={run.id}>
+											{shortID(run.id)} · {run.status}
+										</option>
+									))}
 							</select>
 						</label>
-						{comparison.data && <Text>Comparison loaded: {comparison.data.left_traces.length} left traces and {comparison.data.right_traces.length} right traces.</Text>}
+						{comparison.data && (
+							<Text>
+								Comparison loaded: {comparison.data.left_traces.length} left traces and{" "}
+								{comparison.data.right_traces.length} right traces.
+							</Text>
+						)}
 					</Stack>
 				</Panel>
 			)}

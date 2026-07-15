@@ -24,15 +24,16 @@ func NewService(queries *db.Queries) *Service { return &Service{queries: queries
 type SpecificationInput = experimentspec.Input
 
 type Specification struct {
-	ID                  string         `json:"id"`
-	SchemaVersion       string         `json:"schema_version"`
-	CorpusSnapshotID    string         `json:"corpus_snapshot_id"`
-	ChunkSetID          string         `json:"chunk_set_id"`
-	BM25ArtifactID      string         `json:"bm25_artifact_id,omitempty"`
-	EmbeddingSetID      string         `json:"embedding_set_id,omitempty"`
-	EvaluationDatasetID string         `json:"evaluation_dataset_id,omitempty"`
-	Config              map[string]any `json:"config"`
-	CreatedAt           string         `json:"created_at"`
+	ID                  string          `json:"id"`
+	SchemaVersion       string          `json:"schema_version"`
+	CorpusSnapshotID    string          `json:"corpus_snapshot_id"`
+	ChunkSetID          string          `json:"chunk_set_id"`
+	BM25ArtifactID      string          `json:"bm25_artifact_id,omitempty"`
+	EmbeddingSetID      string          `json:"embedding_set_id,omitempty"`
+	EvaluationDatasetID string          `json:"evaluation_dataset_id,omitempty"`
+	Config              map[string]any  `json:"config"`
+	Manifest            json.RawMessage `json:"manifest"`
+	CreatedAt           string          `json:"created_at"`
 }
 
 type Event struct {
@@ -123,13 +124,15 @@ func (s *Service) GetSpecification(ctx context.Context, id string) (*Specificati
 	}
 	var result Specification
 	var configJSON string
-	err := s.queries.DB().QueryRowContext(ctx, `SELECT id,schema_version,corpus_snapshot_id,chunk_set_id,COALESCE(bm25_artifact_id,''),COALESCE(embedding_set_id,''),evaluation_dataset_id,config_json,created_at FROM experiment_specs WHERE id=?`, id).Scan(&result.ID, &result.SchemaVersion, &result.CorpusSnapshotID, &result.ChunkSetID, &result.BM25ArtifactID, &result.EmbeddingSetID, &result.EvaluationDatasetID, &configJSON, &result.CreatedAt)
+	var manifestJSON string
+	err := s.queries.DB().QueryRowContext(ctx, `SELECT id,schema_version,corpus_snapshot_id,chunk_set_id,COALESCE(bm25_artifact_id,''),COALESCE(embedding_set_id,''),evaluation_dataset_id,config_json,manifest_json,created_at FROM experiment_specs WHERE id=?`, id).Scan(&result.ID, &result.SchemaVersion, &result.CorpusSnapshotID, &result.ChunkSetID, &result.BM25ArtifactID, &result.EmbeddingSetID, &result.EvaluationDatasetID, &configJSON, &manifestJSON, &result.CreatedAt)
 	if err != nil {
 		return nil, errors.Wrap(err, "get experiment specification")
 	}
 	if err := json.Unmarshal([]byte(configJSON), &result.Config); err != nil {
 		return nil, errors.Wrap(err, "decode experiment specification config")
 	}
+	result.Manifest = json.RawMessage(manifestJSON)
 	return &result, nil
 }
 

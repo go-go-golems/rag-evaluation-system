@@ -26,8 +26,16 @@ with artifacts from the same immutable lineage and set its `database` value.
 The target database must already have the rag-eval migrations applied. The
 script opens the database with `execution: "allowRuns"`, validates the
 catalog, deduplicates the immutable specification, creates a distinct run,
-and appends its `submitted` event. It does not yet execute retrieval; that is
-the executor milestone.
+and appends its `submitted` event. It deliberately stops before retrieval so
+you can inspect the persisted specification and run lifecycle independently.
+
+To execute a vector or hybrid run, copy
+`03-execute-with-geppetto.js`. Replace its explicit artifact IDs, database
+path, profile registry path, and embedding profile name. It resolves the
+profile through `require("geppetto")`, passes `embedder.embed(query)` as the
+required synchronous `queryEmbed` callback, then calls `lab.execute()`.
+Credentials and endpoints stay in the external profile registry; the
+experiment persists only immutable artifact IDs and retrieval policy.
 
 For a read-only compatibility check, change `allowRuns` to `readOnly` and call
 only `experiment.validate(lab)`. `persist` and `start` deliberately fail in
