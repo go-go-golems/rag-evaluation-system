@@ -109,3 +109,14 @@ Step 13: exposed synchronous lab.execute() to JavaScript with an explicit finite
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/gojamodules/rag/module.go — JavaScript execution and query embedding adapter
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/laboratory.go — Atomic public run orchestration
 
+
+## 2026-07-15
+
+Completed operator documentation and immutable-specification inspection for
+the JavaScript RAG laboratory (commit 4cd09ff).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-eval/doc/01-rag-laboratory-javascript.md — Embedded operator tutorial
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/examples/rag-lab-js/03-execute-with-geppetto.js — Geppetto-backed execution example
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/services/experimentrun/service.go — Canonical manifest API response
