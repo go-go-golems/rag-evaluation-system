@@ -746,6 +746,8 @@ correctness.
 | `internal/services/immutableretrieval/bm25.go` | Lexical retrieval implementation. |
 | `internal/services/immutableretrieval/vector.go` | Vector/RRF/collapse baseline behavior. |
 | `internal/db/db.go` | Schema and append-only database constraints. |
+| `pkg/raglab/catalog.go` | Read-only artifact lineage validation contract. |
+| `pkg/raglab/catalog_sqlite.go` | SQLite implementation of immutable artifact lookup. |
 | `internal/api/experiment_handlers.go` | Existing laboratory API transport layer. |
 | `docs/guides/ttc-rag-laboratory.md` | Current operator guide. |
 | `ttmp/.../RAGEVAL-TTC-LAB-001/...` | Baseline artifacts, evaluation protocol, and immutable-run decisions. |

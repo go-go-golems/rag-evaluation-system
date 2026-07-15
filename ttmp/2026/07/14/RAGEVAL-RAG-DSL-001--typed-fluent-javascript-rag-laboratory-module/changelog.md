@@ -30,3 +30,12 @@ Step 4: Added the pure typed RAG experiment builder, deterministic validation, a
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/builder.go — Fluent typed builder
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/builder_test.go — Regression coverage
+
+## 2026-07-14
+
+Step 5: Added immutable artifact-catalog lineage validation and evaluation/representation catalog schema (commit 3b6dc55).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/db/db.go — Immutable catalog schema
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/catalog.go — Compatibility rules

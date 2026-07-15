@@ -4,7 +4,7 @@
 
 - [x] 1. Reconcile the canonical experiment-specification JSON schema with the API contract; add explicit schema-version handling if it is absent.
 - [x] 2. Define pure Go `raglab` domain specs, artifact references, validation errors, and fluent builders without importing goja.
-- [ ] 3. Implement compatibility validation for snapshot, chunk, embedding, BM25, and evaluation-dataset references.
+- [x] 3. Implement compatibility validation for snapshot, chunk, embedding, BM25, and evaluation-dataset references.
 - [x] 4. Implement retrieval-channel, RRF, collapse, result-count, representation, and metric builders with deterministic canonical output.
 - [x] 5. Add pure Go service tests for valid plans, invalid combinations, error paths, canonicalisation, and stable fingerprints.
 - [ ] 6. Implement the `require("rag")` NativeModule adapter with lower-camel JavaScript codecs and thrown validation errors.
