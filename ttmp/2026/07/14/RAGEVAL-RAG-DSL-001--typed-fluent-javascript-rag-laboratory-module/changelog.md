@@ -39,3 +39,13 @@ Step 5: Added immutable artifact-catalog lineage validation and evaluation/repre
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/db/db.go — Immutable catalog schema
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/catalog.go — Compatibility rules
+
+## 2026-07-15
+
+Implemented native JavaScript RAG module, explicit laboratory persistence/start, runtime tests, and TypeScript descriptor (commit c46485e).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/gojamodules/rag/module.go — Public require(rag) API
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/laboratory.go — Append-only persistence/start boundary
+
