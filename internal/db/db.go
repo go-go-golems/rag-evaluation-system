@@ -60,6 +60,7 @@ func Migrate(db *sql.DB) error {
 		migrationV2EmbeddingSets,
 		migrationV2RetrievalArtifacts,
 		migrationV3ExperimentRuns,
+		migrationV4EvaluationArtifacts,
 	}
 
 	for i, m := range migrations {
@@ -473,4 +474,38 @@ CREATE TRIGGER IF NOT EXISTS experiment_query_traces_no_update
 BEFORE UPDATE ON experiment_query_traces BEGIN SELECT RAISE(ABORT, 'query traces are immutable'); END;
 CREATE TRIGGER IF NOT EXISTS experiment_query_traces_no_delete
 BEFORE DELETE ON experiment_query_traces BEGIN SELECT RAISE(ABORT, 'query traces are immutable'); END;
+`
+
+// Evaluation datasets are immutable corpus-bound truth artifacts. The older
+// eval_queries tables remain legacy workflow state and must not be used to
+// validate a reproducible experiment specification.
+const migrationV4EvaluationArtifacts = `
+CREATE TABLE IF NOT EXISTS evaluation_datasets (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    corpus_snapshot_id TEXT NOT NULL REFERENCES corpus_snapshots(id),
+    status TEXT NOT NULL CHECK (status IN ('candidate', 'frozen')),
+    manifest_json TEXT NOT NULL,
+    query_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS representation_sets (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    kind TEXT NOT NULL CHECK (kind IN ('summary', 'question')),
+    chunk_set_id TEXT NOT NULL REFERENCES chunk_sets(id),
+    manifest_json TEXT NOT NULL,
+    item_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TRIGGER IF NOT EXISTS evaluation_datasets_no_update
+BEFORE UPDATE ON evaluation_datasets BEGIN SELECT RAISE(ABORT, 'evaluation datasets are immutable'); END;
+CREATE TRIGGER IF NOT EXISTS evaluation_datasets_no_delete
+BEFORE DELETE ON evaluation_datasets BEGIN SELECT RAISE(ABORT, 'evaluation datasets are immutable'); END;
+CREATE TRIGGER IF NOT EXISTS representation_sets_no_update
+BEFORE UPDATE ON representation_sets BEGIN SELECT RAISE(ABORT, 'representation sets are immutable'); END;
+CREATE TRIGGER IF NOT EXISTS representation_sets_no_delete
+BEFORE DELETE ON representation_sets BEGIN SELECT RAISE(ABORT, 'representation sets are immutable'); END;
 `
