@@ -11,8 +11,9 @@ import (
 )
 
 type OpenOptions struct {
-	Database  string
-	AllowRuns bool
+	Database      string
+	AllowRuns     bool
+	QueryEmbedder QueryEmbedder
 }
 
 type ExperimentStore interface {
@@ -35,6 +36,8 @@ type Laboratory struct {
 	store     ExperimentStore
 	allowRuns bool
 	close     func() error
+	executor  *Executor
+	embedder  QueryEmbedder
 }
 
 func NewLaboratory(catalog ArtifactCatalog, store ExperimentStore, allowRuns bool) *Laboratory {
@@ -52,7 +55,12 @@ func OpenSQLite(options OpenOptions) (*Laboratory, error) {
 		return nil, errors.Wrap(err, "open rag laboratory database")
 	}
 	queries := db.NewQueries(database)
-	lab := NewLaboratory(NewSQLiteCatalog(queries), experimentrun.NewService(queries), options.AllowRuns)
+	service := experimentrun.NewService(queries)
+	lab := NewLaboratory(NewSQLiteCatalog(queries), service, options.AllowRuns)
+	if options.QueryEmbedder != nil {
+		lab.executor = NewExecutor(NewSQLiteChannelRetriever(queries), service)
+		lab.embedder = options.QueryEmbedder
+	}
 	lab.close = database.Close
 	return lab, nil
 }
@@ -105,4 +113,20 @@ func (l *Laboratory) Start(ctx context.Context, specification ExperimentSpecific
 		return nil, errors.Wrap(err, "append experiment submission event")
 	}
 	return run, nil
+}
+
+// Execute records the retrieval observations and terminal summary for an
+// already-created run. It requires a laboratory opened with an explicit query
+// embedder whenever the plan contains vector channels.
+func (l *Laboratory) Execute(ctx context.Context, runID string, specification ExperimentSpecification, cards []EvaluationCard, options ExecutionOptions) (*ExecutionResult, error) {
+	if l == nil || l.executor == nil {
+		return nil, errors.New("RAG_EXECUTOR_REQUIRED: open the laboratory with an explicit query embedder")
+	}
+	if !l.allowRuns {
+		return nil, errors.New("RAG_EXECUTION_DISABLED: laboratory is read-only")
+	}
+	if options.Embedder == nil {
+		options.Embedder = l.embedder
+	}
+	return l.executor.Execute(ctx, runID, specification, cards, options)
 }

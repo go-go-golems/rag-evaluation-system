@@ -90,6 +90,14 @@ type FusedHit struct {
 
 // FuseRRF collapses each named channel by document revision before fusing.
 func FuseRRF(channels map[string][]ChunkHit, rankConstant, limit int) []FusedHit {
+	return FuseWeightedRRF(channels, rankConstant, nil, limit)
+}
+
+// FuseWeightedRRF applies reciprocal-rank fusion after deterministic
+// document-level collapse. Missing channel weights default to one. Supplying a
+// non-positive weight deliberately contributes no score; plan validation is
+// responsible for rejecting such weights before execution.
+func FuseWeightedRRF(channels map[string][]ChunkHit, rankConstant int, weights map[string]float64, limit int) []FusedHit {
 	if rankConstant <= 0 {
 		rankConstant = 60
 	}
@@ -98,6 +106,10 @@ func FuseRRF(channels map[string][]ChunkHit, rankConstant, limit int) []FusedHit
 	}
 	fused := map[string]*FusedHit{}
 	for name, hits := range channels {
+		weight := 1.0
+		if configured, ok := weights[name]; ok {
+			weight = configured
+		}
 		for _, hit := range CollapseDocuments(hits) {
 			item := fused[hit.DocumentRevisionID]
 			if item == nil {
@@ -108,7 +120,7 @@ func FuseRRF(channels map[string][]ChunkHit, rankConstant, limit int) []FusedHit
 				item = &copy
 				fused[hit.DocumentRevisionID] = item
 			}
-			contribution := 1.0 / float64(rankConstant+hit.Rank)
+			contribution := weight / float64(rankConstant+hit.Rank)
 			item.Score += contribution
 			item.Components[name] = RRFComponent{hit.Rank, hit.Score, hit.ChunkID, contribution}
 		}
