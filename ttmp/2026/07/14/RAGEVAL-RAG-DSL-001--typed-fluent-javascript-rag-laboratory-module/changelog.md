@@ -59,3 +59,13 @@ Migrated rag-eval-js to xgoja/v2, packaged the RAG provider, generated declarati
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/examples/rag-lab-js/README.md — Operator example instructions
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/xgoja/providers/rag/provider.go — Generated runtime provider
 
+
+## 2026-07-15
+
+Implemented raw lexical/vector/weighted-RRF execution primitives, immutable card loading, and ran a 20-card raw BM25 TTC observation (commits 2106b99, 99b2476).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/executor.go — Append-only execution adapter
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/scripts/02-run-ttc-raw-bm25-experiment.go — Executed TTC observation
+

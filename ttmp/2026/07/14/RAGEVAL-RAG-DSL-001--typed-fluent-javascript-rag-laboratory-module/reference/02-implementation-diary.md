@@ -43,18 +43,27 @@ RelatedFiles:
       Note: Read-only artifact lineage validation added in Step 5 commit 3b6dc55
     - Path: repo://pkg/raglab/catalog_sqlite.go
       Note: SQLite immutable artifact catalog added in Step 5 commit 3b6dc55
+    - Path: repo://pkg/raglab/evaluation_dataset.go
+      Note: Immutable evaluation card manifest loader in Step 9 commit 99b2476
+    - Path: repo://pkg/raglab/executor.go
+      Note: Raw channel execution, trace persistence, and terminal summary logic in Step 8 commit 2106b99
     - Path: repo://pkg/raglab/laboratory.go
       Note: Explicit persisted/run laboratory boundary added in Step 6 commit c46485e
     - Path: repo://pkg/raglab/types.go
       Note: Typed RAG laboratory domain model added in Step 4 commit 31a3c93
     - Path: repo://pkg/xgoja/providers/rag/provider.go
       Note: xgoja v2 provider registration added in Step 7 commit 7b74539
+    - Path: repo://ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/scripts/01-register-ttc-candidate-evaluation-dataset.go
+      Note: Candidate evaluation manifest registration experiment in Step 9 commit 99b2476
+    - Path: repo://ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/scripts/02-run-ttc-raw-bm25-experiment.go
+      Note: Real 20-card raw executor experiment in Step 9 commit 99b2476
 ExternalSources: []
 Summary: Chronological record of the contract-first design work for the typed RAG laboratory JavaScript module.
 LastUpdated: 2026-07-14T22:09:50.352697004-04:00
 WhatFor: Preserve decisions, evidence, and the next implementation steps for the ticket.
 WhenToUse: Read before resuming implementation or reviewing why a public API decision was made.
 ---
+
 
 
 
@@ -752,4 +761,249 @@ cmd/rag-eval/xgoja.yaml
               └── require("rag") in generated rag-eval-js
                     ├── plan-only authoring / validation
                     └── explicit laboratory persistence / submission
+```
+
+## Step 8: Implement the first append-only raw retrieval executor
+
+This checkpoint turns a submitted immutable plan into durable observations.
+The executor runs the selected raw BM25 and vector channels, performs weighted
+RRF, retains the existing retrieval service's hydrated original-source fields,
+records one immutable trace per evaluation card, emits lifecycle events, and
+creates the one permitted terminal summary.
+
+The execution capability is deliberately injected. An embedding-set ID names
+stored vectors and their lineage; it is not credentials or authority to call a
+model. A vector channel therefore refuses to run without an explicit
+`QueryEmbedder`, while a lexical-only plan requires no model at all.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 6)
+
+**Assistant interpretation:** Implement the retrieval/execution portion of
+the laboratory after the JavaScript authoring and generated-runtime layers.
+
+**Inferred user intent:** Make fluent plans operational while preserving
+reproducible artifacts, citations, and append-only measurements.
+
+**Commit (code):** `2106b991a99ed0974dee1395a6300da0de6bee9c` — "feat: execute immutable raw retrieval experiments"
+
+### What I did
+
+- Added `raglab.Executor`, narrow `QueryEmbedder`, `ChannelRetriever`, and
+  `RunRecorder` interfaces, plus a SQLite retriever adapter.
+- Added deterministic evaluation-card execution for BM25 and vector channels;
+  the query vector is generated at most once per card and then reused by all
+  vector channels.
+- Added weighted RRF in `immutableretrieval.FuseWeightedRRF`; the existing
+  unweighted function delegates to it with default weights for unchanged
+  internal callers.
+- Persisted channel results, fused results, source URLs/titles/ranges, timing,
+  per-card relevance observations, execution events, and a terminal run
+  summary through `experimentrun.Service` only.
+- Added tests with fake retriever/embedder/recorder that prove weighted fusion,
+  citation propagation, event order, terminal success, and rejection of a
+  vector plan without an explicit embedder.
+- Ran `GOWORK=off go test ./internal/services/immutableretrieval ./pkg/raglab -count=1` successfully.
+
+### Why
+
+The prior `lab.start()` correctly represented submission but left an executor
+pending. It would be misleading to replace that marker with an implicit model
+call. The executor creates a narrow, testable boundary: immutable artifact
+lookups and ranking are separate from query embedding; run persistence remains
+the sole authority for trace/event/summary writes.
+
+### What worked
+
+- The executor's success test records `execution_started`, one trace, and
+  `execution_completed` before the terminal summary.
+- The fusion test shows a configured semantic weight changes its contribution
+  and selected document deterministically.
+- Every result uses `immutableretrieval.ChunkHit`, which already hydrates
+  original title, URL, immutable document revision, source rune range, and
+  evidence text before collapse/fusion.
+
+### What didn't work
+
+- The initial executor interface was named `RetrievalBackend`, colliding with
+  the existing `raglab.RetrievalBackend` enum. The focused test command failed
+  with `RetrievalBackend redeclared in this block`. Renaming the injected
+  execution interface to `ChannelRetriever` removed the ambiguity.
+
+### What I learned
+
+- Multi-channel RRF is document-collapsed by the existing immutable retrieval
+  implementation. `parentChunk` cannot honestly be emulated until summary or
+  question materialisations have durable parent mappings, so the executor
+  explicitly rejects that scope.
+- A persisted specification needs no model details, but a vector execution
+  does. Keeping the latter as runtime capability avoids contaminating the
+  immutable experiment identity with credentials or ephemeral endpoints.
+
+### What was tricky to build
+
+The plan model can name raw, summary, and question representations, while the
+current storage has only raw immutable retrieval functions. Allowing the
+executor to treat a materialized representation as raw text would create
+incorrect citations and false experimental claims. The implementation checks
+this before appending the start event, supports raw chunks completely, and
+returns a stable `RAG_EXECUTION_UNSUPPORTED` error for the unmaterialized path.
+
+### What warrants a second pair of eyes
+
+- Review the current per-query relevance inputs: the executor expects immutable
+  document revision IDs. Candidate import must resolve stable source IDs before
+  execution, which Step 9 implements.
+- Review whether weighted RRF should include a zero/non-positive defensive
+  runtime guard in addition to builder validation; current validation rejects
+  it and the fusion primitive treats it as no contribution.
+
+### What should be done in the future
+
+- Expose execution to JavaScript with an explicit callback or configured
+  provider, not an inferred embedding model.
+- Materialize summary/question representation sets and parent mappings before
+  supporting those channel/collapse combinations.
+
+### Code review instructions
+
+- Start in `pkg/raglab/executor.go:Executor.Execute`, then examine
+  `executeCard` and the `experimentrun` calls.
+- Review `internal/services/immutableretrieval/vector.go:FuseWeightedRRF` and
+  the executor test's fake trace assertions.
+- Run `GOWORK=off go test ./internal/services/immutableretrieval ./pkg/raglab -count=1`.
+
+### Technical details
+
+```text
+evaluation card ──► channel retrievals ──► weighted RRF ──► cited result set
+      │                         │                    │              │
+      └─────────────────────────┴────────────────────┴──► query trace
+                                                             │
+run events: created → submitted → execution_started → execution_completed → terminal
+```
+
+## Step 9: Register and run the TTC candidate evaluation manifest
+
+The candidate cards are now represented in the real laboratory database as a
+corpus-bound immutable manifest instead of being only a Markdown document.
+The ticket-local registration experiment resolves every `wp:` source identity
+to a document revision inside the selected snapshot, records the candidate
+dataset, and is idempotent by canonical manifest comparison.
+
+With that manifest, a raw BM25 execution ran all 20 cards through the new
+executor. It created a terminal append-only observation with 20 query traces;
+the result is candidate evidence, not a published or human-frozen benchmark.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 6)
+
+**Assistant interpretation:** Run the next available real-corpus stage after
+implementing the executor, recording evidence and any external limitation.
+
+**Inferred user intent:** Move beyond fixtures and establish a credible first
+TTC laboratory observation with explicit inputs and measured output.
+
+**Commit (code):** `99b24769309200b478a09f4fd7aaff43b765aee0` — "feat: execute TTC evaluation cards from immutable manifests"
+
+### What I did
+
+- Added `LoadEvaluationCards`, which decodes the immutable
+  `rag-eval-evaluation-dataset/v1` manifest and sorts cards before execution.
+- Added ticket script `01-register-ttc-candidate-evaluation-dataset.go`; it
+  applies migrations, parses the 20 reviewed cards, resolves stable source IDs
+  against `corpus_snapshot_documents`, canonicalizes the manifest, and inserts
+  only when the candidate ID is absent.
+- Added ticket script `02-run-ttc-raw-bm25-experiment.go`; it creates a raw
+  immutable plan, starts a run, loads the manifest cards, and executes the
+  lexical channel through the new executor.
+- Registered `candidate:ttc-baseline-v1` in `data/rag-eval.db` with status
+  `candidate`, the exact TTC snapshot ID, and query count 20.
+- Executed run `run_b57ed9283ef071e616e00f82e420f0cf`: 20 traces, terminal
+  status `succeeded`, MRR `0.7473684210526316`, mean relevant recall@10
+  `0.7631578947368421`, and 19 answerable cards.
+
+### Why
+
+The catalog initially had only an evaluation-dataset header schema; the real
+TTC database had not applied V4 and therefore could not validate the candidate
+dataset ID at all. A reproducible executor must read a fixed manifest tied to
+the snapshot, not scrape a ticket during normal operation or use legacy
+mutable `eval_queries` rows.
+
+### What worked
+
+- The isolated `/tmp/rag-eval-candidate.db` experiment failed safely with
+  `sql: no rows in result set` while resolving corpus evidence. This proves the
+  script does not fabricate revision identities when its required snapshot is
+  absent.
+- The scoped database registration succeeded, and a second run reported
+  `candidate evaluation dataset already registered`, proving canonical
+  idempotence.
+- The raw execution run has events in the intended order: `created`,
+  `submitted`, `execution_started`, `execution_completed`, `terminal`.
+
+### What didn't work
+
+- The local vector comparison could not be re-executed because
+  `curl -fsS --max-time 3 http://127.0.0.1:11435/api/tags` returned
+  `curl: (7) Failed to connect to 127.0.0.1 port 11435`. There is no live
+  configured Ollama endpoint for fresh query embeddings in this workspace.
+- A direct SQL status inspection initially queried a non-existent
+  `experiment_runs.status` column. Status is derived from
+  `experiment_run_summaries`; joining that table confirmed the raw run is
+  `succeeded` with 20 traces.
+
+### What I learned
+
+- The existing earlier candidate baseline artifacts contain vector/hybrid
+  traces, but a fresh vector or weighted-RRF execution must wait for an
+  explicit query-embedding provider. Reusing old traces as if they were a new
+  executor run would undermine measurement provenance.
+- One negative card has no relevant document, yielding 19 answerable cards;
+  MRR and recall averages therefore use 19 as their denominator while the run
+  still records all 20 cards.
+
+### What was tricky to build
+
+Candidate cards use stable WordPress-style source IDs, while retrieval traces
+and citations use immutable document revision IDs. The registration script
+resolves the IDs through the selected corpus snapshot before writing the
+manifest. This avoids a hidden cross-snapshot lookup and makes every future
+trace's relevance judgment match the exact corpus it evaluates.
+
+### What warrants a second pair of eyes
+
+- Review whether the candidate status should allow automatic execution in the
+  UI. The current result is clearly candidate-labelled and must not become a
+  published quality claim before human adjudication freezes the dataset.
+- Review the uncommitted JS execution API design before giving scripts a model
+  callback; it must retain explicit authority and safe synchronous ownership.
+
+### What should be done in the future
+
+- Configure or reconnect an Ollama/embedding server, then run the 20-card
+  vector and weighted-RRF executor cases as new immutable observations.
+- Add summary/question materialisation, then compare raw-only, summaries-only,
+  questions-only, and fused representations with the same frozen protocol.
+
+### Code review instructions
+
+- Review both ticket scripts in numeric order; run registration once with a
+  temporary database to see the required-snapshot failure, then with the TTC
+  database to register the candidate manifest.
+- Inspect the terminal run and 20 traces through the existing laboratory API
+  or UI. Confirm the summary denominator is 19 answerable cards.
+- Run `GOWORK=off go test ./pkg/raglab ./internal/services/immutableretrieval -count=1`.
+
+### Technical details
+
+```text
+candidate Markdown cards
+  └── source IDs resolved in selected corpus snapshot
+        └── immutable evaluation_datasets.manifest_json
+              └── 20 executor cards / 19 answerable
+                    └── append-only raw BM25 run + 20 cited traces
 ```
