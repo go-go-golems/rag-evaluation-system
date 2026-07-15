@@ -13,23 +13,15 @@ import (
 
 	"github.com/go-go-golems/rag-evaluation-system/internal/db"
 	"github.com/go-go-golems/rag-evaluation-system/internal/experiments"
+	"github.com/go-go-golems/rag-evaluation-system/internal/experimentspec"
 	"github.com/pkg/errors"
 )
-
-const specificationSchema = "rag-eval-experiment-spec/v1"
 
 type Service struct{ queries *db.Queries }
 
 func NewService(queries *db.Queries) *Service { return &Service{queries: queries} }
 
-type SpecificationInput struct {
-	CorpusSnapshotID    string         `json:"corpus_snapshot_id"`
-	ChunkSetID          string         `json:"chunk_set_id"`
-	BM25ArtifactID      string         `json:"bm25_artifact_id,omitempty"`
-	EmbeddingSetID      string         `json:"embedding_set_id,omitempty"`
-	EvaluationDatasetID string         `json:"evaluation_dataset_id,omitempty"`
-	Config              map[string]any `json:"config"`
-}
+type SpecificationInput = experimentspec.Input
 
 type Specification struct {
 	ID                  string         `json:"id"`
@@ -85,16 +77,6 @@ type Run struct {
 	Summary          *Summary `json:"summary,omitempty"`
 }
 
-type specManifest struct {
-	SchemaVersion       string         `json:"schema_version"`
-	CorpusSnapshotID    string         `json:"corpus_snapshot_id"`
-	ChunkSetID          string         `json:"chunk_set_id"`
-	BM25ArtifactID      string         `json:"bm25_artifact_id,omitempty"`
-	EmbeddingSetID      string         `json:"embedding_set_id,omitempty"`
-	EvaluationDatasetID string         `json:"evaluation_dataset_id,omitempty"`
-	Config              map[string]any `json:"config"`
-}
-
 func (s *Service) CreateSpecification(ctx context.Context, input SpecificationInput) (*Specification, bool, error) {
 	if s == nil || s.queries == nil {
 		return nil, false, errors.New("experiment-run service requires database queries")
@@ -102,11 +84,9 @@ func (s *Service) CreateSpecification(ctx context.Context, input SpecificationIn
 	if err := validateSpecificationInput(ctx, s.queries, input); err != nil {
 		return nil, false, err
 	}
-	if input.Config == nil {
-		input.Config = map[string]any{}
-	}
-	manifest := specManifest{specificationSchema, input.CorpusSnapshotID, input.ChunkSetID, input.BM25ArtifactID, input.EmbeddingSetID, input.EvaluationDatasetID, input.Config}
-	id, err := experiments.Fingerprint(specificationSchema, manifest)
+	input = experimentspec.Normalize(input)
+	manifest := experimentspec.NewManifest(input)
+	id, err := experimentspec.Fingerprint(input)
 	if err != nil {
 		return nil, false, err
 	}
@@ -130,7 +110,7 @@ func (s *Service) CreateSpecification(ctx context.Context, input SpecificationIn
 	if !errors.Is(err, sql.ErrNoRows) {
 		return nil, false, errors.Wrap(err, "read experiment specification")
 	}
-	if _, err := s.queries.DB().ExecContext(ctx, `INSERT INTO experiment_specs (id,schema_version,corpus_snapshot_id,chunk_set_id,bm25_artifact_id,embedding_set_id,evaluation_dataset_id,config_json,manifest_json) VALUES (?,?,?,?,?,?,?,?,?)`, id, specificationSchema, input.CorpusSnapshotID, input.ChunkSetID, nullable(input.BM25ArtifactID), nullable(input.EmbeddingSetID), input.EvaluationDatasetID, string(configJSON), string(manifestJSON)); err != nil {
+	if _, err := s.queries.DB().ExecContext(ctx, `INSERT INTO experiment_specs (id,schema_version,corpus_snapshot_id,chunk_set_id,bm25_artifact_id,embedding_set_id,evaluation_dataset_id,config_json,manifest_json) VALUES (?,?,?,?,?,?,?,?,?)`, id, experimentspec.SchemaVersion, input.CorpusSnapshotID, input.ChunkSetID, nullable(input.BM25ArtifactID), nullable(input.EmbeddingSetID), input.EvaluationDatasetID, string(configJSON), string(manifestJSON)); err != nil {
 		return nil, false, errors.Wrap(err, "insert experiment specification")
 	}
 	result, err := s.GetSpecification(ctx, id)
