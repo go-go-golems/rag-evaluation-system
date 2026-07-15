@@ -1007,3 +1007,98 @@ candidate Markdown cards
               └── 20 executor cards / 19 answerable
                     └── append-only raw BM25 run + 20 cited traces
 ```
+
+## Step 10: Validate the complete implementation and generated runtime
+
+This final checkpoint validates the repository after all code and ticket
+scripts were added. It exercises the full Go test graph and independently
+recreates the generated JavaScript runtime, declaration sidecar, and a
+copy/paste RAG authoring script from the native xgoja/v2 specification.
+
+The checks distinguish completed work from the remaining external dependency.
+All local code paths pass; only a fresh vector/hybrid corpus observation is
+deferred because the previously used Ollama endpoint is not currently running.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 6)
+
+**Assistant interpretation:** Finish the requested implementation stages with
+proportionate repository and generated-binary validation before handoff.
+
+**Inferred user intent:** Have a tested implementation and an accurate account
+of what is immediately usable versus what awaits an external embedding server.
+
+**Commit (code):** N/A — validation and diary checkpoint after commits `2106b99` and `99b2476`.
+
+### What I did
+
+- Ran `GOWORK=off go test ./... -count=1`; every package passed.
+- Ran `xgoja doctor -f cmd/rag-eval/xgoja.yaml`; the native v2 plan and all
+  provider/module resolutions passed.
+- Ran `xgoja gen-dts -f cmd/rag-eval/xgoja.yaml --out /tmp/rag-eval-js.d.ts`.
+- Ran `xgoja build -f cmd/rag-eval/xgoja.yaml --output /tmp/rag-eval-js-final`.
+- Ran `/tmp/rag-eval-js-final run examples/rag-lab-js/01-plan-only.js`.
+
+### Why
+
+The Go unit boundary, provider runtime boundary, and generated binary boundary
+can fail independently. A builder that passes Go tests but is not registered
+by a provider is not usable by operators; a provider that builds but has an
+incorrect JavaScript projection is not a trustworthy playground primitive.
+
+### What worked
+
+- All Go packages—including `pkg/raglab`, `pkg/gojamodules/rag`, the new
+  provider, immutable retrieval, and existing API/web packages—passed.
+- xgoja resolved local Goja/Geppetto/rag-eval sources through the workspace and
+  released goja-text `v0.1.2` by version.
+- Declaration generation emitted the RAG module, and the generated binary ran
+  the plan-only script successfully.
+
+### What didn't work
+
+- Strict whole-runtime declarations remain intentionally unavailable because
+  Geppetto has no TypeScript descriptor. The declaration artifact remains
+  non-strict and the follow-up task is explicit.
+- No new vector/hybrid run was attempted after the failed local endpoint probe;
+  the blocker is the unavailable external embedding service, not a test or
+  implementation failure.
+
+### What I learned
+
+- The repository can now validate the complete authoring/runtime/execution
+  path offline for BM25 and deterministic fakes. Vector execution has a clean,
+  explicit operational precondition rather than an ambiguous runtime failure.
+
+### What was tricky to build
+
+Generated xgoja binaries use a sidecar module and resolve providers differently
+from the repository test process. Running both `doctor` and `build` was
+necessary to prove the provider selection, v2 migration, module versions, and
+embedded example source graph together.
+
+### What warrants a second pair of eyes
+
+- Confirm the target embedding server and provider profile before enabling a
+  JS-facing execution callback; do not encode a personal endpoint in the
+  immutable plan or committed xgoja configuration.
+
+### What should be done in the future
+
+- Complete follow-up tasks `mzbi`, `rvqq`, and `xj83` after an embedding
+  endpoint is available and Geppetto's declaration ownership is decided.
+
+### Code review instructions
+
+- Re-run the five commands under **What I did** from the repository root.
+- Inspect run `run_b57ed9283ef071e616e00f82e420f0cf` through the laboratory UI
+  or API to confirm its 20 traces and terminal summary.
+
+### Technical details
+
+```text
+Go domain + executor tests ──► xgoja plan validation ──► DTS sidecar
+          │                           │                       │
+          └──────── generated binary + plan-only JS example ◄─┘
+```

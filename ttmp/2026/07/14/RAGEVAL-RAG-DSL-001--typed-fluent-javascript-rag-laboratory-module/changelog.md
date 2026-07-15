@@ -69,3 +69,13 @@ Implemented raw lexical/vector/weighted-RRF execution primitives, immutable card
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/executor.go — Append-only execution adapter
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/scripts/02-run-ttc-raw-bm25-experiment.go — Executed TTC observation
 
+
+## 2026-07-15
+
+Validated all Go packages plus xgoja v2 plan, declaration generation, generated binary, and RAG plan-only example after executor work.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-eval/xgoja.yaml — Final generated runtime validation
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/executor_test.go — Executor regression coverage
+
