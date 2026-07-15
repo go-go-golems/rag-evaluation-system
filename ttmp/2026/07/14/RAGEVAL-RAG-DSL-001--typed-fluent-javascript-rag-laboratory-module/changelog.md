@@ -131,3 +131,15 @@ live Geppetto/Ollama JavaScript execution validation (commit be3623a).
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/scripts/05-run-rag-lab-js-geppetto.js — Frozen TTC live JS observation
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-eval/xgoja.yaml — Generated runtime validation plan
+
+
+## 2026-07-15
+
+Reviewed v1 summary/question representation support and chose a separate
+immutable representation-materialization workstream rather than expanding the
+retrieval executor with generation callbacks.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/executor.go — Deliberate non-raw representation guard
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/services/chunkenrichment/service.go — Existing provenance-bearing enrichment storage

@@ -1704,3 +1704,104 @@ canonical TTC JS plan                       Mac Ollama / nomic 768D
      |                                           |
      +-------- execute -> 20 traces -> immutable summary <-+
 ```
+
+## Step 16: Review the representation API and preserve the v1 boundary
+
+The API review confirms that summary and hypothetical-question retrieval should
+not be implemented as a small extension to the current `rag` executor. The
+current builder can express representation intent and the catalog recognizes a
+representation-set artifact, but execution intentionally rejects non-raw
+representations and parent-chunk collapse. That rejection is correct because
+the required materialization, embedding, parent mapping, and citation
+hydration contracts do not yet exist as durable artifacts.
+
+The next representation capability should be a separate materialization
+module/service and ticket, not hidden generation callbacks in the retrieval
+builder. It must produce immutable representation artifacts that the existing
+`rag` plan can reference. This keeps retrieval experiments declarative and
+reproducible: generation cost, prompt/model identity, source hashes, and
+parent relationships become input lineage instead of ambient runtime behavior.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 14)
+
+**Assistant interpretation:** Decide the public API seam before moving from
+the completed raw retrieval baseline to representations and reranking.
+
+**Inferred user intent:** Avoid an attractive but unmaintainable fluent API
+that mixes artifact production, retrieval, and ranking in one callback chain.
+
+### What I did
+
+- Compared `pkg/raglab/types.go` representation declarations and catalog
+  support with `pkg/raglab/executor.go` execution guards.
+- Inspected the existing `internal/services/chunkenrichment` service and CLI,
+  which already persists summaries, questions, prompt version, provider/model,
+  source hash, and quality but currently exposes only a fake provider.
+- Chose a separate representation-materialization workstream that emits an
+  immutable representation set plus parent mappings and embeddings, then uses
+  the existing declarative `representations(...)` plan input.
+
+### Why
+
+Summary and question generation is data production. It can fail, cost money,
+change with prompts/models, and multiply one source chunk into several
+retrieval candidates. Treating it as a query-time lambda would make the same
+experiment non-reproducible and would make citation collapse ambiguous.
+
+### What worked
+
+The current public surface already has the right declarative vocabulary:
+`summaries(name, configure)` and `questions(name, configure)` reference an
+artifact and state that its parent is the source chunk. No API break is needed
+for the future materialization work.
+
+### What didn't work
+
+The present executor correctly returns
+`RAG_EXECUTION_UNSUPPORTED: materialized representations need a representation executor`
+for summary/question plans. It also rejects `parentChunk` collapse until parent
+mappings exist. These are deliberate implementation boundaries, not failures
+to work around.
+
+### What I learned
+
+The required next layer is not “summarization in the RAG DSL.” It is an
+immutable representation-artifact pipeline with these records:
+
+```text
+source chunk -- generator(prompt, model) --> representation rows
+     |                                           |
+     +-- source hash, lineage -------------------+
+                                                 |
+representation set -- embedding set --> retrieval channel --> parent collapse
+```
+
+### What warrants a second pair of eyes
+
+- Decide whether one representation set may contain several question rows per
+  source chunk, and how their individual embedding/cost records are modeled.
+- Decide whether the current enrichment table can evolve into the materialized
+  representation source or should remain a UI-facing enrichment cache.
+
+### What should be done in the future
+
+- Open a dedicated representation-materialization ticket after the reranker
+  workstream has a stable candidate-set boundary.
+- Keep the current raw-vector/RRF executor as the baseline comparison for any
+  summary or question representation study.
+
+### Code review instructions
+
+- Compare `pkg/raglab/types.go:129` with the guard in
+  `pkg/raglab/executor.go:147`.
+- Inspect `internal/services/chunkenrichment/service.go` for the existing
+  generation provenance fields and its fake-provider limitation.
+
+### Technical details
+
+```text
+v1 rag DSL: reference durable artifacts -> retrieve -> fuse -> collapse -> score
+future materializer: source chunks -> generate -> persist lineage -> embed -> artifact
+```
