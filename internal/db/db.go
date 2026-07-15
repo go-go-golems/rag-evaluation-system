@@ -58,6 +58,7 @@ func Migrate(db *sql.DB) error {
 		migrationV2ChunkSets,
 		migrationV2EmbeddingPlans,
 		migrationV2EmbeddingSets,
+		migrationV2RetrievalArtifacts,
 	}
 
 	for i, m := range migrations {
@@ -374,5 +375,20 @@ CREATE TABLE IF NOT EXISTS immutable_embeddings (
     chunk_id TEXT NOT NULL REFERENCES immutable_chunks(id),
     vector BLOB NOT NULL,
     PRIMARY KEY (embedding_set_id, chunk_id)
+);
+`
+
+const migrationV2RetrievalArtifacts = `
+CREATE TABLE IF NOT EXISTS retrieval_artifacts (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    chunk_set_id TEXT NOT NULL REFERENCES chunk_sets(id),
+    embedding_set_id TEXT REFERENCES embedding_sets(id),
+    config_json TEXT NOT NULL,
+    manifest_json TEXT NOT NULL,
+    artifact_path TEXT NOT NULL,
+    chunk_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 `
