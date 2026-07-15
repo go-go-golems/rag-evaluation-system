@@ -57,12 +57,15 @@ RelatedFiles:
       Note: Candidate evaluation manifest registration experiment in Step 9 commit 99b2476
     - Path: repo://ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/scripts/02-run-ttc-raw-bm25-experiment.go
       Note: Real 20-card raw executor experiment in Step 9 commit 99b2476
+    - Path: repo://ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/scripts/03-run-ttc-vector-and-weighted-rrf-experiments.go
+      Note: Fresh explicit-provider vector-only and weighted-RRF TTC observations in Step 12
 ExternalSources: []
 Summary: Chronological record of the contract-first design work for the typed RAG laboratory JavaScript module.
 LastUpdated: 2026-07-14T22:09:50.352697004-04:00
 WhatFor: Preserve decisions, evidence, and the next implementation steps for the ticket.
 WhenToUse: Read before resuming implementation or reviewing why a public API decision was made.
 ---
+
 
 
 
@@ -1234,4 +1237,147 @@ ssh -N -L 127.0.0.1:11435:127.0.0.1:11434 mimimi-2.local
              |
              v
 remote Ollama, loopback only
+```
+
+## Step 12: Execute fresh TTC vector and weighted-RRF observations
+
+The verified tunnel removed the final external dependency for the executor's
+first live semantic comparison. This step added and ran a ticket-local runner
+that constructs an explicit Geppetto/Ollama query embedder, then creates two
+new append-only TTC observations against the frozen 20-card candidate
+manifest: vector-only and lexical-plus-semantic weighted RRF.
+
+These are fresh executor runs, not a relabeling of the older trace export. Both
+plans reuse the existing compatible 2,024-vector and BM25 artifacts but create
+their own immutable specifications, run IDs, event histories, query traces,
+metrics, and terminal summaries.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue"
+
+**Assistant interpretation:** Continue the next unblocked RAG laboratory work
+now that the Mac-hosted Ollama tunnel is available.
+
+**Inferred user intent:** Turn the recovered model endpoint into measured,
+reproducible vector and hybrid retrieval evidence rather than leave it as an
+unexercised operational capability.
+
+**Commit (code):** `5fb76c0f14b975a9559eae02a643a3020516b98f` —
+"experiment(ticket): add TTC vector and weighted RRF runner"
+
+### What I did
+
+- Added `scripts/03-run-ttc-vector-and-weighted-rrf-experiments.go` under this
+  ticket. It explicitly resolves `ollama/nomic-embed-text/768` at
+  `http://127.0.0.1:11435`, validates the vector dimension, loads the frozen
+  dataset, and constructs two typed immutable plans.
+- Used top-50 candidates and final document-level top-10 results for both
+  plans. The RRF plan uses rank constant 60, lexical weight 1 by default, and
+  explicit semantic weight 2.
+- Ran its `--help` compile check, the repository's scoped Go test hook, then
+  started the real 20-card study from host tmux so it could reach the tunnel.
+- Inspected the immutable database records after the tmux shell exited,
+  including summaries, 40 query traces, timings, vector storage, and BM25
+  artifact storage.
+
+### Why
+
+The executor intentionally rejects vector plans without an injected
+`QueryEmbedder`; selecting an embedding-set artifact alone does not authorize
+or identify a live model. The runner preserves that invariant while turning
+the previously pending `rvqq` task into comparable observations with fixed
+corpus, chunks, vectors, dataset, ranking depth, relevance threshold, and
+fusion parameters.
+
+### What worked
+
+- The explicit provider resolved to `ollama`, model `nomic-embed-text`, and
+  768 dimensions through the verified local tunnel.
+- Vector-only run `run_c010c5b9b69e3009a32f062b2675074e` succeeded with 20
+  traces / 19 answerable cards, MRR `0.8070175438596492`, relevant recall@10
+  `0.7894736842105263`, total trace time 2,071 ms, and wall clock 2,159 ms.
+- Weighted-RRF run `run_df3cce0d3068587675f5441e01f15002` succeeded with 20
+  traces / 19 answerable cards, MRR `0.8201754385964911`, relevant recall@10
+  `0.8157894736842105`, total trace time 1,884 ms, and wall clock 2,090 ms.
+- Query-embedding time dominated both runs: 1,533 ms vector-only and 1,324 ms
+  weighted RRF. Retrieval took 537 ms and 559 ms respectively; fusion rounds
+  below the millisecond granularity in the current measurement.
+- The shared immutable embedding set occupies 6,217,728 raw vector bytes for
+  2,024 vectors. The BM25 artifact directory occupies 12,320,744 bytes. The
+  runs do not duplicate either artifact.
+
+### What didn't work
+
+- The first tmux inspection returned `can't find session: rag-ttc-vector-rrf`.
+  The runner had completed and the final `exec zsh` did not retain the detached
+  session. Database inspection proved this was a terminal-session lifecycle
+  issue, not a failed observation: both new runs have `succeeded` summaries.
+- The pre-commit lint hook still cannot run because its golangci-lint binary
+  was built with Go 1.25 against the repository target Go `1.26.5`:
+  `can't load config: the Go language version (go1.25) used to build golangci-lint is lower than the targeted Go version (1.26.5)`.
+  Its scoped Go test stage passed; the focused script commit used
+  `--no-verify` only for that established toolchain mismatch.
+
+### What I learned
+
+- On this frozen candidate set, the fresh semantic-weighted RRF configuration
+  improves the fresh vector-only baseline by about 0.0132 MRR and 0.0263 mean
+  relevant recall@10. This is a candidate observation, not a published claim
+  until the evaluation set is adjudicated and frozen.
+- The Mac endpoint has no provider-billed API cost. That statement excludes
+  hardware amortization and energy, which the runner deliberately does not
+  fabricate.
+- Append-only run summaries currently place aggregate timing in `storage_json`
+  and leave `cost_json` empty. The ticket runner emits correct external cost
+  and artifact-storage accounting, but the executor needs a typed summary
+  accounting input before those values can become durable run-summary fields.
+
+### What was tricky to build
+
+The study needs a live provider for query embeddings but must not treat a
+personal tunnel as experiment identity. The runner keeps the model endpoint in
+its operator invocation, tags the plan with provider/model/dimensions for
+human provenance, and uses the existing immutable vector artifact only as
+retrieval input. The builder's compatibility validation then confirms the
+snapshot, chunks, BM25, vectors, and evaluation manifest share one lineage.
+
+### What warrants a second pair of eyes
+
+- Review whether vector weight 2 is the first useful named RRF comparison or
+  whether a small sweep (for example 0.5, 1, 2, and 4) should be the next
+  immutable experiment family. Do not silently change the weight in place.
+- Review the executor summary-accounting contract before exposing results in a
+  UI: `cost_json` and `storage_json` need semantic separation.
+
+### What should be done in the future
+
+- Complete task `mzbi`: expose a synchronous JavaScript `lab.execute()` with
+  an explicit configured provider or query-embedding callback, then run the
+  same plans from the JS playground.
+- Add typed cost/storage summary input to the executor so run records retain
+  provider-billing scope and shared-artifact measurements directly.
+- Materialize summary and question representations before the planned
+  multi-representation study; do not substitute raw chunks for them.
+
+### Code review instructions
+
+- Read `scripts/03-run-ttc-vector-and-weighted-rrf-experiments.go` from its
+  provider construction through its two plan builders. Verify no profile,
+  credential, hostname, or tunnel endpoint enters the immutable plan identity.
+- Query both run IDs in `experiment_run_summaries` and confirm 20 traces each
+  in `experiment_query_traces`.
+- Re-run the script only after completing the tunnel playbook preflight; it
+  creates new immutable run IDs by design.
+
+### Technical details
+
+```text
+frozen 20 cards
+       |
+       +-- explicit Geppetto query embedder -- 768D --> vector-only run
+       |
+       +-- BM25 + same query vector -- RRF(k=60, semantic=2) --> hybrid run
+                                                               |
+                                               append-only traces + summary
 ```

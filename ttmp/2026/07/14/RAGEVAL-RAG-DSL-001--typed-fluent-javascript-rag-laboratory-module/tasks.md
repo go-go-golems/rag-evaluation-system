@@ -17,5 +17,5 @@
 - [ ] 13. Validate with Go unit/integration tests, xgoja doctor, declaration generation, binary build, example scripts, and the normal web build.
 - [ ] 14. Review the public API after one TTC study and decide whether summary/question representation generation needs a second module or a v1 extension.
 - [ ] Expose synchronous lab.execute() to JS with an explicit query-embedding callback or configured provider; do not infer a model from an embedding-set artifact. <!-- t:mzbi -->
-- [ ] Run the 20-card vector and weighted-RRF executor comparison once the configured Ollama endpoint is available; record fresh traces, metrics, costs, and storage next to the raw executor run. <!-- t:rvqq -->
+- [x] Run the 20-card vector and weighted-RRF executor comparison once the configured Ollama endpoint is available; record fresh traces, metrics, costs, and storage next to the raw executor run. <!-- t:rvqq -->
 - [ ] Add a Geppetto TypeScript descriptor and restore strict xgoja declaration generation for the complete selected runtime. <!-- t:xj83 -->

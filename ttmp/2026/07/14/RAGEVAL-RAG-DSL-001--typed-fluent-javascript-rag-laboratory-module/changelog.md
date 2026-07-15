@@ -89,3 +89,13 @@ Verified the reachable Mac-hosted Ollama route and added a private SSH-loopback 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/reference/02-implementation-diary.md — Step 11 operational investigation diary
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/reference/03-mimimi-ollama-tunnel-operator-playbook.md — Reusable verified tunnel procedure
 
+
+## 2026-07-15
+
+Step 12: added and executed fresh explicit-provider TTC vector-only and semantic-weighted RRF runs (commit 5fb76c0); both runs succeeded with append-only traces and recorded candidate quality, latency, cost scope, and shared-artifact storage evidence.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/reference/02-implementation-diary.md — Step 12 durable results and review instructions
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/scripts/03-run-ttc-vector-and-weighted-rrf-experiments.go — Executable observation definition
+
