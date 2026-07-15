@@ -40,7 +40,7 @@ xgoja build -f cmd/rag-eval/xgoja.yaml --output cmd/rag-eval/dist/rag-eval-js
 cmd/rag-eval/dist/rag-eval-js help --all
 ```
 
-The generated declaration file is `cmd/rag-eval/js/types/xgoja-modules.d.ts`.
+The generated declaration file is `js/types/xgoja-modules.d.ts`.
 It covers the `rag` module. Whole-runtime strict declaration generation remains
 tracked separately until the Geppetto provider publishes its descriptor.
 
