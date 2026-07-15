@@ -102,6 +102,9 @@ func FuseRRF(channels map[string][]ChunkHit, rankConstant, limit int) []FusedHit
 			item := fused[hit.DocumentRevisionID]
 			if item == nil {
 				copy := FusedHit{ChunkHit: hit, Components: map[string]RRFComponent{}}
+				// The output score is the RRF score, not the raw score from
+				// whichever channel happens to be visited first.
+				copy.Score = 0
 				item = &copy
 				fused[hit.DocumentRevisionID] = item
 			}

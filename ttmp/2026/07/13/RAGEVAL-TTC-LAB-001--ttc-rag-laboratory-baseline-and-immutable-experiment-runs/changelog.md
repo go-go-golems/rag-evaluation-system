@@ -78,3 +78,7 @@ Completed lbwm: built and verified the real Mac-backed Ollama 768D immutable emb
 ## 2026-07-14
 
 Executed and scored the first 20-card immutable TTC retrieval comparison; added trace and candidate-score scripts plus isolated standalone ticket scripts from package tests.
+
+## 2026-07-14
+
+Added append-only experiment specifications, run events, query traces, terminal summaries, and offline lifecycle coverage; corrected RRF score initialization nondeterminism.

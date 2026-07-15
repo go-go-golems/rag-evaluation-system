@@ -27,20 +27,30 @@ RelatedFiles:
       Note: Deadline control and operator-facing long-run behavior (commit 4c7d448)
     - Path: repo://internal/chunking/chunker.go
       Note: Exact source-range implementation correction (commit ecd8f2a)
+    - Path: repo://internal/db/db.go
+      Note: Append-only experiment specification run event summary and trace schema with immutability triggers
     - Path: repo://internal/experiments/canonical.go
       Note: Canonical JSON and schema-scoped IDs (commit 0f5a4a0)
     - Path: repo://internal/services/corpussnapshot/service.go
       Note: Content-addressed revision and immutable snapshot implementation (commit c846043)
     - Path: repo://internal/services/corpussnapshot/service_test.go
       Note: Immutable creation, reuse, change, and conflict coverage (commit c846043)
+    - Path: repo://internal/services/experimentrun/service.go
+      Note: Content-addressed specifications append-only runs events traces and summaries
+    - Path: repo://internal/services/experimentrun/service_test.go
+      Note: Offline lifecycle and database immutability coverage
     - Path: repo://internal/services/immutablechunk/service.go
       Note: Immutable chunk-plan and chunk-set builder (commit 425412e)
     - Path: repo://internal/services/immutableembedding/service.go
       Note: Batch artifact construction path under investigation
     - Path: repo://internal/services/immutableretrieval/bm25.go
       Note: Content-addressed BM25 artifact and evidence hydration
+    - Path: repo://internal/services/immutableretrieval/bm25_test.go
+      Note: BM25 artifact reuse and citation hydration coverage
     - Path: repo://internal/services/immutableretrieval/vector.go
-      Note: Exhaustive vector retrieval document collapse and RRF
+      Note: |-
+        Exhaustive vector retrieval document collapse and RRF
+        RRF raw-score initialization correction
     - Path: repo://internal/services/ttcimport/service.go
       Note: Deterministic TTC selection, operational import, and atomic manifest implementation (commit 2fcf2bc)
     - Path: repo://internal/services/ttcimport/service_test.go
@@ -65,6 +75,7 @@ LastUpdated: 2026-07-14T21:29:00-04:00
 WhatFor: Preserve the exact evidence, commands, failures, corrections, and reasoning used to create the TTC baseline and immutable-run implementation plan.
 WhenToUse: Read when reviewing the ticket, reproducing the TTC export, continuing implementation, or diagnosing assumptions in the design guide.
 ---
+
 
 
 
@@ -1361,4 +1372,88 @@ candidate Markdown cards
   -> JSON traces + candidate metrics + resource accounting
 
 candidate-source-validated != human-frozen evaluation-dataset/v1
+```
+
+## Step 16: Add append-only experiment specifications and run evidence
+
+This checkpoint adds the persistence boundary that turns retrieval artifacts into laboratory experiments. A content-addressed experiment specification names the immutable corpus snapshot, chunk set, lexical artifact, embedding set, candidate/frozen evaluation-dataset identifier, and canonical retrieval configuration. A generated run ID then records immutable observations of that specification: a creation event, ordered lifecycle events, one trace per query card, and at most one terminal summary.
+
+The lifecycle is intentionally represented as additions rather than updates. SQLite triggers reject update and delete operations over experiment specifications, runs, events, summaries, and traces. This makes a result reproducible even when a later implementation adds new runs with different settings.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue ,why do you keep stopping. do all items 1-5"
+
+**Assistant interpretation:** Continue from completed retrieval traces to the promised immutable experiment-run infrastructure without waiting for another prompt.
+
+**Inferred user intent:** Make the RAG laboratory able to preserve, inspect, and compare real experimental observations rather than rely on mutable scripts or summaries.
+
+**Commit (code):** pending at time of this diary entry.
+
+### What I did
+
+- Added migration V3 with `experiment_specs`, `experiment_runs`, `experiment_run_events`, `experiment_run_summaries`, and `experiment_query_traces`.
+- Added `internal/services/experimentrun`, including content-addressed specification creation/reuse, run creation, ordered event appending, canonical JSON trace persistence, immutable terminal summary creation, and run/trace queries.
+- Validated every referenced input before specification creation: the chunk set must belong to the corpus snapshot, and both BM25 and embedding artifacts must belong to that chunk set.
+- Added an end-to-end offline service fixture that creates a corpus snapshot, chunk set, BM25 artifact, specification, run, event, query trace, and terminal summary; it then proves late writes and SQL updates are rejected.
+- Added the BM25 fixture requested by the remaining retrieval task. It proves deterministic artifact reuse and hydrated title, URL, text, rank, channel, and source-range fields.
+- Corrected an RRF bug found by the focused tests: the fusion score had been initialized from the first channel’s raw retrieval score, making final rank depend on Go map iteration order. Fusion now starts at zero and accumulates only reciprocal-rank contributions; component objects retain the source-channel scores for diagnostics.
+
+### Why
+
+Experiment comparison requires two identities. The specification identity answers “what inputs and retrieval settings were intended?” The run identity answers “what observation happened at a particular execution?” A SHA-256 specification cannot identify two separate executions, and a mutable run-status row cannot preserve how an execution progressed. The split provides both without mutation.
+
+### What worked
+
+```bash
+GOWORK=off go test ./internal/services/experimentrun ./internal/services/immutableretrieval ./internal/db -count=1
+```
+
+All three packages passed. The run fixture confirmed these properties:
+
+1. Recreating an identical specification returns the same ID and reports reuse.
+2. A new run begins with a `created` event at sequence 1.
+3. Event sequence 2 can be appended, a query trace can be recorded, and completion appends the terminal event.
+4. An event or trace after terminal completion fails.
+5. An SQL `UPDATE experiment_runs` fails because the immutable trigger rejects it.
+
+### What didn't work
+
+The existing RRF unit test initially failed after the new suite made its nondeterminism visible. The issue was not a fixture expectation: `FuseRRF` copied the first channel hit, including its raw score, before adding RRF contribution. Since named channels are stored in a Go map, the first channel was unspecified. Initializing the fused score to zero fixed the real defect, and the focused test suite passed on rerun.
+
+### What I learned
+
+- Immutability must be enforced below the service layer as well as in Go code. Database triggers make accidental administrative or future-code updates fail loudly.
+- A terminal summary is an immutable observation, not a status transition on the run row. The current status is derived from whether that summary exists.
+- RRF evidence needs both score domains: raw channel scores for explanation and a clean fused score for ordering. Mixing them corrupts the algorithm.
+
+### What was tricky to build
+
+SQLite has a single writer and no application-level sequence object. Event sequence allocation occurs inside a transaction by reading the current maximum and inserting the next value. The local database uses one connection, so this is sufficient for the current bounded laboratory; a later concurrent deployment needs explicit writer serialization or a database-native sequence design.
+
+### What warrants a second pair of eyes
+
+- Review the initial terminal states (`succeeded`, `failed`, `cancelled`) and whether an explicit `abandoned` state is needed for interrupted local runs.
+- Review whether query-card trace IDs should become foreign keys once immutable evaluation datasets are persisted in the database.
+- Verify that the RRF fix preserves the UI’s expected score formatting once trace inspection is exposed.
+
+### What should be done in the future
+
+- Import the existing 20-card trace and metric artifact as the first completed run.
+- Add the `/api/v1/lab/...` endpoints and RTK Query contracts over specifications, runs, traces, and comparisons.
+- Add the human adjudication packet and wait for TTC approval before marking the evaluation dataset as frozen v1.
+
+### Code review instructions
+
+Read `migrationV3ExperimentRuns` first, then `CreateSpecification`, `CreateRun`, `AppendEvent`, `RecordQueryTrace`, and `CompleteRun`. In the tests, verify the attempted late event/trace and direct SQL update are expected to fail. Finally inspect `FuseRRF` and its test: the final score must be sum of RRF contributions only.
+
+### Technical details
+
+```text
+immutable inputs + canonical config
+  -> SHA-256 experiment specification
+  -> generated execution run
+  -> [created, progress*, terminal] append-only event stream
+  -> one immutable query trace per card
+  -> one immutable terminal metrics/cost/storage summary
 ```
