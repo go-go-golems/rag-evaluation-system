@@ -1,6 +1,8 @@
 // Probe the Geppetto embedding factory against the local Ollama service.
 // Run from the repository root:
 // GOWORK=off go run ./ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/02-geppetto-ollama-embedding-probe.go
+//go:build ignore
+
 package main
 
 import (

@@ -74,3 +74,7 @@ Completed lbwm: built and verified the real Mac-backed Ollama 768D immutable emb
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/services/immutableembedding/service.go — Immutable embedding artifact persistence
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/01-implementation-diary.md — Mac-backed execution evidence
+
+## 2026-07-14
+
+Executed and scored the first 20-card immutable TTC retrieval comparison; added trace and candidate-score scripts plus isolated standalone ticket scripts from package tests.
