@@ -1034,3 +1034,133 @@ rag-eval process --base-url 127.0.0.1:11435
      -> mimimi-2.local:127.0.0.1:11434
      -> GPU-loaded nomic-embed-text (768D)
 ```
+
+## Step 12: Specify the immutable retrieval vertical slice
+
+This step turns the completed real vector artifact into the next implementable boundary: retrieval must use immutable chunk, embedding, and index identities rather than the existing mutable `documents`, `chunks`, and `chunk_embeddings` path. The work is deliberately ordered as BM25 artifact, exhaustive vector scan, channel-local document collapse, and RRF fusion, because evaluation is judged at document-revision level while evidence remains chunk-level.
+
+The prior code inspection found that the legacy search service is useful reference code but cannot be reused as the scientific path. Its BM25 IDs omit bounded document selection, its vector query applies a candidate limit before scoring, and hybrid fusion permits multiple chunks from one document to contribute independently. The new implementation will port the algorithms while changing ownership and identifiers.
+
+### Prompt Context
+
+**User prompt (verbatim):** "do 1-5"
+
+**Assistant interpretation:** Implement the complete retrieval-to-evaluation vertical slice: immutable BM25, exhaustive vector retrieval, parent collapse/RRF, deterministic tests, real-card retrieval traces, and evaluation-dataset freeze.
+
+**Inferred user intent:** Move from having vectors to being able to inspect and compare evidence-backed retrieval quality against a fixed TTC corpus and fixed truth.
+
+**Commit (code):** Pending — retrieval implementation has not yet been committed.
+
+### What I did
+
+- Inspected `internal/services/search/bm25.go`, `vector.go`, and `hybrid.go` alongside the ticket’s retrieval design sections.
+- Confirmed the completed source artifacts used by the new path: 200 revision snapshot, 2,024 fixed chunks, and real 768D embedding set `sha256:2665c5249b8352ce6904fc00c934534dd179f3eeef0a6a75429a9034be0e03e0`.
+- Identified the required persistence and trace boundaries: content-addressed BM25 artifact, exhaustive embedding-set load, hydrated evidence, document-revision collapse, RRF components, and deterministic ties.
+
+### Why
+
+The laboratory needs explainable comparisons. A final document rank without the winning evidence chunk, pre-collapse channel results, and RRF contribution cannot explain quality differences or support citation inspection.
+
+### What worked
+
+- The existing ticket design specifies the critical algorithms and invariants at sections 14.2–14.4.
+- The real immutable embedding set is complete, so vector retrieval can be validated against actual TTC data rather than a mock model.
+
+### What didn't work
+
+- The legacy search path is not acceptable for the baseline unchanged: it uses mutable tables, has a prefix-limited vector candidate query, and fuses chunk hits without per-document channel collapse.
+
+### What I learned
+
+- Retrieval result identity has two levels: one winning chunk provides evidence, while its immutable document revision is the item used for relevance and collapse.
+- The index artifact itself must be content-addressed and published atomically; a file-system path is operational metadata, not semantic identity.
+
+### What was tricky to build
+
+The design requires both rich diagnostics and deterministic ranking. The immutable service must retain all channel chunk hits for the trace, collapse only for fusion, and sort ties by stable IDs. Collapsing too early would lose diagnostics; collapsing too late would over-credit long documents.
+
+### What warrants a second pair of eyes
+
+- Review the initial BM25 analyzer/mapping choice; it enters the index implementation version and hence artifact identity.
+- Review whether source URL/title changes belong in hydrated display metadata only or retrieval artifact content. The first path will read them from immutable document revisions.
+
+### What should be done in the future
+
+- Implement the retrieval service and offline fixture tests before running candidate cards.
+- Freeze the evaluation dataset only after humans review the candidate cards; model-generated labels remain drafts.
+
+### Code review instructions
+
+Start with the legacy search files for algorithm reference, then compare the new immutable service against ticket design sections 14.2–14.4. Confirm it never reads mutable `chunks` or `chunk_embeddings` tables.
+
+### Technical details
+
+```text
+immutable chunk set -> immutable BM25 artifact
+immutable embedding set -> exhaustive cosine channel
+channel chunk hits -> one best chunk per document revision
+document ranks -> RRF -> hydrated winning evidence + citation fields
+```
+
+## Step 13: Implement immutable BM25 artifact construction
+
+This checkpoint adds the lexical retrieval foundation on the immutable path. It builds a Bleve artifact only from `immutable_chunks` joined to `document_revisions`, fingerprints the ordered chunk membership and implementation configuration, publishes the index atomically, and records immutable artifact metadata.
+
+The query path returns chunk IDs from Bleve and then hydrates title, URL, document revision, source ranges, and exact evidence text from immutable SQLite records. This separation prevents an index copy from becoming the authority for citation text.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 12)
+
+**Assistant interpretation:** Begin the requested retrieval work with a content-addressed BM25 channel.
+
+**Inferred user intent:** Make lexical retrieval reproducible and traceable to exact TTC evidence before fusion or evaluation.
+
+**Commit (code):** `4824535` — "feat: add immutable BM25 artifacts"
+
+### What I did
+
+- Added `retrieval_artifacts` schema storage.
+- Added `internal/services/immutableretrieval/bm25.go` with deterministic manifest identity, atomic Bleve directory publication, artifact reuse validation, query, and evidence hydration.
+- Validated compilation with `GOWORK=off go test ./internal/services/immutableretrieval ./internal/db`.
+
+### Why
+
+The previous BM25 implementation reads mutable chunks and uses an ID that does not fully identify bounded input. The immutable baseline needs artifact identity to include the exact ordered chunk-set members and analyzer implementation.
+
+### What worked
+
+The new package compiled and database migration tests passed.
+
+### What didn't work
+
+No runtime corpus query has been run yet; vector, collapse, RRF, and fixture coverage remain required before declaring retrieval task `crkp` complete.
+
+### What I learned
+
+Bleve hit IDs are sufficient as an index lookup key, but immutable SQLite remains the source for evidence and citation hydration.
+
+### What was tricky to build
+
+Index publication must occur before the metadata insert, while a collision must be treated as reuse only when the stored canonical manifest matches. The index path is deliberately excluded from identity.
+
+### What warrants a second pair of eyes
+
+- Review stale temporary-index cleanup on error paths.
+- Add fixture coverage before relying on an artifact’s reuse branch.
+
+### What should be done in the future
+
+- Add exhaustive immutable vector retrieval, collapse, and RRF.
+- Add tests and build the real TTC BM25 artifact.
+
+### Code review instructions
+
+Start at `BuildBM25`, then `QueryBM25`, then `hydrate`. Verify no query uses mutable `chunks` or `chunk_embeddings`.
+
+### Technical details
+
+```text
+ordered immutable chunk IDs + analyzer config -> BM25 artifact SHA-256
+Bleve hit ID -> immutable chunk/revision hydration -> citation fields
+```
