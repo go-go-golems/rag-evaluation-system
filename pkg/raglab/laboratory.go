@@ -38,6 +38,7 @@ type Laboratory struct {
 	close     func() error
 	executor  *Executor
 	embedder  QueryEmbedder
+	loadCards func(context.Context, string) ([]EvaluationCard, error)
 }
 
 func NewLaboratory(catalog ArtifactCatalog, store ExperimentStore, allowRuns bool) *Laboratory {
@@ -58,6 +59,9 @@ func OpenSQLite(options OpenOptions) (*Laboratory, error) {
 	service := experimentrun.NewService(queries)
 	lab := NewLaboratory(NewSQLiteCatalog(queries), service, options.AllowRuns)
 	lab.executor = NewExecutor(NewSQLiteChannelRetriever(queries), service)
+	lab.loadCards = func(ctx context.Context, datasetID string) ([]EvaluationCard, error) {
+		return LoadEvaluationCards(ctx, queries, datasetID)
+	}
 	if options.QueryEmbedder != nil {
 		lab.embedder = options.QueryEmbedder
 	}
@@ -129,4 +133,22 @@ func (l *Laboratory) Execute(ctx context.Context, runID string, specification Ex
 		options.Embedder = l.embedder
 	}
 	return l.executor.Execute(ctx, runID, specification, cards, options)
+}
+
+// Run loads the frozen evaluation cards selected by the specification, creates
+// a fresh append-only run, and executes it. It is the single-call execution
+// boundary for user-facing clients such as the JavaScript laboratory module.
+func (l *Laboratory) Run(ctx context.Context, specification ExperimentSpecification) (*ExecutionResult, error) {
+	if l == nil || l.loadCards == nil {
+		return nil, errors.New("RAG_EVALUATION_DATASET_REQUIRED: laboratory must be opened with an immutable evaluation dataset loader")
+	}
+	cards, err := l.loadCards(ctx, specification.Inputs.EvaluationDataset.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "load immutable evaluation cards")
+	}
+	run, err := l.Start(ctx, specification)
+	if err != nil {
+		return nil, err
+	}
+	return l.Execute(ctx, run.ID, specification, cards, ExecutionOptions{})
 }

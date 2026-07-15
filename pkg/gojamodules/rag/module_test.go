@@ -166,9 +166,38 @@ func TestEngineRegistrarCanRequireRagModule(t *testing.T) {
 
 func TestTypeScriptModuleDeclaresRagSurface(t *testing.T) {
 	declaration := strings.Join(TypeScriptModule().RawDTS, "\n")
-	for _, want := range []string{"declare", "export function open", "export interface Experiment", "export interface Laboratory", "export function grade"} {
+	for _, want := range []string{"declare", "export function open", "export interface Experiment", "export interface Laboratory", "execute(experiment", "queryEmbed?: QueryEmbed", "export function grade"} {
 		if !strings.Contains(declaration, want) && want != "declare" {
 			t.Fatalf("TypeScript declaration missing %q: %s", want, declaration)
 		}
+	}
+}
+
+func TestGojaQueryEmbedderRequiresFiniteNumberArray(t *testing.T) {
+	vm := goja.New()
+	value, err := vm.RunString(`query => [query.length, 2.5]`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	callback, ok := goja.AssertFunction(value)
+	if !ok {
+		t.Fatal("expected JavaScript callback")
+	}
+	embedder := &gojaQueryEmbedder{runtime: &runtime{vm: vm}, callback: callback}
+	vector, err := embedder.GenerateEmbedding(context.Background(), "abc")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(vector) != 2 || vector[0] != 3 || vector[1] != 2.5 {
+		t.Fatalf("vector = %#v", vector)
+	}
+	invalidValue, err := vm.RunString(`() => [1, NaN]`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	invalid, _ := goja.AssertFunction(invalidValue)
+	embedder.callback = invalid
+	if _, err := embedder.GenerateEmbedding(context.Background(), "ignored"); err == nil || !strings.Contains(err.Error(), "finite") {
+		t.Fatalf("invalid vector error = %v", err)
 	}
 }

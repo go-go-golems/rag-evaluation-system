@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/dop251/goja"
 	"github.com/dop251/goja_nodejs/require"
@@ -67,6 +68,13 @@ type experimentHandle struct{ builder *raglab.ExperimentBuilder }
 type fragmentHandle struct{ fragment raglab.Fragment }
 type laboratoryHandle struct{ laboratory *raglab.Laboratory }
 
+type gojaQueryEmbedder struct {
+	runtime  *runtime
+	callback goja.Callable
+}
+
+var _ raglab.QueryEmbedder = (*gojaQueryEmbedder)(nil)
+
 func (r *runtime) open(call goja.FunctionCall) goja.Value {
 	options := r.objectArgument(call.Argument(0), "open options")
 	database := r.stringProperty(options, "database")
@@ -77,7 +85,15 @@ func (r *runtime) open(call goja.FunctionCall) goja.Value {
 	if execution != "" && execution != "readOnly" && execution != "allowRuns" {
 		r.throwType("RAG_INVALID_EXECUTION", "execution must be readOnly or allowRuns")
 	}
-	laboratory, err := r.factory(raglab.OpenOptions{Database: database, AllowRuns: execution == "allowRuns"})
+	openOptions := raglab.OpenOptions{Database: database, AllowRuns: execution == "allowRuns"}
+	if callbackValue := options.Get("queryEmbed"); callbackValue != nil && !goja.IsUndefined(callbackValue) && !goja.IsNull(callbackValue) {
+		callback, ok := goja.AssertFunction(callbackValue)
+		if !ok {
+			r.throwType("RAG_INVALID_QUERY_EMBED", "queryEmbed must be a synchronous function returning number[]")
+		}
+		openOptions.QueryEmbedder = &gojaQueryEmbedder{runtime: r, callback: callback}
+	}
+	laboratory, err := r.factory(openOptions)
 	if err != nil {
 		r.throw(err)
 	}
@@ -357,6 +373,13 @@ func (r *runtime) laboratoryObject(handle *laboratoryHandle) *goja.Object {
 		}
 		return r.vm.ToValue(map[string]any{"id": run.ID, "experimentSpecId": run.ExperimentSpecID, "status": run.Status})
 	})
+	modules.SetExport(object, ModuleName, "execute", func(call goja.FunctionCall) goja.Value {
+		result, err := handle.laboratory.Run(context.Background(), r.build(r.experimentArgument(call.Argument(0))))
+		if err != nil {
+			r.throw(err)
+		}
+		return r.vm.ToValue(map[string]any{"runId": result.RunID, "queryCount": result.QueryCount, "metrics": result.Metrics, "timing": result.Timing, "completedAt": result.CompletedAt})
+	})
 	modules.SetExport(object, ModuleName, "close", func(goja.FunctionCall) goja.Value {
 		if err := handle.laboratory.Close(); err != nil {
 			r.throw(err)
@@ -393,6 +416,30 @@ func (r *runtime) configure(value goja.Value, argument goja.Value) {
 	if _, err := callback(goja.Undefined(), argument); err != nil {
 		panic(err)
 	}
+}
+
+func (e *gojaQueryEmbedder) GenerateEmbedding(_ context.Context, text string) ([]float32, error) {
+	value, err := e.callback(goja.Undefined(), e.runtime.vm.ToValue(text))
+	if err != nil {
+		return nil, fmt.Errorf("RAG_QUERY_EMBED_FAILED: callback failed: %w", err)
+	}
+	if goja.IsUndefined(value) || goja.IsNull(value) {
+		return nil, errors.New("RAG_QUERY_EMBED_INVALID: callback must return number[]")
+	}
+	object := value.ToObject(e.runtime.vm)
+	length := int(object.Get("length").ToInteger())
+	if length <= 0 {
+		return nil, errors.New("RAG_QUERY_EMBED_INVALID: callback must return a non-empty number[]")
+	}
+	vector := make([]float32, length)
+	for i := range vector {
+		number := object.Get(fmt.Sprintf("%d", i)).ToFloat()
+		if math.IsNaN(number) || math.IsInf(number, 0) {
+			return nil, errors.New("RAG_QUERY_EMBED_INVALID: callback vector entries must be finite numbers")
+		}
+		vector[i] = float32(number)
+	}
+	return vector, nil
 }
 
 func (r *runtime) fragmentArgument(value goja.Value) raglab.Fragment {
