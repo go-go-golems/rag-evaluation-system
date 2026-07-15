@@ -1164,3 +1164,71 @@ Start at `BuildBM25`, then `QueryBM25`, then `hydrate`. Verify no query uses mut
 ordered immutable chunk IDs + analyzer config -> BM25 artifact SHA-256
 Bleve hit ID -> immutable chunk/revision hydration -> citation fields
 ```
+
+## Step 14: Add exhaustive immutable vector retrieval and RRF
+
+This checkpoint completes the algorithmic retrieval core that the immutable BM25 artifact will feed. The vector path loads every vector in one immutable embedding set, scores each with cosine similarity, and deterministically orders ties. Hybrid fusion first collapses each channel to one winning evidence chunk per document revision, then applies RRF.
+
+The collapse location is intentional: pre-collapse chunk hits remain available for traces, while only collapsed document ranks contribute to fusion. This prevents long documents from receiving multiple reciprocal-rank contributions from a single channel.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 12)
+
+**Assistant interpretation:** Implement the vector, parent-collapse, and RRF portions of the requested retrieval vertical slice.
+
+**Inferred user intent:** Compare lexical and semantic retrieval fairly, with diagnostic evidence that explains hybrid ranks.
+
+**Commit (code):** `3fe1b7a` — "feat: add immutable vector fusion retrieval"
+
+### What I did
+
+- Added exhaustive immutable embedding-set scan and cosine scoring.
+- Added deterministic score tie-breaking by chunk ID.
+- Added document-revision collapse and RRF component accounting.
+- Added a fixture test that proves duplicate BM25 chunks from one document yield one channel contribution and preserve the highest-ranked evidence chunk.
+
+### Why
+
+The legacy vector query limits candidates before scoring and hybrid RRF works at chunk level. Both behaviors invalidate a document-oriented baseline comparison.
+
+### What worked
+
+```bash
+GOWORK=off go test ./internal/services/immutableretrieval
+```
+
+The collapse/RRF fixture passed.
+
+### What didn't work
+
+The real operator command and query-trace persistence are not yet wired, so the real embedding set has not been queried through this new service at this checkpoint.
+
+### What I learned
+
+RRF result identity is the document revision, but each component must retain its winning chunk ID for evidence hydration.
+
+### What was tricky to build
+
+The vector path must not apply a pre-scoring candidate limit. It loads all vectors first, then limits only the final sorted hits. This is acceptable for the bounded 2,024-vector baseline and is explicitly a correctness baseline rather than an approximate ANN implementation.
+
+### What warrants a second pair of eyes
+
+- Add vector fixture coverage that exercises decoded SQLite vector bytes and an actual immutable embedding-set join.
+- Review whether RRF channel weights should be part of the next retrieval-plan identity.
+
+### What should be done in the future
+
+- Wire BM25/vector/hybrid operator commands and trace records.
+- Build the real BM25 artifact and execute the candidate-card matrix.
+
+### Code review instructions
+
+Review `QueryVector`, `CollapseDocuments`, and `FuseRRF`; then read `vector_test.go` for the expected collapse ordering and winning evidence behavior.
+
+### Technical details
+
+```text
+all vectors -> cosine ranks -> per-channel document collapse
+BM25 collapsed ranks + vector collapsed ranks -> RRF(document revision)
+```
