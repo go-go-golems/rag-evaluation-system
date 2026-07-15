@@ -21,3 +21,12 @@ Step 3: Extracted the shared immutable experiment specification schema and finge
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/experimentspec/specification.go — New schema authority
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/services/experimentrun/service.go — Uses schema authority
+
+## 2026-07-14
+
+Step 4: Added the pure typed RAG experiment builder, deterministic validation, and fingerprint tests (commit 31a3c93).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/builder.go — Fluent typed builder
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/builder_test.go — Regression coverage

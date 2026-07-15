@@ -741,6 +741,8 @@ correctness.
 | `docs/howtos/how-to-write-rag-eval-js-scripts.md` | Operator-facing xgoja/jsverb explanation. |
 | `internal/services/experimentrun/service.go` | Immutable specification/run persistence authority. |
 | `internal/experimentspec/specification.go` | Shared schema, manifest, normalization, and fingerprint contract. |
+| `pkg/raglab/types.go` | Typed artifact, retrieval, representation, metric, validation, and specification model. |
+| `pkg/raglab/builder.go` | Pure fluent Go builder and deterministic structural validation. |
 | `internal/services/immutableretrieval/bm25.go` | Lexical retrieval implementation. |
 | `internal/services/immutableretrieval/vector.go` | Vector/RRF/collapse baseline behavior. |
 | `internal/db/db.go` | Schema and append-only database constraints. |
