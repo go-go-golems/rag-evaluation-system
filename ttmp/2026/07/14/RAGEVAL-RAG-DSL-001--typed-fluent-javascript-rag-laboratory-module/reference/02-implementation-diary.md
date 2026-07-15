@@ -1381,3 +1381,87 @@ frozen 20 cards
                                                                |
                                                append-only traces + summary
 ```
+
+## Step 13: Expose explicit synchronous execution to JavaScript
+
+The JavaScript module can now execute a frozen evaluation manifest, not merely
+author, validate, and submit a plan. `lab.execute(experiment)` remains safe by
+requiring a synchronous `queryEmbed` callback for vector channels; it does not
+infer a model or endpoint from the embedding artifact.
+
+The callback is adapted to Go's narrow `QueryEmbedder` interface, validates a
+non-empty finite `number[]`, and is supplied only at `rag.open()` runtime
+construction. The laboratory loads immutable cards before creating a run, then
+starts and executes one append-only observation.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 12)
+
+**Assistant interpretation:** Continue with the next JavaScript-playground
+capability now that a live explicit provider path is understood.
+
+**Inferred user intent:** Let an operator iterate on real RAG plans from JS
+without sacrificing typed execution boundaries or reproducible runs.
+
+**Commit (code):** `cb04190e60ea9e57456d5acb487325c7704d6d7f` —
+"feat: execute RAG laboratory plans from JavaScript"
+
+### What I did
+
+- Added `Laboratory.Run`, which loads the selected immutable evaluation cards,
+  creates a run, and delegates to the executor.
+- Added `queryEmbed` to `rag.open()` and `lab.execute(experiment)` to the
+  native module and TypeScript declaration.
+- Added callback-vector validation and regression coverage for valid and NaN
+  vectors; updated the normative API reference.
+
+### Why
+
+The immutable embedding set identifies stored corpus vectors, not permission
+or capability to embed a new query. Making the caller provide the capability
+prevents hidden provider selection and keeps the tunnel outside plan identity.
+
+### What worked
+
+- `GOWORK=off go test ./pkg/raglab ./pkg/gojamodules/rag -count=1` passed.
+- The module accepts absent `queryEmbed` for lexical plans and validates
+  explicit callbacks before using them for vector plans.
+
+### What didn't work
+
+- The first test run could not write the sandbox Go build cache. Retrying with
+  normal cache access exposed and then fixed optional-property handling where
+  an absent Goja property was `nil` rather than `undefined`.
+
+### What I learned
+
+- A callback adapter is sufficient for v1 and lets JS compose Geppetto or
+  another provider without adding a personal provider DSL to `rag`.
+
+### What was tricky to build
+
+Goja missing properties can be nil at this boundary. The adapter checks nil,
+undefined, and null before asserting a callback, preserving lexical scripts.
+
+### What warrants a second pair of eyes
+
+- Review the synchronous-only constraint before any asynchronous JS provider
+  support is introduced; Goja runtime ownership must remain single-threaded.
+
+### What should be done in the future
+
+- Add a copy/paste Geppetto-backed `lab.execute()` JS example and run it
+  against the tunnel; then complete normal generated-runtime validation.
+
+### Code review instructions
+
+- Start with `pkg/gojamodules/rag/module.go` and `pkg/raglab/laboratory.go`.
+- Run the focused test command above and inspect the `queryEmbed` declarations.
+
+### Technical details
+
+```text
+JS queryEmbed(query) -> Goja adapter -> raglab.QueryEmbedder
+                              -> immutable cards -> start -> execute -> traces
+```

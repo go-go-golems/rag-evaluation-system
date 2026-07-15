@@ -99,3 +99,13 @@ Step 12: added and executed fresh explicit-provider TTC vector-only and semantic
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/reference/02-implementation-diary.md — Step 12 durable results and review instructions
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/scripts/03-run-ttc-vector-and-weighted-rrf-experiments.go — Executable observation definition
 
+
+## 2026-07-15
+
+Step 13: exposed synchronous lab.execute() to JavaScript with an explicit finite-number queryEmbed callback and immutable evaluation-card loading (commit cb04190).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/gojamodules/rag/module.go — JavaScript execution and query embedding adapter
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/laboratory.go — Atomic public run orchestration
+

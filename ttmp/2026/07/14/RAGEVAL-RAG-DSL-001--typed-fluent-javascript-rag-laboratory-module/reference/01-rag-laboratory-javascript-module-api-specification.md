@@ -113,7 +113,7 @@ type after every call.
 interface OpenOptions {
   database: string;                 // required, SQLite database path
   execution?: "readOnly" | "allowRuns";
-  defaultTopK?: number;             // positive integer; default 10
+  queryEmbed?: (query: string) => number[];
 }
 ```
 
@@ -127,6 +127,12 @@ does not open or mutate a database until an operation needs artifact lookup,
 `execution` defaults to `"readOnly"`. In that mode, `persist()` and `start()`
 throw `RAG_EXECUTION_DISABLED`. A generated project-analysis runtime SHOULD
 select only this mode. An operator runtime may select `"allowRuns"`.
+
+`queryEmbed` is optional only for lexical plans. A vector channel requires a
+synchronous callback returning a non-empty finite `number[]`; it is called for
+each evaluation query at execution time. The callback is runtime capability,
+not immutable plan data, so it can construct a Geppetto provider without
+placing hostnames, credentials, or model-server transport into a fingerprint.
 
 ```js
 const lab = rag.open({
@@ -665,6 +671,7 @@ interface Laboratory {
   inspect(ref: ArtifactRef | { kind: ArtifactKind; id: string }): ArtifactInspection;
   persist(experiment: Experiment | ExperimentSpecification): PersistedSpecification;
   start(experiment: Experiment | ExperimentSpecification, options?: StartOptions): RunHandle;
+  execute(experiment: Experiment): ExecutionResult;
   compare(leftRunId: string, rightRunId: string): RunComparison;
 }
 ```
@@ -708,6 +715,22 @@ the v1 initial module contract. Operators use the existing run-inspection API
 or web UI for progress.
 
 ### 9.3 Inspection and comparison
+
+### 9.3 Execute runs a frozen evaluation manifest synchronously
+
+```js
+const lab = rag.open({
+  database: "data/rag-eval.db",
+  execution: "allowRuns",
+  queryEmbed: query => embedder.embed(query),
+});
+const result = lab.execute(experiment);
+```
+
+`execute()` loads the immutable evaluation manifest named by the experiment,
+creates one append-only run, and records its query traces and terminal summary.
+It rejects vector plans that lack `queryEmbed`; it never infers a provider from
+the selected embedding-set artifact.
 
 ```js
 const embedding = lab.inspect(rag.artifact("embeddingSet", "sha256:..."));
@@ -801,7 +824,7 @@ at runtime; JavaScript remains dynamic, and scripts can be run without TypeScrip
   objects, functions as data, or provider credentials.
 - `.toSpec()` and `.validate()` MUST be free of writes, provider calls, and
   embedding work.
-- `lab.persist()` and `lab.start()` are the only initial public effects.
+- `lab.persist()`, `lab.start()`, and `lab.execute()` are explicit public effects.
 - A module configuration MUST make side-effect authority opt-in.
 - Any source/representation result returned after collapse MUST include
   original-source citation fields and representation provenance.
