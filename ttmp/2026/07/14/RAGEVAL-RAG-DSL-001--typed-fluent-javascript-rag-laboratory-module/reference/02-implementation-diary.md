@@ -1585,3 +1585,122 @@ JavaScript experiment -> canonical manifest -> execute -+-> traces + metrics
                                               |
 selected web trace -> /lab/specifications/{id} -> manifest_json
 ```
+
+## Step 15: Validate the generated runtime and live Geppetto execution
+
+The completed runtime validation covered both static packaging and a live
+append-only observation. The generated binary accepted the `rag` module,
+generated a declaration sidecar, and executed the pure authoring script. The
+production web build completed and emitted an updated embedded asset index.
+
+The live check then used the same 768-dimensional `nomic-embed-text` model as
+the frozen TTC embedding set. It resolved a credential-free local Geppetto
+profile, sent query embeddings through the private `rag-ollama-mimimi` SSH
+tunnel, and persisted a fresh 20-card JavaScript-driven weighted-RRF run. Its
+quality matched the earlier Go-driven weighted-RRF observation, establishing
+that the JS adapter adds no retrieval-policy drift.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 14)
+
+**Assistant interpretation:** Validate the completed RAG laboratory before
+advancing to the new reranker workstream.
+
+**Inferred user intent:** A fluent API is only useful if it can execute against
+the real corpus and provider path, not merely pass isolated unit tests.
+
+**Commit (code):** `be3623a` — "test: validate RAG JavaScript execution
+through Geppetto"
+
+### What I did
+
+- Ran `xgoja doctor`, `xgoja gen-dts`, and `xgoja build` against
+  `cmd/rag-eval/xgoja.yaml`; all completed successfully.
+- Ran `01-plan-only.js` with the generated binary and confirmed canonical
+  output and stable fingerprint without database side effects.
+- Ran `GOWORK=off go test ./... -count=1`, `GOWORK=off go build ./...`, and
+  `pnpm --dir web build`; all passed. Vite emitted only its standard advisory
+  for a 512 kB minified JavaScript bundle.
+- Verified remote Ollama model inventory over SSH, then verified the existing
+  `rag-ollama-mimimi` tmux tunnel locally. Its server contains
+  `nomic-embed-text:latest` and the downloaded reranker artifacts.
+- Stored a credential-free operational YAML profile and a frozen-TTC JS
+  runner under this ticket's `scripts/` directory. The runner created
+  `run_20b25df32dc874af1265a9e6ccf87570`.
+- Queried immutable run records: the summary status is `succeeded`, it stores
+  20 traces, MRR is `0.8201754385964911`, and relevant recall at result count
+  is `0.8157894736842105`.
+
+### Why
+
+The test must exercise the real capability boundary. A unit test can prove the
+Goja callback codec, but it cannot prove profile decoding, Ollama transport,
+vector dimensionality, frozen artifact compatibility, trace persistence, and
+web build integration together.
+
+### What worked
+
+- Generated-runtime doctor, declaration generation, binary build, pure example,
+  full Go tests, full Go build, TypeScript check, and production web build all
+  succeeded.
+- The live JS experiment reported `nomic-embed-text` with 768 dimensions and
+  completed 20 queries in 13.957 seconds wall clock.
+- The server-side immutable summary and trace count corroborate the process
+  output rather than relying on console output alone.
+
+### What didn't work
+
+- The tunnel listener initially refused connections even though an existing
+  tmux session name was present. Normal sandbox commands could not inspect the
+  tmux socket; operator-level inspection showed the session and local tunnel
+  were healthy. No tunnel was replaced.
+- An initial ad-hoc SQL query assumed flattened metric columns. The actual
+  append-only summary table deliberately stores metrics in `metrics_json`; the
+  schema inspection corrected the validation query.
+
+### What I learned
+
+The xgoja declaration artifact is an operational generated sidecar, not a
+tracked source artifact in this repository. `js/types/` is now ignored so a
+normal validation run leaves no accidental untracked declaration output. The
+operator help accurately points at that generated path.
+
+### What was tricky to build
+
+The live script needs its `embedder` resolved before `rag.open()` captures the
+`queryEmbed` callback. The final script makes that ordering explicit and keeps
+the profile YAML separate from the canonical experiment itself.
+
+### What warrants a second pair of eyes
+
+- Confirm whether the Vite 512 kB advisory merits future code splitting; it is
+  not a correctness failure for this delivery.
+- Confirm the eventual Geppetto TypeScript descriptor covers the profile and
+  embeddings API used by the example before strict whole-runtime declaration
+  generation is enabled.
+
+### What should be done in the future
+
+- Perform the public API review of summary/question representations.
+- Open the reranker ticket before selecting the reranker service boundary,
+  model family, request batching policy, or UI presentation.
+
+### Code review instructions
+
+- Run the xgoja commands documented in `examples/rag-lab-js/README.md`.
+- With the tunnel preflight from `reference/03-mimimi-ollama-tunnel-operator-playbook.md`, run
+  `scripts/05-run-rag-lab-js-geppetto.js` and inspect its new run ID.
+- Query `experiment_run_summaries` and `experiment_query_traces` by run ID to
+  confirm the durable output.
+
+### Technical details
+
+```text
+generated rag-eval-js -> gp profile -> 127.0.0.1:11435 SSH tunnel
+     |                                           |
+     v                                           v
+canonical TTC JS plan                       Mac Ollama / nomic 768D
+     |                                           |
+     +-------- execute -> 20 traces -> immutable summary <-+
+```

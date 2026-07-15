@@ -120,3 +120,14 @@ the JavaScript RAG laboratory (commit 4cd09ff).
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-eval/doc/01-rag-laboratory-javascript.md — Embedded operator tutorial
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/examples/rag-lab-js/03-execute-with-geppetto.js — Geppetto-backed execution example
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/services/experimentrun/service.go — Canonical manifest API response
+
+
+## 2026-07-15
+
+Completed the generated runtime, full repository, web production-build, and
+live Geppetto/Ollama JavaScript execution validation (commit be3623a).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/scripts/05-run-rag-lab-js-geppetto.js — Frozen TTC live JS observation
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-eval/xgoja.yaml — Generated runtime validation plan
