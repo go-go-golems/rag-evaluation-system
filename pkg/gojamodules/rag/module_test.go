@@ -98,6 +98,18 @@ func TestModuleBuildsValidSpecAndStartsExplicitRun(t *testing.T) {
 	if specification["schemaVersion"] != experimentspec.SchemaVersion || specification["fingerprint"] == "" {
 		t.Fatalf("spec = %#v", specification)
 	}
+	inputs := specification["inputs"].(map[string]any)
+	if _, ok := inputs["corpusSnapshot"]; !ok {
+		t.Fatalf("JavaScript spec must use lower-camel keys: %#v", inputs)
+	}
+	if _, leakedGoName := inputs["CorpusSnapshot"]; leakedGoName {
+		t.Fatalf("JavaScript spec leaked a Go field name: %#v", inputs)
+	}
+	retrieval := specification["retrieval"].(map[string]any)
+	channels := retrieval["channels"].([]map[string]any)
+	if channels[0]["topK"] != 50 {
+		t.Fatalf("JavaScript retrieval projection = %#v", retrieval)
+	}
 	if got["version"] != "v1" || got["persisted"].(map[string]any)["id"] != "spec-snapshot" || got["run"].(map[string]any)["id"] != "run-spec-snapshot" {
 		t.Fatalf("result = %#v", got)
 	}

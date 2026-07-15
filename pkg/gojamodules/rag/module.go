@@ -487,7 +487,87 @@ func (r *runtime) reportValue(report raglab.ValidationReport) goja.Value {
 	return r.vm.ToValue(map[string]any{"ok": report.OK(), "issues": issues})
 }
 func (r *runtime) specValue(specification raglab.ExperimentSpecification) goja.Value {
-	return r.vm.ToValue(map[string]any{"schemaVersion": specification.SchemaVersion, "fingerprint": specification.Fingerprint, "name": specification.Name, "provenance": specification.Provenance, "inputs": specification.Inputs, "retrieval": specification.Retrieval, "metrics": specification.Metrics})
+	inputs := map[string]any{
+		"corpusSnapshot":    artifactValue(specification.Inputs.CorpusSnapshot),
+		"chunkSet":          artifactValue(specification.Inputs.ChunkSet),
+		"evaluationDataset": artifactValue(specification.Inputs.EvaluationDataset),
+		"representations":   representationValues(specification.Inputs.Representations),
+	}
+	if specification.Inputs.BM25Index != nil {
+		inputs["bm25Index"] = artifactValue(*specification.Inputs.BM25Index)
+	}
+	if specification.Inputs.EmbeddingSet != nil {
+		inputs["embeddingSet"] = artifactValue(*specification.Inputs.EmbeddingSet)
+	}
+	return r.vm.ToValue(map[string]any{
+		"schemaVersion": specification.SchemaVersion,
+		"fingerprint":   specification.Fingerprint,
+		"name":          specification.Name,
+		"provenance": map[string]any{
+			"fragments": specification.Provenance.Fragments,
+			"notes":     specification.Provenance.Notes,
+			"tags":      specification.Provenance.Tags,
+		},
+		"inputs":    inputs,
+		"retrieval": retrievalValue(specification.Retrieval),
+		"metrics":   metricsValue(specification.Metrics),
+	})
+}
+
+// The Go authoring model deliberately uses Go field names internally. The
+// JavaScript contract is a separate lower-camel plain-object projection so
+// JSON.stringify(), examples, and generated declarations agree exactly.
+func artifactValue(ref raglab.ArtifactRef) map[string]any {
+	return map[string]any{"kind": string(ref.Kind), "id": ref.ID}
+}
+
+func representationValues(items []raglab.RepresentationSpec) []map[string]any {
+	result := make([]map[string]any, 0, len(items))
+	for _, item := range items {
+		result = append(result, map[string]any{
+			"name": item.Name, "kind": string(item.Kind), "artifactId": item.ArtifactID, "parent": item.Parent,
+		})
+	}
+	return result
+}
+
+func filterValue(filter raglab.FilterSpec) map[string]any {
+	return map[string]any{
+		"sourceIds": filter.SourceIDs, "documentIds": filter.DocumentIDs,
+		"contentTypes": filter.ContentTypes, "metadataEquals": filter.MetadataEquals,
+	}
+}
+
+func retrievalValue(plan raglab.RetrievalPlan) map[string]any {
+	channels := make([]map[string]any, 0, len(plan.Channels))
+	for _, channel := range plan.Channels {
+		channels = append(channels, map[string]any{
+			"name": channel.Name, "backend": string(channel.Backend), "representation": channel.Representation,
+			"topK": channel.TopK, "filter": filterValue(channel.Filter),
+		})
+	}
+	result := map[string]any{
+		"channels": channels, "filter": filterValue(plan.Filter),
+		"collapse": string(plan.Collapse), "results": plan.Results,
+	}
+	if plan.Fusion != nil {
+		result["fusion"] = map[string]any{
+			"kind": plan.Fusion.Kind, "rankConstant": plan.Fusion.RankConstant, "weights": plan.Fusion.Weights,
+		}
+	}
+	return result
+}
+
+func metricsValue(plan raglab.MetricsPlan) map[string]any {
+	result := map[string]any{
+		"precisionAt": plan.PrecisionAt, "recallAt": plan.RecallAt, "hitRateAt": plan.HitRateAt,
+		"ndcgAt": plan.NDCGAt, "mrr": plan.MRR, "meanRelevantRecallAt": plan.MeanRelevantRecall,
+		"abstention": plan.Abstention,
+	}
+	if plan.RelevanceAt != nil {
+		result["relevanceAt"] = map[string]any{"name": plan.RelevanceAt.Name, "ordinal": plan.RelevanceAt.Ordinal}
+	}
+	return result
 }
 func (r *runtime) throw(err error) {
 	validation := new(raglab.ValidationError)
