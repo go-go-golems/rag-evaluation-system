@@ -110,3 +110,88 @@ prevents model-store details from leaking into immutable experiment identity.
 ```text
 BM25 + vector -> RRF candidates (N) -> cross encoder -> reordered K -> collapse -> citations -> metrics
 ```
+
+## Step 2: Validate and publish the implementation package
+
+The ticket now has a complete implementation foundation before any reranker
+code is written. Its task list differentiates completed research decisions
+from the first probe, Go contracts, executor integration, UI work, and the
+TTC comparison matrix. This ordering ensures the response schema is observed
+before a client is committed.
+
+The document package passed docmgr validation after adding the new `reranking`
+and `ollama` vocabulary terms. It was bundled with the ticket overview,
+technical design, and diary and uploaded to the reMarkable destination below.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 1)
+
+**Assistant interpretation:** Store the design in a real ticket and deliver it
+to the tablet, not merely report a recommendation in chat.
+
+**Inferred user intent:** Give an intern a standalone, reviewable starting
+point and let the project owner read it away from the workstation.
+
+**Commit (docs):** `788c867` — "docs(ticket): design immutable RAG reranking stage"
+
+### What I did
+
+- Ran `docmgr --root ttmp doctor --ticket RAGEVAL-RERANK-001 --stale-after 30`.
+- Added the `reranking` and `ollama` topic vocabulary entries required by the
+  three ticket documents.
+- Uploaded the bundle containing `index.md`, the primary design guide, and
+  this diary with a two-level table of contents.
+
+### Why
+
+The ticket must be usable independently of this conversation. Validation and a
+single tablet bundle make the durable documentation the handoff artifact.
+
+### What worked
+
+- Docmgr reported: `✅ All checks passed`.
+- `remarquee` reported:
+  `OK: uploaded RAGEVAL Reranking Stage Guide.pdf -> /ai/2026/07/15/RAGEVAL-RERANK-001`.
+
+### What didn't work
+
+- The first ticket scaffold was accidentally created using `docmgr --root .`,
+  which placed it in a repository-level untracked `2026/` directory. It was
+  recreated correctly under `ttmp/` before substantive docs were written; the
+  empty mistaken scaffold was removed without touching project content.
+
+### What I learned
+
+This repository's active docmgr root is `ttmp/`, even though `--root .` is a
+valid CLI argument. Explicitly naming the doc root prevents an untracked
+parallel ticket tree.
+
+### What was tricky to build
+
+The design must distinguish evidence already observed from implementation
+proposals. The guide labels the llama.cpp HTTP boundary as accepted, while the
+exact decoder and collapse placement remain task-gated until the live probe.
+
+### What warrants a second pair of eyes
+
+- Before implementing Task 6, review the saved live probe response against the
+  adapter's assumed index/score JSON structure.
+
+### What should be done in the future
+
+- Execute Task 4 in a dedicated tmux session and store its curl command and
+  output artifact under `scripts/`.
+
+### Code review instructions
+
+- Read the primary design guide's Sections 4–9.
+- Confirm the ticket task ordering retains the real-probe gate before adapter
+  implementation.
+
+### Technical details
+
+```text
+ticket docs -- docmgr doctor --> validated
+           -- remarquee bundle --> /ai/2026/07/15/RAGEVAL-RERANK-001
+```
