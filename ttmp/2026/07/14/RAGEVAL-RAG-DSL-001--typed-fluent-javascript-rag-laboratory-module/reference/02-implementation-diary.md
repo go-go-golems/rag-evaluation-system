@@ -1102,3 +1102,136 @@ Go domain + executor tests ──► xgoja plan validation ──► DTS sidecar
           │                           │                       │
           └──────── generated binary + plan-only JS example ◄─┘
 ```
+
+## Step 11: Verify the mimimi Mac Ollama tunnel and publish its operator playbook
+
+The fresh vector/RRF follow-up had a genuine operational dependency: the old
+local endpoint at port 11435 was absent, but the earlier TTC embedding artifact
+was created through a Mac-hosted Ollama tunnel. This step recovered the actual
+topology from the historical experiment diary, ticket scripts, SSH defaults,
+and a live remote API check instead of treating an unverified hostname as
+configuration.
+
+The resulting playbook makes the tunnel a repeatable operator procedure. It
+separates remote model health, local tunnel health, provider configuration, and
+immutable experiment identity, so a future run can diagnose the correct layer
+without silently falling back to a local CPU-only service or copying old
+retrieval traces.
+
+### Prompt Context
+
+**User prompt (verbatim):** "use the mimimi.local ollama tunnel version, can you find information about that? create a playbook so we know what to do next time"
+
+**Assistant interpretation:** Locate and verify the previously used Mac-hosted
+Ollama forwarding route, then record a concise but complete recovery and
+usage guide in the active RAG ticket.
+
+**Inferred user intent:** Make fast, private model access a reliable piece of
+the RAG laboratory workflow so that the pending live vector/RRF experiment can
+resume without rediscovering machine-specific operational details.
+
+**Commit (code):** N/A — operator documentation and live infrastructure
+verification only.
+
+### What I did
+
+- Read the existing TTC laboratory diary, especially its Mac migration step,
+  the Geppetto probe, and the historical retrieval-trace script.
+- Inspected SSH configuration without connecting; it defines `manuel` for both
+  `mimimi.local` and `mimimi-2.local`.
+- Confirmed the old local endpoint had no listener before this step.
+- Tested the requested `mimimi.local` alias: it failed DNS resolution.
+- Tested `mimimi-2.local`: SSH succeeded, the remote Ollama API responded at
+  `127.0.0.1:11434`, and its model list contained `nomic-embed-text:latest`.
+- Added `reference/03-mimimi-ollama-tunnel-operator-playbook.md`, including
+  topology, tmux lifecycle commands, API probes, explicit Geppetto use,
+  troubleshooting, and the preflight for the pending vector/RRF study.
+
+### Why
+
+The old run’s historical evidence showed the intended route but did not give a
+future operator one durable place to distinguish its private remote service,
+the SSH loopback tunnel, and the local provider base URL. That distinction is
+necessary because `127.0.0.1:11435` is intentionally runtime-only and must
+not become a hidden immutable experiment input.
+
+### What worked
+
+- `ssh -o BatchMode=yes -o ConnectTimeout=10 mimimi-2.local ...` connected
+  successfully and reported `host=mimimi-2.local` plus
+  `models=nomic-embed-text:latest` from `GET /api/tags`.
+- The prior evidence and current remote model inventory agree on the exact
+  `nomic-embed-text` 768D provider expected by the TTC artifacts.
+- The playbook uses `ssh -N -L 127.0.0.1:11435:127.0.0.1:11434` in a named
+  tmux session with `ExitOnForwardFailure`, server keepalives, and no LAN
+  listener.
+
+### What didn't work
+
+- `ssh -o BatchMode=yes -o ConnectTimeout=10 mimimi.local ...` failed with:
+  `ssh: Could not resolve hostname mimimi.local: Name or service not known`.
+  The desired alias is not currently resolvable from this workstation.
+- The old local tunnel was not running: historical validation recorded
+  `curl: (7) Failed to connect to 127.0.0.1 port 11435`. This is a missing
+  runtime session, not evidence of a Go, Geppetto, or retrieval bug.
+
+### What I learned
+
+- “mimimi” means a local SSH loopback tunnel, not a host that should be baked
+  into code. Today the operational host is `mimimi-2.local`; the short alias
+  must be repaired at the DNS/mDNS layer if it is to be used again.
+- The Mac API is already live even though `ollama` is not on its shell PATH.
+  API health is therefore a better first diagnostic than `command -v ollama`.
+- Geppetto’s Ollama adapter uses `/api/embeddings`, while a direct current
+  Ollama health request can use `/api/embed`; both are documented to prevent
+  endpoint-version confusion.
+
+### What was tricky to build
+
+The historical work described the route with two hostnames at different times.
+Treating the requested name as a fact would have produced a playbook that
+fails at its first command. The recovery process verified the two SSH aliases
+separately, then recorded the observed distinction: `mimimi.local` is the
+intended name but currently unresolved, while `mimimi-2.local` is the live
+route to the model API.
+
+### What warrants a second pair of eyes
+
+- Confirm whether `mimimi.local` should be made a DNS/mDNS alias for
+  `mimimi-2.local`, rather than relying on the versioned name in future docs.
+- When the vector/RRF executor is wired to the live provider, review that it
+  accepts an explicit `QueryEmbedder` and logs provider/model metadata without
+  persisting host-specific transport details in the immutable plan.
+
+### What should be done in the future
+
+- Start and verify the documented tmux tunnel, then complete task `rvqq` with
+  new vector and weighted-RRF traces from the frozen 20-card TTC manifest.
+- Decide whether the workstation should retain a persistent SSH `Host` alias
+  or whether the playbook command is sufficient; do not add a global
+  forwarding rule without an explicit infrastructure decision.
+
+### Code review instructions
+
+- Begin with `reference/03-mimimi-ollama-tunnel-operator-playbook.md` and
+  compare its commands to the historical Step 11 evidence and probe script.
+- Validate the live remote side with the documented SSH health command, then
+  start the named tmux session and confirm local `/api/tags` on port 11435.
+- Run the ticket-local Geppetto probe with
+  `--base-url http://127.0.0.1:11435`; it must return a 768D vector before a
+  larger experiment starts.
+
+### Technical details
+
+```text
+configured Geppetto provider
+  BaseURL = http://127.0.0.1:11435
+  Engine  = nomic-embed-text
+  Dims    = 768
+             |
+             v
+ssh -N -L 127.0.0.1:11435:127.0.0.1:11434 mimimi-2.local
+             |
+             v
+remote Ollama, loopback only
+```

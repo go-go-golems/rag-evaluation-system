@@ -79,3 +79,13 @@ Validated all Go packages plus xgoja v2 plan, declaration generation, generated 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-eval/xgoja.yaml — Final generated runtime validation
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/raglab/executor_test.go — Executor regression coverage
 
+
+## 2026-07-15
+
+Verified the reachable Mac-hosted Ollama route and added a private SSH-loopback tunnel operator playbook; documented the unresolved mimimi.local alias, live mimimi-2.local model inventory, tmux lifecycle, Geppetto configuration, and vector/RRF preflight.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/reference/02-implementation-diary.md — Step 11 operational investigation diary
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/14/RAGEVAL-RAG-DSL-001--typed-fluent-javascript-rag-laboratory-module/reference/03-mimimi-ollama-tunnel-operator-playbook.md — Reusable verified tunnel procedure
+
