@@ -96,6 +96,19 @@
 	font-size: 11px;
 }
 
+.reranking {
+	border: 1px solid var(--rag-color-border, #c9ccd1);
+	border-radius: 4px;
+	padding: 8px;
+	display: grid;
+	gap: 5px;
+}
+
+.rerankTable { display: grid; gap: 3px; overflow-x: auto; }
+.rerankHeader, .rerankRow { display: grid; grid-template-columns: minmax(90px, 1.6fr) repeat(4, minmax(56px, 1fr)); gap: 6px; align-items: center; }
+.rerankHeader { font-size: 11px; font-weight: 700; }
+.rerankRow { font: var(--rag-font-role-caption); }
+
 .specificationLink {
 	display: flex;
 	align-items: center;

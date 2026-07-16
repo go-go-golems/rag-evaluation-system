@@ -20,6 +20,40 @@ function shortID(id: string) {
 	return id.length > 22 ? `${id.slice(0, 18)}…` : id;
 }
 
+type RerankingTrace = {
+	identity?: { kind?: string; model?: string };
+	candidates?: Array<{ candidateId?: string; preRerankRank?: number; retrievalScore?: number }>;
+	results?: Array<{ candidateId?: string; rank?: number; score?: number }>;
+};
+
+function rerankingTrace(trace: Record<string, unknown>): RerankingTrace | undefined {
+	const value = trace.reranking;
+	return value && typeof value === "object" ? (value as RerankingTrace) : undefined;
+}
+
+function RerankingTraceView({ trace }: { trace: Record<string, unknown> }) {
+	const reranking = rerankingTrace(trace);
+	if (!reranking) return null;
+	const resultByID = new Map((reranking.results ?? []).map((result) => [result.candidateId, result]));
+	return (
+		<section className={styles.reranking} aria-label="Reranking trace">
+			<strong>Cross-encoder reranking</strong>
+			<Caption>{reranking.identity?.kind ?? "unknown"} · {reranking.identity?.model ?? "unknown model"}</Caption>
+			<div className={styles.rerankTable} role="table" aria-label="Candidate rank changes">
+				<div role="row" className={styles.rerankHeader}><span>Candidate</span><span>Before</span><span>Retrieval</span><span>After</span><span>Rerank score</span></div>
+				{(reranking.candidates ?? []).map((candidate) => {
+					const result = resultByID.get(candidate.candidateId);
+					return <div role="row" className={styles.rerankRow} key={candidate.candidateId}>
+						<span title={candidate.candidateId}>{shortID(candidate.candidateId ?? "unknown")}</span>
+						<span>{candidate.preRerankRank ?? "—"}</span><span>{candidate.retrievalScore?.toFixed(4) ?? "—"}</span>
+						<span>{result?.rank ?? "truncated"}</span><span>{result?.score?.toFixed(4) ?? "—"}</span>
+					</div>;
+				})}
+			</div>
+		</section>
+	);
+}
+
 export function EvaluationPage() {
 	const catalog = useGetLabCatalogQuery();
 	const specifications = useListExperimentSpecificationsQuery();
@@ -283,6 +317,7 @@ export function EvaluationPage() {
 								<article className={styles.card} key={trace.query_card_id}>
 									<strong>{trace.query_card_id}</strong>
 									<Caption>{JSON.stringify(trace.timing)}</Caption>
+									<RerankingTraceView trace={trace.trace} />
 									<pre>{JSON.stringify(trace.trace, null, 2).slice(0, 1200)}</pre>
 								</article>
 							)) ?? <Caption>Loading traces…</Caption>}
