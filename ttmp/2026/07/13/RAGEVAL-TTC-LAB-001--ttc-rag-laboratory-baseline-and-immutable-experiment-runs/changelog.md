@@ -114,3 +114,12 @@ Added 70-card expansion draft and 50-card SQLite-grounded audit draft. These 120
 - ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/04-ttc-evaluation-expansion-v0-70-proposed-cards.md — 70-card structured authoring queue
 - ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/06-ttc-expansion-audit-and-50-card-source-grounded-draft.md — 50 source-grounded candidate cards and coverage audit
 
+
+## 2026-07-16
+
+Validated the 70-card and 50-card expansion drafts against the rebuilt TTC SQLite export: 142 unique source IDs, 142 resolved, none missing. This is identity validation only; labels and evidence spans remain open.
+
+### Related Files
+
+- ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/07-validate-expansion-source-ids.py — Read-only source-ID validator
+

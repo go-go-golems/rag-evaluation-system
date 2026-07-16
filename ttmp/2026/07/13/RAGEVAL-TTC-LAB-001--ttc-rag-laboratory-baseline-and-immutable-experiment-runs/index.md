@@ -31,6 +31,8 @@ RelatedFiles:
       Note: 50 additional SQLite-grounded candidate cards and coverage audit
     - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/06-ttc-v2-240-card-partition-and-leakage-audit-protocol.md
       Note: 240-card partition and union-find leakage audit contract
+    - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/07-ttc-expansion-source-validation-result.md
+      Note: 142 unique source IDs resolved across 120 candidate cards
     - Path: repo://ttmp/2026/07/15/RAGEVAL-RERANK-001--reranking-stage-for-the-immutable-ttc-rag-laboratory/scripts/06-ttc-v1-development-holdout-regression-split-draft.md
       Note: Leakage-aware pilot split and expansion protocol
     - Path: repo://ttmp/2026/07/15/RAGEVAL-RERANK-001--reranking-stage-for-the-immutable-ttc-rag-laboratory/scripts/07-ttc-chunk-level-evidence-label-proposal.md
@@ -41,6 +43,7 @@ LastUpdated: 2026-07-14T16:10:00-04:00
 WhatFor: Track the implementation of the first reproducible TTC RAG laboratory slice in the maintained RAG Evaluation System.
 WhenToUse: Start here when implementing or reviewing TTC corpus snapshots, baseline retrieval, experiment runs, evaluation, or laboratory UI work.
 ---
+
 
 
 
