@@ -216,6 +216,23 @@ func (b *ExperimentBuilder) Validate() ValidationReport {
 			}
 		}
 	}
+	if reranking := b.retrieval.Reranking; reranking != nil {
+		if reranking.Kind != CrossEncoderReranking {
+			report.add("RAG_INVALID_RERANKING", "$.retrieval.reranking.kind", "only crossEncoder reranking is supported")
+		}
+		if reranking.Model == "" {
+			report.add("RAG_INVALID_RERANKING", "$.retrieval.reranking.model", "reranker model is required")
+		}
+		if reranking.CandidateCount <= 0 {
+			report.add("RAG_INVALID_RERANKING", "$.retrieval.reranking.candidateCount", "candidate count must be positive")
+		}
+		if reranking.Results <= 0 || reranking.Results > reranking.CandidateCount {
+			report.add("RAG_INVALID_RERANKING", "$.retrieval.reranking.results", "reranking results must be positive and no greater than candidate count")
+		}
+		if b.retrieval.Results > reranking.Results {
+			report.add("RAG_INVALID_RERANKING", "$.retrieval.reranking.results", "reranking results must be at least final result count")
+		}
+	}
 	validateFilter(&report, "$.retrieval.filter", b.retrieval.Filter)
 	for i, channel := range b.retrieval.Channels {
 		validateFilter(&report, "$.retrieval.channels["+itoa(i)+"].filter", channel.Filter)
@@ -340,6 +357,18 @@ func (b *RetrievalBuilder) Weight(channel string, value float64) *RetrievalBuild
 		return b
 	}
 	b.plan.Fusion.Weights[channel] = value
+	return b
+}
+
+// RerankCrossEncoder configures a bounded cross-encoder stage. The model name
+// participates in canonical experiment identity; provider URL and credentials
+// are supplied separately when execution begins.
+func (b *RetrievalBuilder) RerankCrossEncoder(model string, candidateCount, results int) *RetrievalBuilder {
+	if b.plan.Reranking != nil {
+		b.experiment.buildIssues.add("RAG_CONFLICTING_RERANKING", "$.retrieval.reranking", "reranking is already configured")
+		return b
+	}
+	b.plan.Reranking = &RerankingSpec{Kind: CrossEncoderReranking, Model: model, CandidateCount: candidateCount, Results: results}
 	return b
 }
 
@@ -503,6 +532,10 @@ func normalizeRetrieval(plan RetrievalPlan) RetrievalPlan {
 			copy.Weights = nil
 		}
 		plan.Fusion = &copy
+	}
+	if plan.Reranking != nil {
+		copy := *plan.Reranking
+		plan.Reranking = &copy
 	}
 	return plan
 }

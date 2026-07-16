@@ -162,12 +162,27 @@ type FusionSpec struct {
 	Weights      map[string]float64 `json:"weights,omitempty"`
 }
 
+type RerankingKind string
+
+const CrossEncoderReranking RerankingKind = "crossEncoder"
+
+// RerankingSpec is immutable experiment policy. Endpoint credentials and
+// transport timeouts are runtime capabilities and intentionally do not belong
+// in this persisted specification.
+type RerankingSpec struct {
+	Kind           RerankingKind `json:"kind"`
+	Model          string        `json:"model"`
+	CandidateCount int           `json:"candidate_count"`
+	Results        int           `json:"results"`
+}
+
 type RetrievalPlan struct {
-	Channels []ChannelSpec `json:"channels"`
-	Filter   FilterSpec    `json:"filter,omitempty"`
-	Fusion   *FusionSpec   `json:"fusion,omitempty"`
-	Collapse CollapseScope `json:"collapse"`
-	Results  int           `json:"results"`
+	Channels  []ChannelSpec  `json:"channels"`
+	Filter    FilterSpec     `json:"filter,omitempty"`
+	Fusion    *FusionSpec    `json:"fusion,omitempty"`
+	Reranking *RerankingSpec `json:"reranking,omitempty"`
+	Collapse  CollapseScope  `json:"collapse"`
+	Results   int            `json:"results"`
 }
 
 type MetricsPlan struct {
