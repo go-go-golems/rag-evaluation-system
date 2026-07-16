@@ -71,7 +71,7 @@ func main() {
 	}
 	idRx := regexp.MustCompile("^#### `([^`]+)`")
 	listIDRx := regexp.MustCompile(`^\s*-\s+\{?id:\s*['\"]?([^,}\s]+)`)
-	qRx := regexp.MustCompile(`^query: "(.*)"`)
+	qRx := regexp.MustCompile(`(?:^|\s)query:\s*"([^"]+)"`)
 	var traces []trace
 	for _, cardPath := range strings.Split(*cards, ",") {
 		cardPath = strings.TrimSpace(cardPath)
@@ -89,7 +89,6 @@ func main() {
 			}
 			if m := listIDRx.FindStringSubmatch(line); m != nil {
 				id = m[1]
-				continue
 			}
 			if m := qRx.FindStringSubmatch(line); m != nil && id != "" {
 				query := m[1]

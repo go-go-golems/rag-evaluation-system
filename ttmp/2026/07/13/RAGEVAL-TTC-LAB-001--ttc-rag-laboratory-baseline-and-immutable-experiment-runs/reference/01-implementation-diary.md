@@ -1735,4 +1735,24 @@ two policy-conflict records whose source is absent from the current snapshot.
 The retrieval command is ready, but the development run could not start because
 the configured Ollama endpoint `http://127.0.0.1:11435` is not listening in this
 workspace. No partial traces were treated as results.
+
+## 2026-07-16: first 148-card development retrieval run
+
+The documented SSH loopback tunnel was started in tmux session
+`rag-ollama-mimimi`, forwarding `127.0.0.1:11435` to `mimimi-2.local` Ollama.
+The local `/api/tags` health check succeeded. The trace driver then processed
+150 authored cards; the two policy-conflict records were omitted from the
+registered candidate manifest, leaving 148 scored cards.
+
+The provisional development result was:
+
+- BM25 MRR `0.8221`, Recall@10 `0.8889`;
+- vector MRR `0.9174`, Recall@10 `0.9722`;
+- RRF hybrid MRR `0.9005`, Recall@10 `0.9722`;
+- mean total latency `173 ms`, P95 `230 ms`.
+
+The first run exposed two parser defects (indented queries and inline YAML
+queries); both were corrected before the successful 150-trace run. The metric
+scorer uses provisional source mappings from the candidate manifest, so these
+numbers are engineering signals only and require human evidence adjudication.
 ```

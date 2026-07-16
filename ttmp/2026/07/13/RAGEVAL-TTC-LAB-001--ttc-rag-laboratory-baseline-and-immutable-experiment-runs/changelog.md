@@ -150,3 +150,12 @@ Generalized immutable retrieval trace driver to parse multiple expansion card fi
 
 - ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/04-run-immutable-retrieval-traces.go — Multi-format expansion trace runner
 
+
+## 2026-07-16
+
+Ran the 148-card expansion development trace through Mac Ollama: vector MRR 0.9174, hybrid MRR 0.9005, BM25 MRR 0.8221; hybrid/vector Recall@10 0.9722. Mean latency 173 ms, P95 230 ms. Metrics remain provisional because source IDs are not human-adjudicated.
+
+### Related Files
+
+- ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/09-ttc-expansion-development-run-results.md — Development run result record
+
