@@ -568,6 +568,33 @@ meanings. The latter is the post-score, pre-collapse window. The executor
 scores the whole candidate set, records it, applies the policy window, then
 collapses/truncates to the former final user-facing limit.
 
+## Step 8: Render rank changes in the Evaluation trace inspector
+
+The web trace inspector previously displayed only a truncated JSON block. It
+now detects the optional reranking trace and renders a compact table for each
+query card. The table intentionally shows every candidate that was submitted,
+including a visible `truncated` post-rerank state when a candidate was scored
+but did not survive the configured result window.
+
+### What I did
+
+- Added a narrow TypeScript projection for the optional trace payload without
+  changing the generic API transport type.
+- Added the cross-encoder identity and candidate transition table to
+  `EvaluationPage`.
+- Added responsive grid styling while retaining the complete JSON trace below
+  it for unmodeled fields and forensic inspection.
+
+### What worked
+
+- `pnpm --dir web typecheck` passed.
+
+### Why
+
+An experimenter needs to see rank movement directly. A raw JSON blob does not
+make it practical to distinguish a candidate that was never retrieved from a
+candidate that was retrieved, scored, and then truncated.
+
 ### What warrants a second pair of eyes
 
 - Review whether `RerankingSpec.Results` should remain a distinct pre-collapse

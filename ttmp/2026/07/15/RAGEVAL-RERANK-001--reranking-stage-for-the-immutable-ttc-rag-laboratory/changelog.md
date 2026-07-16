@@ -28,3 +28,7 @@
 - Added executor integration for bounded reranking, strict runtime model
   identity, full candidate scoring, post-score final collapse, and durable
   per-query candidate/result trace data.
+
+- Added an Evaluation-page reranking trace table showing pre-rerank rank,
+  retrieval score, post-rerank rank (including truncation), and cross-encoder
+  score for every submitted candidate.
