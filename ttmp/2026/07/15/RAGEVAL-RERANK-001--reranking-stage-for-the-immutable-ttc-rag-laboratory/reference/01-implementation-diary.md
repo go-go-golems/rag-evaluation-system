@@ -359,6 +359,77 @@ The experiment needs model identity but must not persist the endpoint. The
 types keep `Model` in `RerankingSpec`, while URL, timeout, and credentials will
 be adapter options. This mirrors the existing explicit query-embedding design.
 
+## Step 5: Implement and validate the llama.cpp reranker adapter
+
+The concrete adapter is intentionally small and strict. It posts the observed
+`model`, `query`, `documents`, and `top_n` request shape to `/v1/rerank`, then
+uses each returned `index` to recover the submitted candidate's durable ID.
+The implementation does not trust server result order: it validates a complete
+set of distinct in-range indexes, rejects missing or non-finite scores, and
+sorts results by descending relevance score with deterministic retrieval-rank
+tie breaking.
+
+### Prompt Context
+
+**User prompt (verbatim):** “go ahead.”
+
+**Assistant interpretation:** Continue the already approved reranker task
+sequence without pausing at the adapter boundary.
+
+**Inferred user intent:** Produce a usable, reproducible runtime component,
+not merely a wire-format sketch.
+
+**Commit (code):** pending — adapter and tests are staged as this diary entry
+is written.
+
+### What I did
+
+- Added `LlamaCPPReranker` and explicit `LlamaCPPRerankerOptions` in
+  `pkg/raglab/reranker_llamacpp.go`.
+- Required an operator-supplied base URL and model; kept them out of the
+  immutable policy except for the policy's model identity.
+- Enforced a configurable serialized-request limit and propagated the caller's
+  context through `http.NewRequestWithContext`.
+- Added strict response validation for result count, mandatory fields, index
+  range/uniqueness, and finite scores.
+- Added an `httptest` contract test that returns intentionally unsorted results
+  and proves they hydrate as candidate IDs and deterministic ranks.
+- Added regression tests for oversized requests and malformed response shapes.
+
+### Why
+
+The live probe established that llama.cpp returns candidate indexes and may
+return negative scores. Mapping index to durable IDs before sorting prevents a
+later executor from accidentally treating an ephemeral server array position
+as an experiment artifact.
+
+### What worked
+
+- `GOCACHE=/tmp/rag-eval-go-build GOWORK=off go test ./pkg/raglab -count=1`
+  passed.
+- The request test verifies the exact `/v1/rerank` payload and the adapter
+  ranks `-1` ahead of `-5`, matching the observed higher-is-better convention.
+
+### What didn't work
+
+- The first test invocation used Go's default build cache under
+  `~/.cache/go-build`; this sandbox mounts it read-only. Re-running with a
+  ticket-local-safe cache under `/tmp` resolved the environmental limitation.
+  No product code failed.
+
+### What I learned
+
+Response ordering is not needed for correctness. The combination of submitted
+candidate order, returned index, score validation, and deterministic sorting is
+sufficient to construct a stable artifact.
+
+### What was tricky to build
+
+The adapter must distinguish three boundaries: the request's `TopN` requested
+from llama.cpp, the server's result cardinality, and the final rank assigned
+after local deterministic sorting. Keeping each boundary explicit makes a
+short or malformed server response fail before it contaminates a run trace.
+
 ### What warrants a second pair of eyes
 
 - Review whether `RerankingSpec.Results` should remain a distinct pre-collapse

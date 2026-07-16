@@ -16,3 +16,7 @@
 
 - Added immutable cross-encoder reranking policy and pure transport-neutral Go
   contracts with fingerprint and validation regression coverage (commit 3764e20).
+
+- Added and contract-tested the strict llama.cpp `/v1/rerank` adapter: explicit
+  endpoint/model identity, request-size limits, context-aware transport, and
+  durable-ID hydration from validated result indexes.
