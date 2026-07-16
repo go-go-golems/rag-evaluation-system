@@ -133,6 +133,8 @@ topics:
       description: Cross-encoder post-retrieval candidate scoring and ordering.
     - slug: ollama
       description: Local model runtime and model-store integration.
+    - slug: obsidian
+      description: Obsidian vault corpus structure, Markdown metadata, and wikilink semantics
 docTypes:
     - slug: design-doc
       description: Structured rationale and architecture notes
