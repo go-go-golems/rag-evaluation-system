@@ -51,3 +51,12 @@ Committed the complete upstream shortcut implementation and public documentation
 
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/packages/rag-evaluation-site/src/app/App.tsx — React shortcut runtime integration committed in 36bafb0
 - /home/manuel/code/wesen/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v3.go — Shortcut builder and page lowering committed in 36bafb0
+
+## 2026-07-16
+
+Committed the Upwork Triage consumer, rebuilt embedded assets, and operator documentation as 9905e09c1bf97d736eff7cddbdf61151675ff1e0 (upwork: add triage keyboard shortcuts).
+
+### Related Files
+
+- /home/manuel/code/wesen/claw-stuff/upwork/assets/public — Rebuilt shortcut-enabled SPA committed in 9905e09
+- /home/manuel/code/wesen/claw-stuff/upwork/verbs/lib/pages.js — Y/N/S consumer bindings committed in 9905e09

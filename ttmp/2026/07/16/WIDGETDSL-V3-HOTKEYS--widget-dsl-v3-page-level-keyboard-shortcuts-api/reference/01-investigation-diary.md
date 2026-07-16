@@ -243,6 +243,8 @@ single-key decisions without a one-off browser hack or divergence from Widget DS
 
 **Commit (code):** 36bafb06a91a3374917c5b3e8e4dec53c2015ff7 — "widgetdsl: add page keyboard shortcuts"
 
+**Commit (consumer):** 9905e09c1bf97d736eff7cddbdf61151675ff1e0 — "upwork: add triage keyboard shortcuts"
+
 ### What I did
 
 - Added `PageShortcutSpec`, modifiers, page storage, canonical chords, validation, and lowering in
