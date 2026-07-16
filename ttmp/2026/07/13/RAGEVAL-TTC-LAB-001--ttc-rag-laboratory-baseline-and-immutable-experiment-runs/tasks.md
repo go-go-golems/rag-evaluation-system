@@ -42,3 +42,6 @@
 - [ ] Adjudicate authoritative and substantial document/chunk evidence for each TTC v2 card, including negative and ambiguous controls. <!-- t:6yhf -->
 - [ ] Persist immutable TTC evaluation dataset v2 and validate snapshot/card/revision compatibility. <!-- t:0vvo -->
 - [ ] Run BGE baseline and collapse-order comparisons against development data; evaluate the holdout only after configuration freeze. <!-- t:ntev -->
+- [ ] Author and source-validate at least 200 TTC cards across independent evidence families before freezing holdout results. <!-- t:1yt0 -->
+- [ ] Partition 200+ TTC cards into development, untouched holdout, regression, and abstention/control suites with leakage audit. <!-- t:8bf2 -->
+- [ ] Compile and register immutable TTC evaluation dataset v3 after evidence adjudication and snapshot compatibility validation. <!-- t:1d4l -->
