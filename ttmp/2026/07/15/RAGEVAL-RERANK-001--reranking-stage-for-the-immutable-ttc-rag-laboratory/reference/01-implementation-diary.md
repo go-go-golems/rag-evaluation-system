@@ -195,3 +195,98 @@ exact decoder and collapse placement remain task-gated until the live probe.
 ticket docs -- docmgr doctor --> validated
            -- remarquee bundle --> /ai/2026/07/15/RAGEVAL-RERANK-001
 ```
+
+## Step 3: Probe the real llama.cpp BGE reranker contract
+
+The first reranker task was intentionally a probe rather than application code.
+The Mac already contained the BGE reranker as an Ollama model blob and the
+Ollama application bundles a compatible `llama-server` binary. This made it
+possible to establish the HTTP contract without installing another package or
+downloading a second model artifact.
+
+The server runs only on the Mac loopback interface at port 8012. A dedicated
+local tmux SSH tunnel forwards `127.0.0.1:18012` to that address. The bounded
+three-document request confirms the exact result structure, negative score
+range, `top_n` truncation behavior, and input-index mapping the Go adapter must
+validate.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead."
+
+**Assistant interpretation:** Continue from the reranker design into the next
+task-gated implementation step without waiting for a separate confirmation.
+
+**Inferred user intent:** Replace assumptions about the local reranking stack
+with measured behavior before committing the adapter architecture.
+
+### What I did
+
+- Located `/Applications/Ollama.app/Contents/Resources/llama-server` on
+  `mimimi-2.local`; its version is `1 (cb295bf59)` for Darwin arm64.
+- Read the BGE Ollama manifest and used its local model blob with
+  `--embedding --pooling rank --rerank --host 127.0.0.1 --port 8012`.
+- Started the server using `nohup` because the Mac does not have `tmux`;
+  verified `/health` returns `{"status":"ok"}`.
+- Created local tmux session `rag-reranker-mimimi` for the private tunnel
+  `127.0.0.1:18012 -> mimimi-2.local:127.0.0.1:8012`.
+- Added the executable probe script and the observed contract/results record.
+- Re-ran the script successfully: the complete request took `0.087942` seconds
+  through the tunnel.
+
+### Why
+
+The adapter must decode the actual server, not a generic interpretation of an
+OpenAI-style reranking API. Indexes refer to request document positions and
+scores are negative finite values, both of which influence correctness checks.
+
+### What worked
+
+- `/v1/rerank` returned `{model, object, usage, results}`.
+- Results contain `index` and `relevance_score`; the payroll candidate at index
+  zero had the highest score.
+- `top_n: 2` returned exactly two result rows, establishing that a complete
+  rerank pass must request `top_n == len(documents)`.
+
+### What didn't work
+
+- The initial check did not find `llama-server` on `PATH`; the executable is
+  bundled inside `Ollama.app`. The model is also stored as an Ollama blob rather
+  than a named GGUF file. Both were resolved by using their explicit paths.
+
+### What I learned
+
+The server evaluates document pairs on separate slots. The API response in this
+probe was score ordered, but request-document identity is carried only by the
+returned index. A correct adapter maps index to candidate first and sorts only
+after validation.
+
+### What was tricky to build
+
+The established local tunnel playbook uses tmux, but tmux is unavailable on the
+Mac. The Mac server is therefore a bounded `nohup` process with an explicit log
+at `/tmp/rag-reranker-llama-server.log`; the workstation tunnel remains tmux
+managed and inspectable. This preserves the private binding without pretending
+that remote process lifecycle is equivalent to the local tunnel lifecycle.
+
+### What warrants a second pair of eyes
+
+- Confirm that the adapter treats a short `top_n` response as invalid only for
+  its complete-scoring call; a future API may intentionally support partial
+  reranking with a separately declared policy.
+
+### What should be done in the future
+
+- Implement Task 5's pure contracts and fixtures from this recorded response.
+
+### Code review instructions
+
+- Run `scripts/01-probe-llamacpp-bge-reranker.sh` after checking the tunnel.
+- Compare its output to `scripts/02-llamacpp-bge-reranker-probe-results.md`.
+
+### Technical details
+
+```text
+documents[i] -> llama.cpp result.index i -> immutable candidate ID
+                         + relevance_score (finite, descending is better)
+```

@@ -5,7 +5,7 @@
 - [x] 1. Map the current raw retrieval executor, experiment persistence, and live TTC baseline; record the reranking insertion point.
 - [x] 2. Select the initial runtime contract: llama.cpp native reranking endpoint behind a private Mac tunnel, not Ollama scoring emulation.
 - [x] 3. Write the intern-ready design, API specification, evaluation matrix, and operational playbook; upload the package to reMarkable.
-- [ ] 4. Run a no-code `llama-server` probe with `qllama/bge-reranker-v2-m3:q4_k_m`; capture request/response shape, index semantics, latency, and model metadata in `scripts/`.
+- [x] 4. Run a no-code `llama-server` probe with `qllama/bge-reranker-v2-m3:q4_k_m`; capture request/response shape, index semantics, latency, and model metadata in `scripts/`.
 - [ ] 5. Define Go domain types for `Reranker`, `RerankRequest`, `RerankResult`, and an immutable `RerankingSpec`; add contract tests without modifying the executor.
 - [ ] 6. Add the llama.cpp HTTP adapter with strict response validation, request size limits, context cancellation, and operator-configured endpoint/model identity.
 - [ ] 7. Extend experiment specifications and JavaScript builders with an optional `.rerank(...)` stage; no backwards-compatibility adapter is required because this API is unmerged.

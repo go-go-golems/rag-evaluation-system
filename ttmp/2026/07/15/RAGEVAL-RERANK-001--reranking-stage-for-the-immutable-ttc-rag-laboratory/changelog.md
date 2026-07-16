@@ -10,3 +10,6 @@
 
 - Validated the ticket with docmgr and uploaded the combined index, design, and
   diary bundle to `/ai/2026/07/15/RAGEVAL-RERANK-001` on reMarkable.
+
+- Completed the live llama.cpp BGE reranker probe through the private Mac
+  tunnel; stored the executable probe and exact response/decoder contract.
