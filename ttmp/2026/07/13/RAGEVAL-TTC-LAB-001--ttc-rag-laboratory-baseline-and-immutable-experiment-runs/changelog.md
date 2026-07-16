@@ -132,3 +132,12 @@ Added the second 80-card expansion batch and upgraded the draft audit utility to
 
 - ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/05-ttc-evaluation-expansion-y-v0-80-proposed-cards.md — Second expansion batch
 
+
+## 2026-07-16
+
+Registered candidate:ttc-expansion-v0 with 148 snapshot-compatible cards; excluded two policy-conflict cards whose source is intentionally absent from the current snapshot. Emitted and committed the canonical manifest.
+
+### Related Files
+
+- ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/09-register-ttc-expansion-candidate-dataset.py — Immutable candidate registrar
+
