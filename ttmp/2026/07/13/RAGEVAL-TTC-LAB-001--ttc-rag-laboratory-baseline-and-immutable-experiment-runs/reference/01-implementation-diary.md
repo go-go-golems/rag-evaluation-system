@@ -1576,3 +1576,22 @@ artifact catalog -> compatible-input specification form -> SHA-256 specification
 
 candidate cards --human reviewer packet--> future published evaluation dataset
 ```
+
+## 2026-07-16: TTC v2 evaluation foundation
+
+The first 20-card pilot is now treated as a source of evidence families, not a
+final benchmark. Completed drafts supplied a pilot split, a chunk-level
+evidence proposal, and 72 additional candidate cards. The new candidates are
+not scored yet: a resolving source ID is weaker than an authoritative revision
+and chunk judgment.
+
+The canonical v2 design introduces a staged 110-card foundation: 75
+development, 20 holdout, and 15 regression cards. Related evidence cannot
+cross partitions. BGE remains the active reranker baseline; Qwen protocol work
+is deferred to a dedicated ticket.
+
+### Next action
+
+Adjudicate candidate cards in evidence-family batches. Each accepted card
+needs revision IDs, authoritative/substantial chunk labels, rationale, and
+explicit negative/ambiguous treatment before immutable dataset v2 registration.

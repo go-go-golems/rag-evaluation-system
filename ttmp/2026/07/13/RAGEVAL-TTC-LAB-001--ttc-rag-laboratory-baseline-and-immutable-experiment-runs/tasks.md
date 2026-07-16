@@ -37,3 +37,8 @@
 - [x] Add Storybook states for artifact, metric, trace, and comparison UI components <!-- t:nb2g -->
 - [x] Document immutable retrieval, evaluation adjudication, experiment runs, API, UI, and operator workflow <!-- t:iawa -->
 - [x] Run and record Go, TypeScript, formatting, and bounded end-to-end validation <!-- t:vico -->
+- [ ] Reconcile pilot split, chunk-label, and proposed-card drafts into the canonical TTC evaluation v2 package. <!-- t:xahq -->
+- [ ] Define a 110-card TTC foundation: 75 development, 20 holdout, and 15 regression cards grouped by evidence family. <!-- t:5wq3 -->
+- [ ] Adjudicate authoritative and substantial document/chunk evidence for each TTC v2 card, including negative and ambiguous controls. <!-- t:6yhf -->
+- [ ] Persist immutable TTC evaluation dataset v2 and validate snapshot/card/revision compatibility. <!-- t:0vvo -->
+- [ ] Run BGE baseline and collapse-order comparisons against development data; evaluate the holdout only after configuration freeze. <!-- t:ntev -->
