@@ -141,3 +141,12 @@ Registered candidate:ttc-expansion-v0 with 148 snapshot-compatible cards; exclud
 
 - ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/09-register-ttc-expansion-candidate-dataset.py — Immutable candidate registrar
 
+
+## 2026-07-16
+
+Generalized immutable retrieval trace driver to parse multiple expansion card files and inline YAML card records. Development run command is ready; execution awaits Ollama endpoint at 127.0.0.1:11435.
+
+### Related Files
+
+- ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/04-run-immutable-retrieval-traces.go — Multi-format expansion trace runner
+

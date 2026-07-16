@@ -9,6 +9,7 @@ import (
 	"flag"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	cmdhelpers "github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds"
@@ -43,7 +44,7 @@ type traceFile struct {
 
 func main() {
 	dbPath := flag.String("db", "data/rag-eval.db", "SQLite database")
-	cards := flag.String("cards", "ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/02-ttc-baseline-evaluation-dataset-v1-candidate-cards.md", "candidate cards")
+	cards := flag.String("cards", "ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/02-ttc-baseline-evaluation-dataset-v1-candidate-cards.md", "candidate card Markdown paths, comma-separated")
 	out := flag.String("out", "data/artifacts/traces/ttc-baseline-v1.json", "output JSON")
 	bm25 := flag.String("bm25-artifact", "sha256:cf6491873ec521135ade41000800751dc8eeaecba52dabbeacda1cf530f7b691", "BM25 artifact")
 	emb := flag.String("embedding-set", "sha256:2665c5249b8352ce6904fc00c934534dd179f3eeef0a6a75429a9034be0e03e0", "embedding set")
@@ -68,60 +69,68 @@ func main() {
 	if p.Close != nil {
 		defer p.Close()
 	}
-	f, e := os.Open(*cards)
-	if e != nil {
-		log.Fatal().Err(e).Msg("open cards")
-	}
-	defer f.Close()
 	idRx := regexp.MustCompile("^#### `([^`]+)`")
+	listIDRx := regexp.MustCompile(`^\s*-\s+\{?id:\s*['\"]?([^,}\s]+)`)
 	qRx := regexp.MustCompile(`^query: "(.*)"`)
-	var id string
 	var traces []trace
-	s := bufio.NewScanner(f)
-	for s.Scan() {
-		line := s.Text()
-		if m := idRx.FindStringSubmatch(line); m != nil {
-			id = m[1]
-			continue
+	for _, cardPath := range strings.Split(*cards, ",") {
+		cardPath = strings.TrimSpace(cardPath)
+		f, e := os.Open(cardPath)
+		if e != nil {
+			log.Fatal().Err(e).Str("path", cardPath).Msg("open cards")
 		}
-		if m := qRx.FindStringSubmatch(line); m != nil && id != "" {
-			query := m[1]
-			started := time.Now()
-			channelStarted := time.Now()
-			b, e := immutableretrieval.QueryBM25(context.Background(), q, *bm25, query, *limit)
-			if e != nil {
-				log.Fatal().Err(e).Str("id", id).Msg("bm25")
+		var id string
+		s := bufio.NewScanner(f)
+		for s.Scan() {
+			line := s.Text()
+			if m := idRx.FindStringSubmatch(line); m != nil {
+				id = m[1]
+				continue
 			}
-			bm25Elapsed := time.Since(channelStarted)
-			channelStarted = time.Now()
-			v, e := p.Provider.GenerateEmbedding(context.Background(), query)
-			if e != nil {
-				log.Fatal().Err(e).Str("id", id).Msg("query embedding")
+			if m := listIDRx.FindStringSubmatch(line); m != nil {
+				id = m[1]
+				continue
 			}
-			embeddingElapsed := time.Since(channelStarted)
-			channelStarted = time.Now()
-			vec, e := immutableretrieval.QueryVector(context.Background(), q, *emb, v, *limit)
-			if e != nil {
-				log.Fatal().Err(e).Str("id", id).Msg("vector")
+			if m := qRx.FindStringSubmatch(line); m != nil && id != "" {
+				query := m[1]
+				started := time.Now()
+				channelStarted := time.Now()
+				b, e := immutableretrieval.QueryBM25(context.Background(), q, *bm25, query, *limit)
+				if e != nil {
+					log.Fatal().Err(e).Str("id", id).Msg("bm25")
+				}
+				bm25Elapsed := time.Since(channelStarted)
+				channelStarted = time.Now()
+				v, e := p.Provider.GenerateEmbedding(context.Background(), query)
+				if e != nil {
+					log.Fatal().Err(e).Str("id", id).Msg("query embedding")
+				}
+				embeddingElapsed := time.Since(channelStarted)
+				channelStarted = time.Now()
+				vec, e := immutableretrieval.QueryVector(context.Background(), q, *emb, v, *limit)
+				if e != nil {
+					log.Fatal().Err(e).Str("id", id).Msg("vector")
+				}
+				vectorElapsed := time.Since(channelStarted)
+				channelStarted = time.Now()
+				hybrid := immutableretrieval.FuseRRF(map[string][]immutableretrieval.ChunkHit{"bm25": b, "vector": vec}, 60, 10)
+				fusionElapsed := time.Since(channelStarted)
+				traces = append(traces, trace{
+					ID: id, Query: query, BM25: b, Vector: vec, Hybrid: hybrid,
+					BM25DurationMilliseconds:      bm25Elapsed.Milliseconds(),
+					EmbeddingDurationMilliseconds: embeddingElapsed.Milliseconds(),
+					VectorDurationMilliseconds:    vectorElapsed.Milliseconds(),
+					FusionDurationMilliseconds:    fusionElapsed.Milliseconds(),
+					TotalDurationMilliseconds:     time.Since(started).Milliseconds(),
+				})
+				log.Info().Str("id", id).Int64("total_duration_ms", time.Since(started).Milliseconds()).Msg("completed retrieval trace")
+				id = ""
 			}
-			vectorElapsed := time.Since(channelStarted)
-			channelStarted = time.Now()
-			hybrid := immutableretrieval.FuseRRF(map[string][]immutableretrieval.ChunkHit{"bm25": b, "vector": vec}, 60, 10)
-			fusionElapsed := time.Since(channelStarted)
-			traces = append(traces, trace{
-				ID: id, Query: query, BM25: b, Vector: vec, Hybrid: hybrid,
-				BM25DurationMilliseconds:      bm25Elapsed.Milliseconds(),
-				EmbeddingDurationMilliseconds: embeddingElapsed.Milliseconds(),
-				VectorDurationMilliseconds:    vectorElapsed.Milliseconds(),
-				FusionDurationMilliseconds:    fusionElapsed.Milliseconds(),
-				TotalDurationMilliseconds:     time.Since(started).Milliseconds(),
-			})
-			log.Info().Str("id", id).Int64("total_duration_ms", time.Since(started).Milliseconds()).Msg("completed retrieval trace")
-			id = ""
 		}
-	}
-	if e := s.Err(); e != nil {
-		log.Fatal().Err(e).Msg("scan cards")
+		if e := s.Err(); e != nil {
+			log.Fatal().Err(e).Str("path", cardPath).Msg("scan cards")
+		}
+		_ = f.Close()
 	}
 	if e := os.MkdirAll("data/artifacts/traces", 0o750); e != nil {
 		log.Fatal().Err(e).Msg("mkdir")

@@ -1722,4 +1722,17 @@ candidate cards + adjudicated evidence
   -> stratified 18/6/6 assignment per primary stratum
   -> manifest + family-edge audit
   -> development selection -> one holdout comparison -> regression gate
+
+## 2026-07-16: expansion retrieval driver integration
+
+The immutable trace driver was updated to accept comma-separated candidate-card
+Markdown paths and both ticket authoring formats: heading cards, `- id:` YAML
+records, and inline `- {id: ...}` records. This allows the 70-card and 80-card
+expansion queues to use the same BM25/vector/RRF trace pipeline.
+
+The local candidate dataset is registered with 148 cards after excluding the
+two policy-conflict records whose source is absent from the current snapshot.
+The retrieval command is ready, but the development run could not start because
+the configured Ollama endpoint `http://127.0.0.1:11435` is not listening in this
+workspace. No partial traces were treated as results.
 ```
