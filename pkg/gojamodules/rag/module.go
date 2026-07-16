@@ -257,12 +257,44 @@ func (r *runtime) retrievalObject(builder *raglab.RetrievalBuilder) *goja.Object
 		r.configure(call.Argument(0), r.fusionObject(builder))
 		return object
 	})
+	set("rerank", func(call goja.FunctionCall) goja.Value {
+		config := &rerankingConfig{runtime: r}
+		r.configure(call.Argument(0), config.object())
+		builder.RerankCrossEncoder(config.model, config.candidates, config.results)
+		return object
+	})
 	set("collapse", func(call goja.FunctionCall) goja.Value {
 		builder.Collapse(raglab.CollapseScope(call.Argument(0).String()))
 		return object
 	})
 	set("results", func(call goja.FunctionCall) goja.Value {
 		builder.Results(int(call.Argument(0).ToInteger()))
+		return object
+	})
+	return object
+}
+
+// rerankingConfig collects JavaScript fluent settings before the typed Go
+// builder materializes the canonical RerankingSpec.
+type rerankingConfig struct {
+	runtime    *runtime
+	model      string
+	candidates int
+	results    int
+}
+
+func (c *rerankingConfig) object() *goja.Object {
+	object := c.runtime.vm.NewObject()
+	modules.SetExport(object, ModuleName, "crossEncoder", func(call goja.FunctionCall) goja.Value {
+		c.model = call.Argument(0).String()
+		return object
+	})
+	modules.SetExport(object, ModuleName, "candidates", func(call goja.FunctionCall) goja.Value {
+		c.candidates = int(call.Argument(0).ToInteger())
+		return object
+	})
+	modules.SetExport(object, ModuleName, "results", func(call goja.FunctionCall) goja.Value {
+		c.results = int(call.Argument(0).ToInteger())
 		return object
 	})
 	return object
@@ -600,6 +632,12 @@ func retrievalValue(plan raglab.RetrievalPlan) map[string]any {
 	if plan.Fusion != nil {
 		result["fusion"] = map[string]any{
 			"kind": plan.Fusion.Kind, "rankConstant": plan.Fusion.RankConstant, "weights": plan.Fusion.Weights,
+		}
+	}
+	if plan.Reranking != nil {
+		result["reranking"] = map[string]any{
+			"kind": string(plan.Reranking.Kind), "model": plan.Reranking.Model,
+			"candidateCount": plan.Reranking.CandidateCount, "results": plan.Reranking.Results,
 		}
 	}
 	return result

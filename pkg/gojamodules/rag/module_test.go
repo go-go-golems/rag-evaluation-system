@@ -78,6 +78,7 @@ func TestModuleBuildsValidSpecAndStartsExplicitRun(t *testing.T) {
 				.channel("lexical", c => c.bm25().topK(50))
 				.channel("semantic", c => c.vector().topK(50))
 				.fuse(f => f.rrf().rankConstant(60).weight("semantic", 1.25))
+				.rerank(x => x.crossEncoder("qllama/bge-reranker-v2-m3:q4_k_m").candidates(50).results(10))
 				.collapse("document").results(10))
 			.metrics(m => m.relevanceAt(rag.grade("2_SUBSTANTIAL")).recallAt([10, 1, 3]).mrr()));
 		const report = experiment.validate(lab);
@@ -109,6 +110,10 @@ func TestModuleBuildsValidSpecAndStartsExplicitRun(t *testing.T) {
 	channels := retrieval["channels"].([]map[string]any)
 	if channels[0]["topK"] != 50 {
 		t.Fatalf("JavaScript retrieval projection = %#v", retrieval)
+	}
+	reranking := retrieval["reranking"].(map[string]any)
+	if reranking["kind"] != "crossEncoder" || reranking["model"] != "qllama/bge-reranker-v2-m3:q4_k_m" || reranking["candidateCount"] != 50 || reranking["results"] != 10 {
+		t.Fatalf("JavaScript reranking projection = %#v", reranking)
 	}
 	if got["version"] != "v1" || got["persisted"].(map[string]any)["id"] != "spec-snapshot" || got["run"].(map[string]any)["id"] != "run-spec-snapshot" {
 		t.Fatalf("result = %#v", got)
@@ -166,7 +171,7 @@ func TestEngineRegistrarCanRequireRagModule(t *testing.T) {
 
 func TestTypeScriptModuleDeclaresRagSurface(t *testing.T) {
 	declaration := strings.Join(TypeScriptModule().RawDTS, "\n")
-	for _, want := range []string{"declare", "export function open", "export interface Experiment", "export interface Laboratory", "execute(experiment", "queryEmbed?: QueryEmbed", "export function grade"} {
+	for _, want := range []string{"declare", "export function open", "export interface Experiment", "export interface Laboratory", "execute(experiment", "queryEmbed?: QueryEmbed", "export function grade", "export interface RerankingBuilder", "rerank(configure"} {
 		if !strings.Contains(declaration, want) && want != "declare" {
 			t.Fatalf("TypeScript declaration missing %q: %s", want, declaration)
 		}
