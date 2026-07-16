@@ -45,3 +45,4 @@
 - [ ] Author and source-validate at least 200 TTC cards across independent evidence families before freezing holdout results. <!-- t:1yt0 -->
 - [ ] Partition 200+ TTC cards into development, untouched holdout, regression, and abstention/control suites with leakage audit. <!-- t:8bf2 -->
 - [ ] Compile and register immutable TTC evaluation dataset v3 after evidence adjudication and snapshot compatibility validation. <!-- t:1d4l -->
+- [ ] Run the 148-card candidate expansion through immutable BM25/vector/RRF traces once the Ollama endpoint is available; record metrics and latency. <!-- t:gmfb -->
