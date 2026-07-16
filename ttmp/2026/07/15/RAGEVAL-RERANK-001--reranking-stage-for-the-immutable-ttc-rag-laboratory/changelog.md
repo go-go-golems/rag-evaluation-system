@@ -32,3 +32,7 @@
 - Added an Evaluation-page reranking trace table showing pre-rerank rank,
   retrieval score, post-rerank rank (including truncation), and cross-encoder
   score for every submitted candidate.
+
+- Added explicit JavaScript `rag.open({ reranker })` llama.cpp capability
+  configuration and laboratory propagation, so `lab.execute()` can use the
+  private Mac reranker tunnel without putting endpoint data in an experiment.

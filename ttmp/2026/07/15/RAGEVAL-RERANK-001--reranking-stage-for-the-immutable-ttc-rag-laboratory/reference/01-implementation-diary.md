@@ -595,6 +595,51 @@ An experimenter needs to see rank movement directly. A raw JSON blob does not
 make it practical to distinguish a candidate that was never retrieved from a
 candidate that was retrieved, scored, and then truncated.
 
+## Step 9: Make the llama.cpp reranker an explicit JavaScript runtime capability
+
+`lab.execute()` obtains operational capabilities from its laboratory handle.
+The JavaScript `open` method now accepts a typed `reranker` object and creates
+the existing strict llama.cpp adapter. This closes the final path between a
+fluent experiment policy and the private Mac service while preserving the
+separation between immutable experiment identity and mutable endpoint details.
+
+```js
+const lab = rag.open({
+  database: "ttc-rag.sqlite",
+  execution: "allowRuns",
+  queryEmbed,
+  reranker: {
+    kind: "llama.cpp",
+    baseURL: "http://127.0.0.1:18012",
+    model: "qllama/bge-reranker-v2-m3:q4_k_m"
+  }
+});
+```
+
+### What I did
+
+- Added `Reranker` to `raglab.OpenOptions` and defaulted it into execution in
+  `Laboratory.Execute`.
+- Added JavaScript validation for `reranker.kind === "llama.cpp"` and adapter
+  construction from `baseURL`, `model`, and optional request limit.
+- Added TypeScript declarations for `LlamaCPPRerankerOptions`.
+- Added a Goja module test that captures the constructed capability and rejects
+  an unsupported kind.
+- Made `stringProperty` nil-safe after the test revealed that an omitted Goja
+  optional property can be represented as nil rather than undefined.
+
+### What worked
+
+- Focused Goja/laboratory tests passed.
+- `pnpm --dir web typecheck` passed.
+
+### Why
+
+The executor correctly rejects a reranking plan without a capability. Providing
+this capability through `open` makes the authority explicit at the user-facing
+boundary, rather than hiding an endpoint in environment state or in persisted
+experiment JSON.
+
 ### What warrants a second pair of eyes
 
 - Review whether `RerankingSpec.Results` should remain a distinct pre-collapse
