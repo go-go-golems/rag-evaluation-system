@@ -495,6 +495,79 @@ The returned Goja maps must use `candidateCount`, while Go persistence uses
 `candidate_count`. The explicit projection keeps JavaScript scripts consistent
 with TypeScript without altering the stored immutable representation.
 
+## Step 7: Execute reranking and persist both candidate orders
+
+The executor now treats reranking as an explicit runtime capability. It forms
+the ordinary raw or RRF candidate list, limits that list by the immutable
+`candidateCount`, submits every candidate for scoring, and applies the
+declared reranking result window before final document collapse and final
+result truncation. The trace records the stable reranker identity, every
+submitted candidate's pre-rerank rank and retrieval score, and every returned
+scored result.
+
+### Prompt Context
+
+**User prompt (verbatim):** “do you know how to continue? you should only stop
+if you're at a loss of what to do next”
+
+**Assistant interpretation:** Resume a deterministic test-fixture correction
+and continue the task sequence rather than treating ordinary validation as a
+blocker.
+
+**Commit (code):** pending — executor integration and regression coverage are
+ready to commit.
+
+### What I did
+
+- Added the explicit `ExecutionOptions.Reranker` capability and fail-fast
+  validation for a plan that declares reranking without supplying one.
+- Used the policy candidate count as the RRF output limit when reranking is
+  enabled, avoiding premature truncation to the final display count.
+- Added `applyReranking`, which checks model identity, requires hydrated chunk
+  text, preserves candidate IDs, requests scores for the complete submitted
+  window, and rejects unknown returned IDs.
+- Persisted `reranking.identity`, `reranking.candidates`, and
+  `reranking.results` in each query trace.
+- Added an executor regression test using a deterministic reverse reranker;
+  it proves the first raw candidate becomes the second final result and that
+  the complete before/after trace is recorded.
+
+### Why
+
+Reranking cannot be inferred after a run. The trace must retain candidate
+order and original retrieval scores so a user can distinguish poor retrieval
+from changed cross-encoder ranking.
+
+### What worked
+
+- `GOCACHE=/tmp/rag-eval-go-build GOWORK=off go test ./pkg/raglab -run
+  TestExecutorReranksBoundedCandidatesAndPersistsBothOrders -count=1` passed.
+- `GOWORK=off go test ./pkg/raglab -count=1` passed outside the sandbox. This
+  full run also exercised the adapter's `httptest` HTTP contract.
+
+### What didn't work
+
+- The initial new fixture omitted required metric configuration, then omitted
+  the relevance threshold required for a graded metric. Both errors were
+  deterministic builder diagnostics; adding the explicit threshold fixed the
+  test setup. They did not indicate an executor defect.
+- The sandbox cannot bind the loopback listener used by `httptest`; the normal
+  environment full suite passed.
+
+### What I learned
+
+For the current RRF implementation, duplicate document revisions are already
+collapsed inside `FuseWeightedRRF`. Single-channel retrieval, however, retains
+raw chunk candidates until reranking. The trace makes that distinction visible
+and preserves the evidence needed for Task 11's collapse-order decision.
+
+### What was tricky to build
+
+The plan's `results` and the reranker policy's `results` have distinct
+meanings. The latter is the post-score, pre-collapse window. The executor
+scores the whole candidate set, records it, applies the policy window, then
+collapses/truncates to the former final user-facing limit.
+
 ### What warrants a second pair of eyes
 
 - Review whether `RerankingSpec.Results` should remain a distinct pre-collapse

@@ -24,3 +24,7 @@
 - Exposed immutable reranking policy in `require("rag")` with the fluent
   `rerank(x => x.crossEncoder(...).candidates(...).results(...))` API,
   TypeScript declarations, and JavaScript-spec projection (commit 51c9f89).
+
+- Added executor integration for bounded reranking, strict runtime model
+  identity, full candidate scoring, post-score final collapse, and durable
+  per-query candidate/result trace data.
