@@ -123,3 +123,12 @@ Validated the 70-card and 50-card expansion drafts against the rebuilt TTC SQLit
 
 - ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/07-validate-expansion-source-ids.py — Read-only source-ID validator
 
+
+## 2026-07-16
+
+Added the second 80-card expansion batch and upgraded the draft audit utility to parse both YAML-list formats, including explicit unanswerable controls. The expansion queue now contains 200 records beyond the pilot; source validation resolves 173 unique IDs.
+
+### Related Files
+
+- ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/05-ttc-evaluation-expansion-y-v0-80-proposed-cards.md — Second expansion batch
+

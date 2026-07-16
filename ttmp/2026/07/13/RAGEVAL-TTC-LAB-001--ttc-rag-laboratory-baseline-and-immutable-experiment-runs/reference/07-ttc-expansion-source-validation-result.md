@@ -22,13 +22,15 @@ WhenToUse: Run after changing either expansion draft and before building evidenc
 
 # Result
 
-The validator scanned the 70-card structured expansion draft and the 50-card
-SQLite-grounded audit draft. It found **142 unique `wp:*` source IDs**, and all
-142 resolved in `data/ttc-wordpress-rag.sqlite`:
+The validator scanned the 70-card structured expansion draft, the 80-card
+comparison/diagnostic expansion draft, and the 50-card SQLite-grounded audit
+draft. Together they contain **200 expansion records** (plus the 20-card
+pilot), with **173 unique `wp:*` source IDs**. All 173 resolved in
+`data/ttc-wordpress-rag.sqlite`:
 
 ```text
-files=2 unique_source_ids=142
-resolved=142 missing=0
+files=3 unique_source_ids=173
+resolved=173 missing=0
 ```
 
 The validator checks only document identity and reports document kind/title.
@@ -46,6 +48,6 @@ python3 ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-imm
   ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/06-ttc-expansion-audit-and-50-card-source-grounded-draft.md
 ```
 
-The 120 cards are therefore source-ID-grounded candidates, not 120 frozen
-judgments. The next gate is full-text inspection, exact revision/chunk
+The 200 expansion records are therefore source-ID-grounded candidates, not 200
+independent or frozen judgments. The next gate is full-text inspection, exact revision/chunk
 evidence, evidence-family union, and reviewer adjudication.
