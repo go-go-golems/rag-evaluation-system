@@ -4,4 +4,4 @@ package spec
 
 import logcopter "github.com/go-go-golems/logcopter/pkg/logcopter"
 
-var log = logcopter.Package("go-go-golems.rag-evaluation-system.pkg.widgetdsl.v2.spec")
+var log = logcopter.Package("go-go-golems.rag-evaluation-system.pkg.widgetdsl.spec")

@@ -219,7 +219,8 @@ Runtime factory: `NewObject`.
 
 All builders below expose `use(fragment)` in addition to their listed methods.
 
-- `PageBuilder`: [id title meta shell root density breadcrumb section view validate toPage use]
+- `PageBuilder`: [id title meta shell shortcuts root density breadcrumb section view validate toPage use]
+- `ShortcutsBuilder`: [bind use]
 - `AppShellBuilder`: [brand navigation content use]
 - `NavigationBuilder`: [placement active width narrowMode ariaLabel section use]
 - `NavigationItemsBuilder`: [item use]
@@ -260,6 +261,7 @@ All builders below expose `use(fragment)` in addition to their listed methods.
 
 ## Action contexts
 
+- `page.shortcut` (`PageShortcut`): `[pageId shortcutId key componentType]`. Context dispatched when a page-level keyboard shortcut activates.
 - `app.navigate` (`SidebarNav`): `[itemId value componentType]`. Context dispatched by typed application navigation.
 - `table.rowSelect` (`DataTable`): `[row rowKey componentType]`. Context dispatched when a collection row is selected.
 - `table.cellAction` (`DataTableCell`): `[row rowKey componentType]`. Context dispatched by an action-button cell.
@@ -289,7 +291,6 @@ All builders below expose `use(fragment)` in addition to their listed methods.
 - `crm.fieldChange` (`RecordFieldList`): `[key value componentType]`. Context dispatched when a CRM record field changes.
 - `activity.open` (`ActivityFeed`): `[activityId componentType]`. Context dispatched when an activity is opened.
 - `activity.loadMore` (`ActivityFeed`): `[componentType]`. Context dispatched when earlier activities are requested.
-
 
 ## Using this reference
 

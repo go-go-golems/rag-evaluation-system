@@ -1,12 +1,15 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { ErrorCallout } from "../components/atoms";
 import { Caption } from "../components/foundation";
 import { AppShell, Panel, SidebarShell } from "../components/layout";
-import { AppNav, SidebarNav } from "../components/molecules";
+import { AppNav, KeyboardShortcutHelp, SidebarNav } from "../components/molecules";
 import { CourseStudioShell } from "../components/organisms";
+import { ariaKeyShortcuts, formatShortcutChord } from "../hooks/pageShortcuts.logic";
+import { usePageShortcuts } from "../hooks/usePageShortcuts";
 import {
 	type PageNavigationItemSpec,
 	type PageShellSpec,
+	type PageShortcutSpec,
 	useWidgetPage,
 	type WidgetPageResponse,
 } from "../hooks/useWidgetPage";
@@ -43,6 +46,18 @@ interface WidgetPageMeta {
 	maxWidth?: PageMaxWidth;
 }
 
+const SHORTCUT_PREFERENCE_KEY = "rag-evaluation-site:page-shortcuts-enabled";
+const EMPTY_PAGE_SHORTCUTS: PageShortcutSpec[] = [];
+
+function readShortcutPreference(): boolean {
+	if (typeof window === "undefined") return true;
+	try {
+		return window.localStorage.getItem(SHORTCUT_PREFERENCE_KEY) !== "false";
+	} catch {
+		return true;
+	}
+}
+
 const DEFAULT_NAV_ITEMS: AppNavItemSpec[] = [
 	{ id: "index", label: "Overview" },
 	{ id: "demo", label: "Demo" },
@@ -54,6 +69,7 @@ export function RagEvaluationSiteApp({
 	defaultPageId = "index",
 }: RagEvaluationSiteAppProps) {
 	const [locationVersion, setLocationVersion] = useState(0);
+	const [shortcutsEnabled, setShortcutsEnabled] = useState(readShortcutPreference);
 
 	useEffect(() => {
 		const handleLocationChange = () => setLocationVersion((version) => version + 1);
@@ -68,47 +84,69 @@ export function RagEvaluationSiteApp({
 		`${cleanApiBase}/pages/${encodeURIComponent(pageId)}${pageSearch}`,
 	);
 
-	async function handleAction(action: ActionSpec, context: WidgetActionContext): Promise<void> {
-		if (!confirmWidgetAction(action, context)) {
-			return;
-		}
-		if (action.kind !== "server") {
-			dispatchWidgetAction(action, context);
-			return;
-		}
-		const response = await fetch(`${cleanApiBase}/actions/${encodeURIComponent(action.name)}`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ payload: resolveActionPayload(action.payload, context), context }),
-		});
-		const result = (await response.json().catch(() => ({
-			ok: false,
-			error: `Widget action failed: ${response.status} ${response.statusText}`,
-		}))) as {
-			ok?: boolean;
-			refresh?: boolean;
-			toast?: string;
-			error?: string;
-			fieldErrors?: Record<string, string>;
-		};
-		if (typeof window !== "undefined") {
-			window.dispatchEvent(
-				new CustomEvent("widget:action-result", {
-					detail: { action, context, responseOk: response.ok, result },
-				}),
-			);
-			if (result.toast || result.error)
+	const handleAction = useCallback(
+		async (action: ActionSpec, context: WidgetActionContext): Promise<void> => {
+			if (!confirmWidgetAction(action, context)) {
+				return;
+			}
+			if (action.kind !== "server") {
+				dispatchWidgetAction(action, context);
+				return;
+			}
+			const response = await fetch(`${cleanApiBase}/actions/${encodeURIComponent(action.name)}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ payload: resolveActionPayload(action.payload, context), context }),
+			});
+			const result = (await response.json().catch(() => ({
+				ok: false,
+				error: `Widget action failed: ${response.status} ${response.statusText}`,
+			}))) as {
+				ok?: boolean;
+				refresh?: boolean;
+				toast?: string;
+				error?: string;
+				fieldErrors?: Record<string, string>;
+			};
+			if (typeof window !== "undefined") {
 				window.dispatchEvent(
-					new CustomEvent("widget:toast", {
-						detail: {
-							message: result.toast ?? result.error,
-							tone: response.ok && result.ok !== false ? "success" : "danger",
-						},
+					new CustomEvent("widget:action-result", {
+						detail: { action, context, responseOk: response.ok, result },
 					}),
 				);
+				if (result.toast || result.error)
+					window.dispatchEvent(
+						new CustomEvent("widget:toast", {
+							detail: {
+								message: result.toast ?? result.error,
+								tone: response.ok && result.ok !== false ? "success" : "danger",
+							},
+						}),
+					);
+			}
+			if (response.ok && result.refresh) refresh();
+		},
+		[cleanApiBase, refresh],
+	);
+
+	const shortcutBindings = page?.shortcuts?.bindings ?? EMPTY_PAGE_SHORTCUTS;
+	usePageShortcuts({
+		pageId: page?.id ?? pageId,
+		bindings: shortcutBindings,
+		enabled: shortcutsEnabled,
+		onAction: handleAction,
+	});
+
+	const updateShortcutsEnabled = (enabled: boolean) => {
+		setShortcutsEnabled(enabled);
+		if (typeof window !== "undefined") {
+			try {
+				window.localStorage.setItem(SHORTCUT_PREFERENCE_KEY, String(enabled));
+			} catch {
+				// The in-memory preference still applies when storage is unavailable.
+			}
 		}
-		if (response.ok && result.refresh) refresh();
-	}
+	};
 
 	if (loading && !page) {
 		return (
@@ -136,9 +174,18 @@ export function RagEvaluationSiteApp({
 
 	return (
 		<>
-			{renderPage(page, pageId, (action, context) => {
+			{renderPage(page, pageId, shortcutsEnabled, (action, context) => {
 				void handleAction(action, context);
 			})}
+			<KeyboardShortcutHelp
+				items={shortcutBindings.map((binding) => ({
+					id: binding.id,
+					label: binding.label,
+					chord: formatShortcutChord(binding),
+				}))}
+				enabled={shortcutsEnabled}
+				onEnabledChange={updateShortcutsEnabled}
+			/>
 			{loading && <RoutePendingIndicator />}
 			{error && (
 				<ErrorCallout className="rag-evaluation-site-inline-error">
@@ -166,10 +213,14 @@ function RoutePendingIndicator(): ReactNode {
 function renderPage(
 	page: WidgetPageResponse,
 	pageId: string,
+	shortcutsEnabled: boolean,
 	onAction: (action: ActionSpec, context: WidgetActionContext) => void,
 ): ReactNode {
 	const meta = normalizeMeta(page.meta);
 	const shell = resolvePageShell(page, pageId, meta);
+	const shortcutKeys = shortcutsEnabled
+		? ariaKeyShortcuts(page.shortcuts?.bindings ?? EMPTY_PAGE_SHORTCUTS)
+		: undefined;
 	const usesFramedAppShell = shell.kind === "app" && shell.navigation.placement === "top";
 	const rootClassName = [
 		"rag-evaluation-site-root",
@@ -188,6 +239,7 @@ function renderPage(
 				data-rag-page="RagEvaluationSiteApp"
 				data-page-id={page.id}
 				data-rag-shell="course-studio"
+				aria-keyshortcuts={shortcutKeys}
 			>
 				{renderCourseStudioShellPage(legacyCourseShellNode, onAction)}
 			</div>
@@ -205,6 +257,7 @@ function renderPage(
 				data-rag-page="RagEvaluationSiteApp"
 				data-page-id={page.id}
 				data-rag-shell={shell.kind}
+				aria-keyshortcuts={shortcutKeys}
 			>
 				{renderedRoot}
 			</div>
@@ -240,6 +293,7 @@ function renderPage(
 				data-rag-page="RagEvaluationSiteApp"
 				data-page-id={page.id}
 				data-rag-shell="app-sidebar"
+				aria-keyshortcuts={shortcutKeys}
 			>
 				<SidebarShell
 					sidebarWidth={navigation.sidebarWidth ?? 188}
@@ -282,6 +336,7 @@ function renderPage(
 			data-rag-page="RagEvaluationSiteApp"
 			data-page-id={page.id}
 			data-rag-shell="app-top"
+			aria-keyshortcuts={shortcutKeys}
 		>
 			<AppShell
 				className="rag-evaluation-site-shell"

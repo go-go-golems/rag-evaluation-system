@@ -123,6 +123,7 @@ export function DataTable<T>({
 		<table
 			className={[styles.root, className ?? ""].filter(Boolean).join(" ")}
 			data-rag-component="DataTable"
+			data-rag-keyboard-scope={keyboard ? "DataTable" : undefined}
 		>
 			<thead>
 				<tr>

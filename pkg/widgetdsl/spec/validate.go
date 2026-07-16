@@ -24,6 +24,24 @@ func (s PageSpec) Validate() []ValidationIssue {
 	if s.Shell != nil {
 		issues = append(issues, s.Shell.Validate("shell")...)
 	}
+	seenShortcutIDs := map[string]int{}
+	seenShortcutChords := map[string]int{}
+	for i, shortcut := range s.Shortcuts {
+		path := fmt.Sprintf("shortcuts.bindings[%d]", i)
+		issues = append(issues, shortcut.Validate(path)...)
+		id := strings.TrimSpace(shortcut.ID)
+		if first, ok := seenShortcutIDs[id]; id != "" && ok {
+			issues = append(issues, errorIssue("page.shortcut.id.duplicate", path+".id", fmt.Sprintf("Duplicate shortcut id %q; first used at bindings[%d].", id, first), "Use a unique stable command id."))
+		} else if id != "" {
+			seenShortcutIDs[id] = i
+		}
+		chord := shortcut.CanonicalChord()
+		if first, ok := seenShortcutChords[chord]; chord != "" && ok {
+			issues = append(issues, errorIssue("page.shortcut.chord.duplicate", path+".key", fmt.Sprintf("Duplicate shortcut chord %q; first used at bindings[%d].", chord, first), "Choose a unique key and modifier combination."))
+		} else if chord != "" {
+			seenShortcutChords[chord] = i
+		}
+	}
 	if s.Root.Kind != "" {
 		issues = append(issues, s.Root.Validate("root")...)
 	}
@@ -97,6 +115,60 @@ func (s ContentViewportSpec) Validate(path string) []ValidationIssue {
 	if s.Scroll != "" && s.Scroll != "page" && s.Scroll != "main" {
 		issues = append(issues, errorIssue("page.shell.content.scroll.invalid", path+".scroll", fmt.Sprintf("Unknown content scroll mode %q.", s.Scroll), "Use page or main."))
 	}
+	return issues
+}
+
+// CanonicalChord returns the normalized chord used for duplicate validation.
+func (s PageShortcutSpec) CanonicalChord() string {
+	key := strings.TrimSpace(s.Key)
+	if len(key) == 1 && key[0] >= 'A' && key[0] <= 'Z' {
+		key = strings.ToLower(key)
+	}
+	present := map[ShortcutModifier]bool{}
+	for _, modifier := range s.Modifiers {
+		present[modifier] = true
+	}
+	parts := []string{}
+	for _, modifier := range []ShortcutModifier{ShortcutModifierAlt, ShortcutModifierControl, ShortcutModifierMeta, ShortcutModifierShift} {
+		if present[modifier] {
+			parts = append(parts, string(modifier))
+		}
+	}
+	if key == "" {
+		return ""
+	}
+	return strings.Join(append(parts, key), "+")
+}
+
+// Validate checks a page shortcut before browser transport.
+func (s PageShortcutSpec) Validate(path string) []ValidationIssue {
+	issues := []ValidationIssue{}
+	if strings.TrimSpace(s.ID) == "" {
+		issues = append(issues, errorIssue("page.shortcut.id.required", path+".id", "Shortcut id is required.", "Use a stable command id such as accept or skip."))
+	}
+	key := strings.TrimSpace(s.Key)
+	if key == "" {
+		issues = append(issues, errorIssue("page.shortcut.key.required", path+".key", "Shortcut key is required.", "Use a KeyboardEvent.key value such as y or Enter."))
+	} else if strings.Contains(key, "+") && len(key) > 1 {
+		issues = append(issues, errorIssue("page.shortcut.key.chord.invalid", path+".key", "Shortcut key must not contain serialized modifiers.", "Put Control, Alt, Meta, or Shift in modifiers and keep key separate."))
+	}
+	if strings.TrimSpace(s.Label) == "" {
+		issues = append(issues, errorIssue("page.shortcut.label.required", path+".label", "Shortcut label is required.", "Describe the command for shortcut help and accessibility."))
+	}
+	seenModifiers := map[ShortcutModifier]bool{}
+	for i, modifier := range s.Modifiers {
+		modifierPath := fmt.Sprintf("%s.modifiers[%d]", path, i)
+		if !validShortcutModifier(modifier) {
+			issues = append(issues, errorIssue("page.shortcut.modifier.invalid", modifierPath, fmt.Sprintf("Unknown shortcut modifier %q.", modifier), "Use Alt, Control, Meta, or Shift."))
+		} else if seenModifiers[modifier] {
+			issues = append(issues, errorIssue("page.shortcut.modifier.duplicate", modifierPath, fmt.Sprintf("Duplicate shortcut modifier %q.", modifier), "List each modifier once."))
+		}
+		seenModifiers[modifier] = true
+	}
+	if len(key) == 1 && len(s.Modifiers) == 0 {
+		issues = append(issues, warningIssue("page.shortcut.character.unmodified", path+".key", "Unmodified character shortcuts require a user-facing disable, remap, or focus-only mechanism.", "Expose the host shortcut preference and visible shortcut help."))
+	}
+	issues = append(issues, s.Action.Validate(path+".action")...)
 	return issues
 }
 
@@ -338,6 +410,15 @@ func validateOptionalAction(action *ActionSpec, path string) []ValidationIssue {
 		return nil
 	}
 	return action.Validate(path)
+}
+
+func validShortcutModifier(modifier ShortcutModifier) bool {
+	switch modifier {
+	case ShortcutModifierAlt, ShortcutModifierControl, ShortcutModifierMeta, ShortcutModifierShift:
+		return true
+	default:
+		return false
+	}
 }
 
 func validFieldKind(kind FieldKind) bool {

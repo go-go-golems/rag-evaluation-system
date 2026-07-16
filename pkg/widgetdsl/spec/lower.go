@@ -16,6 +16,9 @@ func (s PageSpec) ToWidgetPage() JSONObject {
 	if s.Shell != nil {
 		page["shell"] = s.Shell.ToJSON()
 	}
+	if len(s.Shortcuts) > 0 {
+		page["shortcuts"] = JSONObject{"bindings": pageShortcutsToJSON(s.Shortcuts)}
+	}
 	if s.Root.Kind != "" {
 		page["root"] = s.Root.ToWidgetNode()
 	}
@@ -96,6 +99,26 @@ func (s ContentViewportSpec) ToJSON() JSONObject {
 	}
 	if s.Scroll != "" {
 		out["scroll"] = s.Scroll
+	}
+	return out
+}
+
+func pageShortcutsToJSON(shortcuts []PageShortcutSpec) []JSONValue {
+	out := make([]JSONValue, 0, len(shortcuts))
+	for _, shortcut := range shortcuts {
+		modifiers := make([]JSONValue, 0, len(shortcut.Modifiers))
+		for _, modifier := range shortcut.Modifiers {
+			modifiers = append(modifiers, string(modifier))
+		}
+		out = append(out, JSONObject{
+			"id":             shortcut.ID,
+			"key":            shortcut.Key,
+			"modifiers":      modifiers,
+			"label":          shortcut.Label,
+			"action":         shortcut.Action.ToWidgetAction(),
+			"preventDefault": shortcut.PreventDefault,
+			"allowRepeat":    shortcut.AllowRepeat,
+		})
 	}
 	return out
 }
