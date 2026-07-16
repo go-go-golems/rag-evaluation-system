@@ -43,6 +43,7 @@ type EvaluationCard struct {
 
 type ExecutionOptions struct {
 	Embedder QueryEmbedder
+	Reranker Reranker
 }
 
 type ExecutionResult struct {
@@ -158,6 +159,9 @@ func executable(specification ExperimentSpecification, options ExecutionOptions)
 			return errors.New("RAG_EMBEDDER_REQUIRED: vector retrieval needs an explicit query embedder")
 		}
 	}
+	if specification.Retrieval.Reranking != nil && options.Reranker == nil {
+		return errors.New("RAG_RERANKER_REQUIRED: reranking needs an explicit reranker")
+	}
 	return nil
 }
 
@@ -167,9 +171,22 @@ type executionTrace struct {
 	Channels          map[string][]immutableretrieval.ChunkHit `json:"channels"`
 	Results           []immutableretrieval.ChunkHit            `json:"results"`
 	Fusion            []immutableretrieval.FusedHit            `json:"fusion,omitempty"`
+	Reranking         *rerankingTrace                          `json:"reranking,omitempty"`
 	Timing            executionTiming                          `json:"timing"`
 	FirstRelevantRank int                                      `json:"firstRelevantRank,omitempty"`
 	RecallAtResults   float64                                  `json:"recallAtResults,omitempty"`
+}
+
+type rerankingTrace struct {
+	Identity   RerankerIdentity          `json:"identity"`
+	Candidates []rerankingCandidateTrace `json:"candidates"`
+	Results    []RerankResult            `json:"results"`
+}
+
+type rerankingCandidateTrace struct {
+	CandidateID    string  `json:"candidateId"`
+	PreRerankRank  int     `json:"preRerankRank"`
+	RetrievalScore float64 `json:"retrievalScore"`
 }
 
 type executionTiming struct {
@@ -221,10 +238,10 @@ func (e *Executor) executeCard(ctx context.Context, specification ExperimentSpec
 	trace := executionTrace{QueryID: card.ID, Query: card.Query, Channels: channels}
 	if len(specification.Retrieval.Channels) == 1 {
 		trace.Results = append([]immutableretrieval.ChunkHit(nil), channels[specification.Retrieval.Channels[0].Name]...)
-		if specification.Retrieval.Collapse == CollapseDocument {
+		if specification.Retrieval.Reranking == nil && specification.Retrieval.Collapse == CollapseDocument {
 			trace.Results = immutableretrieval.CollapseDocuments(trace.Results)
 		}
-		if len(trace.Results) > specification.Retrieval.Results {
+		if specification.Retrieval.Reranking == nil && len(trace.Results) > specification.Retrieval.Results {
 			trace.Results = trace.Results[:specification.Retrieval.Results]
 		}
 	} else {
@@ -232,15 +249,78 @@ func (e *Executor) executeCard(ctx context.Context, specification ExperimentSpec
 		if specification.Retrieval.Fusion != nil {
 			weights = specification.Retrieval.Fusion.Weights
 		}
-		trace.Fusion = immutableretrieval.FuseWeightedRRF(channels, specification.Retrieval.Fusion.RankConstant, weights, specification.Retrieval.Results)
+		candidateLimit := specification.Retrieval.Results
+		if specification.Retrieval.Reranking != nil {
+			candidateLimit = specification.Retrieval.Reranking.CandidateCount
+		}
+		trace.Fusion = immutableretrieval.FuseWeightedRRF(channels, specification.Retrieval.Fusion.RankConstant, weights, candidateLimit)
 		trace.Results = make([]immutableretrieval.ChunkHit, len(trace.Fusion))
 		for i := range trace.Fusion {
 			trace.Results[i] = trace.Fusion[i].ChunkHit
 		}
 	}
+	if specification.Retrieval.Reranking != nil {
+		if err := applyReranking(ctx, &trace, card.Query, specification.Retrieval, options.Reranker); err != nil {
+			return executionTrace{}, err
+		}
+	}
 	trace.Timing = executionTiming{EmbeddingMilliseconds: embeddingMilliseconds, RetrievalMilliseconds: retrievalMilliseconds, FusionMilliseconds: time.Since(fusionStarted).Milliseconds(), TotalMilliseconds: time.Since(started).Milliseconds()}
 	trace.FirstRelevantRank, trace.RecallAtResults = relevance(trace.Results, card.RelevantDocumentRevisionIDs, specification.Retrieval.Results)
 	return trace, nil
+}
+
+func applyReranking(ctx context.Context, trace *executionTrace, query string, plan RetrievalPlan, reranker Reranker) error {
+	policy := plan.Reranking
+	if policy == nil || reranker == nil {
+		return errors.New("RAG_RERANKER_REQUIRED: reranking policy and capability are required")
+	}
+	identity := reranker.Identity()
+	if identity.Model != policy.Model {
+		return errors.Errorf("RAG_RERANKER_IDENTITY_MISMATCH: experiment requires %q, runtime provides %q", policy.Model, identity.Model)
+	}
+	candidates := append([]immutableretrieval.ChunkHit(nil), trace.Results...)
+	if len(candidates) > policy.CandidateCount {
+		candidates = candidates[:policy.CandidateCount]
+	}
+	request := RerankRequest{Query: query, Candidates: make([]RerankCandidate, 0, len(candidates)), TopN: len(candidates)}
+	trace.Reranking = &rerankingTrace{Identity: identity, Candidates: make([]rerankingCandidateTrace, 0, len(candidates))}
+	byID := make(map[string]immutableretrieval.ChunkHit, len(candidates))
+	for i, hit := range candidates {
+		if hit.Text == "" {
+			return errors.Errorf("RAG_RERANK_CANDIDATE_TEXT_REQUIRED: chunk %q has no text", hit.ChunkID)
+		}
+		request.Candidates = append(request.Candidates, RerankCandidate{ID: hit.ChunkID, Text: hit.Text, OriginalRank: i + 1, RetrievalScore: hit.Score})
+		trace.Reranking.Candidates = append(trace.Reranking.Candidates, rerankingCandidateTrace{CandidateID: hit.ChunkID, PreRerankRank: i + 1, RetrievalScore: hit.Score})
+		byID[hit.ChunkID] = hit
+	}
+	results, err := reranker.Rerank(ctx, request)
+	if err != nil {
+		return errors.Wrap(err, "rerank retrieved candidates")
+	}
+	trace.Reranking.Results = append([]RerankResult(nil), results...)
+	if len(results) > policy.Results {
+		results = results[:policy.Results]
+	}
+	trace.Results = make([]immutableretrieval.ChunkHit, 0, len(results))
+	for _, result := range results {
+		hit, ok := byID[result.CandidateID]
+		if !ok {
+			return errors.Errorf("RAG_RERANK_RESPONSE_CANDIDATE_UNKNOWN: candidate %q was not submitted", result.CandidateID)
+		}
+		hit.Score = result.Score
+		hit.Rank = result.Rank
+		trace.Results = append(trace.Results, hit)
+	}
+	if plan.Collapse == CollapseDocument {
+		trace.Results = immutableretrieval.CollapseDocuments(trace.Results)
+	}
+	if len(trace.Results) > plan.Results {
+		trace.Results = trace.Results[:plan.Results]
+	}
+	for i := range trace.Results {
+		trace.Results[i].Rank = i + 1
+	}
+	return nil
 }
 
 func relevance(hits []immutableretrieval.ChunkHit, relevant []string, cutoff int) (int, float64) {
