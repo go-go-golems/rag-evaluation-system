@@ -1595,3 +1595,20 @@ is deferred to a dedicated ticket.
 Adjudicate candidate cards in evidence-family batches. Each accepted card
 needs revision IDs, authoritative/substantial chunk labels, rationale, and
 explicit negative/ambiguous treatment before immutable dataset v2 registration.
+
+## 2026-07-16: v2 reconciliation and first adjudication batch
+
+The two reranker-side drafts were reconciled into the canonical TTC ticket.
+The split draft supplies the leakage controls and the 75/20/15 foundation;
+the chunk-label draft supplies proposed evidence groups for the existing pilot.
+I added a direct-source batch for twelve support/FAQ cards and recorded the
+stable revision hashes. These are reviewable proposals, not silently promoted
+truth, so the v2 dataset remains unfrozen until reviewer metadata and the
+remaining pooled evidence families are complete.
+
+Validation performed:
+
+- confirmed the support revisions resolve to the immutable TTC snapshot;
+- preserved the withheld cancellation-policy conflict outside scoreable data;
+- documented the exact next artifact: `ttc-baseline-eval-v2` with evidence
+  family IDs and chunk-level labels.

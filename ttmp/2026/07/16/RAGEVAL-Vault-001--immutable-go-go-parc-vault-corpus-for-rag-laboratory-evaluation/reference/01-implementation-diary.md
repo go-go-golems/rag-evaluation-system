@@ -59,6 +59,19 @@ The vault contains durable reports and temporary material side by side. The
 design therefore chooses an explicit inclusion manifest rather than assuming
 all Markdown is benchmark data.
 
+## 2026-07-16: first deterministic candidate inventory
+
+I added the first-snapshot inclusion manifest and a read-only inventory script.
+The selected roots currently yield 108 Markdown candidates: 96 current project
+notes, 8 playbooks, and 4 institute guidelines. The sorted candidate path list
+hash is `sha256:1d81752cc302bfbefa9dc010477283313dc63609f3d98398202f85bf55436b95`.
+This is within the intended 100–200-note range and excludes ticket workspaces,
+attachments, generated material, and private scratch trees.
+
+The inventory is still a candidate set rather than an immutable corpus. The
+next implementation task is to persist the path list, note hashes, parser
+version, and extracted heading/link metadata under one snapshot ID.
+
 ### Code review instructions
 
 Start with the design document's source selection and heading-chunking

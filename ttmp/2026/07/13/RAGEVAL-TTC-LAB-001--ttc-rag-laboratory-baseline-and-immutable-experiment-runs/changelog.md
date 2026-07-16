@@ -86,3 +86,11 @@ Added append-only experiment specifications, run events, query traces, terminal 
 ## 2026-07-14
 
 Exposed immutable experiment laboratory APIs and React trace-inspection UI; imported the real 20-card baseline run; added human adjudication packet and operator guide.
+
+## 2026-07-16
+
+Reconciled reranker expansion drafts into TTC v2 policy and added twelve-card direct-source adjudication batch; v2 remains unfrozen pending remaining family labels.
+
+### Related Files
+
+- ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/04-ttc-v2-support-faq-adjudication-batch-01.md — Concrete direct-source evidence packet

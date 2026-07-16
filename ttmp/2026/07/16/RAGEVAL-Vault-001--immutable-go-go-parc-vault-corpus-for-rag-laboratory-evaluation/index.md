@@ -11,13 +11,20 @@ Topics:
 DocType: index
 Intent: long-term
 Owners: []
-RelatedFiles: []
+RelatedFiles:
+    - Path: repo://ttmp/2026/07/16/RAGEVAL-Vault-001--immutable-go-go-parc-vault-corpus-for-rag-laboratory-evaluation/reference/01-implementation-diary.md
+      Note: Inventory result and candidate hash diary entry
+    - Path: repo://ttmp/2026/07/16/RAGEVAL-Vault-001--immutable-go-go-parc-vault-corpus-for-rag-laboratory-evaluation/reference/02-first-snapshot-inclusion-manifest.md
+      Note: Curated first snapshot inclusion and exclusion policy
+    - Path: repo://ttmp/2026/07/16/RAGEVAL-Vault-001--immutable-go-go-parc-vault-corpus-for-rag-laboratory-evaluation/scripts/01-inventory-go-go-parc.sh
+      Note: Deterministic read-only candidate path inventory
 ExternalSources: []
 Summary: ""
 LastUpdated: 2026-07-16T15:55:11.09199684-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 # Immutable go-go-parc vault corpus for RAG laboratory evaluation
 

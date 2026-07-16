@@ -18,13 +18,25 @@ Topics:
 DocType: index
 Intent: long-term
 Owners: []
-RelatedFiles: []
+RelatedFiles:
+    - Path: repo://2026/07/15/RAGEVAL-RERANK-001--reranking-stage-for-the-immutable-ttc-rag-laboratory/scripts/02-ttc-eval-v2-proposed-stratified-cards.md
+      Note: 72-card stratified expansion draft awaiting source validation
+    - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/04-ttc-v2-support-faq-adjudication-batch-01.md
+      Note: First concrete twelve-card direct-source adjudication packet
+    - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/05-ttc-v2-proposed-split-and-chunk-label-reconciliation.md
+      Note: Reconciles reranker split and chunk-label drafts into canonical TTC v2 decisions
+    - Path: repo://ttmp/2026/07/15/RAGEVAL-RERANK-001--reranking-stage-for-the-immutable-ttc-rag-laboratory/scripts/06-ttc-v1-development-holdout-regression-split-draft.md
+      Note: Leakage-aware pilot split and expansion protocol
+    - Path: repo://ttmp/2026/07/15/RAGEVAL-RERANK-001--reranking-stage-for-the-immutable-ttc-rag-laboratory/scripts/07-ttc-chunk-level-evidence-label-proposal.md
+      Note: Proposed chunk-level evidence labels for pilot cards
 ExternalSources: []
 Summary: Build a bounded TTC retrieval baseline and introduce immutable, content-addressed experiment specifications, runs, artifacts, traces, and comparisons.
 LastUpdated: 2026-07-14T16:10:00-04:00
 WhatFor: Track the implementation of the first reproducible TTC RAG laboratory slice in the maintained RAG Evaluation System.
 WhenToUse: Start here when implementing or reviewing TTC corpus snapshots, baseline retrieval, experiment runs, evaluation, or laboratory UI work.
 ---
+
+
 
 # TTC RAG laboratory baseline and immutable experiment runs
 

@@ -135,6 +135,8 @@ topics:
       description: Local model runtime and model-store integration.
     - slug: obsidian
       description: Obsidian vault corpus structure, Markdown metadata, and wikilink semantics
+    - slug: adjudication
+      description: Human review and evidence labeling
 docTypes:
     - slug: design-doc
       description: Structured rationale and architecture notes
