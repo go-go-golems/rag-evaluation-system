@@ -8,7 +8,7 @@
 - [x] 4. Run a no-code `llama-server` probe with `qllama/bge-reranker-v2-m3:q4_k_m`; capture request/response shape, index semantics, latency, and model metadata in `scripts/`.
 - [x] 5. Define Go domain types for `Reranker`, `RerankRequest`, `RerankResult`, and an immutable `RerankingSpec`; add contract tests without modifying the executor.
 - [x] 6. Add the llama.cpp HTTP adapter with strict response validation, request size limits, context cancellation, and operator-configured endpoint/model identity.
-- [ ] 7. Extend experiment specifications and JavaScript builders with an optional `.rerank(...)` stage; no backwards-compatibility adapter is required because this API is unmerged.
+- [x] 7. Extend experiment specifications and JavaScript builders with an optional `.rerank(...)` stage; no backwards-compatibility adapter is required because this API is unmerged.
 - [ ] 8. Apply reranking after candidate-channel fusion and before collapse/citation hydration; persist candidate and scored order in query traces.
 - [ ] 9. Add web trace visualization for pre-rerank rank, score, post-rerank rank, truncation, and reranker timing.
 - [ ] 10. Run the TTC matrix: raw vector, weighted RRF, RRF+BGE rerank, and one Qwen reranker comparison; record quality, latency, local cost scope, and storage.

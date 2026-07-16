@@ -20,3 +20,7 @@
 - Added and contract-tested the strict llama.cpp `/v1/rerank` adapter: explicit
   endpoint/model identity, request-size limits, context-aware transport, and
   durable-ID hydration from validated result indexes.
+
+- Exposed immutable reranking policy in `require("rag")` with the fluent
+  `rerank(x => x.crossEncoder(...).candidates(...).results(...))` API,
+  TypeScript declarations, and JavaScript-spec projection (commit 51c9f89).

@@ -430,6 +430,71 @@ from llama.cpp, the server's result cardinality, and the final rank assigned
 after local deterministic sorting. Keeping each boundary explicit makes a
 short or malformed server response fail before it contaminates a run trace.
 
+## Step 6: Expose the policy through the JavaScript fluent builder
+
+The Goja module now provides the ergonomic authoring form specified in the
+ticket while preserving the typed Go builder as the authority:
+
+```js
+.rerank(x => x
+  .crossEncoder("qllama/bge-reranker-v2-m3:q4_k_m")
+  .candidates(50)
+  .results(10))
+```
+
+The temporary JavaScript configuration object only collects values. It then
+calls `RetrievalBuilder.RerankCrossEncoder`, so duplicate and invalid policy
+diagnostics remain centralized in `pkg/raglab` rather than reimplemented in
+the binding.
+
+### Prompt Context
+
+**User prompt (verbatim):** “go ahead.”
+
+**Assistant interpretation:** Continue through the approved API authoring
+task after completing the adapter.
+
+**Commit (code):** `51c9f89` — "feat: expose reranking through JavaScript DSL"
+
+### What I did
+
+- Added `retrieval.rerank(configure)` and its fluent `crossEncoder`,
+  `candidates`, and `results` primitives.
+- Added the `RerankingBuilder` TypeScript declaration.
+- Added lower-camel `retrieval.reranking` projection in `toSpec()` and
+  `toJSON()`.
+- Extended the Goja module integration test to build, validate, persist, and
+  inspect a reranking policy from JavaScript.
+
+### Why
+
+Experiments must declare reranking before persistence, not pass runtime model
+choices as incidental JavaScript variables. The builder makes the policy part
+of the immutable specification and therefore part of its fingerprint.
+
+### What worked
+
+- `GOCACHE=/tmp/rag-eval-go-build GOWORK=off go test ./pkg/gojamodules/rag -count=1`
+  passed.
+
+### What didn't work
+
+- The first integration assertion found that the existing JavaScript
+  `retrievalValue` projection omitted `Reranking`. The Go policy itself was
+  correct; adding the lower-camel projection fixed the authoring contract.
+
+### What I learned
+
+Authoring, canonical Go state, and JavaScript JSON output are separate
+boundaries. A feature is incomplete when any one of them omits a semantic
+field, even if the fingerprint already includes it.
+
+### What was tricky to build
+
+The returned Goja maps must use `candidateCount`, while Go persistence uses
+`candidate_count`. The explicit projection keeps JavaScript scripts consistent
+with TypeScript without altering the stored immutable representation.
+
 ### What warrants a second pair of eyes
 
 - Review whether `RerankingSpec.Results` should remain a distinct pre-collapse
