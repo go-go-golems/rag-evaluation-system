@@ -13,3 +13,6 @@
 
 - Completed the live llama.cpp BGE reranker probe through the private Mac
   tunnel; stored the executable probe and exact response/decoder contract.
+
+- Added immutable cross-encoder reranking policy and pure transport-neutral Go
+  contracts with fingerprint and validation regression coverage (commit 3764e20).

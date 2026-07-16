@@ -290,3 +290,93 @@ that remote process lifecycle is equivalent to the local tunnel lifecycle.
 documents[i] -> llama.cpp result.index i -> immutable candidate ID
                          + relevance_score (finite, descending is better)
 ```
+
+## Step 4: Add immutable reranking policy and transport-neutral contracts
+
+The first code change adds the vocabulary required to express a reranking
+experiment without making a network call. `RerankingSpec` is part of the
+retrieval policy and therefore participates in the canonical experiment
+fingerprint. The `Reranker` interface and request/result types are pure Go;
+they deliberately do not name llama.cpp, HTTP, Goja, or a database.
+
+This isolates two classes of correctness. Builder validation establishes that
+an experiment declares a coherent model and bounded candidate policy. A later
+adapter establishes that a configured runtime can fulfill that policy. The
+executor remains unchanged in this step, so no current raw retrieval behavior
+is affected.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 3)
+
+**Assistant interpretation:** Continue from the observed reranking contract
+into the next implementation task without expanding the scope prematurely.
+
+**Inferred user intent:** Build the reranker as a typed, reproducible system
+whose experiment identity remains meaningful across provider restarts.
+
+**Commit (code):** `3764e20` — "feat: add immutable reranking policy types"
+
+### What I did
+
+- Added `RerankingKind`, `RerankingSpec`, and optional
+  `RetrievalPlan.Reranking` in `pkg/raglab/types.go`.
+- Added transport-neutral `RerankCandidate`, `RerankRequest`, `RerankResult`,
+  `RerankerIdentity`, and `Reranker` interface in `pkg/raglab/reranker.go`.
+- Added `RetrievalBuilder.RerankCrossEncoder(model, candidateCount, results)`.
+- Added validation for kind, nonempty model, positive bounded counts, final
+  result coverage, duplicate configuration, and canonical copying.
+- Added tests proving stable fingerprints for the same policy and different
+  fingerprints when the reranker model changes.
+
+### Why
+
+The model and candidate budget change the experiment. They must be serialized
+before a runner is implemented; otherwise later runs could use different
+rerankers while appearing to share an experiment specification.
+
+### What worked
+
+- `GOWORK=off go test ./pkg/raglab -count=1` passed.
+- The new policy is absent by default, so existing raw plans retain their
+  pre-reranking canonical form.
+
+### What didn't work
+
+- No implementation failure occurred in this step.
+
+### What I learned
+
+The explicit `results` value is a pre-collapse reranking window, while the
+existing retrieval `results` value remains the final user-facing result count.
+Validation requires the former to cover the latter. The future executor may
+request scores for all candidates, then apply this declared window before
+collapse.
+
+### What was tricky to build
+
+The experiment needs model identity but must not persist the endpoint. The
+types keep `Model` in `RerankingSpec`, while URL, timeout, and credentials will
+be adapter options. This mirrors the existing explicit query-embedding design.
+
+### What warrants a second pair of eyes
+
+- Review whether `RerankingSpec.Results` should remain a distinct pre-collapse
+  window or be renamed before the JavaScript API is exposed.
+
+### What should be done in the future
+
+- Implement the llama.cpp adapter against the recorded index/score contract.
+
+### Code review instructions
+
+- Start at `pkg/raglab/reranker.go`, then inspect validation in
+  `pkg/raglab/builder.go`.
+- Run the focused raglab test command above.
+
+### Technical details
+
+```text
+RerankingSpec(model, candidateCount, results) -> canonical retrieval JSON -> fingerprint
+Reranker interface -> later llama.cpp adapter -> later executor
+```
