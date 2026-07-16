@@ -14,6 +14,7 @@ type OpenOptions struct {
 	Database      string
 	AllowRuns     bool
 	QueryEmbedder QueryEmbedder
+	Reranker      Reranker
 }
 
 type ExperimentStore interface {
@@ -38,6 +39,7 @@ type Laboratory struct {
 	close     func() error
 	executor  *Executor
 	embedder  QueryEmbedder
+	reranker  Reranker
 	loadCards func(context.Context, string) ([]EvaluationCard, error)
 }
 
@@ -64,6 +66,9 @@ func OpenSQLite(options OpenOptions) (*Laboratory, error) {
 	}
 	if options.QueryEmbedder != nil {
 		lab.embedder = options.QueryEmbedder
+	}
+	if options.Reranker != nil {
+		lab.reranker = options.Reranker
 	}
 	lab.close = database.Close
 	return lab, nil
@@ -131,6 +136,9 @@ func (l *Laboratory) Execute(ctx context.Context, runID string, specification Ex
 	}
 	if options.Embedder == nil {
 		options.Embedder = l.embedder
+	}
+	if options.Reranker == nil {
+		options.Reranker = l.reranker
 	}
 	return l.executor.Execute(ctx, runID, specification, cards, options)
 }

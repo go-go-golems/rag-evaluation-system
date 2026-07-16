@@ -149,6 +149,25 @@ func TestModuleReturnsDiagnosticsAndPreservesConfiguratorException(t *testing.T)
 	}
 }
 
+func TestModuleOpenBuildsExplicitLlamaCPPRerankerCapability(t *testing.T) {
+	var captured raglab.OpenOptions
+	vm := newVM(func(options raglab.OpenOptions) (*raglab.Laboratory, error) {
+		captured = options
+		return raglab.NewLaboratory(moduleCatalog{}, &moduleStore{}, options.AllowRuns), nil
+	})
+	_, err := vm.RunString(`require("rag").open({ database: "fixture.db", reranker: { kind: "llama.cpp", baseURL: "http://127.0.0.1:18012", model: "qllama/bge-reranker-v2-m3:q4_k_m", maxRequestBytes: 4096 } });`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if captured.Reranker == nil || captured.Reranker.Identity().Model != "qllama/bge-reranker-v2-m3:q4_k_m" {
+		t.Fatalf("reranker = %#v", captured.Reranker)
+	}
+	_, err = vm.RunString(`require("rag").open({ database: "fixture.db", reranker: { kind: "ollama", baseURL: "http://127.0.0.1", model: "ignored" } });`)
+	if err == nil || !strings.Contains(err.Error(), "reranker.kind") {
+		t.Fatalf("invalid reranker error = %v", err)
+	}
+}
+
 func TestEngineRegistrarCanRequireRagModule(t *testing.T) {
 	factory, err := engine.NewRuntimeFactoryBuilder().WithModules(NewRegistrar()).Build()
 	if err != nil {
@@ -171,7 +190,7 @@ func TestEngineRegistrarCanRequireRagModule(t *testing.T) {
 
 func TestTypeScriptModuleDeclaresRagSurface(t *testing.T) {
 	declaration := strings.Join(TypeScriptModule().RawDTS, "\n")
-	for _, want := range []string{"declare", "export function open", "export interface Experiment", "export interface Laboratory", "execute(experiment", "queryEmbed?: QueryEmbed", "export function grade", "export interface RerankingBuilder", "rerank(configure"} {
+	for _, want := range []string{"declare", "export function open", "export interface Experiment", "export interface Laboratory", "execute(experiment", "queryEmbed?: QueryEmbed", "reranker?: LlamaCPPRerankerOptions", "export function grade", "export interface RerankingBuilder", "rerank(configure"} {
 		if !strings.Contains(declaration, want) && want != "declare" {
 			t.Fatalf("TypeScript declaration missing %q: %s", want, declaration)
 		}

@@ -93,6 +93,25 @@ func (r *runtime) open(call goja.FunctionCall) goja.Value {
 		}
 		openOptions.QueryEmbedder = &gojaQueryEmbedder{runtime: r, callback: callback}
 	}
+	if rerankerValue := options.Get("reranker"); rerankerValue != nil && !goja.IsUndefined(rerankerValue) && !goja.IsNull(rerankerValue) {
+		rerankerOptions := r.objectArgument(rerankerValue, "reranker options")
+		if r.stringProperty(rerankerOptions, "kind") != "llama.cpp" {
+			r.throwType("RAG_INVALID_RERANKER", "reranker.kind must be llama.cpp")
+		}
+		maxRequestBytes := 0
+		if value := rerankerOptions.Get("maxRequestBytes"); value != nil && !goja.IsUndefined(value) && !goja.IsNull(value) {
+			maxRequestBytes = int(value.ToInteger())
+		}
+		reranker, err := raglab.NewLlamaCPPReranker(raglab.LlamaCPPRerankerOptions{
+			BaseURL:         r.stringProperty(rerankerOptions, "baseURL"),
+			Model:           r.stringProperty(rerankerOptions, "model"),
+			MaxRequestBytes: maxRequestBytes,
+		})
+		if err != nil {
+			r.throw(err)
+		}
+		openOptions.Reranker = reranker
+	}
 	laboratory, err := r.factory(openOptions)
 	if err != nil {
 		r.throw(err)
@@ -535,7 +554,7 @@ func (r *runtime) objectArgument(value goja.Value, label string) *goja.Object {
 }
 func (r *runtime) stringProperty(object *goja.Object, name string) string {
 	value := object.Get(name)
-	if goja.IsUndefined(value) || goja.IsNull(value) {
+	if value == nil || goja.IsUndefined(value) || goja.IsNull(value) {
 		return ""
 	}
 	return value.String()
