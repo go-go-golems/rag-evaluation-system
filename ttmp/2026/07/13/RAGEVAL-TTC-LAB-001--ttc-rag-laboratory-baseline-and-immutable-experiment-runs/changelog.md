@@ -94,3 +94,23 @@ Reconciled reranker expansion drafts into TTC v2 policy and added twelve-card di
 ### Related Files
 
 - ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/04-ttc-v2-support-faq-adjudication-batch-01.md — Concrete direct-source evidence packet
+
+## 2026-07-16
+
+Added draft 240-card TTC v2 partition and evidence-family leakage-audit protocol; labels remain unfrozen.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/01-implementation-diary.md — Step 18 records the design decision and review guidance
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/06-ttc-v2-240-card-partition-and-leakage-audit-protocol.md — Exact 144/48/48 allocation, abstention distribution, and validator contract
+
+
+## 2026-07-16
+
+Added 70-card expansion draft and 50-card SQLite-grounded audit draft. These 120 candidates are explicitly unlabelled; source validation and evidence-family adjudication remain required before any freeze.
+
+### Related Files
+
+- ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/04-ttc-evaluation-expansion-v0-70-proposed-cards.md — 70-card structured authoring queue
+- ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/06-ttc-expansion-audit-and-50-card-source-grounded-draft.md — 50 source-grounded candidate cards and coverage audit
+

@@ -65,6 +65,8 @@ RelatedFiles:
       Note: Consolidated 20-card source-validated draft described in Step 5
     - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/03-ttc-baseline-v1-human-adjudication-packet.md
       Note: Human authority gate for candidate cards
+    - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/reference/06-ttc-v2-240-card-partition-and-leakage-audit-protocol.md
+      Note: Records the 240-card split and machine-checkable leakage-audit contract
     - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/01-validate-ttc-baseline-evaluation-cards.sh
       Note: Validation command and initial failures recorded in Step 5
     - Path: repo://ttmp/2026/07/13/RAGEVAL-TTC-LAB-001--ttc-rag-laboratory-baseline-and-immutable-experiment-runs/scripts/02-geppetto-ollama-embedding-probe.go
@@ -87,6 +89,7 @@ LastUpdated: 2026-07-14T21:29:00-04:00
 WhatFor: Preserve the exact evidence, commands, failures, corrections, and reasoning used to create the TTC baseline and immutable-run implementation plan.
 WhenToUse: Read when reviewing the ticket, reproducing the TTC export, continuing implementation, or diagnosing assumptions in the design guide.
 ---
+
 
 
 
@@ -1612,3 +1615,111 @@ Validation performed:
 - preserved the withheld cancellation-policy conflict outside scoreable data;
 - documented the exact next artifact: `ttc-baseline-eval-v2` with evidence
   family IDs and chunk-level labels.
+
+## Step 18: Specify the 240-card benchmark partition and leakage audit
+
+This step replaces an underspecified "200+ cards" aspiration with a precise,
+reviewable target: 240 adjudicated cards in 144 Development, 48 Holdout, and
+48 Regression positions. Thirty cards are calibrated abstention cases spread
+18/6/6 across those roles; they are an answerability stratum, not a separate
+pool that would evade normal holdout and regression discipline.
+
+The new reference does not modify or freeze any labels. It defines the rules
+that future card authors, reviewers, and a validator must satisfy before an
+expanded TTC dataset can make model-selection claims.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Design the 200+ card TTC evaluation partition and leakage/audit protocol. Recommend exact development/holdout/regression/abstention counts, evidence-family grouping rules, minimum strata coverage, and a machine-checkable validation checklist. Add a reference document under the canonical TTC ticket and update the diary; do not freeze labels."
+
+**Assistant interpretation:** Add a canonical, draft-only benchmark expansion
+contract with an exact split, formal anti-leakage grouping, coverage floors,
+and validation requirements; record the work in this diary.
+
+**Inferred user intent:** Make the next TTC evaluation corpus large enough to
+support credible reranker and retrieval decisions without accidentally tuning
+against related evidence or treating unreviewed labels as immutable truth.
+
+**Commit (code):** Not committed; documentation-only draft.
+
+### What I did
+
+- Added `reference/06-ttc-v2-240-card-partition-and-leakage-audit-protocol.md`.
+- Defined eight 30-card primary strata, including 30 abstention cases, with an
+  exact 18/6/6 partition allocation in every row.
+- Defined evidence-family construction as a transitive union over relevant and
+  partial evidence, shared entities/workflows, paraphrases, precedence
+  decisions, and reviewer-declared latent answers.
+- Added a validator-facing manifest contract and non-zero-exit audit checklist.
+
+### Why
+
+The 20-card pilot is useful for diagnosis, and the 110-card plan is a useful
+adjudication milestone, but neither gives enough independent evidence families
+for stable cross-stratum selection claims. Random splitting would let the same
+article, policy wording, or product entity leak from tuning into Holdout.
+
+### What worked
+
+- Existing v2 references confirmed the required continuity: the 110-card
+  75/20/15 proposal remains a staging milestone, while this document defines
+  the benchmark-sized 240-card target.
+- The proposed 18/6/6 matrix gives every stratum, including abstention, equal
+  representation in development, unbiased comparison, and release gating.
+
+### What didn't work
+
+- No implementation command or test was required; no labels were frozen.
+- A broad `rg` inspection produced truncated terminal output while reading
+  existing ticket references. The targeted source documents were still read,
+  and no conclusion depends on omitted output.
+
+### What I learned
+
+- Leakage must include partial and misleading evidence, not authoritative
+  documents alone: a near miss in one card can be the correct document for a
+  related card.
+- Abstention needs its own corpus-scope review and metrics, but must remain
+  partitioned with ordinary cards to expose operational regressions.
+
+### What was tricky to build
+
+The core trade-off is exact stratum balance versus indivisible evidence
+families. The protocol resolves it in favor of family integrity: components
+are assigned as units, and a small count variance requires an explicit audit
+exception rather than a hidden cross-partition split.
+
+### What warrants a second pair of eyes
+
+- Confirm the eight primary strata reflect TTC's future product and support
+  coverage before authors begin filling quotas.
+- Review whether the "same product entity" grouping should distinguish truly
+  independent attribute passages after the first full evidence-family manifest
+  is available.
+- Review the validator's semantic-family declaration format so it is auditable
+  without encouraging arbitrary manual overrides.
+
+### What should be done in the future
+
+- Build the draft evidence-family manifest and run the specified audit before
+  opening any v2 Holdout result.
+- Implement the validator to emit `families.csv` and `split-audit.json`.
+- Adjudicate cards in batches toward the 110-card foundation, then the 240-card
+  benchmark target; publish only a newly hashed, reviewer-approved dataset.
+
+### Code review instructions
+
+- Start with `reference/06-ttc-v2-240-card-partition-and-leakage-audit-protocol.md`.
+- Compare its 240-card target to `design-doc/03-ttc-evaluation-corpus-v2-foundation-and-adjudication-protocol.md`; the latter remains the intermediate milestone.
+- Validate the future manifest with every checkbox in the new reference before
+  treating any Holdout metric as decision evidence.
+
+### Technical details
+
+```text
+candidate cards + adjudicated evidence
+  -> union-find evidence families
+  -> stratified 18/6/6 assignment per primary stratum
+  -> manifest + family-edge audit
+  -> development selection -> one holdout comparison -> regression gate
+```
