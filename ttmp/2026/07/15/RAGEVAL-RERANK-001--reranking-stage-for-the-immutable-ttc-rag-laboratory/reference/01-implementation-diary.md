@@ -640,6 +640,39 @@ this capability through `open` makes the authority explicit at the user-facing
 boundary, rather than hiding an endpoint in environment state or in persisted
 experiment JSON.
 
+## Step 10: Run the first live frozen-TTC BGE reranker experiment
+
+The local tunnels were re-established and the generated xgoja runtime was
+rebuilt from the current branch. The JavaScript experiment then completed all
+20 frozen TTC cards with BGE cross-encoder reranking. The result is an
+append-only experiment run with complete candidate and score traces, rather
+than an in-memory benchmark observation.
+
+### What worked
+
+- Run `run_76e8425d56b07b134915a749e05bb03f` succeeded with 20 traces.
+- MRR was `0.9473684210526315`; mean relevant recall@10 was
+  `0.8947368421052632`.
+- Accumulated per-card execution time was 26,801 ms; wall-clock was 26,976 ms.
+- SQLite inspection confirmed BGE identity and one-to-one candidate/result
+  trace arrays for the sampled query cards.
+
+### What did not work
+
+- The previous local SSH tunnels had expired. The private services themselves
+  were healthy; recreating `rag-reranker-mimimi` and `rag-ollama-mimimi` tmux
+  tunnels restored them.
+- The sandbox blocked the generated xgoja build's required Go toolchain proxy
+  download. The permitted normal-environment build succeeded without source or
+  dependency changes.
+
+### What I learned
+
+The current RRF implementation has already document-collapsed candidates, so
+the first reranker does not always receive its configured maximum of 50 texts.
+This is observable in the saved traces and is the empirical premise for the
+still-pending collapse-order comparison.
+
 ### What warrants a second pair of eyes
 
 - Review whether `RerankingSpec.Results` should remain a distinct pre-collapse

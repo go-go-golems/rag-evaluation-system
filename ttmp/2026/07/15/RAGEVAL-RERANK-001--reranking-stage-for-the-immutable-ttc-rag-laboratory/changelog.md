@@ -36,3 +36,7 @@
 - Added explicit JavaScript `rag.open({ reranker })` llama.cpp capability
   configuration and laboratory propagation, so `lab.execute()` can use the
   private Mac reranker tunnel without putting endpoint data in an experiment.
+
+- Ran and recorded the first live frozen-TTC BGE reranker observation:
+  `run_76e8425d56b07b134915a749e05bb03f`, 20 traces, MRR 0.9474 and mean
+  relevant recall@10 0.8947.
