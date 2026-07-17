@@ -95,6 +95,7 @@ export function DataTable<T>({
 
 	const handleKeyDown = (event: KeyboardEvent<HTMLTableRowElement>, row: T) => {
 		if (!keyboard || isEditableTarget(event.target)) return;
+		if (event.ctrlKey || event.metaKey || event.altKey) return;
 		if (event.key === "ArrowDown" || (keyboard.vimAliases && event.key.toLowerCase() === "j")) {
 			event.preventDefault();
 			moveFocus(1);

@@ -19,15 +19,10 @@ export interface WidgetRendererProps {
 
 export function WidgetRenderer({ node, registry, onAction }: WidgetRendererProps) {
 	const ctx = createRenderContext(registry, onAction);
-	return (
-		<>
-			{renderWidgetNode(node, ctx, registry)}
-			<WidgetToastRegion />
-		</>
-	);
+	return <>{renderWidgetNode(node, ctx, registry)}</>;
 }
 
-function WidgetToastRegion() {
+export function WidgetToastRegion() {
 	const [toast, setToast] = useState<{ message: string; tone?: string }>();
 	useEffect(() => {
 		let timer: ReturnType<typeof setTimeout> | undefined;

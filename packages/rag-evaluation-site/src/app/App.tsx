@@ -28,7 +28,7 @@ import type {
 	RenderableValue,
 	WidgetNode,
 } from "../widgets/ir";
-import { WidgetRenderer } from "../widgets/WidgetRenderer";
+import { WidgetRenderer, WidgetToastRegion } from "../widgets/WidgetRenderer";
 import "./app.css";
 
 export interface RagEvaluationSiteAppProps {
@@ -177,6 +177,7 @@ export function RagEvaluationSiteApp({
 			{renderPage(page, pageId, shortcutsEnabled, (action, context) => {
 				void handleAction(action, context);
 			})}
+			<WidgetToastRegion />
 			<KeyboardShortcutHelp
 				items={shortcutBindings.map((binding) => ({
 					id: binding.id,
