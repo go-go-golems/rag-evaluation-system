@@ -4,7 +4,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/pkg/errors"
 )
 
@@ -16,21 +15,21 @@ type ExportOptions struct {
 // researchctl RAG wire payload. Artifact IDs and prototype fingerprints are
 // intentionally excluded: the researchctl adapter represents those as input
 // references and provenance around this domain value.
-func ExportSpecificationV1(input ExperimentSpecification, options ExportOptions) (ragcontract.Specification, error) {
+func ExportSpecificationV1(input ExperimentSpecification, options ExportOptions) (PrototypeSpecification, error) {
 	if strings.TrimSpace(options.DatasetSplit) == "" {
-		return ragcontract.Specification{}, errors.New("RAG_DATASET_SPLIT_REQUIRED: export requires an explicit dataset split")
+		return PrototypeSpecification{}, errors.New("RAG_DATASET_SPLIT_REQUIRED: export requires an explicit dataset split")
 	}
 	if len(input.Metrics.HitRateAt) > 0 || input.Metrics.MeanRelevantRecall > 0 || input.Metrics.Abstention {
-		return ragcontract.Specification{}, errors.New("RAG_EXPORT_UNSUPPORTED: hit-rate, legacy mean-relevant-recall, and abstention metrics are not in rag-retrieval-spec/v1")
+		return PrototypeSpecification{}, errors.New("RAG_EXPORT_UNSUPPORTED: hit-rate, legacy mean-relevant-recall, and abstention metrics are not in rag-retrieval-spec/v1")
 	}
 	if input.Metrics.RelevanceAt == nil {
-		return ragcontract.Specification{}, errors.New("RAG_RELEVANCE_GRADE_REQUIRED: export requires an explicit relevance threshold")
+		return PrototypeSpecification{}, errors.New("RAG_RELEVANCE_GRADE_REQUIRED: export requires an explicit relevance threshold")
 	}
-	result := ragcontract.Specification{
-		SchemaVersion: ragcontract.SchemaVersion,
+	result := PrototypeSpecification{
+		SchemaVersion: PrototypeSchemaVersion,
 		Name:          input.Name,
-		Dataset:       ragcontract.DatasetSelection{Split: options.DatasetSplit},
-		Metrics: ragcontract.MetricPlan{
+		Dataset:       PrototypeDatasetSelection{Split: options.DatasetSplit},
+		Metrics: PrototypeMetricPlan{
 			RelevanceAt: input.Metrics.RelevanceAt.Name,
 			RecallAt:    normalizedExportInts(input.Metrics.RecallAt),
 			PrecisionAt: normalizedExportInts(input.Metrics.PrecisionAt),
@@ -46,27 +45,27 @@ func ExportSpecificationV1(input ExperimentSpecification, options ExportOptions)
 		if representation.Kind == QuestionRepresentation {
 			kind = "questions"
 		}
-		result.Representations = append(result.Representations, ragcontract.Representation{Name: representation.Name, Kind: kind})
+		result.Representations = append(result.Representations, PrototypeRepresentation{Name: representation.Name, Kind: kind})
 	}
-	result.Retrieval = ragcontract.RetrievalPlan{
+	result.Retrieval = PrototypeRetrievalPlan{
 		Filter:   exportFilter(input.Retrieval.Filter),
 		Collapse: string(input.Retrieval.Collapse),
 		Results:  input.Retrieval.Results,
 	}
 	for _, channel := range input.Retrieval.Channels {
-		result.Retrieval.Channels = append(result.Retrieval.Channels, ragcontract.Channel{
+		result.Retrieval.Channels = append(result.Retrieval.Channels, PrototypeChannel{
 			Name: channel.Name, Backend: string(channel.Backend), Representation: channel.Representation,
 			TopK: channel.TopK, Filter: exportFilter(channel.Filter),
 		})
 	}
 	if input.Retrieval.Fusion != nil {
-		result.Retrieval.Fusion = &ragcontract.FusionPlan{
+		result.Retrieval.Fusion = &PrototypeFusionPlan{
 			Kind: input.Retrieval.Fusion.Kind, RankConstant: input.Retrieval.Fusion.RankConstant,
 			Weights: cloneFloatMap(input.Retrieval.Fusion.Weights),
 		}
 	}
 	if input.Retrieval.Reranking != nil {
-		result.Retrieval.Reranking = &ragcontract.RerankingPlan{
+		result.Retrieval.Reranking = &PrototypeRerankingPlan{
 			Kind: string(input.Retrieval.Reranking.Kind), Model: input.Retrieval.Reranking.Model,
 			CandidateCount: input.Retrieval.Reranking.CandidateCount, Results: input.Retrieval.Reranking.Results,
 		}
@@ -74,8 +73,8 @@ func ExportSpecificationV1(input ExperimentSpecification, options ExportOptions)
 	return result, nil
 }
 
-func exportFilter(input FilterSpec) ragcontract.FilterSpec {
-	return ragcontract.FilterSpec{
+func exportFilter(input FilterSpec) PrototypeFilterSpec {
+	return PrototypeFilterSpec{
 		SourceIDs: normalizedExportStrings(input.SourceIDs), DocumentIDs: normalizedExportStrings(input.DocumentIDs),
 		ContentTypes: normalizedExportStrings(input.ContentTypes), MetadataEquals: cloneStringMap(input.MetadataEquals),
 	}

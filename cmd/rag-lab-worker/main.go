@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-go-golems/rag-evaluation-system/internal/db"
 	"github.com/go-go-golems/rag-evaluation-system/internal/services/embedding"
-	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/raglab"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -25,9 +24,9 @@ type requestEnvelope struct {
 }
 
 type request struct {
-	Specification ragcontract.Specification `json:"specification"`
-	Inputs        resolvedInputs            `json:"inputs"`
-	DatasetSplit  string                    `json:"datasetSplit"`
+	Specification raglab.PrototypeSpecification `json:"specification"`
+	Inputs        resolvedInputs                `json:"inputs"`
+	DatasetSplit  string                        `json:"datasetSplit"`
 }
 
 type resolvedInputs struct {
@@ -44,12 +43,12 @@ type resolvedInput struct {
 }
 
 type frame struct {
-	Type     string                  `json:"type"`
-	Event    *raglab.DomainEvent     `json:"event,omitempty"`
-	Trace    *ragcontract.QueryTrace `json:"trace,omitempty"`
-	Metric   *raglab.DomainMetric    `json:"metric,omitempty"`
-	Artifact *raglab.DomainArtifact  `json:"artifact,omitempty"`
-	Error    string                  `json:"error,omitempty"`
+	Type     string                      `json:"type"`
+	Event    *raglab.DomainEvent         `json:"event,omitempty"`
+	Trace    *raglab.PrototypeQueryTrace `json:"trace,omitempty"`
+	Metric   *raglab.DomainMetric        `json:"metric,omitempty"`
+	Artifact *raglab.DomainArtifact      `json:"artifact,omitempty"`
+	Error    string                      `json:"error,omitempty"`
 }
 
 type protocolObserver struct{ encoder *json.Encoder }
@@ -57,7 +56,7 @@ type protocolObserver struct{ encoder *json.Encoder }
 func (o *protocolObserver) Event(_ context.Context, value raglab.DomainEvent) error {
 	return o.encoder.Encode(frame{Type: "event", Event: &value})
 }
-func (o *protocolObserver) QueryTrace(_ context.Context, value ragcontract.QueryTrace) error {
+func (o *protocolObserver) QueryTrace(_ context.Context, value raglab.PrototypeQueryTrace) error {
 	return o.encoder.Encode(frame{Type: "trace", Trace: &value})
 }
 func (o *protocolObserver) Metric(_ context.Context, value raglab.DomainMetric) error {
@@ -233,7 +232,7 @@ func toPrototype(input request) (raglab.ExperimentSpecification, string, error) 
 	return result, evaluation.ID, nil
 }
 
-func toFilter(input ragcontract.FilterSpec) raglab.FilterSpec {
+func toFilter(input raglab.PrototypeFilterSpec) raglab.FilterSpec {
 	return raglab.FilterSpec{SourceIDs: input.SourceIDs, DocumentIDs: input.DocumentIDs, ContentTypes: input.ContentTypes, MetadataEquals: input.MetadataEquals}
 }
 

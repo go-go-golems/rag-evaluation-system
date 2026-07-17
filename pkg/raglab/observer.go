@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/go-go-golems/rag-evaluation-system/internal/services/immutableretrieval"
-	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/pkg/errors"
 )
 
@@ -37,7 +36,7 @@ type DomainArtifact struct {
 // responsibility of the calling laboratory.
 type Observer interface {
 	Event(context.Context, DomainEvent) error
-	QueryTrace(context.Context, ragcontract.QueryTrace) error
+	QueryTrace(context.Context, PrototypeQueryTrace) error
 	Metric(context.Context, DomainMetric) error
 	Artifact(context.Context, DomainArtifact) error
 }
@@ -107,33 +106,33 @@ func (e *ObservationExecutor) Execute(ctx context.Context, request ObservationEx
 	return observer.Event(ctx, DomainEvent{Type: "rag.execution.completed", Payload: mustJSON(map[string]any{"queryCount": len(request.Cards)})})
 }
 
-func exportQueryTrace(specification ExperimentSpecification, split string, card EvaluationCard, input executionTrace) ragcontract.QueryTrace {
-	result := ragcontract.QueryTrace{
+func exportQueryTrace(specification ExperimentSpecification, split string, card EvaluationCard, input executionTrace) PrototypeQueryTrace {
+	result := PrototypeQueryTrace{
 		SchemaVersion: "rag-query-trace/v1", QueryCardID: card.ID, Query: card.Query, DatasetSplit: split,
-		Relevance: ragcontract.RelevanceTrace{
+		Relevance: PrototypeRelevanceTrace{
 			ExpectedDocumentRevisionIDs: append([]string(nil), card.RelevantDocumentRevisionIDs...),
 			FirstRelevantRank:           input.FirstRelevantRank, RelevantDocumentRecall: input.RecallAtResults,
 		},
-		Timing: ragcontract.TimingTrace{
+		Timing: PrototypeTimingTrace{
 			EmbeddingMilliseconds: input.Timing.EmbeddingMilliseconds, RetrievalMilliseconds: input.Timing.RetrievalMilliseconds,
 			FusionMilliseconds: input.Timing.FusionMilliseconds, RerankingMilliseconds: input.Timing.RerankingMilliseconds,
 			TotalMilliseconds: input.Timing.TotalMilliseconds,
 		},
 	}
 	for _, channel := range inputChannelOrder(specification, input) {
-		result.Channels = append(result.Channels, ragcontract.ChannelTrace{Name: channel.name, Backend: channel.backend, Hits: exportHits(channel.hits)})
+		result.Channels = append(result.Channels, PrototypeChannelTrace{Name: channel.name, Backend: channel.backend, Hits: exportHits(channel.hits)})
 	}
 	result.Results = exportHits(input.Results)
 	if len(input.Fusion) > 0 {
-		result.Fusion = &ragcontract.FusionTrace{Kind: "rrf", RankConstant: specification.Retrieval.Fusion.RankConstant, Hits: exportFusedHits(input.Fusion)}
+		result.Fusion = &PrototypeFusionTrace{Kind: "rrf", RankConstant: specification.Retrieval.Fusion.RankConstant, Hits: exportFusedHits(input.Fusion)}
 	}
 	if input.Reranking != nil {
-		result.Reranking = &ragcontract.RerankingTrace{Kind: input.Reranking.Identity.Kind, Model: input.Reranking.Identity.Model}
+		result.Reranking = &PrototypeRerankingTrace{Kind: input.Reranking.Identity.Kind, Model: input.Reranking.Identity.Model}
 		for _, candidate := range input.Reranking.Candidates {
-			result.Reranking.Candidates = append(result.Reranking.Candidates, ragcontract.RerankingCandidate{CandidateID: candidate.CandidateID, PreRerankRank: candidate.PreRerankRank, RetrievalScore: candidate.RetrievalScore})
+			result.Reranking.Candidates = append(result.Reranking.Candidates, PrototypeRerankingCandidate(candidate))
 		}
 		for _, reranked := range input.Reranking.Results {
-			result.Reranking.Results = append(result.Reranking.Results, ragcontract.RerankingResult{CandidateID: reranked.CandidateID, Rank: reranked.Rank, Score: reranked.Score})
+			result.Reranking.Results = append(result.Reranking.Results, PrototypeRerankingResult{CandidateID: reranked.CandidateID, Rank: reranked.Rank, Score: reranked.Score})
 		}
 	}
 	return result
@@ -154,24 +153,24 @@ func inputChannelOrder(specification ExperimentSpecification, input executionTra
 	return result
 }
 
-func exportHits(input []immutableretrieval.ChunkHit) []ragcontract.Hit {
-	result := make([]ragcontract.Hit, 0, len(input))
+func exportHits(input []immutableretrieval.ChunkHit) []PrototypeHit {
+	result := make([]PrototypeHit, 0, len(input))
 	for _, hit := range input {
 		result = append(result, exportHit(hit))
 	}
 	return result
 }
 
-func exportFusedHits(input []immutableretrieval.FusedHit) []ragcontract.Hit {
-	result := make([]ragcontract.Hit, 0, len(input))
+func exportFusedHits(input []immutableretrieval.FusedHit) []PrototypeHit {
+	result := make([]PrototypeHit, 0, len(input))
 	for _, hit := range input {
 		result = append(result, exportHit(hit.ChunkHit))
 	}
 	return result
 }
 
-func exportHit(hit immutableretrieval.ChunkHit) ragcontract.Hit {
-	return ragcontract.Hit{Rank: hit.Rank, ChunkID: hit.ChunkID, DocumentRevisionID: hit.DocumentRevisionID, Score: hit.Score, Title: hit.Title, URL: hit.URL, Channel: hit.Channel}
+func exportHit(hit immutableretrieval.ChunkHit) PrototypeHit {
+	return PrototypeHit{Rank: hit.Rank, ChunkID: hit.ChunkID, DocumentRevisionID: hit.DocumentRevisionID, Score: hit.Score, Title: hit.Title, URL: hit.URL, Channel: hit.Channel}
 }
 
 func mustJSON(value any) json.RawMessage {
@@ -193,7 +192,7 @@ func newMetricAccumulator(plan MetricsPlan) *metricAccumulator {
 	return &metricAccumulator{plan: plan, sums: map[string]float64{}}
 }
 
-func (m *metricAccumulator) add(card EvaluationCard, results []ragcontract.Hit) {
+func (m *metricAccumulator) add(card EvaluationCard, results []PrototypeHit) {
 	m.queries++
 	relevant := map[string]bool{}
 	for _, id := range card.RelevantDocumentRevisionIDs {
@@ -247,7 +246,7 @@ func (m *metricAccumulator) metrics(wallClockMS int64) []DomainMetric {
 	return append(result, DomainMetric{Name: "rag.wall_clock_duration_ms", Value: float64(wallClockMS), Unit: "ms"})
 }
 
-func recallAt(results []ragcontract.Hit, relevant map[string]bool, cutoff int) float64 {
+func recallAt(results []PrototypeHit, relevant map[string]bool, cutoff int) float64 {
 	seen := map[string]bool{}
 	for i, hit := range results {
 		if i >= cutoff {
@@ -260,7 +259,7 @@ func recallAt(results []ragcontract.Hit, relevant map[string]bool, cutoff int) f
 	return float64(len(seen)) / float64(len(relevant))
 }
 
-func precisionAt(results []ragcontract.Hit, relevant map[string]bool, cutoff int) float64 {
+func precisionAt(results []PrototypeHit, relevant map[string]bool, cutoff int) float64 {
 	if cutoff <= 0 {
 		return 0
 	}
@@ -278,7 +277,7 @@ func precisionAt(results []ragcontract.Hit, relevant map[string]bool, cutoff int
 	return float64(hits) / float64(cutoff)
 }
 
-func ndcgAt(results []ragcontract.Hit, relevant map[string]bool, cutoff int) float64 {
+func ndcgAt(results []PrototypeHit, relevant map[string]bool, cutoff int) float64 {
 	dcg := 0.0
 	for i, hit := range results {
 		if i >= cutoff {

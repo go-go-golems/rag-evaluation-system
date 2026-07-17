@@ -6,8 +6,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 )
 
 func TestExportSpecificationV1MatchesResearchctlGolden(t *testing.T) {
@@ -37,7 +35,7 @@ func TestExportSpecificationV1MatchesResearchctlGolden(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var golden ragcontract.Specification
+	var golden PrototypeSpecification
 	if err := json.Unmarshal(goldenData, &golden); err != nil {
 		t.Fatal(err)
 	}

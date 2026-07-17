@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/go-go-golems/rag-evaluation-system/internal/services/immutableretrieval"
-	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 )
 
 var errUnexpected = errors.New("unexpected fake retrieval request")
@@ -42,7 +41,7 @@ func (f *fakeEmbedder) GenerateEmbedding(_ context.Context, _ string) ([]float32
 
 type collectingObserver struct {
 	events    []DomainEvent
-	traces    []ragcontract.QueryTrace
+	traces    []PrototypeQueryTrace
 	metrics   []DomainMetric
 	artifacts []DomainArtifact
 }
@@ -51,7 +50,7 @@ func (o *collectingObserver) Event(_ context.Context, value DomainEvent) error {
 	o.events = append(o.events, value)
 	return nil
 }
-func (o *collectingObserver) QueryTrace(_ context.Context, value ragcontract.QueryTrace) error {
+func (o *collectingObserver) QueryTrace(_ context.Context, value PrototypeQueryTrace) error {
 	o.traces = append(o.traces, value)
 	return nil
 }
@@ -91,7 +90,7 @@ func TestObservationExecutorEmitsPublicEvidenceWithoutRunLifecycle(t *testing.T)
 	if len(observer.events) != 4 || observer.events[0].Type != "rag.execution.started" || observer.events[3].Type != "rag.execution.completed" {
 		t.Fatalf("events = %#v", observer.events)
 	}
-	if len(observer.traces) != 1 || observer.traces[0].SchemaVersion != ragcontract.TraceSchemaVersion {
+	if len(observer.traces) != 1 || observer.traces[0].SchemaVersion != PrototypeTraceSchemaVersion {
 		t.Fatalf("traces = %#v", observer.traces)
 	}
 	trace := observer.traces[0]
