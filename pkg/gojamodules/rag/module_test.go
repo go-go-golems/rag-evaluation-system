@@ -123,6 +123,37 @@ func TestModuleBuildsValidSpecAndStartsExplicitRun(t *testing.T) {
 	}
 }
 
+func TestModuleExportsPureResearchctlSpecification(t *testing.T) {
+	vm := newVM(func(raglab.OpenOptions) (*raglab.Laboratory, error) {
+		t.Fatal("pure export must not open a laboratory")
+		return nil, nil
+	})
+	value, err := vm.RunString(`
+		const rag = require("rag");
+		rag.experiment("hybrid", e => e
+			.corpus("snapshot").chunks("chunks").bm25("bm25").evaluation("eval")
+			.tag("corpus", "ttc")
+			.representations(r => r.rawChunks("raw"))
+			.retrieval(r => r.channel("lexical", c => c.bm25().representation("raw").topK(50)).collapse("document").results(10))
+			.metrics(m => m.relevanceAt(rag.grade("2_SUBSTANTIAL")).recallAt([10]).mrr()))
+			.exportSpecification({ datasetSplit: "development" });
+	`)
+	if err != nil {
+		t.Fatalf("pure export failed: %v", err)
+	}
+	exported := value.Export().(map[string]any)
+	if exported["schemaVersion"] != "rag-retrieval-spec/v1" || exported["name"] != "hybrid" {
+		t.Fatalf("export = %#v", exported)
+	}
+	if _, leaked := exported["inputs"]; leaked {
+		t.Fatalf("domain export must not contain prototype input IDs: %#v", exported)
+	}
+	dataset := exported["dataset"].(map[string]any)
+	if dataset["split"] != "development" {
+		t.Fatalf("dataset = %#v", dataset)
+	}
+}
+
 func TestModuleReturnsDiagnosticsAndPreservesConfiguratorException(t *testing.T) {
 	vm := newVM(testFactory(&moduleStore{}))
 	value, err := vm.RunString(`
@@ -190,7 +221,7 @@ func TestEngineRegistrarCanRequireRagModule(t *testing.T) {
 
 func TestTypeScriptModuleDeclaresRagSurface(t *testing.T) {
 	declaration := strings.Join(TypeScriptModule().RawDTS, "\n")
-	for _, want := range []string{"declare", "export function open", "export interface Experiment", "export interface Laboratory", "execute(experiment", "queryEmbed?: QueryEmbed", "reranker?: LlamaCPPRerankerOptions", "export function grade", "export interface RerankingBuilder", "rerank(configure"} {
+	for _, want := range []string{"declare", "export function open", "export interface Experiment", "export interface Laboratory", "execute(experiment", "queryEmbed?: QueryEmbed", "reranker?: LlamaCPPRerankerOptions", "export function grade", "export interface RerankingBuilder", "rerank(configure", "exportSpecification(options"} {
 		if !strings.Contains(declaration, want) && want != "declare" {
 			t.Fatalf("TypeScript declaration missing %q: %s", want, declaration)
 		}

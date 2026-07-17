@@ -3,6 +3,7 @@ package rag
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -207,6 +208,14 @@ func (r *runtime) experimentObject(handle *experimentHandle) *goja.Object {
 	set("validate", func(call goja.FunctionCall) goja.Value { return r.validateExperiment(handle, call.Argument(0)) })
 	set("toSpec", func(goja.FunctionCall) goja.Value { return r.specValue(r.build(handle)) })
 	set("toJSON", func(goja.FunctionCall) goja.Value { return r.specValue(r.build(handle)) })
+	set("exportSpecification", func(call goja.FunctionCall) goja.Value {
+		options := r.objectArgument(call.Argument(0), "export options")
+		exported, err := raglab.ExportSpecificationV1(r.build(handle), raglab.ExportOptions{DatasetSplit: r.stringProperty(options, "datasetSplit")})
+		if err != nil {
+			r.throw(err)
+		}
+		return r.jsonValue(exported)
+	})
 	return object
 }
 
@@ -584,6 +593,18 @@ func (r *runtime) reportValue(report raglab.ValidationReport) goja.Value {
 	}
 	return r.vm.ToValue(map[string]any{"ok": report.OK(), "issues": issues})
 }
+func (r *runtime) jsonValue(value any) goja.Value {
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		r.throw(err)
+	}
+	var plain any
+	if err := json.Unmarshal(encoded, &plain); err != nil {
+		r.throw(err)
+	}
+	return r.vm.ToValue(plain)
+}
+
 func (r *runtime) specValue(specification raglab.ExperimentSpecification) goja.Value {
 	inputs := map[string]any{
 		"corpusSnapshot":    artifactValue(specification.Inputs.CorpusSnapshot),
