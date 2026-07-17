@@ -2,6 +2,9 @@ package main
 
 import (
 	"github.com/go-go-golems/glazed/pkg/cmds/logging"
+	"github.com/go-go-golems/glazed/pkg/help"
+	help_cmd "github.com/go-go-golems/glazed/pkg/help/cmd"
+	"github.com/go-go-golems/rag-evaluation-system"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/chunk"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/document"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/embedding"
@@ -27,6 +30,12 @@ func main() {
 	if err := logging.AddLoggingSectionToRootCommand(rootCmd, "rag-eval"); err != nil {
 		cobra.CheckErr(err)
 	}
+
+	helpSystem := help.NewHelpSystem()
+	if err := rageval.AddDocToHelpSystem(helpSystem); err != nil {
+		cobra.CheckErr(err)
+	}
+	help_cmd.SetupCobraRootCommand(helpSystem, rootCmd)
 
 	// Add command groups
 	rootCmd.AddCommand(source.NewCommand())
