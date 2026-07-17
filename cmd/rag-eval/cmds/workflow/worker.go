@@ -46,7 +46,7 @@ func newRunWorkerCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer store.Close()
+			defer func() { _ = store.Close() }()
 			err = sched.Run(cmd.Context())
 			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 				return nil
@@ -76,7 +76,7 @@ func runCycles(cmd *cobra.Command, opts *workerOptions) error {
 	if err != nil {
 		return err
 	}
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 	for i := 1; i <= cycles; i++ {
 		result, err := sched.RunOnce(cmd.Context())
 		if err != nil {

@@ -70,7 +70,7 @@ func BuildBM25(ctx context.Context, q *db.Queries, req BM25BuildRequest) (*BM25B
 	if err != nil {
 		return nil, errors.Wrap(err, "load immutable chunks")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var docs []indexed
 	var ids []string
 	for rows.Next() {
@@ -161,7 +161,7 @@ func QueryBM25(ctx context.Context, q *db.Queries, artifactID, query string, lim
 	if err != nil {
 		return nil, err
 	}
-	defer idx.Close()
+	defer func() { _ = idx.Close() }()
 	text := bleve.NewMatchQuery(query)
 	text.SetField("text")
 	title := bleve.NewMatchQuery(query)

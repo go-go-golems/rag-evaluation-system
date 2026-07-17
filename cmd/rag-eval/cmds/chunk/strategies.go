@@ -86,7 +86,7 @@ func (c *StrategiesCommand) RunIntoGlazeProcessor(
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	rows, err := queries.DB().QueryContext(ctx, `
 		SELECT id, name, type, description, created_at
@@ -95,7 +95,7 @@ func (c *StrategiesCommand) RunIntoGlazeProcessor(
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var id, name, typ, desc, createdAt string

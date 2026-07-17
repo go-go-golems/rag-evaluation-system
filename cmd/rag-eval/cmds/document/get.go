@@ -98,7 +98,7 @@ func (c *GetCommand) RunIntoGlazeProcessor(
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	service := documentservice.NewService(queries)
 	doc, err := service.Get(ctx, s.DocID)

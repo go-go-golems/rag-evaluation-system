@@ -51,7 +51,7 @@ func (c *buildImmutableCommand) RunIntoGlazeProcessor(ctx context.Context, v *va
 	if e != nil {
 		return e
 	}
-	defer q.Close()
+	defer func() { _ = q.Close() }()
 	r, e := immutablechunk.Build(ctx, q, immutablechunk.Request{CorpusSnapshotID: s.SnapshotID, Strategy: s.Strategy, InputVariant: s.Input, ChunkSize: s.Size, Overlap: s.Overlap})
 	if e != nil {
 		return e

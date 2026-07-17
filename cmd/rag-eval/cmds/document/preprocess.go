@@ -35,7 +35,7 @@ Live LLM providers are reserved for the bounded live-provider smoke phase.`,
 			if err != nil {
 				return err
 			}
-			defer queries.Close()
+			defer func() { _ = queries.Close() }()
 			var provider documentprocessing.Provider
 			switch opts.provider {
 			case "fake":

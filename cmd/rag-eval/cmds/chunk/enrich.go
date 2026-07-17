@@ -33,7 +33,7 @@ Live LLM providers are reserved for the bounded live-provider smoke phase.`,
 			if err != nil {
 				return err
 			}
-			defer queries.Close()
+			defer func() { _ = queries.Close() }()
 			if opts.provider != "fake" {
 				return fmt.Errorf("unsupported chunk enrichment provider %q; only fake is available before live provider smoke", opts.provider)
 			}

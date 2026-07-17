@@ -69,7 +69,7 @@ func (r *IntakeRunner) runChunkDocument(ctx context.Context, runCtx runner.RunCo
 	if opErr != nil {
 		return opErr, nil
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	result, err := chunkservice.NewService(queries).Apply(ctx, chunkservice.ApplyRequest{
 		DocumentID:   input.DocumentID,
@@ -99,7 +99,7 @@ func (r *IntakeRunner) runPreprocessDocument(ctx context.Context, runCtx runner.
 	if opErr != nil {
 		return opErr, nil
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	provider, err := r.resolveDocumentProcessor(ctx, input)
 	if err != nil {
@@ -136,7 +136,7 @@ func (r *IntakeRunner) runEnrichChunk(ctx context.Context, runCtx runner.RunCont
 	if opErr != nil {
 		return opErr, nil
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	provider, err := r.resolveChunkEnricher(ctx, input)
 	if err != nil {
@@ -174,7 +174,7 @@ func (r *IntakeRunner) runComputeEmbeddings(ctx context.Context, runCtx runner.R
 	if opErr != nil {
 		return opErr, nil
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	resolved, err := r.resolveProvider(ctx, input)
 	if err != nil {
@@ -220,7 +220,7 @@ func (r *IntakeRunner) runBuildBM25(ctx context.Context, runCtx runner.RunContex
 	if opErr != nil {
 		return opErr, nil
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	indexRoot := input.IndexRoot
 	if indexRoot == "" {

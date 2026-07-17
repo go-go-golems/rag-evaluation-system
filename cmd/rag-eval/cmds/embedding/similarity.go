@@ -130,7 +130,7 @@ func (c *SimilarityCommand) RunIntoGlazeProcessor(
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	service := embeddingservice.NewService(queries)
 	result, err := service.Similarity(ctx, embeddingservice.SimilarityRequest{

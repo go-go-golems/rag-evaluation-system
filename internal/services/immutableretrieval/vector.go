@@ -23,7 +23,7 @@ func QueryVector(ctx context.Context, q *db.Queries, embeddingSetID string, quer
 	if err != nil {
 		return nil, errors.Wrap(err, "load immutable embedding set")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var hits []ChunkHit
 	for rows.Next() {
 		var chunkID string

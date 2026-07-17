@@ -26,7 +26,7 @@ func runHTTPServer(cmd *cobra.Command, address, dbPath, engineDB, logLevel strin
 	if err != nil {
 		zerolog_log.Fatal().Err(err).Str("path", dbPath).Msg("failed to open database")
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 
 	if err := db.Migrate(database); err != nil {
 		zerolog_log.Fatal().Err(err).Msg("failed to run migrations")

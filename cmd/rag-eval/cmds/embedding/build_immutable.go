@@ -67,7 +67,7 @@ func (c *buildImmutableCommand) RunIntoGlazeProcessor(ctx context.Context, vals 
 	if err != nil {
 		return err
 	}
-	defer q.Close()
+	defer func() { _ = q.Close() }()
 	resolved, err := embeddingservice.ResolveProvider(ctx, embeddingservice.ProviderConfig{Type: s.EmbeddingType, Engine: s.EmbeddingEngine, Dimensions: s.Dimensions, BaseURL: s.BaseURL, CacheType: s.CacheType, CacheDirectory: s.CacheDirectory})
 	if err != nil {
 		return errors.Wrap(err, "resolve embedding provider")

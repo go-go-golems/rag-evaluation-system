@@ -20,7 +20,7 @@ func TestEchoRunnerCompletesWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open engine store: %v", err)
 	}
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	registry := runner.NewRegistry()
 	if err := registry.Register(&EchoRunner{}); err != nil {

@@ -97,7 +97,7 @@ func (c *VectorCommand) RunIntoGlazeProcessor(ctx context.Context, vals *values.
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	resolved, err := embeddingservice.ResolveProvider(ctx, embeddingservice.ProviderConfig{
 		ProfileRegistries: s.ProfileRegistries,
