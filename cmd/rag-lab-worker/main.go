@@ -156,7 +156,6 @@ func openReadOnly(ctx context.Context, path string) (*sql.DB, error) {
 	}
 	query := url.Values{}
 	query.Set("mode", "ro")
-	query.Set("immutable", "1")
 	query.Set("_query_only", "1")
 	database, err := sql.Open("sqlite3", "file:"+filepath.ToSlash(absolute)+"?"+query.Encode())
 	if err != nil {
