@@ -130,6 +130,7 @@ type CitationPolicy struct {
 type RuntimePolicy struct {
 	TimeoutMilliseconds int64  `json:"timeoutMilliseconds,omitempty"`
 	MaxResults          int    `json:"maxResults"`
+	MaxConcurrent       int    `json:"maxConcurrent,omitempty"`
 	TracePolicy         string `json:"tracePolicy"`
 	FailurePolicy       string `json:"failurePolicy"`
 }
@@ -140,6 +141,8 @@ type ProductPlan struct {
 	Bindings      []ArtifactBinding `json:"bindings"`
 	Models        []ModelBinding    `json:"models,omitempty"`
 	Citations     CitationPolicy    `json:"citations"`
+	Request       json.RawMessage   `json:"request"`
+	Response      json.RawMessage   `json:"response"`
 	Runtime       RuntimePolicy     `json:"runtime"`
 	Display       DisplayMetadata   `json:"display,omitempty"`
 }

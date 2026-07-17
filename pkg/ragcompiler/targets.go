@@ -22,6 +22,14 @@ func CompileProduct(input ragcontract.ProductPlan, registry *Registry) (ragcontr
 	input.Pipeline = pipeline
 	sort.Slice(input.Bindings, func(i, j int) bool { return input.Bindings[i].SlotID < input.Bindings[j].SlotID })
 	sort.Slice(input.Models, func(i, j int) bool { return input.Models[i].Reference < input.Models[j].Reference })
+	input.Request, err = ragcontract.CanonicalRaw(input.Request, "{}")
+	if err != nil {
+		return input, fmt.Errorf("RAG_V2_PRODUCT_REQUEST: %w", err)
+	}
+	input.Response, err = ragcontract.CanonicalRaw(input.Response, "{}")
+	if err != nil {
+		return input, fmt.Errorf("RAG_V2_PRODUCT_RESPONSE: %w", err)
+	}
 	if input.Runtime.MaxResults <= 0 {
 		input.Runtime.MaxResults = 10
 	}
@@ -233,8 +241,14 @@ func clonePipeline(v ragcontract.PipelineIR) ragcontract.PipelineIR {
 }
 func applyOverrides(p ragcontract.PipelineIR, factors []ragcontract.Factor, selections []ragcontract.FactorSelection) (ragcontract.PipelineIR, error) {
 	selected := map[string]string{}
+	selectedValues := map[string]any{}
 	for _, selection := range selections {
 		selected[selection.FactorID] = selection.ValueID
+		var value any
+		if err := json.Unmarshal(selection.Value, &value); err != nil {
+			return p, fmt.Errorf("RAG_V2_FACTOR_VALUE: %s: %w", selection.FactorID, err)
+		}
+		selectedValues[selection.FactorID] = value
 	}
 	for _, factor := range factors {
 		wanted := selected[factor.ID]
@@ -269,7 +283,51 @@ func applyOverrides(p ragcontract.PipelineIR, factors []ragcontract.Factor, sele
 			}
 		}
 	}
+	for i := range p.Nodes {
+		var config any
+		if err := json.Unmarshal(p.Nodes[i].Config, &config); err != nil {
+			return p, err
+		}
+		resolved, err := resolveFactorRefs(config, selectedValues)
+		if err != nil {
+			return p, fmt.Errorf("node %s: %w", p.Nodes[i].ID, err)
+		}
+		p.Nodes[i].Config = mustJSON(resolved)
+	}
 	return p, nil
+}
+func resolveFactorRefs(value any, selected map[string]any) (any, error) {
+	switch typed := value.(type) {
+	case map[string]any:
+		if len(typed) == 1 {
+			if factor, ok := typed["$factor"].(string); ok {
+				resolved, exists := selected[factor]
+				if !exists {
+					return nil, fmt.Errorf("RAG_V2_FACTOR_REFERENCE: %s", factor)
+				}
+				return resolved, nil
+			}
+		}
+		for key, item := range typed {
+			resolved, err := resolveFactorRefs(item, selected)
+			if err != nil {
+				return nil, err
+			}
+			typed[key] = resolved
+		}
+		return typed, nil
+	case []any:
+		for i := range typed {
+			resolved, err := resolveFactorRefs(typed[i], selected)
+			if err != nil {
+				return nil, err
+			}
+			typed[i] = resolved
+		}
+		return typed, nil
+	default:
+		return value, nil
+	}
 }
 func object(raw json.RawMessage) (map[string]any, error) {
 	var v map[string]any

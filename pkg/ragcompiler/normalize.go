@@ -242,10 +242,11 @@ func expandRecipes(input ragcontract.PipelineIR, registry *Registry) (ragcontrac
 		}
 		source := n.Inputs[0].From
 		mergeInputs := make([]ragcontract.InputBinding, 0, len(config.Operators))
+		namedOutputs := map[string]ragcontract.PortRef{}
 		for i, entry := range config.Operators {
 			ref := ragcontract.OperatorRef{Kind: entry.Kind, Version: entry.Version}
 			definition, ok := registry.Definition(ref)
-			if !ok || definition.Recipe || len(definition.Inputs) != 1 || definition.Inputs[0].Kind != ragcontract.PortChunks || len(definition.Outputs) != 1 || definition.Outputs[0].Kind != ragcontract.PortRepresentations {
+			if !ok || definition.Recipe || len(definition.Inputs) == 0 || definition.Inputs[0].Kind != ragcontract.PortChunks || len(definition.Outputs) != 1 || definition.Outputs[0].Kind != ragcontract.PortRepresentations {
 				return result, fmt.Errorf("RAG_V2_RECIPE_OPERATOR: unsupported representation operator %s", ref.ID())
 			}
 			raw := entry.Config
@@ -253,9 +254,26 @@ func expandRecipes(input ragcontract.PipelineIR, registry *Registry) (ragcontrac
 				raw = json.RawMessage(`{}`)
 			}
 			id := fmt.Sprintf("%s.%03d", n.ID, i+1)
-			node := ragcontract.Node{ID: id, Operator: ref, Inputs: []ragcontract.InputBinding{{Port: definition.Inputs[0].Name, From: source}}, Config: raw, Order: n.Order + i}
+			bindings := []ragcontract.InputBinding{{Port: definition.Inputs[0].Name, From: source}}
+			var descriptorConfig struct {
+				Name string `json:"name"`
+				From string `json:"from"`
+			}
+			_ = json.Unmarshal(raw, &descriptorConfig)
+			if descriptorConfig.From != "" {
+				upstream, exists := namedOutputs[descriptorConfig.From]
+				if !exists {
+					return result, fmt.Errorf("RAG_V2_RECIPE_DEPENDENCY: representation %q references unknown or later %q", descriptorConfig.Name, descriptorConfig.From)
+				}
+				bindings = append(bindings, ragcontract.InputBinding{Port: "source", From: upstream})
+			}
+			node := ragcontract.Node{ID: id, Operator: ref, Inputs: bindings, Config: raw, Order: n.Order + i}
 			result.Nodes = append(result.Nodes, node)
-			mergeInputs = append(mergeInputs, ragcontract.InputBinding{Port: fmt.Sprintf("set.%03d", i+1), From: ragcontract.PortRef{NodeID: id, Port: definition.Outputs[0].Name}})
+			outputRef := ragcontract.PortRef{NodeID: id, Port: definition.Outputs[0].Name}
+			if descriptorConfig.Name != "" {
+				namedOutputs[descriptorConfig.Name] = outputRef
+			}
+			mergeInputs = append(mergeInputs, ragcontract.InputBinding{Port: fmt.Sprintf("set.%03d", i+1), From: outputRef})
 		}
 		output := mergeInputs[0].From
 		if len(mergeInputs) > 1 {
