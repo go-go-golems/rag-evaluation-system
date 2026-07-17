@@ -79,6 +79,7 @@ Runtime factory: `v3UIObject`.
 - `splitPane` (function)
 - `card` (function)
 - `button` (function)
+- `iconButton` (function)
 - `caption` (function)
 - `badge` (function)
 - `metadata` (function)

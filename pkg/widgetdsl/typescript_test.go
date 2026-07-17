@@ -54,6 +54,7 @@ func TestWidgetV3TypeScriptModuleDeclaresRootNamespaces(t *testing.T) {
 		"export function page(titleOrOptions: string | Record<string, any>, configure?: Fragment<PageBuilder>): PageBuilder;",
 		"export interface UINamespace",
 		"callout(options?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
+		"iconButton(glyph: WidgetChild, label: string, action?: ActionSpec, options?: Record<string, any>): WidgetNodeSpec;",
 		"export interface ActionsBuilder",
 		"shell(shellSpec: PageShellSpec): this;",
 		"root(node: WidgetNodeSpec): this;",

@@ -1028,6 +1028,7 @@ func (r *runtime) v3UIObject() *goja.Object {
 	setExport(ui, "splitPane", r.v3UISplitPane)
 	setExport(ui, "card", r.v3ComponentFactory("Panel", nil))
 	setExport(ui, "button", r.v3UIButton)
+	setExport(ui, "iconButton", r.v3UIIconButton)
 	setExport(ui, "caption", r.v3ComponentFactory("Caption", nil))
 	setExport(ui, "badge", r.v3ComponentFactory("Tag", nil))
 	setExport(ui, "metadata", r.v3UIMetadata)
@@ -1114,6 +1115,15 @@ func (r *runtime) v3UIButton(label goja.Value, action goja.Value, options ...goj
 		props["action"] = action.Export()
 	}
 	return componentNode("Button", props, r.v3NodeSpecsToIR(r.v3ExportChild(label))...)
+}
+
+func (r *runtime) v3UIIconButton(glyph goja.Value, label string, action goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	props["label"] = label
+	if action != nil && !goja.IsUndefined(action) && !goja.IsNull(action) {
+		props["action"] = action.Export()
+	}
+	return componentNode("IconButton", props, r.v3NodeSpecsToIR(r.v3ExportChild(glyph))...)
 }
 
 func (r *runtime) v3UIDisclosure(title goja.Value, content goja.Value, options ...goja.Value) map[string]any {

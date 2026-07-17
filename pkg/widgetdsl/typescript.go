@@ -385,6 +385,7 @@ func widgetV3TypeScriptLines() []string {
 		"splitPane(left: WidgetChild, right: WidgetChild, options?: Record<string, any>): WidgetNodeSpec;",
 		"card(options?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
 		"button(label: WidgetChild, action?: ActionSpec, options?: Record<string, any>): WidgetNodeSpec;",
+		"iconButton(glyph: WidgetChild, label: string, action?: ActionSpec, options?: Record<string, any>): WidgetNodeSpec;",
 		"caption(options?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
 		"badge(options?: Record<string, any> | WidgetChild, ...children: WidgetChild[]): WidgetNodeSpec;",
 		"metadata(record: Record<string, JsonValue>, options?: Record<string, any>): WidgetNodeSpec;",

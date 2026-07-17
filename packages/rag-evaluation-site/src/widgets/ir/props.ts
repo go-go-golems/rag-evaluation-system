@@ -86,6 +86,13 @@ export interface ButtonWidgetProps extends BaseWidgetProps {
 	type?: "button" | "submit" | "reset";
 }
 
+export interface IconButtonWidgetProps extends BaseWidgetProps {
+	label: string;
+	size?: "compact" | "normal" | "large";
+	variant?: "bare" | "boxed";
+	disabled?: boolean;
+}
+
 export interface TextWidgetProps extends BaseWidgetProps {
 	as?: TextAs;
 	size?: TextSize;
@@ -664,6 +671,7 @@ export type WidgetProps =
 	| AppShellWidgetProps
 	| AppNavWidgetProps
 	| ButtonWidgetProps
+	| IconButtonWidgetProps
 	| TextWidgetProps
 	| CodeTextWidgetProps
 	| DividerWidgetProps

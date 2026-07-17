@@ -116,7 +116,7 @@ var widgetV3Module = v3ModuleDescriptor{
 			Description:    "Generic composition widgets.",
 			RuntimeFactory: "v3UIObject",
 			Members: v3Members([]string{
-				"callout", "stack", "inline", "splitPane", "card", "button", "caption", "badge", "metadata",
+				"callout", "stack", "inline", "splitPane", "card", "button", "iconButton", "caption", "badge", "metadata",
 				"shareLink", "form", "formRow", "textInput", "textareaInput", "selectInput", "status", "emptyState",
 				"text", "code", "divider", "disclosure", "scroll", "tabs", "summary", "checkList", "stepList", "markdownArticle", "upload", "formDialog",
 			}),
