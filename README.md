@@ -124,6 +124,22 @@ packages/rag-evaluation-site/  React component library
   widgets/           Widget IR types and WidgetRenderer
 ```
 
+## Researchctl laboratory integration
+
+The authoritative cross-purpose execution path exports a pure `rag-retrieval-spec/v1` value and emits observations through `pkg/raglab.ObservationExecutor`. Researchctl owns runs, attempts, retries, timestamps, terminal state, SQLite, artifact custody, import, and export. This repository owns retrieval, fusion, reranking, relevance, and query-trace semantics.
+
+```bash
+# Inspect a lifecycle-free JavaScript specification export.
+go run ./cmd/rag-eval js run examples/rag-lab-js/04-export-researchctl-spec.js
+
+# Build the strict NDJSON worker used by researchctl experiment run-rag.
+go build -o .bin/rag-lab-worker ./cmd/rag-lab-worker
+```
+
+The worker speaks `researchctl-rag-runner-stdio/v1`, accepts one request on stdin, writes protocol frames only to stdout, and sends diagnostics to stderr. It opens the TTC SQLite catalog with WAL-aware `mode=ro` and query-only access. Filters, generated representations, parent-chunk collapse, missing embedders, and missing rerankers fail explicitly before observations.
+
+See [`pkg/ragcontract/README.md`](pkg/ragcontract/README.md) for the dependency-free boundary and `examples/rag-lab-js/04-export-researchctl-spec.js` for pure authoring. Candidate TTC datasets and metrics remain provisional development evidence until human adjudication and holdout freeze.
+
 ## Widget IR frontend
 
 The frontend uses a Widget IR (Interchange Representation) — a JSON-compatible data format that describes pages as trees of component nodes. Host applications expose Widget IR at routes such as `/api/widget/pages/{id}`, and the React `WidgetRenderer` renders it in the browser.
