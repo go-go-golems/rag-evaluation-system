@@ -55,6 +55,19 @@ func TestLlamaCPPRerankerMapsResponseToDurableCandidateIDs(t *testing.T) {
 	}
 }
 
+func TestLlamaCPPRerankerRejectsUnsafeNetworkConfiguration(t *testing.T) {
+	for _, baseURL := range []string{
+		"file:///tmp/socket",
+		"http://user:provider-secret@example.test",
+		"http://example.test?token=provider-secret",
+		"http://example.test/#provider-secret",
+	} {
+		if _, err := NewLlamaCPPReranker(LlamaCPPRerankerOptions{BaseURL: baseURL, Model: "model"}); err == nil {
+			t.Fatalf("unsafe base URL accepted: %s", baseURL)
+		}
+	}
+}
+
 func TestLlamaCPPRerankerRejectsOversizedRequest(t *testing.T) {
 	t.Parallel()
 	reranker, err := NewLlamaCPPReranker(LlamaCPPRerankerOptions{BaseURL: "http://example.test", Model: "model", MaxRequestBytes: 1})

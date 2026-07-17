@@ -9,6 +9,37 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 )
 
+var errUnexpected = errors.New("unexpected fake retrieval request")
+
+type fakeRetrievalBackend struct{}
+
+func (fakeRetrievalBackend) BM25(_ context.Context, artifactID, _ string, limit int) ([]immutableretrieval.ChunkHit, error) {
+	if artifactID != "bm25" || limit != 10 {
+		return nil, errUnexpected
+	}
+	return []immutableretrieval.ChunkHit{
+		{Rank: 1, ChunkID: "a-1", DocumentRevisionID: "a", Title: "A", URL: "https://example.test/a", Score: 5},
+		{Rank: 2, ChunkID: "b-1", DocumentRevisionID: "b", Title: "B", URL: "https://example.test/b", Score: 4},
+	}, nil
+}
+
+func (fakeRetrievalBackend) Vector(_ context.Context, artifactID string, vector []float32, limit int) ([]immutableretrieval.ChunkHit, error) {
+	if artifactID != "embeddings" || len(vector) != 2 || limit != 10 {
+		return nil, errUnexpected
+	}
+	return []immutableretrieval.ChunkHit{
+		{Rank: 1, ChunkID: "b-1", DocumentRevisionID: "b", Title: "B", URL: "https://example.test/b", Score: .9},
+		{Rank: 2, ChunkID: "a-1", DocumentRevisionID: "a", Title: "A", URL: "https://example.test/a", Score: .8},
+	}, nil
+}
+
+type fakeEmbedder struct{ calls int }
+
+func (f *fakeEmbedder) GenerateEmbedding(_ context.Context, _ string) ([]float32, error) {
+	f.calls++
+	return []float32{1, 2}, nil
+}
+
 type collectingObserver struct {
 	events    []DomainEvent
 	traces    []ragcontract.QueryTrace

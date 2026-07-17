@@ -2,6 +2,7 @@ package raglab
 
 import (
 	"errors"
+	"reflect"
 	"testing"
 )
 
@@ -30,7 +31,7 @@ func validExperiment(t *testing.T) *ExperimentBuilder {
 		Metrics(func(m *MetricsBuilder) { m.RelevanceAt(substantial(t)).RecallAt(10, 1, 3, 3).MRR() })
 }
 
-func TestBuildProducesStablePersistenceFingerprint(t *testing.T) {
+func TestBuildProducesStableNormalizedAuthoringValue(t *testing.T) {
 	first, err := validExperiment(t).Build()
 	if err != nil {
 		t.Fatal(err)
@@ -39,18 +40,14 @@ func TestBuildProducesStablePersistenceFingerprint(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if first.SchemaVersion == "" || first.Fingerprint == "" {
-		t.Fatalf("incomplete specification: %#v", first)
+	if first.SchemaVersion != AuthoringSchemaVersion {
+		t.Fatalf("schema version = %q", first.SchemaVersion)
 	}
-	if first.Fingerprint != second.Fingerprint {
-		t.Fatalf("fingerprint = %s, want %s", first.Fingerprint, second.Fingerprint)
+	if !reflect.DeepEqual(first, second) {
+		t.Fatalf("normalized authoring values differ:\n%#v\n%#v", first, second)
 	}
 	if got := first.Metrics.RecallAt; len(got) != 3 || got[0] != 1 || got[1] != 3 || got[2] != 10 {
 		t.Fatalf("recall cutoffs = %#v", got)
-	}
-	input := first.PersistenceInput()
-	if input.CorpusSnapshotID != "snapshot" || input.EmbeddingSetID != "embeddings" || input.Config["retrieval"] == nil {
-		t.Fatalf("persistence input = %#v", input)
 	}
 }
 
@@ -139,8 +136,8 @@ func TestBuildCanonicalizesSetLikeFiltersButKeepsFragmentProvenanceOrder(t *test
 	}
 	first := build("b", "a", "b")
 	second := build("a", "b")
-	if first.Fingerprint != second.Fingerprint {
-		t.Fatalf("set-like filters changed fingerprint: %s != %s", first.Fingerprint, second.Fingerprint)
+	if !reflect.DeepEqual(first, second) {
+		t.Fatalf("set-like filters changed normalized authoring value:\n%#v\n%#v", first, second)
 	}
 	if got := first.Provenance.Fragments; len(got) != 2 || got[0] != "first" || got[1] != "second" {
 		t.Fatalf("fragment provenance order = %#v", got)

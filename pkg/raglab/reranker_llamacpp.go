@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"math"
 	"net/http"
+	"net/url"
 	"sort"
 	"strings"
 
@@ -37,6 +38,10 @@ func NewLlamaCPPReranker(options LlamaCPPRerankerOptions) (*LlamaCPPReranker, er
 	baseURL := strings.TrimRight(strings.TrimSpace(options.BaseURL), "/")
 	if baseURL == "" {
 		return nil, errors.New("RAG_RERANKER_BASE_URL_REQUIRED: llama.cpp base URL is required")
+	}
+	parsedURL, err := url.Parse(baseURL)
+	if err != nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") || parsedURL.Host == "" || parsedURL.User != nil || parsedURL.RawQuery != "" || parsedURL.Fragment != "" {
+		return nil, errors.New("RAG_RERANKER_BASE_URL_INVALID: base URL must be an http(s) origin or path without credentials, query, or fragment")
 	}
 	if strings.TrimSpace(options.Model) == "" {
 		return nil, errors.New("RAG_RERANKER_MODEL_REQUIRED: llama.cpp model is required")

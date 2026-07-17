@@ -1,13 +1,6 @@
 package api
 
-import (
-	"encoding/json"
-	"net/http"
-
-	"github.com/go-go-golems/rag-evaluation-system/internal/services/experimentrun"
-)
-
-func (h *handler) experimentRuns() *experimentrun.Service { return experimentrun.NewService(h.queries) }
+import "net/http"
 
 func (h *handler) handleLabCatalog(w http.ResponseWriter, r *http.Request) {
 	type snapshot struct {
@@ -86,7 +79,7 @@ func (h *handler) handleLabCatalog(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "catalog_failed", err.Error())
 		return
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	for rows.Next() {
 		var item bm25Artifact
 		if err := rows.Scan(&item.ID, &item.ChunkSetID, &item.ChunkCount, &item.CreatedAt); err != nil {
@@ -100,136 +93,4 @@ func (h *handler) handleLabCatalog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, result)
-}
-
-func (h *handler) handleListExperimentSpecifications(w http.ResponseWriter, r *http.Request) {
-	items, err := h.experimentRuns().ListSpecifications(r.Context())
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "list_failed", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"items": items})
-}
-func (h *handler) handleGetExperimentSpecification(w http.ResponseWriter, r *http.Request) {
-	item, err := h.experimentRuns().GetSpecification(r.Context(), r.PathValue("id"))
-	if err != nil {
-		writeError(w, http.StatusNotFound, "not_found", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusOK, item)
-}
-func (h *handler) handleCreateExperimentSpecification(w http.ResponseWriter, r *http.Request) {
-	var input experimentrun.SpecificationInput
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
-		return
-	}
-	item, reused, err := h.experimentRuns().CreateSpecification(r.Context(), input)
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "create_failed", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusCreated, map[string]any{"item": item, "reused": reused})
-}
-func (h *handler) handleCreateExperimentRun(w http.ResponseWriter, r *http.Request) {
-	item, err := h.experimentRuns().CreateRun(r.Context(), r.PathValue("id"))
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "create_failed", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusCreated, item)
-}
-func (h *handler) handleListExperimentRuns(w http.ResponseWriter, r *http.Request) {
-	items, err := h.experimentRuns().ListRuns(r.Context(), r.URL.Query().Get("specification_id"))
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "list_failed", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"items": items})
-}
-func (h *handler) handleGetExperimentRun(w http.ResponseWriter, r *http.Request) {
-	item, err := h.experimentRuns().GetRun(r.Context(), r.PathValue("id"))
-	if err != nil {
-		writeError(w, http.StatusNotFound, "not_found", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusOK, item)
-}
-func (h *handler) handleListExperimentRunTraces(w http.ResponseWriter, r *http.Request) {
-	items, err := h.experimentRuns().ListQueryTraces(r.Context(), r.PathValue("id"))
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "list_failed", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"items": items})
-}
-func (h *handler) handleAppendExperimentRunEvent(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Type    string          `json:"type"`
-		Payload json.RawMessage `json:"payload"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
-		return
-	}
-	item, err := h.experimentRuns().AppendEvent(r.Context(), r.PathValue("id"), input.Type, input.Payload)
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "append_failed", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusCreated, item)
-}
-func (h *handler) handleRecordExperimentQueryTrace(w http.ResponseWriter, r *http.Request) {
-	var input experimentrun.QueryTraceInput
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
-		return
-	}
-	if err := h.experimentRuns().RecordQueryTrace(r.Context(), r.PathValue("id"), input); err != nil {
-		writeError(w, http.StatusBadRequest, "trace_failed", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusCreated, map[string]any{"ok": true})
-}
-func (h *handler) handleCompleteExperimentRun(w http.ResponseWriter, r *http.Request) {
-	var input experimentrun.SummaryInput
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
-		return
-	}
-	item, err := h.experimentRuns().CompleteRun(r.Context(), r.PathValue("id"), input)
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "complete_failed", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusCreated, item)
-}
-func (h *handler) handleCompareExperimentRuns(w http.ResponseWriter, r *http.Request) {
-	leftID, rightID := r.URL.Query().Get("left"), r.URL.Query().Get("right")
-	if leftID == "" || rightID == "" {
-		writeError(w, http.StatusBadRequest, "missing_run", "left and right run IDs are required")
-		return
-	}
-	service := h.experimentRuns()
-	left, err := service.GetRun(r.Context(), leftID)
-	if err != nil {
-		writeError(w, http.StatusNotFound, "not_found", err.Error())
-		return
-	}
-	right, err := service.GetRun(r.Context(), rightID)
-	if err != nil {
-		writeError(w, http.StatusNotFound, "not_found", err.Error())
-		return
-	}
-	leftTraces, err := service.ListQueryTraces(r.Context(), leftID)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "comparison_failed", err.Error())
-		return
-	}
-	rightTraces, err := service.ListQueryTraces(r.Context(), rightID)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "comparison_failed", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"left": left, "right": right, "left_traces": leftTraces, "right_traces": rightTraces})
 }

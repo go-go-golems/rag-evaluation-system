@@ -4,7 +4,7 @@
 
 The authoritative schema/version is `rag-retrieval-spec/v1`. The matching researchctl implementation and JSON Schemas live in `researchctl/pkg/rag/spec`. Cross-repository golden tests prevent field/tag drift.
 
-The existing `pkg/raglab.Laboratory` and `internal/services/experimentrun` paths remain prototype persistence APIs during migration. Native researchctl execution must use `raglab.ObservationExecutor`, whose observer emits domain events, query traces, metrics, and artifacts without creating or completing a run. Researchctl owns the enclosing run and attempt through its `ObservationSink`.
+Native execution uses `raglab.ObservationExecutor`, whose observer emits domain events, query traces, metrics, and artifacts without creating or completing a run. Researchctl owns the enclosing run and attempt through its `ObservationSink`. The former `pkg/raglab.Laboratory`, persisted executor, `internal/services/experimentrun`, database-backed JavaScript lifecycle API, and writable `/api/v1/lab/runs` endpoints were removed after import/native parity review. Historical SQLite tables remain migration history but have no supported writer.
 
 Unsupported execution behavior is an error. In particular, filters remain authorable but are rejected before any event or retrieval call until every channel can apply and trace them. Summary/question representations and parent-chunk collapse remain unsupported by the current executor.
 

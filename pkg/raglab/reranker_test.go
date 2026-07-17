@@ -1,8 +1,11 @@
 package raglab
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
-func TestRerankingPolicyIsCanonicalAndChangesFingerprint(t *testing.T) {
+func TestRerankingPolicyIsNormalizedAndChangesAuthoringValue(t *testing.T) {
 	build := func(model string) ExperimentSpecification {
 		t.Helper()
 		spec, err := validExperiment(t).Retrieval(func(r *RetrievalBuilder) {
@@ -19,11 +22,11 @@ func TestRerankingPolicyIsCanonicalAndChangesFingerprint(t *testing.T) {
 	if first.Retrieval.Reranking == nil || first.Retrieval.Reranking.CandidateCount != 50 {
 		t.Fatalf("reranking = %#v", first.Retrieval.Reranking)
 	}
-	if first.Fingerprint != second.Fingerprint {
-		t.Fatalf("same reranking policy changed fingerprint: %s != %s", first.Fingerprint, second.Fingerprint)
+	if !reflect.DeepEqual(first, second) {
+		t.Fatalf("same reranking policy changed normalized value: %#v != %#v", first, second)
 	}
-	if first.Fingerprint == third.Fingerprint {
-		t.Fatal("reranker model must participate in experiment fingerprint")
+	if reflect.DeepEqual(first, third) {
+		t.Fatal("reranker model must participate in exported authoring semantics")
 	}
 }
 

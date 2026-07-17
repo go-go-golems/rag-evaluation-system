@@ -77,7 +77,7 @@ func (e *ObservationExecutor) Execute(ctx context.Context, request ObservationEx
 		return err
 	}
 	started := time.Now()
-	algorithm := &Executor{backend: e.backend}
+	algorithm := &retrievalExecutor{backend: e.backend}
 	metricState := newMetricAccumulator(request.Specification.Metrics)
 	for _, card := range request.Cards {
 		if err := ctx.Err(); err != nil {
@@ -144,7 +144,7 @@ type orderedChannel struct {
 	hits          []immutableretrieval.ChunkHit
 }
 
-// executionTrace stores channels by name for prototype compatibility. The
+// executionTrace stores channels by name for efficient retrieval assembly. The
 // observer contract restores specification order before publishing evidence.
 func inputChannelOrder(specification ExperimentSpecification, input executionTrace) []orderedChannel {
 	result := make([]orderedChannel, 0, len(specification.Retrieval.Channels))

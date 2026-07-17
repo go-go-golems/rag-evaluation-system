@@ -327,63 +327,6 @@ export interface LabCatalog {
 	bm25_artifacts: LabBM25Artifact[];
 }
 
-export interface ExperimentSpecificationInput {
-	corpus_snapshot_id: string;
-	chunk_set_id: string;
-	bm25_artifact_id?: string;
-	embedding_set_id?: string;
-	evaluation_dataset_id?: string;
-	config: Record<string, unknown>;
-}
-
-export interface ExperimentSpecification extends ExperimentSpecificationInput {
-	id: string;
-	schema_version: string;
-	manifest: Record<string, unknown>;
-	created_at: string;
-}
-
-export interface ExperimentRunEvent {
-	sequence: number;
-	type: string;
-	occurred_at: string;
-	payload: Record<string, unknown>;
-}
-
-export interface ExperimentRunSummary {
-	status: "succeeded" | "failed" | "cancelled";
-	finished_at: string;
-	metrics: Record<string, unknown>;
-	cost: Record<string, unknown>;
-	storage: Record<string, unknown>;
-	error: Record<string, unknown>;
-}
-
-export interface ExperimentRun {
-	id: string;
-	experiment_spec_id: string;
-	created_at: string;
-	status: string;
-	events: ExperimentRunEvent[];
-	summary?: ExperimentRunSummary;
-}
-
-export interface ExperimentQueryTrace {
-	query_card_id: string;
-	trace: Record<string, unknown>;
-	metrics: Record<string, unknown>;
-	timing: Record<string, unknown>;
-	cost: Record<string, unknown>;
-	storage: Record<string, unknown>;
-}
-
-export interface ExperimentComparison {
-	left: ExperimentRun;
-	right: ExperimentRun;
-	left_traces: ExperimentQueryTrace[];
-	right_traces: ExperimentQueryTrace[];
-}
-
 function filterIdentityParams(
 	args: CorpusIdentityArgs,
 ): Record<string, string | number | undefined> {
@@ -588,53 +531,9 @@ export const ragApi = createApi({
 			providesTags: ["Artifacts"],
 		}),
 
-		// --- Immutable experiment laboratory ---
+		// --- Read-only immutable domain artifact catalog ---
 		getLabCatalog: builder.query<LabCatalog, void>({
 			query: () => "lab/catalog",
-			providesTags: ["Lab"],
-		}),
-		listExperimentSpecifications: builder.query<ExperimentSpecification[], void>({
-			query: () => "lab/specifications",
-			transformResponse: (response: { items: ExperimentSpecification[] }) => response.items ?? [],
-			providesTags: ["Lab"],
-		}),
-		getExperimentSpecification: builder.query<ExperimentSpecification, string>({
-			query: (id) => `lab/specifications/${encodeURIComponent(id)}`,
-			providesTags: ["Lab"],
-		}),
-		createExperimentSpecification: builder.mutation<
-			{ item: ExperimentSpecification; reused: boolean },
-			ExperimentSpecificationInput
-		>({
-			query: (body) => ({ url: "lab/specifications", method: "POST", body }),
-			invalidatesTags: ["Lab"],
-		}),
-		listExperimentRuns: builder.query<ExperimentRun[], { specificationId?: string } | void>({
-			query: (args) => ({
-				url: "lab/runs",
-				params: args?.specificationId ? { specification_id: args.specificationId } : undefined,
-			}),
-			transformResponse: (response: { items: ExperimentRun[] }) => response.items ?? [],
-			providesTags: ["Lab"],
-		}),
-		createExperimentRun: builder.mutation<ExperimentRun, string>({
-			query: (specificationId) => ({
-				url: `lab/specifications/${encodeURIComponent(specificationId)}/runs`,
-				method: "POST",
-			}),
-			invalidatesTags: ["Lab"],
-		}),
-		getExperimentRun: builder.query<ExperimentRun, string>({
-			query: (id) => `lab/runs/${encodeURIComponent(id)}`,
-			providesTags: ["Lab"],
-		}),
-		listExperimentRunTraces: builder.query<ExperimentQueryTrace[], string>({
-			query: (id) => `lab/runs/${encodeURIComponent(id)}/traces`,
-			transformResponse: (response: { items: ExperimentQueryTrace[] }) => response.items ?? [],
-			providesTags: ["Lab"],
-		}),
-		getExperimentComparison: builder.query<ExperimentComparison, { left: string; right: string }>({
-			query: (args) => ({ url: "lab/comparison", params: args }),
 			providesTags: ["Lab"],
 		}),
 	}),
@@ -924,16 +823,8 @@ export const {
 	useGetChunkEnrichmentCoverageQuery,
 	useGetDocumentProcessingArtifactsQuery,
 	useGetChunkEnrichmentsQuery,
-	// Immutable experiment laboratory
+	// Read-only immutable domain artifact catalog
 	useGetLabCatalogQuery,
-	useListExperimentSpecificationsQuery,
-	useGetExperimentSpecificationQuery,
-	useCreateExperimentSpecificationMutation,
-	useListExperimentRunsQuery,
-	useCreateExperimentRunMutation,
-	useGetExperimentRunQuery,
-	useListExperimentRunTracesQuery,
-	useGetExperimentComparisonQuery,
 	// Op result
 	useGetOpResultQuery,
 } = ragApi;

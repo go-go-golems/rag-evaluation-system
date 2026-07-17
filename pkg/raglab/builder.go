@@ -3,8 +3,6 @@ package raglab
 import (
 	"sort"
 	"strconv"
-
-	"github.com/go-go-golems/rag-evaluation-system/internal/experimentspec"
 )
 
 type Fragment struct {
@@ -248,18 +246,13 @@ func (b *ExperimentBuilder) Build() (ExperimentSpecification, error) {
 		return ExperimentSpecification{}, &ValidationError{Report: report}
 	}
 	spec := ExperimentSpecification{
-		SchemaVersion: experimentspec.SchemaVersion,
+		SchemaVersion: AuthoringSchemaVersion,
 		Name:          b.name,
 		Provenance:    normalizeProvenance(b.provenance),
 		Inputs:        normalizeInputs(b.inputs),
 		Retrieval:     normalizeRetrieval(b.retrieval),
 		Metrics:       normalizeMetrics(b.metrics),
 	}
-	fingerprint, err := experimentspec.Fingerprint(spec.PersistenceInput())
-	if err != nil {
-		return ExperimentSpecification{}, err
-	}
-	spec.Fingerprint = fingerprint
 	return spec, nil
 }
 
@@ -527,15 +520,15 @@ func normalizeRetrieval(plan RetrievalPlan) RetrievalPlan {
 		plan.Channels[i].Filter = normalizeFilter(plan.Channels[i].Filter)
 	}
 	if plan.Fusion != nil {
-		copy := *plan.Fusion
-		if len(copy.Weights) == 0 {
-			copy.Weights = nil
+		cloned := *plan.Fusion
+		if len(cloned.Weights) == 0 {
+			cloned.Weights = nil
 		}
-		plan.Fusion = &copy
+		plan.Fusion = &cloned
 	}
 	if plan.Reranking != nil {
-		copy := *plan.Reranking
-		plan.Reranking = &copy
+		cloned := *plan.Reranking
+		plan.Reranking = &cloned
 	}
 	return plan
 }

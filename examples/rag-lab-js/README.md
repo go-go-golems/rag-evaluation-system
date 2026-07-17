@@ -1,42 +1,26 @@
-# RAG laboratory JavaScript examples
+# Pure RAG JavaScript authoring examples
 
-These scripts use the `require("rag")` module in the generated
-`rag-eval-js` binary. They intentionally use explicit immutable artifact IDs:
-a script never selects "the latest" corpus, chunk set, embedding set, or
-evaluation dataset.
+The `rag` module is a lifecycle-free frontend for `rag-retrieval-spec/v1`. It builds and validates retrieval semantics, then exports plain data for researchctl. It does not open SQLite, contact providers, create runs, persist traces, or choose terminal state.
 
-Build the runtime from the repository root:
+## Examples
+
+- `01-plan-only.js` demonstrates fragments, raw BM25/vector channels, weighted RRF, metrics, candidate status, structural validation, and pure export.
+- `04-export-researchctl-spec.js` is the cross-repository golden-style export used by the integration contract.
+
+The older database-backed `rag.open`, `persist`, `start`, and direct execution examples were removed. Researchctl is the only supported native lifecycle path.
+
+## Run an export
+
+Build the xgoja runtime and execute the program using its JavaScript command, or load it through researchctl's RAG specification loader. The observable output is a `rag-retrieval-spec/v1` value; input artifact IDs are supplied separately to researchctl.
 
 ```bash
-xgoja doctor -f cmd/rag-eval/xgoja.yaml
-xgoja build -f cmd/rag-eval/xgoja.yaml --output cmd/rag-eval/dist/rag-eval-js
+researchctl experiment run-rag examples/rag-lab-js/01-plan-only.js \
+  --project /path/to/project.yaml \
+  --experiment-id EXP-RAG \
+  --inputs /path/to/inputs.json \
+  --ttc-database /path/to/rag-eval.db \
+  --runner /path/to/rag-lab-worker \
+  --runner-arg=--db --runner-arg=/path/to/rag-eval.db
 ```
 
-Run the pure, no-database authoring example:
-
-```bash
-cmd/rag-eval/dist/rag-eval-js run examples/rag-lab-js/01-plan-only.js
-```
-
-It prints a canonical specification and a stable fingerprint. It is safe to
-run because `toSpec()` and `validate()` do not open or write a database.
-
-To run `02-validate-persist-start.js`, replace every `REPLACE_WITH_...` ID
-with artifacts from the same immutable lineage and set its `database` value.
-The target database must already have the rag-eval migrations applied. The
-script opens the database with `execution: "allowRuns"`, validates the
-catalog, deduplicates the immutable specification, creates a distinct run,
-and appends its `submitted` event. It deliberately stops before retrieval so
-you can inspect the persisted specification and run lifecycle independently.
-
-To execute a vector or hybrid run, copy
-`03-execute-with-geppetto.js`. Replace its explicit artifact IDs, database
-path, profile registry path, and embedding profile name. It resolves the
-profile through `require("geppetto")`, passes `embedder.embed(query)` as the
-required synchronous `queryEmbed` callback, then calls `lab.execute()`.
-Credentials and endpoints stay in the external profile registry; the
-experiment persists only immutable artifact IDs and retrieval policy.
-
-For a read-only compatibility check, change `allowRuns` to `readOnly` and call
-only `experiment.validate(lab)`. `persist` and `start` deliberately fail in
-that mode.
+Vector and reranking capabilities are worker configuration. Keep credentials out of authored specifications, manifests, traces, and recorded environment evidence.

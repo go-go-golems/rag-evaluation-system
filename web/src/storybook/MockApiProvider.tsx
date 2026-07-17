@@ -223,66 +223,6 @@ const dslRoot: WidgetNode = component("Panel", { title: "DSL Preview" }, [
 	]),
 ]);
 
-const labSpecification = {
-	id: "sha256:lab-spec-001",
-	schema_version: "rag-eval-experiment-spec/v1",
-	corpus_snapshot_id: "sha256:corpus-001",
-	chunk_set_id: "sha256:chunks-001",
-	bm25_artifact_id: "sha256:bm25-001",
-	embedding_set_id: "sha256:embeddings-001",
-	evaluation_dataset_id: "candidate:ttc-baseline-v1",
-	config: { channels: ["bm25", "vector"], rrf_k: 60, limit: 10 },
-	manifest: {
-		schema_version: "rag-eval-experiment-spec/v1",
-		corpus_snapshot_id: "sha256:corpus-001",
-		chunk_set_id: "sha256:chunks-001",
-		bm25_artifact_id: "sha256:bm25-001",
-		embedding_set_id: "sha256:embeddings-001",
-		evaluation_dataset_id: "candidate:ttc-baseline-v1",
-		config: { channels: ["bm25", "vector"], rrf_k: 60, limit: 10 },
-	},
-	created_at: now,
-};
-
-const labRun = {
-	id: "run_storybook_001",
-	experiment_spec_id: labSpecification.id,
-	created_at: now,
-	status: "succeeded",
-	events: [
-		{ sequence: 1, type: "created", occurred_at: now, payload: {} },
-		{
-			sequence: 2,
-			type: "candidate_trace_imported",
-			occurred_at: now,
-			payload: { query_count: 20 },
-		},
-		{ sequence: 3, type: "terminal", occurred_at: now, payload: { status: "succeeded" } },
-	],
-	summary: {
-		status: "succeeded",
-		finished_at: now,
-		metrics: { mrr: 0.8 },
-		cost: { billed: 0 },
-		storage: { trace_bytes: 3436858 },
-		error: {},
-	},
-};
-
-const labTraces = [
-	{
-		query_card_id: "ttc-eval-001",
-		trace: {
-			query: "What mature height does Thuja Green Giant have?",
-			hybrid: [{ title: "Thuja Green Giant", rank: 1 }],
-		},
-		metrics: { recall_at_10: 1 },
-		timing: { total_ms: 216 },
-		cost: { billed_usd: 0 },
-		storage: {},
-	},
-];
-
 function jsonResponse(body: unknown): Response {
 	return new Response(JSON.stringify(body), {
 		status: 200,
@@ -294,8 +234,6 @@ function mockPayload(url: URL, method: string): unknown {
 	const path = url.pathname.replace(/^\/api\/v1\/?/, "");
 
 	if (method === "POST") {
-		if (path === "lab/specifications") return { item: labSpecification, reused: true };
-		if (path === `lab/specifications/${labSpecification.id}/runs`) return labRun;
 		if (path === "embeddings/coverage")
 			return { total_chunks: 5592, embedded_chunks: 4908, missing_chunks: 684 };
 		if (path === "embeddings/compute")
@@ -371,13 +309,6 @@ function mockPayload(url: URL, method: string): unknown {
 				},
 			],
 		};
-	if (path === "lab/specifications") return { items: [labSpecification] };
-	if (path === `lab/specifications/${labSpecification.id}`) return labSpecification;
-	if (path === "lab/runs") return { items: [labRun] };
-	if (path === `lab/runs/${labRun.id}`) return labRun;
-	if (path === `lab/runs/${labRun.id}/traces`) return { items: labTraces };
-	if (path === "lab/comparison")
-		return { left: labRun, right: labRun, left_traces: labTraces, right_traces: labTraces };
 	if (path === "documents") return { items: documents };
 	if (path.endsWith("/chunks")) return { items: chunks };
 	if (path === "chunking-strategies") return { items: strategies };

@@ -7,7 +7,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/go-go-golems/rag-evaluation-system/internal/experimentspec"
 	"github.com/pkg/errors"
 )
 
@@ -84,10 +83,6 @@ func (r ValidationReport) OK() bool {
 
 func (r *ValidationReport) add(code, path, message string) {
 	r.Issues = append(r.Issues, ValidationIssue{Code: code, Path: path, Message: message, Severity: ValidationErrorSeverity})
-}
-
-func (r *ValidationReport) warn(code, path, message string) {
-	r.Issues = append(r.Issues, ValidationIssue{Code: code, Path: path, Message: message, Severity: ValidationWarningSeverity})
 }
 
 func (r *ValidationReport) Normalize() {
@@ -215,37 +210,13 @@ type InputSpec struct {
 	Representations   []RepresentationSpec `json:"representations"`
 }
 
+const AuthoringSchemaVersion = "rag-authoring/v1"
+
 type ExperimentSpecification struct {
 	SchemaVersion string        `json:"schema_version"`
-	Fingerprint   string        `json:"fingerprint"`
 	Name          string        `json:"name"`
 	Provenance    Provenance    `json:"provenance"`
 	Inputs        InputSpec     `json:"inputs"`
 	Retrieval     RetrievalPlan `json:"retrieval"`
 	Metrics       MetricsPlan   `json:"metrics"`
-}
-
-// PersistenceInput is the only conversion from the typed authoring model to
-// the pre-existing immutable experiment storage contract.
-func (s ExperimentSpecification) PersistenceInput() experimentspec.Input {
-	config := map[string]any{
-		"name":            s.Name,
-		"provenance":      s.Provenance,
-		"representations": s.Inputs.Representations,
-		"retrieval":       s.Retrieval,
-		"metrics":         s.Metrics,
-	}
-	input := experimentspec.Input{
-		CorpusSnapshotID:    s.Inputs.CorpusSnapshot.ID,
-		ChunkSetID:          s.Inputs.ChunkSet.ID,
-		EvaluationDatasetID: s.Inputs.EvaluationDataset.ID,
-		Config:              config,
-	}
-	if s.Inputs.BM25Index != nil {
-		input.BM25ArtifactID = s.Inputs.BM25Index.ID
-	}
-	if s.Inputs.EmbeddingSet != nil {
-		input.EmbeddingSetID = s.Inputs.EmbeddingSet.ID
-	}
-	return input
 }

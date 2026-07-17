@@ -2,11 +2,9 @@ package raglab
 
 import (
 	"context"
-	"encoding/json"
 	"sort"
 	"time"
 
-	"github.com/go-go-golems/rag-evaluation-system/internal/services/experimentrun"
 	"github.com/go-go-golems/rag-evaluation-system/internal/services/immutableretrieval"
 	"github.com/pkg/errors"
 )
@@ -25,16 +23,6 @@ type ChannelRetriever interface {
 	Vector(context.Context, string, []float32, int) ([]immutableretrieval.ChunkHit, error)
 }
 
-// RunRecorder is the append-only subset of experimentrun.Service used by a
-// single execution. The executor never writes SQL directly.
-type RunRecorder interface {
-	AppendEvent(context.Context, string, string, json.RawMessage) (*experimentrun.Event, error)
-	RecordQueryTrace(context.Context, string, experimentrun.QueryTraceInput) error
-	CompleteRun(context.Context, string, experimentrun.SummaryInput) (*experimentrun.Summary, error)
-}
-
-var _ RunRecorder = (*experimentrun.Service)(nil)
-
 type EvaluationCard struct {
 	ID                          string   `json:"id"`
 	Query                       string   `json:"query"`
@@ -46,104 +34,9 @@ type ExecutionOptions struct {
 	Reranker Reranker
 }
 
-type ExecutionResult struct {
-	RunID       string         `json:"runId"`
-	QueryCount  int            `json:"queryCount"`
-	Metrics     map[string]any `json:"metrics"`
-	Timing      map[string]any `json:"timing"`
-	CompletedAt time.Time      `json:"completedAt"`
-}
-
-// Executor executes raw immutable chunk retrieval plans and stores every
-// observation through the append-only experiment-run service. Summary/question
-// representations and parent-chunk collapse are rejected until their
-// materialisation and parent mapping schemas exist.
-type Executor struct {
-	backend  ChannelRetriever
-	recorder RunRecorder
-}
-
-func NewExecutor(backend ChannelRetriever, recorder RunRecorder) *Executor {
-	return &Executor{backend: backend, recorder: recorder}
-}
-
-func (e *Executor) Execute(ctx context.Context, runID string, specification ExperimentSpecification, cards []EvaluationCard, options ExecutionOptions) (*ExecutionResult, error) {
-	if e == nil || e.backend == nil || e.recorder == nil {
-		return nil, errors.New("RAG_EXECUTOR_REQUIRED: retrieval backend and run recorder are required")
-	}
-	if runID == "" || len(cards) == 0 {
-		return nil, errors.New("RAG_EXECUTION_INPUT_REQUIRED: run ID and evaluation cards are required")
-	}
-	if err := executable(specification, options); err != nil {
-		return nil, err
-	}
-	if _, err := e.recorder.AppendEvent(ctx, runID, "execution_started", json.RawMessage(`{"executor":"raglab/raw-v1"}`)); err != nil {
-		return nil, errors.Wrap(err, "append execution start event")
-	}
-	started := time.Now()
-	var totalMilliseconds int64
-	var reciprocalRank, recallAtResults float64
-	answerable := 0
-	for _, card := range cards {
-		trace, err := e.executeCard(ctx, specification, card, options)
-		if err != nil {
-			return e.fail(ctx, runID, err)
-		}
-		totalMilliseconds += trace.Timing.TotalMilliseconds
-		if len(card.RelevantDocumentRevisionIDs) > 0 {
-			answerable++
-			rank, recall := relevance(trace.Results, card.RelevantDocumentRevisionIDs, specification.Retrieval.Results)
-			if rank > 0 {
-				reciprocalRank += 1 / float64(rank)
-			}
-			recallAtResults += recall
-		}
-		traceJSON, err := json.Marshal(trace)
-		if err != nil {
-			return e.fail(ctx, runID, errors.Wrap(err, "encode query trace"))
-		}
-		metricsJSON, err := json.Marshal(map[string]any{"firstRelevantRank": trace.FirstRelevantRank, "recallAtResults": trace.RecallAtResults})
-		if err != nil {
-			return e.fail(ctx, runID, errors.Wrap(err, "encode query metrics"))
-		}
-		timingJSON, err := json.Marshal(trace.Timing)
-		if err != nil {
-			return e.fail(ctx, runID, errors.Wrap(err, "encode query timing"))
-		}
-		if err := e.recorder.RecordQueryTrace(ctx, runID, experimentrun.QueryTraceInput{QueryCardID: card.ID, Trace: traceJSON, Metrics: metricsJSON, Timing: timingJSON, Cost: json.RawMessage(`{}`), Storage: json.RawMessage(`{}`)}); err != nil {
-			return e.fail(ctx, runID, errors.Wrap(err, "record query trace"))
-		}
-	}
-	metrics := map[string]any{"queries": len(cards), "answerableQueries": answerable}
-	if answerable > 0 {
-		metrics["meanReciprocalRank"] = reciprocalRank / float64(answerable)
-		metrics["meanRelevantRecallAtResults"] = recallAtResults / float64(answerable)
-	}
-	timing := map[string]any{"totalMilliseconds": totalMilliseconds, "wallClockMilliseconds": time.Since(started).Milliseconds()}
-	metricsJSON, err := json.Marshal(metrics)
-	if err != nil {
-		return e.fail(ctx, runID, errors.Wrap(err, "encode run metrics"))
-	}
-	timingJSON, err := json.Marshal(timing)
-	if err != nil {
-		return e.fail(ctx, runID, errors.Wrap(err, "encode run timing"))
-	}
-	if _, err := e.recorder.AppendEvent(ctx, runID, "execution_completed", json.RawMessage(`{"status":"succeeded"}`)); err != nil {
-		return e.fail(ctx, runID, errors.Wrap(err, "append execution completion event"))
-	}
-	if _, err := e.recorder.CompleteRun(ctx, runID, experimentrun.SummaryInput{Status: "succeeded", Metrics: metricsJSON, Cost: json.RawMessage(`{}`), Storage: timingJSON, Error: json.RawMessage(`{}`)}); err != nil {
-		return nil, errors.Wrap(err, "complete experiment run")
-	}
-	return &ExecutionResult{RunID: runID, QueryCount: len(cards), Metrics: metrics, Timing: timing, CompletedAt: time.Now().UTC()}, nil
-}
-
-func (e *Executor) fail(ctx context.Context, runID string, cause error) (*ExecutionResult, error) {
-	errorJSON, err := json.Marshal(map[string]string{"message": cause.Error()})
-	if err == nil {
-		_, _ = e.recorder.CompleteRun(ctx, runID, experimentrun.SummaryInput{Status: "failed", Metrics: json.RawMessage(`{}`), Cost: json.RawMessage(`{}`), Storage: json.RawMessage(`{}`), Error: errorJSON})
-	}
-	return nil, cause
-}
+// retrievalExecutor contains RAG-owned retrieval semantics only. Lifecycle,
+// persistence, terminal state, and timestamps belong to researchctl.
+type retrievalExecutor struct{ backend ChannelRetriever }
 
 func executable(specification ExperimentSpecification, options ExecutionOptions) error {
 	if !emptyFilter(specification.Retrieval.Filter) {
@@ -207,7 +100,7 @@ type executionTiming struct {
 	TotalMilliseconds     int64 `json:"totalMilliseconds"`
 }
 
-func (e *Executor) executeCard(ctx context.Context, specification ExperimentSpecification, card EvaluationCard, options ExecutionOptions) (executionTrace, error) {
+func (e *retrievalExecutor) executeCard(ctx context.Context, specification ExperimentSpecification, card EvaluationCard, options ExecutionOptions) (executionTrace, error) {
 	if card.ID == "" || card.Query == "" {
 		return executionTrace{}, errors.New("RAG_INVALID_EVALUATION_CARD: card ID and query are required")
 	}

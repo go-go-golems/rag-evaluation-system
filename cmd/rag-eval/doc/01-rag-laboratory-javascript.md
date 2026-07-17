@@ -1,38 +1,27 @@
 ---
-Title: Run immutable RAG laboratory experiments from JavaScript
-Slug: rag-laboratory-javascript
-Short: Build, validate, execute, and inspect reproducible retrieval experiments with require("rag") and Geppetto embeddings.
+Title: "Author RAG specifications from JavaScript"
+Slug: "rag-laboratory-javascript"
+Short: "Export pure versioned retrieval specifications for researchctl execution."
 Topics:
-  - rag
-  - javascript
-  - evaluation
-  - retrieval
+- rag
+- javascript
+- evaluation
+- retrieval
 Commands:
-  - rag-eval
-Flags: []
+- rag-eval
 IsTopLevel: true
 IsTemplate: false
 ShowPerDefault: true
 SectionType: Tutorial
 ---
 
-# Run immutable RAG laboratory experiments from JavaScript
+The generated JavaScript runtime exposes a typed fluent authoring API through `require("rag")`. The module builds and structurally validates retrieval semantics, then exports `rag-retrieval-spec/v1` data. It has no database, provider, run, attempt, persistence, or terminal-lifecycle API.
 
-The generated `rag-eval-js` runtime exposes a typed fluent authoring API as
-`require("rag")`. A script describes immutable input artifacts and retrieval
-policy. It never selects a mutable “latest” artifact. Validation checks that
-the selected corpus, chunks, BM25 index, embedding set, and evaluation dataset
-belong to one compatible lineage before a run can be created.
-
-The execution boundary is deliberately explicit. Vector channels require a
-synchronous `queryEmbed(query)` callback. Geppetto provides that callback via
-a resolved inference-profile registry and an embedding provider. Credentials,
-server endpoints, and the selected model remain operational configuration; the
-persisted experiment stores artifact identities and retrieval policy instead.
+Researchctl is the only supported native execution authority. It resolves immutable inputs, validates lineage, creates runs and attempts, supervises the worker, records observations, verifies artifacts, and owns export/import.
 
 ## Build the JavaScript runtime
 
-From the repository root, generate and inspect the runtime before using it:
+Generate and inspect the runtime from the repository root:
 
 ```bash
 xgoja doctor -f cmd/rag-eval/xgoja.yaml
@@ -41,97 +30,85 @@ cmd/rag-eval/dist/rag-eval-js help --all
 ```
 
 The generated declaration file is `js/types/xgoja-modules.d.ts`.
-It covers the `rag` module. Whole-runtime strict declaration generation remains
-tracked separately until the Geppetto provider publishes its descriptor.
 
-## Author a plan without side effects
+## Export a pure specification
 
-Start with `examples/rag-lab-js/01-plan-only.js`. It calls `toSpec()` and
-`validate()` only, so it does not open or modify a database. A complete plan
-names all immutable inputs and a retrieval pipeline:
+Start with `examples/rag-lab-js/01-plan-only.js`. A plan names retrieval semantics; researchctl input references carry corpus, chunk, index, embedding, and evaluation identities separately.
 
 ```javascript
+const rag = require("rag");
+
 const experiment = rag.experiment("ttc-vector", (e) => e
-  .corpus("corpus-id")
-  .chunks("chunk-set-id")
-  .embeddings("embedding-set-id")
-  .evaluation("evaluation-dataset-id")
+  .corpus("authoring-corpus-reference")
+  .chunks("authoring-chunk-reference")
+  .embeddings("authoring-embedding-reference")
+  .evaluation("authoring-dataset-reference")
+  .representations((r) => r.rawChunks("raw"))
   .retrieval((r) => r
-    .channel("semantic", (c) => c.vector().topK(50))
+    .channel("semantic", (c) => c.vector().representation("raw").topK(50))
     .collapse("document")
     .results(10))
   .metrics((m) => m
     .relevanceAt(rag.grade("2_SUBSTANTIAL"))
     .recallAt([10])
     .mrr()));
+
+const report = experiment.validate();
+if (!report.ok) throw new Error(JSON.stringify(report));
+module.exports = experiment.exportSpecification({ datasetSplit: "development" });
 ```
 
-The stages are:
+The export path is:
 
 ```text
-JavaScript builder
-        |
-        v
-canonical immutable specification -- validate catalog lineage --> persist/start
-        |                                                            |
-        |                                                    query embedding callback
-        v                                                            v
-stable fingerprint                                         retrieval and metrics
+JavaScript builder → structural validation → rag-retrieval-spec/v1
+                                                │
+                       immutable inputs + researchctl run-rag
+                                                │
+                     supervised observation-only RAG worker
 ```
 
-## Execute vector or hybrid retrieval with Geppetto
+The module intentionally does not expose `rag.open`, `toSpec`, `toJSON`, `persist`, `start`, `run`, or `execute`.
 
-Copy `examples/rag-lab-js/03-execute-with-geppetto.js`; replace the explicit
-artifact IDs, database path, and profile registry path. The essential wiring is:
+## Execute through researchctl
 
-```javascript
-const gp = require("geppetto");
-const rag = require("rag");
+Build the strict NDJSON worker:
 
-const settings = gp.inferenceProfiles.load("profiles.yaml").resolve("embeddings");
-const embedder = gp.embeddings(settings);
-const lab = rag.open({
-  database: "data/rag-eval.db",
-  execution: "allowRuns",
-  queryEmbed: (query) => embedder.embed(query),
-});
+```bash
+go build -o .bin/rag-lab-worker ./cmd/rag-lab-worker
 ```
 
-`lab.execute(experiment)` validates, persists/reuses the canonical
-specification, creates a new run, retrieves each evaluation query, hydrates
-original-source citations, and persists trace data and metrics. It returns the
-run identifier, query count, metrics, timing, and completion timestamp.
+Then invoke researchctl with the exported program and explicit immutable inputs:
 
-The profile registry is an external YAML or SQLite source understood by
-Geppetto. A named profile contains an `embeddings` block whose endpoint and
-model describe the currently available embedding service. Do not put API keys
-or host credentials into a JavaScript experiment or commit them to this
-repository.
+```bash
+researchctl experiment run-rag experiment.js \
+  --project project.yaml \
+  --experiment-id EXP-RAG \
+  --inputs inputs.json \
+  --ttc-database data/rag-eval.db \
+  --runner .bin/rag-lab-worker \
+  --runner-arg=--db --runner-arg=data/rag-eval.db \
+  --runner-has-embedder --timeout 10m
+```
 
-## Inspect and compare results
+Embedding and reranking endpoints belong to worker/operator configuration. Never place API keys, bearer tokens, or host credentials in the JavaScript specification, trace payload, artifact metadata, or captured environment evidence.
 
-Start the web application with `rag-eval serve` and open its Evaluation page.
-Select a run, then a query trace. The trace inspector displays the immutable
-specification identifier and links directly to the exported canonical JSON at
-`/api/v1/lab/specifications/{id}`. Use that JSON to establish exactly which
-inputs and policy produced a result before comparing retrieval quality.
+## Unsupported features
 
-## Safety checks
+Filters, generated representations, and parent-chunk collapse remain authorable for contract development but fail capability validation before retrieval. Missing vector embedders and rerankers also fail. The worker never substitutes another method silently.
 
-- Use `execution: "readOnly"` for catalog compatibility checks. `persist`,
-  `start`, and `execute` intentionally fail in that mode.
-- Use `execution: "allowRuns"` only with a database containing the current
-  rag-eval migrations.
-- Keep all artifact IDs explicit. If validation reports lineage errors, create
-  or select a compatible artifact set rather than overriding the check.
-- Treat an embedding model or endpoint change as an operational change. For a
-  fair comparison, use embeddings that match the persisted embedding artifact.
+## Troubleshooting
 
-## See also
+| Problem | Cause | Solution |
+|---|---|---|
+| `rag.open` is undefined | Prototype lifecycle authority was removed. | Export a specification and execute it with researchctl. |
+| Export rejects the metric plan | The requested metric is outside `rag-retrieval-spec/v1`. | Use supported ranking measures or version the contract before adding semantics. |
+| Native execution cannot resolve an input | The catalog identity or lineage is missing/incompatible. | Correct the researchctl input reference; do not query mutable “latest” state. |
+| Vector execution reports a missing embedder | No compatible query provider was declared. | Configure the worker with a manifest-compatible embedder. |
 
-- `examples/rag-lab-js/README.md` for build and execution commands.
-- `examples/rag-lab-js/03-execute-with-geppetto.js` for a complete copyable
-  vector/hybrid experiment.
-- `pkg/gojamodules/rag/typescript.go` for the generated public RAG API shape.
-- `pkg/raglab` for the authoritative Go-side specification, validation, and
-  executor implementation.
+## See Also
+
+- `examples/rag-lab-js/README.md` — copyable pure-authoring workflow.
+- `pkg/gojamodules/rag/typescript.go` — generated public API shape.
+- `pkg/ragcontract/README.md` — observation and worker boundary.
+- Researchctl help topic `rag-laboratory` — execution, inspection, export, and import.
