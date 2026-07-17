@@ -1,71 +1,185 @@
 package ragcontract
 
-const TraceSchemaVersion = "rag-query-trace/v1"
+import "encoding/json"
+
+const TraceSchemaVersion = "rag-query-trace/v2"
+
+type RepresentationIdentity struct {
+	ID            string `json:"id"`
+	Kind          string `json:"kind"`
+	ParentChunkID string `json:"parentChunkId"`
+	ParentUnitID  string `json:"parentUnitId"`
+	ContentDigest string `json:"contentDigest"`
+	EvidenceRole  string `json:"evidenceRole"`
+}
+type CollapseIdentity struct {
+	Scope string `json:"scope"`
+	ID    string `json:"id"`
+}
+type EvidenceIdentity struct {
+	ChunkID  string      `json:"chunkId"`
+	Digest   string      `json:"digest"`
+	Citation CitationRef `json:"citation"`
+}
+type CitationRef struct {
+	SourceID     string `json:"sourceId"`
+	ByteStart    int64  `json:"byteStart,omitempty"`
+	ByteEnd      int64  `json:"byteEnd,omitempty"`
+	OrdinalStart int64  `json:"ordinalStart,omitempty"`
+	OrdinalEnd   int64  `json:"ordinalEnd,omitempty"`
+}
 
 type QueryTrace struct {
-	SchemaVersion string          `json:"schemaVersion"`
-	QueryCardID   string          `json:"queryCardId"`
-	Query         string          `json:"query"`
-	DatasetSplit  string          `json:"datasetSplit"`
-	Channels      []ChannelTrace  `json:"channels"`
-	Fusion        *FusionTrace    `json:"fusion,omitempty"`
-	Reranking     *RerankingTrace `json:"reranking,omitempty"`
-	Results       []Hit           `json:"results"`
-	Relevance     RelevanceTrace  `json:"relevance"`
-	Timing        TimingTrace     `json:"timing"`
+	SchemaVersion string           `json:"schemaVersion"`
+	Query         QueryInputTrace  `json:"query"`
+	Operators     []OperatorTrace  `json:"operators"`
+	Channels      []ChannelTrace   `json:"channels"`
+	Collapses     []CollapseTrace  `json:"collapses"`
+	Fusion        *FusionTrace     `json:"fusion,omitempty"`
+	Hydration     *HydrationTrace  `json:"hydration,omitempty"`
+	Reranking     *RerankingTrace  `json:"reranking,omitempty"`
+	Generation    *GenerationTrace `json:"generation,omitempty"`
+	Results       []ResultTrace    `json:"results"`
+	Relevance     *RelevanceTrace  `json:"relevance,omitempty"`
+	Timing        TimingTrace      `json:"timing"`
+	Usage         UsageTrace       `json:"usage"`
+	Failures      []FailureTrace   `json:"failures"`
 }
-
+type QueryInputTrace struct {
+	ID           string          `json:"id"`
+	TextDigest   string          `json:"textDigest"`
+	DatasetSplit string          `json:"datasetSplit"`
+	Metadata     json.RawMessage `json:"metadata,omitempty"`
+}
+type OperatorTrace struct {
+	NodeID               string      `json:"nodeId"`
+	Operator             OperatorRef `json:"operator"`
+	Status               string      `json:"status"`
+	InputCount           int         `json:"inputCount,omitempty"`
+	OutputCount          int         `json:"outputCount,omitempty"`
+	DurationMilliseconds int64       `json:"durationMilliseconds"`
+}
+type ChannelHit struct {
+	Rank            int                    `json:"rank"`
+	Representation  RepresentationIdentity `json:"representation"`
+	RawScore        float64                `json:"rawScore"`
+	NormalizedScore *float64               `json:"normalizedScore,omitempty"`
+	Filter          json.RawMessage        `json:"filter,omitempty"`
+}
 type ChannelTrace struct {
-	Name    string `json:"name"`
-	Backend string `json:"backend"`
-	Hits    []Hit  `json:"hits"`
+	Name     string       `json:"name"`
+	Operator OperatorRef  `json:"operator"`
+	Hits     []ChannelHit `json:"hits"`
 }
-
-type Hit struct {
-	Rank               int     `json:"rank"`
-	ChunkID            string  `json:"chunkId"`
-	DocumentRevisionID string  `json:"documentRevisionId"`
-	Score              float64 `json:"score"`
-	Title              string  `json:"title,omitempty"`
-	URL                string  `json:"url,omitempty"`
-	Channel            string  `json:"channel,omitempty"`
+type CollapseMember struct {
+	RepresentationID string  `json:"representationId"`
+	Rank             int     `json:"rank"`
+	Score            float64 `json:"score"`
 }
-
+type CollapseGroup struct {
+	Key                      CollapseIdentity `json:"key"`
+	Members                  []CollapseMember `json:"members"`
+	SelectedRepresentationID string           `json:"selectedRepresentationId"`
+	Rank                     int              `json:"rank"`
+}
+type CollapseTrace struct {
+	Stage    string          `json:"stage"`
+	Channel  string          `json:"channel,omitempty"`
+	Operator OperatorRef     `json:"operator"`
+	Groups   []CollapseGroup `json:"groups"`
+}
+type FusionContribution struct {
+	Channel string  `json:"channel"`
+	Rank    int     `json:"rank"`
+	Weight  float64 `json:"weight"`
+	Value   float64 `json:"value"`
+}
+type FusionResult struct {
+	Rank          int                  `json:"rank"`
+	Identity      CollapseIdentity     `json:"identity"`
+	Contributions []FusionContribution `json:"contributions"`
+	Score         float64              `json:"score"`
+}
 type FusionTrace struct {
-	Kind         string `json:"kind"`
-	RankConstant int    `json:"rankConstant"`
-	Hits         []Hit  `json:"hits"`
+	Operator             OperatorRef    `json:"operator"`
+	Results              []FusionResult `json:"results"`
+	MissingChannelPolicy string         `json:"missingChannelPolicy"`
+	TieBreak             string         `json:"tieBreak"`
 }
-
+type HydrationCandidate struct {
+	Collapse     CollapseIdentity `json:"collapse"`
+	Evidence     EvidenceIdentity `json:"evidence"`
+	Contribution float64          `json:"contribution"`
+}
+type HydrationTrace struct {
+	Operator   OperatorRef          `json:"operator"`
+	Candidates []HydrationCandidate `json:"candidates"`
+	Selected   []EvidenceIdentity   `json:"selected"`
+}
+type RerankingEntry struct {
+	Evidence       EvidenceIdentity `json:"evidence"`
+	BeforeRank     int              `json:"beforeRank"`
+	AfterRank      int              `json:"afterRank"`
+	RetrievalScore float64          `json:"retrievalScore"`
+	RerankerScore  float64          `json:"rerankerScore"`
+}
 type RerankingTrace struct {
-	Kind       string               `json:"kind"`
-	Model      string               `json:"model"`
-	Candidates []RerankingCandidate `json:"candidates"`
-	Results    []RerankingResult    `json:"results"`
+	Operator             OperatorRef      `json:"operator"`
+	ModelManifestDigest  string           `json:"modelManifestDigest"`
+	InputPolicy          string           `json:"inputPolicy"`
+	Truncation           string           `json:"truncation"`
+	Entries              []RerankingEntry `json:"entries"`
+	DurationMilliseconds int64            `json:"durationMilliseconds"`
 }
-
-type RerankingCandidate struct {
-	CandidateID    string  `json:"candidateId"`
-	PreRerankRank  int     `json:"preRerankRank"`
-	RetrievalScore float64 `json:"retrievalScore"`
+type GenerationTrace struct {
+	Operator             OperatorRef        `json:"operator"`
+	ModelManifestDigest  string             `json:"modelManifestDigest"`
+	PromptManifestDigest string             `json:"promptManifestDigest"`
+	Evidence             []EvidenceIdentity `json:"evidence"`
+	InputArtifactDigest  string             `json:"inputArtifactDigest,omitempty"`
+	OutputArtifactDigest string             `json:"outputArtifactDigest,omitempty"`
+	FinishReason         string             `json:"finishReason"`
+	CitationsValid       bool               `json:"citationsValid"`
+	DurationMilliseconds int64              `json:"durationMilliseconds"`
 }
-
-type RerankingResult struct {
-	CandidateID string  `json:"candidateId"`
-	Rank        int     `json:"rank"`
-	Score       float64 `json:"score"`
+type ResultScore struct {
+	Fusion   *float64 `json:"fusion,omitempty"`
+	Reranker *float64 `json:"reranker,omitempty"`
 }
-
+type MatchedRepresentation struct {
+	ID      string `json:"id"`
+	Kind    string `json:"kind"`
+	Channel string `json:"channel"`
+	Rank    int    `json:"rank"`
+}
+type ResultTrace struct {
+	Rank                   int                     `json:"rank"`
+	Collapse               CollapseIdentity        `json:"collapse"`
+	MatchedRepresentations []MatchedRepresentation `json:"matchedRepresentations"`
+	Evidence               EvidenceIdentity        `json:"evidence"`
+	Scores                 ResultScore             `json:"scores"`
+}
 type RelevanceTrace struct {
-	ExpectedDocumentRevisionIDs []string `json:"expectedDocumentRevisionIds"`
-	FirstRelevantRank           int      `json:"firstRelevantRank"`
-	RelevantDocumentRecall      float64  `json:"relevantDocumentRecallAtResults"`
+	Target      string                     `json:"target"`
+	ExpectedIDs []string                   `json:"expectedIds"`
+	Grades      map[string]float64         `json:"grades,omitempty"`
+	Measures    map[string]json.RawMessage `json:"measures"`
 }
-
 type TimingTrace struct {
-	EmbeddingMilliseconds int64 `json:"embeddingMilliseconds"`
-	RetrievalMilliseconds int64 `json:"retrievalMilliseconds"`
-	FusionMilliseconds    int64 `json:"fusionMilliseconds"`
-	RerankingMilliseconds int64 `json:"rerankingMilliseconds"`
-	TotalMilliseconds     int64 `json:"totalMilliseconds"`
+	TotalMilliseconds int64            `json:"totalMilliseconds"`
+	ByOperator        map[string]int64 `json:"byOperator"`
+}
+type UsageTrace struct {
+	InputTokens     int64              `json:"inputTokens"`
+	OutputTokens    int64              `json:"outputTokens"`
+	EmbeddingTokens int64              `json:"embeddingTokens"`
+	ProviderCost    map[string]float64 `json:"providerCost,omitempty"`
+}
+type FailureTrace struct {
+	Code       string          `json:"code"`
+	Path       string          `json:"path"`
+	Message    string          `json:"message"`
+	OperatorID string          `json:"operatorId,omitempty"`
+	Retryable  bool            `json:"retryable"`
+	Details    json.RawMessage `json:"details,omitempty"`
 }

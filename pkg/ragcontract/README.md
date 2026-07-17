@@ -1,22 +1,18 @@
-# RAG researchctl wire contract
+# Canonical RAG v2 contracts
 
-`pkg/ragcontract` contains dependency-free DTOs for the coordinated researchctl integration. It intentionally has no database, filesystem, Goja, provider, run, attempt, timestamp, or terminal-lifecycle API.
+`pkg/ragcontract` is the sole canonical wire-contract package for the greenfield RAG pipeline. It owns:
 
-The authoritative schema/version is `rag-retrieval-spec/v1`. The matching researchctl implementation and JSON Schemas live in `researchctl/pkg/rag/spec`. Cross-repository golden tests prevent field/tag drift.
+- `rag-pipeline-ir/v2`;
+- `rag-product-plan/v2`;
+- `rag-study/v2`;
+- `rag-pipeline-execution/v2`;
+- `rag-query-trace/v2`;
+- immutable corpus, unit, chunk, representation, embedding, index, evaluation, model, and prompt manifests.
 
-Native execution uses `raglab.ObservationExecutor`, whose observer emits domain events, query traces, metrics, and artifacts without creating or completing a run. Researchctl owns the enclosing run and attempt through its `ObservationSink`. The former `pkg/raglab.Laboratory`, persisted executor, `internal/services/experimentrun`, database-backed JavaScript lifecycle API, and writable `/api/v1/lab/runs` endpoints were removed after import/native parity review. Historical SQLite tables remain migration history but have no supported writer.
+The package is data-only and dependency-light. It imports no Goja, provider, retrieval engine, SQLite, filesystem runtime, or researchctl package. Strict decoders reject unknown fields and trailing values. Display metadata is structurally separate and excluded by compiler semantic-identity helpers.
 
-Unsupported execution behavior is an error. In particular, filters remain authorable but are rejected before any event or retrieval call until every channel can apply and trace them. Summary/question representations and parent-chunk collapse remain unsupported by the current executor.
+Operator identifiers use `<namespace>.<operation>/<version>`, for example `fusion.weighted-rrf/v1`. An operator identifier names registered semantics; it is not a schema name or JavaScript factory.
 
-## Observation contract
+Generated representations, collapse identities, and source-evidence identities are distinct. A trace may report a matched generated question, a winning unit, and a hydrated source chunk without treating generated text as evidence.
 
-`ObservationExecutor` accepts resolved corpus, index, embedding, and evaluation inputs and reports only public DTOs:
-
-- `Event` for domain progress without lifecycle authority.
-- `QueryTrace` using payload schema `rag-query-trace/v1`.
-- `Metric` with canonical JSON value and optional numeric projection.
-- `Artifact` with immutable content identity.
-
-The researchctl adapter routes trace payloads under core kind `rag-query-trace.v1`; schema version and routing kind are intentionally different strings. Cancellation retains accepted partial evidence but does not turn the attempt into success.
-
-`cmd/rag-lab-worker` exposes these observations over `researchctl-rag-runner-stdio/v1`. It writes NDJSON protocol frames only to stdout and diagnostics to stderr. Provider secrets must enter through operator-controlled environment or secret stores and must not appear in specifications, traces, artifact metadata, or captured environment JSON.
+The disposable v1 laboratory remains isolated under `pkg/raglab` only until the planned destructive cutover. It no longer owns or imports the canonical contract package.

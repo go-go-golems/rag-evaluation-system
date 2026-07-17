@@ -1,0 +1,26 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "rag-pipeline-execution/v2",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"schemaVersion",
+		"pipeline",
+		"bindings",
+		"dataset",
+		"measures",
+		"variantId",
+		"factors",
+		"cellId"
+	],
+	"properties": {
+		"schemaVersion": { "const": "rag-pipeline-execution/v2" },
+		"pipeline": { "$ref": "rag-pipeline-ir-v2.schema.json" },
+		"bindings": { "type": "array" },
+		"dataset": { "type": "object" },
+		"measures": { "type": "array" },
+		"variantId": { "type": "string" },
+		"factors": { "type": "array" },
+		"cellId": { "type": "string" }
+	}
+}

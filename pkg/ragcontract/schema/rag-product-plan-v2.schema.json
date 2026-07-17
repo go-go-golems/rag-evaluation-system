@@ -1,0 +1,16 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "rag-product-plan/v2",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["schemaVersion", "pipeline", "bindings", "citations", "runtime"],
+	"properties": {
+		"schemaVersion": { "const": "rag-product-plan/v2" },
+		"pipeline": { "$ref": "rag-pipeline-ir-v2.schema.json" },
+		"bindings": { "type": "array" },
+		"models": { "type": "array" },
+		"citations": { "type": "object" },
+		"runtime": { "type": "object" },
+		"display": { "type": "object" }
+	}
+}
