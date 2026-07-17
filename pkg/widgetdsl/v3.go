@@ -1231,6 +1231,9 @@ func (r *runtime) v3FieldsBuilder(schema *widgetspec.SchemaSpec) *goja.Object {
 		opts := exportOptions(options)
 		field.Label = stringFromMap(opts, "label", field.Label)
 		field.Layout.Width = stringFromMap(opts, "width", field.Layout.Width)
+		if elide, ok := opts["elide"].(bool); ok {
+			field.Summary.Elide = elide
+		}
 		if required, ok := opts["required"].(bool); ok {
 			field.Validation.Required = required
 		}
