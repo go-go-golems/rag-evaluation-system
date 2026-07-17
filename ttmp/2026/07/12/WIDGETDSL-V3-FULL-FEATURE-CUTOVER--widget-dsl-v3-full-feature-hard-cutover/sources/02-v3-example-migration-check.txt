@@ -1,0 +1,12 @@
+Found 11 migration finding(s):
+pkg/widgetdsl/testdata/v3/examples/08-markdown-article.js:2: raw-component-escape-hatch raw.component: const article = widget.raw.component("MarkdownArticle", {
+pkg/widgetdsl/testdata/v3/examples/21-crm-record-fields.js:15: raw-component-escape-hatch raw.component: widget.raw.component("RecordFieldList", {
+pkg/widgetdsl/testdata/v3/examples/22-crm-field-renderers.js:7: raw-component-escape-hatch raw.component: widget.raw.component("FieldRenderer", {
+pkg/widgetdsl/testdata/v3/examples/22-crm-field-renderers.js:11: raw-component-escape-hatch raw.component: widget.raw.component("FieldRenderer", {
+pkg/widgetdsl/testdata/v3/examples/23-crm-board.js:22: raw-component-escape-hatch raw.component: p.section("Pipeline", (s) => s.view(widget.raw.component("BoardEngine", props))),
+pkg/widgetdsl/testdata/v3/examples/24-activity-feed.js:22: raw-component-escape-hatch raw.component: s.view(widget.raw.component("ActivityFeed", { activities, groupByDay: true })),
+pkg/widgetdsl/testdata/v3/examples/25-ui-form.js:4: raw-component-escape-hatch raw.component: widget.raw.component("FormRow", {
+pkg/widgetdsl/testdata/v3/examples/25-ui-form.js:6: raw-component-escape-hatch raw.component: control: widget.raw.component("TextInput", { name: "name", defaultValue: "Ada" }),
+pkg/widgetdsl/testdata/v3/examples/25-ui-form.js:8: raw-component-escape-hatch raw.component: widget.raw.component("FormRow", {
+pkg/widgetdsl/testdata/v3/examples/25-ui-form.js:10: raw-component-escape-hatch raw.component: control: widget.raw.component("TextareaInput", { name: "notes", defaultValue: "Hello" }),
+pkg/widgetdsl/testdata/v3/examples/26-upload-drop-area.js:2: raw-component-escape-hatch raw.component: const upload = widget.raw.component("ContextUploadDropArea", {

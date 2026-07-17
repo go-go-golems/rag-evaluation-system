@@ -14,6 +14,29 @@
 	padding: 3px 4px;
 	text-align: left;
 }
+.sortButton {
+	align-items: center;
+	appearance: none;
+	background: transparent;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	font: inherit;
+	gap: 0.35rem;
+	padding: 0;
+}
+.sortButton:hover,
+.sortButton:focus-visible {
+	color: var(--mac-accent);
+}
+.sortButton:focus-visible {
+	outline: 2px solid var(--mac-accent);
+	outline-offset: 2px;
+}
+.sortIndicator {
+	color: var(--mac-text-dim);
+}
 .root td {
 	border-bottom: 1px solid var(--mac-border-subtle, #ddd);
 	padding: 3px 4px;
@@ -31,6 +54,31 @@
 .selected {
 	background: var(--mac-bg-dark) !important;
 	color: var(--mac-text-inv) !important;
+}
+.focused {
+	outline: 2px solid var(--mac-accent, #005fcc);
+	outline-offset: -2px;
+}
+.tone-muted {
+	opacity: 0.64;
+}
+.tone-success {
+	background: color-mix(in srgb, #16833b 12%, transparent);
+}
+.tone-warning {
+	background: color-mix(in srgb, #b66a00 14%, transparent);
+}
+.tone-danger {
+	background: color-mix(in srgb, #b42318 12%, transparent);
+}
+.tone-accent {
+	background: color-mix(in srgb, var(--mac-accent, #005fcc) 12%, transparent);
+}
+.commandHelp {
+	caption-side: bottom;
+	padding: 4px;
+	color: var(--mac-text-dim);
+	text-align: left;
 }
 .start {
 	text-align: left;

@@ -4,7 +4,7 @@ import { MonthGrid } from "./MonthGrid";
 
 export const monthGridWidget = defineWidget<MonthGridWidgetProps>({
 	type: "MonthGrid",
-	module: "time.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<MonthGrid
 			className={props.className}

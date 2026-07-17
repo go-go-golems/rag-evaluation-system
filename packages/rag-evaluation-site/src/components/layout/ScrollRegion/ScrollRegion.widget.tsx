@@ -5,7 +5,7 @@ import { ScrollRegion } from "./ScrollRegion";
 
 export const scrollRegionWidget = defineWidget<ScrollRegionWidgetProps>({
 	type: "ScrollRegion",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children) => (
 		<ScrollRegion
 			className={props.className}

@@ -28,7 +28,7 @@ When adding a component that should later be available from the Widget IR/Goja D
 
 Review package Storybook under `Widget IR/Renderer/...` for IR-authored examples grouped by Foundation and Atoms, Layout Recipes, Context Diagrams, Transcript and Notes, and Course Studio.
 
-Goja authors can use direct helpers from split modules such as `require("ui.dsl")`, `require("data.dsl")`, `require("context_window.dsl")`, and `require("course.dsl")`. Semantic recipes live under their owning domains, for example `contextWindow.recipes.contextDiagram`, `contextWindow.recipes.annotatedTranscript`, `course.recipes.courseStudio`, `course.recipes.courseSlide`, and `course.recipes.handout`.
+Goja authors use only `require("widget.dsl")`. Generic UI/data capabilities and semantic context, course, CMS, CRM, schedule, and time views are organized as typed namespaces on that module.
 
 ## Context and transcript style sets
 
@@ -109,6 +109,41 @@ export function App() {
   return <RagEvaluationSiteApp apiBase="/api/widget" defaultPageId="index" />;
 }
 ```
+
+## Page keyboard shortcuts
+
+`RagEvaluationSiteApp` activates optional page-level shortcut bindings returned in the Widget page envelope. A binding carries a stable id, logical key, optional modifiers, human-readable label, and the same `ActionSpec` used by visible controls:
+
+```json
+{
+  "shortcuts": {
+    "bindings": [
+      {
+        "id": "accept",
+        "key": "y",
+        "label": "Yes",
+        "action": { "kind": "server", "name": "triage.accept" },
+        "preventDefault": true,
+        "allowRepeat": false
+      }
+    ]
+  }
+}
+```
+
+The default app:
+
+- installs one page-owned `keydown` listener and dispatches through the existing action handler;
+- ignores editable controls, active dialogs, IME composition, disallowed repeats, consumed events, and nested `data-rag-keyboard-scope` regions;
+- adds `aria-keyshortcuts` only while shortcuts are enabled;
+- renders `KeyboardShortcutHelp` with generated labels and chords;
+- persists the user's enable/disable choice under `rag-evaluation-site:page-shortcuts-enabled`.
+
+`DataTable` remains a nested keyboard scope: table navigation and `table.command(...)` take precedence while a row has focus. Page shortcuts are intended for page-level commands such as card triage, navigation, or global workflow actions.
+
+Custom hosts that fetch a `WidgetPageResponse` but do not render `RagEvaluationSiteApp` can integrate the exported `usePageShortcuts` hook, `formatShortcutChord`, and `KeyboardShortcutHelp` component. They must provide an equivalent user-facing disable mechanism for unmodified character shortcuts; rendering `WidgetRenderer` alone does not install page behavior.
+
+Review the `Component Library/Molecules/KeyboardShortcutHelp` Storybook story for the discoverability and preference UI.
 
 ## Build outputs
 

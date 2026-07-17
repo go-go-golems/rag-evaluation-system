@@ -113,9 +113,7 @@ function renderPage(query = {}) {
 				.main(mainForItem(active)),
 	);
 
-	return widget.page("Course CMS admin", (p) =>
-		p.shell({ kind: "course-admin" }).section("Course shell", (s) => s.view(shell)),
-	);
+	return widget.page("Course CMS admin", (p) => p.shell(widget.app.rootOwned()).root(shell));
 }
 
 const page = renderPage({});

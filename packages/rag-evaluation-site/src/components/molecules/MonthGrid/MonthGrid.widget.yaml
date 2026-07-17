@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: MonthGrid
-module: time.dsl
+module: widget.dsl
 helper: monthGrid
 props: MonthGridWidgetProps
 adapter:

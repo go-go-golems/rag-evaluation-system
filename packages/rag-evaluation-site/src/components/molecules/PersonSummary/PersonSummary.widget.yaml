@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: PersonSummary
-module: ui.dsl
+module: widget.dsl
 helper: personSummary
 props: PersonSummaryWidgetProps
 adapter:

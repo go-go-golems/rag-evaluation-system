@@ -4,7 +4,7 @@ import { DocumentPreviewToolbar } from "./DocumentPreviewToolbar";
 
 export const documentPreviewToolbarWidget = defineWidget<DocumentPreviewToolbarWidgetProps>({
 	type: "DocumentPreviewToolbar",
-	module: "course.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<DocumentPreviewToolbar
 			className={props.className}

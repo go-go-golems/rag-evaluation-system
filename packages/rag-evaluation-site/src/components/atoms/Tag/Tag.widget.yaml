@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: Tag
-module: cms.dsl
+module: widget.dsl
 helper: tag
 props: TagWidgetProps
 adapter:

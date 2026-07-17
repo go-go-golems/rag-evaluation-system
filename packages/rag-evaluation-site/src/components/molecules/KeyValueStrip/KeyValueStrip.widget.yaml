@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: KeyValueStrip
-module: ui.dsl
+module: widget.dsl
 helper: keyValueStrip
 props: KeyValueStripWidgetProps
 adapter:

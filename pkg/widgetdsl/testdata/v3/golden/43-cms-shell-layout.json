@@ -1,0 +1,75 @@
+{
+	"id": "cms-shell-layout",
+	"root": {
+		"children": [
+			{
+				"kind": "component",
+				"props": {
+					"articles": [
+						{
+							"author": "Widget team",
+							"id": "article-1",
+							"slug": "typed-shell-migration",
+							"status": "draft",
+							"tags": ["v3"],
+							"title": "Typed shell migration",
+							"updatedAt": "2026-07-13T12:00:00Z"
+						}
+					],
+					"selectedArticleId": "article-1"
+				},
+				"type": "ArticleListPanel"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"activeItemId": "articles",
+			"onNavigateAction": {
+				"kind": "navigate",
+				"omitEmpty": true,
+				"query": {
+					"item": {
+						"kind": "accessor",
+						"mode": "context",
+						"path": "item.id"
+					}
+				},
+				"to": "/pages/43-cms-shell-layout"
+			},
+			"sections": [
+				{
+					"id": "content",
+					"items": [
+						{
+							"id": "articles",
+							"label": "Articles"
+						},
+						{
+							"id": "media",
+							"label": "Media"
+						}
+					],
+					"label": "Content"
+				}
+			],
+			"sidebarFooter": {
+				"children": [
+					{
+						"kind": "text",
+						"text": "Generated from widget.cms.shell"
+					}
+				],
+				"kind": "component",
+				"type": "Caption"
+			},
+			"subtitle": "Typed CMS workspace",
+			"title": "Editorial Studio"
+		},
+		"type": "CmsShell"
+	},
+	"schemaVersion": "0.1.0",
+	"shell": {
+		"kind": "root-owned"
+	},
+	"title": "CMS shell layout"
+}

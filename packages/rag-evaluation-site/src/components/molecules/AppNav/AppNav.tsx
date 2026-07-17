@@ -4,6 +4,7 @@ import styles from "./AppNav.module.css";
 export interface AppNavItem {
 	id: string;
 	label: ReactNode;
+	disabled?: boolean;
 }
 
 export interface AppNavProps {
@@ -25,6 +26,7 @@ export function AppNav({ brand, items, activeItemId, onItemSelect }: AppNavProps
 						type="button"
 						className={[styles.item, isActive ? styles.active : ""].filter(Boolean).join(" ")}
 						aria-current={isActive ? "page" : undefined}
+						disabled={item.disabled}
 						onClick={() => onItemSelect(item.id)}
 					>
 						{item.label}

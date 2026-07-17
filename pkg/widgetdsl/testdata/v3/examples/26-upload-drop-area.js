@@ -1,8 +1,8 @@
 const widget = require("widget.dsl");
-const upload = widget.raw.component("ContextUploadDropArea", {
+const upload = widget.ui.upload({
 	title: "Upload JSON",
 	description: "Drop a trace JSON file",
 	accept: "application/json,.json",
-	onUploadAction: widget.act.server("upload.trace"),
+	onFilesSelectedAction: widget.act.server("upload.trace"),
 });
 const page = widget.page("Upload drop area", (p) => p.section("Upload", (s) => s.view(upload)));

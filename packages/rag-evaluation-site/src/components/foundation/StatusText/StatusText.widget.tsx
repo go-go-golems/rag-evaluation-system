@@ -4,7 +4,7 @@ import { StatusText } from "./StatusText";
 
 export const statusTextWidget = defineWidget<StatusTextWidgetProps>({
 	type: "StatusText",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children) => (
 		<StatusText className={props.className} status={props.status} icon={props.icon}>
 			{children}

@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: StatTile
-module: data.dsl
+module: widget.dsl
 helper: statTile
 props: StatTileWidgetProps
 adapter:

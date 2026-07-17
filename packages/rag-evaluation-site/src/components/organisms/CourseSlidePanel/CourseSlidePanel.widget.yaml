@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: CourseSlidePanel
-module: course.dsl
+module: widget.dsl
 helper: courseSlidePanel
 props: CourseSlidePanelWidgetProps
 adapter:

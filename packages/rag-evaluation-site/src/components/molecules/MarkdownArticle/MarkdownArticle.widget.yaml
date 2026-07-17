@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: MarkdownArticle
-module: course.dsl
+module: widget.dsl
 helper: markdownArticle
 props: MarkdownArticleWidgetProps
 adapter:

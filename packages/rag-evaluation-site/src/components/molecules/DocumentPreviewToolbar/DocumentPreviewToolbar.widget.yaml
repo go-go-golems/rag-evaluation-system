@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: DocumentPreviewToolbar
-module: course.dsl
+module: widget.dsl
 helper: documentPreviewToolbar
 props: DocumentPreviewToolbarWidgetProps
 adapter:

@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: AssetTile
-module: cms.dsl
+module: widget.dsl
 helper: assetTile
 props: AssetTileWidgetProps
 adapter:

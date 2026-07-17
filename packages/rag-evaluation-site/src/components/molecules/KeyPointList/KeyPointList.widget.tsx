@@ -12,7 +12,7 @@ interface KeyPointObjectItem {
 
 export const keyPointListWidget = defineWidget<KeyPointListWidgetProps>({
 	type: "KeyPointList",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<KeyPointList
 			className={props.className}

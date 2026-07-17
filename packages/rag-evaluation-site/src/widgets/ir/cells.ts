@@ -9,6 +9,9 @@ export interface DataTableColumnSpec {
 	cell: CellSpec;
 	align?: "start" | "end" | "center";
 	maxWidth?: number | string;
+	sortable?: boolean;
+	sortDirection?: "ascending" | "descending";
+	onSort?: ActionSpec;
 }
 
 export type RowKeySpec = string | { field: string } | { template: string };

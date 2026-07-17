@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: TranscriptMessageCard
-module: context_window.dsl
+module: widget.dsl
 helper: transcriptMessageCard
 props: TranscriptMessageCardWidgetProps
 adapter:

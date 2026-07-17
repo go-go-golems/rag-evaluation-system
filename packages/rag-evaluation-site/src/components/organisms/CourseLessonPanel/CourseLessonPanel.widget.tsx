@@ -4,7 +4,7 @@ import { CourseLessonPanel } from "./CourseLessonPanel";
 
 export const courseLessonPanelWidget = defineWidget<CourseLessonPanelWidgetProps>({
 	type: "CourseLessonPanel",
-	module: "course.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<CourseLessonPanel
 			className={props.className}

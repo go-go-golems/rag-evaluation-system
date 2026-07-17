@@ -17,11 +17,14 @@
 .sidebar {
 	grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
 }
-.divider > .pane + .pane {
-	border-left: 1px solid var(--mac-border);
-}
 .pane {
 	min-width: 0;
+}
+.gutterDivider > .pane:first-child {
+	padding-right: 16px;
+}
+.gutterDivider > .pane + .pane {
+	padding-left: 16px;
 }
 .gutterMd {
 	column-gap: 0;
@@ -35,6 +38,9 @@
 .gutterLg > .pane {
 	padding: 24px;
 }
+.divider > .pane + .pane {
+	border-left: 1px solid var(--mac-border);
+}
 @media (max-width: 860px) {
 	.root {
 		grid-template-columns: 1fr;
@@ -42,5 +48,13 @@
 	.divider > .pane + .pane {
 		border-left: 0;
 		border-top: 1px solid var(--mac-border);
+	}
+	.gutterDivider > .pane:first-child {
+		padding-right: 0;
+		padding-bottom: 16px;
+	}
+	.gutterDivider > .pane + .pane {
+		padding-top: 16px;
+		padding-left: 0;
 	}
 }

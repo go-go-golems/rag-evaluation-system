@@ -15,7 +15,7 @@ import (
 func TestSplitModulesExportExpectedHelpersAndOmitCrossDomainHelpers(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -63,7 +63,7 @@ func TestSplitModulesExportExpectedHelpersAndOmitCrossDomainHelpers(t *testing.T
 func TestWidgetV3ModuleExportsRootNamespacesAndKeepsOldModulesAvailable(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -125,7 +125,7 @@ func TestWidgetV3ModuleExportsRootNamespacesAndKeepsOldModulesAvailable(t *testi
 func TestWidgetV3PageBuilderEmitsPageIR(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -183,15 +183,28 @@ func TestWidgetV3PageBuilderEmitsPageIR(t *testing.T) {
 func TestWidgetV3UICompositionHelpersEmitPageIR(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
 		const widget = require("widget.dsl");
 		const branded = p => p.density("compact").breadcrumb("Home", "/");
+		const pageShell = widget.app.shell(s => s
+			.brand("Widget Site")
+			.navigation(n => n
+				.placement("sidebar")
+				.active("overview")
+				.width(188)
+				.ariaLabel("Workspace")
+				.section("main", "Workspace", items => items
+					.item("overview", "Overview", widget.act.navigate("/pages/overview"))
+				)
+			)
+			.content(c => c.maxWidth("none").padding("md").scroll("main"))
+		);
 		const page = widget.page("UI Page", p => p
 			.use(branded)
-			.shell({ kind: "app" })
+			.shell(pageShell)
 			.section("Overview", s => s
 				.actions(a => a.button("Refresh", widget.act.event("refresh")))
 				.caption("Built only with widget.dsl")
@@ -211,7 +224,8 @@ func TestWidgetV3UICompositionHelpersEmitPageIR(t *testing.T) {
 		t.Fatalf("build widget.dsl UI page: %v", err)
 	}
 	page := value.Export().(map[string]any)
-	if page["shell"].(map[string]any)["kind"] != "app" {
+	shell := anyMap(page["shell"])
+	if shell["kind"] != "app" || anyMap(shell["navigation"])["placement"] != "sidebar" {
 		t.Fatalf("page shell = %#v", page["shell"])
 	}
 	root := page["root"].(map[string]any)
@@ -238,10 +252,56 @@ func TestWidgetV3UICompositionHelpersEmitPageIR(t *testing.T) {
 	}
 }
 
+func TestWidgetV3RootOwnedPageLowersWorkspaceAsDirectRoot(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	registerLegacyModulesForTests(reg)
+	reg.Enable(vm)
+
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		widget.page("Course", p => p
+			.shell(widget.app.rootOwned())
+			.root(widget.course.shell({ title: "Course", sections: [] }, s =>
+				s.main(widget.ui.card({ title: "Lesson" }, "Body"))
+			))
+		).toPage();
+	`)
+	if err != nil {
+		t.Fatalf("build root-owned page: %v", err)
+	}
+	page := value.Export().(map[string]any)
+	if anyMap(page["shell"])["kind"] != "root-owned" {
+		t.Fatalf("shell = %#v", page["shell"])
+	}
+	root := anyMap(page["root"])
+	if root["type"] != "CourseStudioShell" {
+		t.Fatalf("root = %#v, want direct CourseStudioShell", root)
+	}
+}
+
+func TestWidgetV3RootAndSectionsAreMutuallyExclusive(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	registerLegacyModulesForTests(reg)
+	reg.Enable(vm)
+
+	_, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		widget.page("Invalid", p => p
+			.root(widget.ui.card({ title: "Root" }, "Body"))
+			.section("Extra", s => s.text("not allowed"))
+		).toPage();
+	`)
+	if err == nil || !strings.Contains(err.Error(), "page.root cannot be combined") {
+		t.Fatalf("error = %v, want root/sections conflict", err)
+	}
+}
+
 func TestWidgetV3SlotsAndChildNormalization(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -294,7 +354,7 @@ func TestWidgetV3SlotsAndChildNormalization(t *testing.T) {
 func TestWidgetV3ScheduleAndTimeViews(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -383,7 +443,7 @@ func TestWidgetV3ScheduleAndTimeViews(t *testing.T) {
 func TestWidgetV3ContextDomainViews(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -454,7 +514,7 @@ func TestWidgetV3ContextDomainViews(t *testing.T) {
 func TestWidgetV3CourseDomainViews(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -539,7 +599,7 @@ func TestWidgetV3CourseDomainViews(t *testing.T) {
 func TestWidgetV3CMSDomainViews(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -614,15 +674,52 @@ func TestWidgetV3CMSDomainViews(t *testing.T) {
 		t.Fatalf("editor = %#v, want MarkdownEditor", editor)
 	}
 	editorProps := anyMap(editor["props"])
-	if editorProps["value"] != "# Draft" || editorProps["title"] != "Body" || editorProps["onSubmitAction"] == nil {
+	if editorProps["defaultValue"] != "# Draft" || editorProps["title"] != "Body" || editorProps["onSubmitAction"] == nil {
 		t.Fatalf("editor props = %#v", editorProps)
+	}
+}
+
+func TestWidgetV3GenericContentHelpers(t *testing.T) {
+	vm := goja.New()
+	reg := require.NewRegistry()
+	registerLegacyModulesForTests(reg)
+	reg.Enable(vm)
+	value, err := vm.RunString(`
+		const widget = require("widget.dsl");
+		([
+			widget.ui.text("Body"),
+			widget.ui.code("x := 1"),
+			widget.ui.divider(),
+			widget.ui.scroll({ axis: "x" }, widget.ui.text("Wide")),
+			widget.ui.tabs([{ id: "one", label: "One" }]),
+			widget.ui.summary([{ key: "status", label: "Status", value: "Ready" }]),
+			widget.ui.checkList([{ id: "a", label: "Checked", checked: true }]),
+			widget.ui.stepList([{ id: "a", label: "First" }]),
+			widget.ui.markdownArticle("# Title"),
+			widget.ui.upload({ title: "Upload" }),
+		]);
+	`)
+	if err != nil {
+		t.Fatalf("build generic content helpers: %v", err)
+	}
+	got := value.Export().([]any)
+	wantTypes := []string{"Text", "CodeText", "Divider", "ScrollRegion", "TabList", "KeyValueStrip", "CheckList", "StepList", "MarkdownArticle", "ContextUploadDropArea"}
+	for index, wantType := range wantTypes {
+		node := anyMap(got[index])
+		if node["type"] != wantType {
+			t.Errorf("helper %d type = %#v, want %s", index, node["type"], wantType)
+		}
+	}
+	articleProps := anyMap(anyMap(got[8])["props"])
+	if articleProps["source"] != "# Title" {
+		t.Fatalf("markdown source = %#v", articleProps["source"])
 	}
 }
 
 func TestWidgetV3DataCollectionMatchesDataV2TableShape(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -680,7 +777,7 @@ func TestWidgetV3DataCollectionMatchesDataV2TableShape(t *testing.T) {
 func TestWidgetV3DataMasterDetailEditAndMatrix(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -729,7 +826,7 @@ func TestWidgetV3DataMasterDetailEditAndMatrix(t *testing.T) {
 func TestWidgetV3AccessorsSelectionsItemsActionsAndValidation(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -803,7 +900,7 @@ func TestWidgetV3AccessorsSelectionsItemsActionsAndValidation(t *testing.T) {
 func TestOldBucketModulesAreAbsent(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -824,7 +921,7 @@ func TestOldBucketModulesAreAbsent(t *testing.T) {
 func TestBuildsWidgetIRAcrossSplitModules(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -884,7 +981,7 @@ func TestBuildsWidgetIRAcrossSplitModules(t *testing.T) {
 func TestSplitModuleRecipesAreJSONSerializable(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -935,7 +1032,7 @@ func TestSplitModuleRecipesAreJSONSerializable(t *testing.T) {
 func TestContextWindowStyleSetHelpersBuildExpectedShape(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`
@@ -980,7 +1077,7 @@ func TestContextWindowStyleSetHelpersBuildExpectedShape(t *testing.T) {
 func TestContextDiagramRecipeRequiresStyleSet(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	_, err := vm.RunString(`
@@ -996,7 +1093,20 @@ func TestContextDiagramRecipeRequiresStyleSet(t *testing.T) {
 	}
 }
 
-func TestEngineRegistrarRegistersSplitModulesOnly(t *testing.T) {
+func TestNewLoaderRejectsLegacySplitModules(t *testing.T) {
+	for _, name := range []string{UIModuleName, DataModuleName, DataV2ModuleName, ContextWindowModuleName, CourseModuleName, CmsModuleName} {
+		t.Run(name, func(t *testing.T) {
+			defer func() {
+				if recover() == nil {
+					t.Fatalf("NewLoader(%q) did not reject legacy module", name)
+				}
+			}()
+			_ = NewLoader(name)
+		})
+	}
+}
+
+func TestEngineRegistrarRegistersOnlyWidgetDSL(t *testing.T) {
 	factory, err := engine.NewRuntimeFactoryBuilder().WithModules(NewRegistrar()).Build()
 	if err != nil {
 		t.Fatalf("build runtime factory: %v", err)
@@ -1011,30 +1121,29 @@ func TestEngineRegistrarRegistersSplitModulesOnly(t *testing.T) {
 		function canRequire(name) {
 			try { require(name); return true; } catch (error) { return false; }
 		}
-		const ui = require("ui.dsl");
-		const data = require("data.dsl");
-		const contextWindow = require("context_window.dsl");
-		const course = require("course.dsl");
+		const widget = require("widget.dsl");
 		({
-			uiPanel: typeof ui.panel,
-			dataTable: typeof data.dataTable,
-			contextDiagramPanel: typeof contextWindow.contextDiagramPanel,
-			courseStudioShell: typeof course.courseStudioShell,
+			page: typeof widget.page,
 			widget: canRequire("widget.dsl"),
-			rag: canRequire("rag.dsl"),
+			ui: canRequire("ui.dsl"),
+			data: canRequire("data.dsl"),
+			contextWindow: canRequire("context_window.dsl"),
+			course: canRequire("course.dsl"),
+			cms: canRequire("cms.dsl"),
+			dataV2: canRequire("data.v2.dsl"),
 		});
 	`)
 	if err != nil {
-		t.Fatalf("require split modules through engine registrar: %v", err)
+		t.Fatalf("require widget.dsl through engine registrar: %v", err)
 	}
 	got := value.Export().(map[string]any)
-	for _, name := range []string{"uiPanel", "dataTable", "contextDiagramPanel", "courseStudioShell"} {
-		if got[name] != "function" {
-			t.Fatalf("%s export = %#v, want function (all: %#v)", name, got[name], got)
-		}
+	if got["page"] != "function" || got["widget"] != true {
+		t.Fatalf("widget.dsl should be the public registrar surface, got %#v", got)
 	}
-	if got["widget"] != true || got["rag"] != false {
-		t.Fatalf("widget.dsl should be present and rag.dsl should be absent from engine registrar, got %#v", got)
+	for _, legacy := range []string{"ui", "data", "contextWindow", "course", "cms", "dataV2"} {
+		if got[legacy] != false {
+			t.Fatalf("legacy module %s remained registered: %#v", legacy, got)
+		}
 	}
 }
 
@@ -1084,7 +1193,7 @@ func assertString(t *testing.T, m map[string]any, key, want string) {
 func TestCmsModuleExportsHelpersRecipesAndBoundaries(t *testing.T) {
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 
 	value, err := vm.RunString(`

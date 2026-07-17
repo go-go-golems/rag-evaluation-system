@@ -4,6 +4,10 @@
 	background: transparent;
 }
 
+.rootCondensed {
+	padding-top: 6px;
+}
+
 .fill {
 	height: 100%;
 }

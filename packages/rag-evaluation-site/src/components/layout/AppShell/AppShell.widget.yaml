@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: AppShell
-module: ui.dsl
+module: widget.dsl
 helper: appShell
 props: AppShellWidgetProps
 adapter:

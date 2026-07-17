@@ -7,69 +7,51 @@
 					{
 						"children": [
 							{
-								"children": [
-									{
-										"children": [
-											{
-												"kind": "text",
-												"text": "Course body inside shell. Use Slides to switch this panel."
-											}
-										],
-										"kind": "component",
-										"type": "Caption"
-									}
-								],
-								"kind": "component",
-								"props": {
-									"title": "Overview"
-								},
-								"type": "Panel"
+								"kind": "text",
+								"text": "Course body inside shell. Use Slides to switch this panel."
 							}
 						],
 						"kind": "component",
-						"props": {
-							"activeItemId": "overview",
-							"onNavigateAction": {
-								"kind": "navigate",
-								"to": "?item=${item.id}"
-							},
-							"sections": [
-								{
-									"id": "nav",
-									"items": [
-										{
-											"id": "overview",
-											"label": "Overview"
-										},
-										{
-											"id": "slides",
-											"label": "Slides"
-										}
-									],
-									"label": "Navigation"
-								}
-							],
-							"title": "Course Shell"
-						},
-						"type": "CourseStudioShell"
+						"type": "Caption"
 					}
 				],
 				"kind": "component",
 				"props": {
-					"density": "flush",
-					"label": "Shell",
-					"level": 1,
-					"rule": true
+					"title": "Overview"
 				},
-				"type": "SectionBlock"
+				"type": "Panel"
 			}
 		],
 		"kind": "component",
 		"props": {
-			"gap": "lg"
+			"activeItemId": "overview",
+			"onNavigateAction": {
+				"kind": "navigate",
+				"to": "?item=${item.id}"
+			},
+			"sections": [
+				{
+					"id": "nav",
+					"items": [
+						{
+							"id": "overview",
+							"label": "Overview"
+						},
+						{
+							"id": "slides",
+							"label": "Slides"
+						}
+					],
+					"label": "Navigation"
+				}
+			],
+			"title": "Course Shell"
 		},
-		"type": "Stack"
+		"type": "CourseStudioShell"
 	},
 	"schemaVersion": "0.1.0",
+	"shell": {
+		"kind": "root-owned"
+	},
 	"title": "Course shell layout"
 }

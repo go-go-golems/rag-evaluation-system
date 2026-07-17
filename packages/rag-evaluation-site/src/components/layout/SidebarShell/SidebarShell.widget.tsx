@@ -4,7 +4,7 @@ import { SidebarShell } from "./SidebarShell";
 
 export const sidebarShellWidget = defineWidget<SidebarShellWidgetProps>({
 	type: "SidebarShell",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children, ctx) => (
 		<SidebarShell
 			className={props.className}

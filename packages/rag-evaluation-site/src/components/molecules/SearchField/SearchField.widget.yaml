@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: SearchField
-module: cms.dsl
+module: widget.dsl
 helper: searchField
 props: SearchFieldWidgetProps
 adapter:

@@ -5,7 +5,7 @@ import { SplitPane } from "./SplitPane";
 
 export const splitPaneWidget = defineWidget<SplitPaneWidgetProps>({
 	type: "SplitPane",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<SplitPane
 			className={props.className}

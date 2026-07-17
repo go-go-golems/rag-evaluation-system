@@ -4,7 +4,7 @@ import { ContextLegend } from "./ContextLegend";
 
 export const contextLegendWidget = defineWidget<ContextLegendWidgetProps>({
 	type: "ContextLegend",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props) => (
 		<ContextLegend
 			className={props.className}

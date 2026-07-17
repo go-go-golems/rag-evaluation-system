@@ -9,7 +9,7 @@ interface CheckListObjectItem {
 
 export const checkListWidget = defineWidget<CheckListWidgetProps>({
 	type: "CheckList",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<CheckList
 			className={props.className}

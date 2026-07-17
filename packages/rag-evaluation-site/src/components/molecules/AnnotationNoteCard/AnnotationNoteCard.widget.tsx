@@ -4,7 +4,7 @@ import { AnnotationNoteCard } from "./AnnotationNoteCard";
 
 export const annotationNoteCardWidget = defineWidget<AnnotationNoteCardWidgetProps>({
 	type: "AnnotationNoteCard",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props) => (
 		<AnnotationNoteCard
 			className={props.className}

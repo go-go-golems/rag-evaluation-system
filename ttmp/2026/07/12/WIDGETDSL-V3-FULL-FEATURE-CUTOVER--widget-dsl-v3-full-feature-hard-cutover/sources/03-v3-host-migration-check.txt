@@ -1,0 +1,1 @@
+No legacy Widget DSL imports or raw component escape hatches found.

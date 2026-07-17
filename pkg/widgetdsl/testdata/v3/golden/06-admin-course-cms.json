@@ -9,178 +9,157 @@
 							{
 								"children": [
 									{
-										"children": [
-											{
-												"children": [
-													{
-														"kind": "text",
-														"text": "Edit the lab agenda and upload supporting workshop material."
-													}
-												],
-												"kind": "component",
-												"type": "Caption"
-											}
-										],
-										"kind": "component",
-										"props": {
-											"title": "Lab module"
-										},
-										"type": "Panel"
-									},
-									{
-										"children": [
-											{
-												"kind": "component",
-												"props": {
-													"columns": [
-														{
-															"cell": {
-																"action": {
-																	"event": "server",
-																	"kind": "server",
-																	"name": "course.agenda.edit",
-																	"payload": {
-																		"direction": "up",
-																		"id": {
-																			"kind": "path",
-																			"path": "rows"
-																		}
-																	}
-																},
-																"kind": "actionButton",
-																"label": "↑"
-															},
-															"header": "",
-															"id": "moveUp",
-															"maxWidth": "5ch"
-														},
-														{
-															"cell": {
-																"action": {
-																	"event": "server",
-																	"kind": "server",
-																	"name": "course.agenda.edit",
-																	"payload": {
-																		"direction": "down",
-																		"id": {
-																			"kind": "path",
-																			"path": "rows"
-																		}
-																	}
-																},
-																"kind": "actionButton",
-																"label": "↓"
-															},
-															"header": "",
-															"id": "moveDown",
-															"maxWidth": "5ch"
-														}
-													],
-													"getRowKey": "id",
-													"rows": [
-														{
-															"duration": 20,
-															"id": "intro",
-															"status": "ready",
-															"title": "Introduction"
-														},
-														{
-															"duration": 60,
-															"id": "lab",
-															"status": "draft",
-															"title": "Hands-on Lab"
-														}
-													]
-												},
-												"type": "DataTable"
-											}
-										],
-										"kind": "component",
-										"props": {
-											"gap": "md"
-										},
-										"type": "Stack"
-									},
-									{
-										"kind": "component",
-										"props": {
-											"accept": ["application/pdf", "image/png"],
-											"description": "Slides, handouts, diagrams",
-											"onDeleteAction": {
-												"kind": "server",
-												"name": "course.material.delete",
-												"payload": {
-													"id": {
-														"kind": "accessor",
-														"mode": "context",
-														"path": "asset.id"
-													}
-												}
-											},
-											"onFilesSelectedAction": {
-												"kind": "server",
-												"name": "course.material.upload"
-											},
-											"title": "Upload material"
-										},
-										"type": "ContextUploadDropArea"
+										"kind": "text",
+										"text": "Edit the lab agenda and upload supporting workshop material."
 									}
 								],
 								"kind": "component",
-								"props": {
-									"gap": "md"
-								},
-								"type": "Stack"
+								"type": "Caption"
 							}
 						],
 						"kind": "component",
 						"props": {
-							"activeItemId": "lab",
-							"onNavigateAction": {
-								"kind": "navigate",
-								"to": "?item=${item.id}"
-							},
-							"sections": [
-								{
-									"id": "modules",
-									"items": [
+							"title": "Lab module"
+						},
+						"type": "Panel"
+					},
+					{
+						"children": [
+							{
+								"kind": "component",
+								"props": {
+									"columns": [
 										{
-											"id": "intro",
-											"label": "Intro"
+											"cell": {
+												"action": {
+													"event": "server",
+													"kind": "server",
+													"name": "course.agenda.edit",
+													"payload": {
+														"direction": "up",
+														"id": {
+															"kind": "path",
+															"path": "rows"
+														}
+													}
+												},
+												"kind": "actionButton",
+												"label": "↑"
+											},
+											"header": "",
+											"id": "moveUp",
+											"maxWidth": "5ch"
 										},
 										{
-											"id": "lab",
-											"label": "Lab"
+											"cell": {
+												"action": {
+													"event": "server",
+													"kind": "server",
+													"name": "course.agenda.edit",
+													"payload": {
+														"direction": "down",
+														"id": {
+															"kind": "path",
+															"path": "rows"
+														}
+													}
+												},
+												"kind": "actionButton",
+												"label": "↓"
+											},
+											"header": "",
+											"id": "moveDown",
+											"maxWidth": "5ch"
 										}
 									],
-									"label": "Modules"
-								}
-							],
-							"subtitle": "Admin preview",
-							"title": "Context Window Engineering"
+									"getRowKey": "id",
+									"rows": [
+										{
+											"duration": 20,
+											"id": "intro",
+											"status": "ready",
+											"title": "Introduction"
+										},
+										{
+											"duration": 60,
+											"id": "lab",
+											"status": "draft",
+											"title": "Hands-on Lab"
+										}
+									]
+								},
+								"type": "DataTable"
+							}
+						],
+						"kind": "component",
+						"props": {
+							"gap": "md"
 						},
-						"type": "CourseStudioShell"
+						"type": "Stack"
+					},
+					{
+						"kind": "component",
+						"props": {
+							"accept": ["application/pdf", "image/png"],
+							"description": "Slides, handouts, diagrams",
+							"onDeleteAction": {
+								"kind": "server",
+								"name": "course.material.delete",
+								"payload": {
+									"id": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "asset.id"
+									}
+								}
+							},
+							"onFilesSelectedAction": {
+								"kind": "server",
+								"name": "course.material.upload"
+							},
+							"title": "Upload material"
+						},
+						"type": "ContextUploadDropArea"
 					}
 				],
 				"kind": "component",
 				"props": {
-					"density": "flush",
-					"label": "Course shell",
-					"level": 1,
-					"rule": true
+					"gap": "md"
 				},
-				"type": "SectionBlock"
+				"type": "Stack"
 			}
 		],
 		"kind": "component",
 		"props": {
-			"gap": "lg"
+			"activeItemId": "lab",
+			"onNavigateAction": {
+				"kind": "navigate",
+				"to": "?item=${item.id}"
+			},
+			"sections": [
+				{
+					"id": "modules",
+					"items": [
+						{
+							"id": "intro",
+							"label": "Intro"
+						},
+						{
+							"id": "lab",
+							"label": "Lab"
+						}
+					],
+					"label": "Modules"
+				}
+			],
+			"subtitle": "Admin preview",
+			"title": "Context Window Engineering"
 		},
-		"type": "Stack"
+		"type": "CourseStudioShell"
 	},
 	"schemaVersion": "0.1.0",
 	"shell": {
-		"kind": "course-admin"
+		"kind": "root-owned"
 	},
 	"title": "Course CMS admin"
 }

@@ -145,6 +145,10 @@ See the provider documentation for full bundling instructions:
 - [Widget DSL JavaScript API Reference and Migration Notes](pkg/xgoja/providers/widgetsite/doc/02-widget-dsl-js-api-reference.md)
 - [Bundling the WidgetRenderer SPA](pkg/xgoja/providers/widgetsite/doc/03-widget-dsl-spa-bundling.md)
 
+### Generated-host integration suites
+
+Run `make widgetdsl-sites-smoke` to rebuild the canonical SPA and validate every xgoja reference host. The suite covers the interactive collection/search/pagination/dialog host, the scheduling poll, the workshop CRM, and all committed Widget DSL v3 golden examples through generated binaries and real HTTP routes. Each site also exposes `make smoke` for focused debugging.
+
 ### Semantic recipes
 
 New hosts import the single v3 module and compose its domain namespaces:
@@ -161,24 +165,7 @@ const page = widget.page("Workshop", (p) =>
 )
 ```
 
-The Goja `rag-widget-site` provider still exposes split semantic helpers for existing RAG pages during migration:
-
-```js
-const contextWindow = require("context_window.dsl")
-const course = require("course.dsl")
-
-// Returns Widget IR for a context window diagram
-contextWindow.recipes.contextDiagram({ snapshot, view: "budget" })
-
-// Returns Widget IR for a teaching page with sidebar navigation
-course.recipes.courseStudio({
-  sections: [{ id: "course", label: "Course", items: [{ id: "slides", label: "Slides" }] }],
-  main: course.recipes.courseSlide({ slide, snapshot, index: 0, total: 1 })
-})
-
-// Returns Widget IR for an annotated transcript
-contextWindow.recipes.annotatedTranscript({ transcript, annotations })
-```
+The Goja `rag-widget-site` provider exposes only `widget.dsl`. Context, course, CMS, CRM, scheduling, and time capabilities live under typed namespaces on that module; split helper modules are no longer registered.
 
 ## Build
 

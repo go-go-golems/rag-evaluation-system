@@ -4,7 +4,7 @@ import { CourseStudioShell } from "./CourseStudioShell";
 
 export const courseStudioShellWidget = defineWidget<CourseStudioShellWidgetProps>({
 	type: "CourseStudioShell",
-	module: "course.dsl",
+	module: "widget.dsl",
 	render: (props, children, ctx) => (
 		<CourseStudioShell
 			className={props.className}

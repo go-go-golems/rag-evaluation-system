@@ -4,7 +4,7 @@ import { MediaThumb } from "./MediaThumb";
 
 export const mediaThumbWidget = defineWidget<MediaThumbWidgetProps>({
 	type: "MediaThumb",
-	module: "cms.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<MediaThumb
 			className={props.className}

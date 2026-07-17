@@ -116,6 +116,7 @@ const widgetV3TypeScriptFixture = `/// <reference path="./widgetdsl.d.ts" />
 import * as widget from "widget.dsl";
 
 const page = widget.page("Dashboard", p => p
+  .shortcuts(keys => keys.bind("refresh", "r", widget.act.server("dashboard.refresh"), { label: "Refresh" }))
   .section("Overview", s => s
     .view(widget.ui.card({ title: "Hello" }, "World"))));
 page.toPage();
@@ -218,7 +219,7 @@ func newRegisteredRuntime(t *testing.T) *goja.Runtime {
 	t.Helper()
 	vm := goja.New()
 	reg := require.NewRegistry()
-	Register(reg)
+	registerLegacyModulesForTests(reg)
 	reg.Enable(vm)
 	return vm
 }

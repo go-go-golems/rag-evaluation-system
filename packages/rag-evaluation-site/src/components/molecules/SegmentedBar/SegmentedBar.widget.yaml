@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: SegmentedBar
-module: ui.dsl
+module: widget.dsl
 helper: segmentedBar
 props: SegmentedBarWidgetProps
 adapter:

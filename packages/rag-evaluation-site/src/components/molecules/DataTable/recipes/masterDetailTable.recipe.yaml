@@ -1,6 +1,6 @@
 schemaVersion: recipe-manifest/v1
 name: masterDetailTable
-module: data.dsl
+module: widget.dsl
 input: MasterDetailTableRecipeOptions
 output: WidgetNode
 implementation:

@@ -4,7 +4,7 @@ import { Button } from "./Button";
 
 export const buttonWidget = defineWidget<ButtonWidgetProps>({
 	type: "Button",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children, ctx) => (
 		<Button
 			className={props.className}

@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: DataTable
-module: data.dsl
+module: widget.dsl
 helper: dataTable
 props: DataTableWidgetProps
 adapter:

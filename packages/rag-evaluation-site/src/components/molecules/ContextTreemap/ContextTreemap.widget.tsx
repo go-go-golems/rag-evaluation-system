@@ -4,7 +4,7 @@ import { ContextTreemap } from "./ContextTreemap";
 
 export const contextTreemapWidget = defineWidget<ContextTreemapWidgetProps>({
 	type: "ContextTreemap",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props) => (
 		<ContextTreemap
 			className={props.className}

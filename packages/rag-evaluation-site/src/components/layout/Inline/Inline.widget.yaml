@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: Inline
-module: ui.dsl
+module: widget.dsl
 helper: inline
 props: InlineWidgetProps
 adapter:

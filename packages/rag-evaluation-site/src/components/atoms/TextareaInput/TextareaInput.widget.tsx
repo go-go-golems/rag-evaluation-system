@@ -4,7 +4,7 @@ import { TextareaInput } from "./TextareaInput";
 
 export const textareaInputWidget = defineWidget<TextareaInputWidgetProps>({
 	type: "TextareaInput",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props) => {
 		const readOnly = props.readOnly ?? true;
 		const sharedProps = {

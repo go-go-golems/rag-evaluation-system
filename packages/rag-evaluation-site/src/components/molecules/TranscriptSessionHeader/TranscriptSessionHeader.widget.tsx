@@ -4,7 +4,7 @@ import { TranscriptSessionHeader } from "./TranscriptSessionHeader";
 
 export const transcriptSessionHeaderWidget = defineWidget<TranscriptSessionHeaderWidgetProps>({
 	type: "TranscriptSessionHeader",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<TranscriptSessionHeader
 			className={props.className}

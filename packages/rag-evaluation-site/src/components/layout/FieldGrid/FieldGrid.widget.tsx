@@ -4,7 +4,7 @@ import { FieldGrid } from "./FieldGrid";
 
 export const fieldGridWidget = defineWidget<FieldGridWidgetProps>({
 	type: "FieldGrid",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children) => (
 		<FieldGrid className={props.className} columns={props.columns} gap={props.gap}>
 			{children}

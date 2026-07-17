@@ -7,6 +7,12 @@ const { buildMonthGridCells, shiftMonth } = await import(
 	"../src/components/molecules/MonthGrid/MonthGrid.logic.ts"
 );
 const { resolveStyleByStyle } = await import("../src/widgets/styleBy.logic.ts");
+const {
+	ariaKeyShortcuts,
+	canonicalShortcutChord,
+	matchPageShortcut,
+	shouldIgnorePageShortcutEvent,
+} = await import("../src/hooks/pageShortcuts.logic.ts");
 
 function ids(packed) {
 	return packed.map((p) => ({ id: p.block.id, lane: p.lane, lanes: p.lanes }));
@@ -61,8 +67,75 @@ function ids(packed) {
 	};
 	assert.equal(resolveStyleByStyle({ styleSet }, "yes")?.fill, "green");
 	assert.equal(resolveStyleByStyle({ styleSet, map: { y: "yes" } }, "y")?.fill, "green");
-	assert.equal(resolveStyleByStyle({ styleSet, fallbackStyleKey: "maybe" }, "missing")?.fill, "yellow");
+	assert.equal(
+		resolveStyleByStyle({ styleSet, fallbackStyleKey: "maybe" }, "missing")?.fill,
+		"yellow",
+	);
 	assert.equal(resolveStyleByStyle({ styleSet }, "missing"), fallback);
+}
+
+{
+	const bindings = [
+		{
+			id: "accept",
+			key: "y",
+			label: "Yes",
+			action: { kind: "server", name: "triage.accept" },
+			preventDefault: true,
+		},
+		{
+			id: "save",
+			key: "s",
+			modifiers: ["Control"],
+			label: "Save",
+			action: { kind: "server", name: "triage.save" },
+		},
+	];
+	const keyEvent = (overrides = {}) => ({
+		key: "y",
+		altKey: false,
+		ctrlKey: false,
+		metaKey: false,
+		shiftKey: false,
+		repeat: false,
+		isComposing: false,
+		defaultPrevented: false,
+		...overrides,
+	});
+
+	assert.equal(canonicalShortcutChord("Y"), "y");
+	assert.equal(canonicalShortcutChord("s", ["Control"]), "Control+s");
+	assert.equal(matchPageShortcut(keyEvent(), bindings)?.id, "accept");
+	assert.equal(matchPageShortcut(keyEvent({ key: "Y" }), bindings)?.id, "accept");
+	assert.equal(matchPageShortcut(keyEvent({ key: "s", ctrlKey: true }), bindings)?.id, "save");
+	assert.equal(matchPageShortcut(keyEvent({ repeat: true }), bindings), undefined);
+	assert.equal(matchPageShortcut(keyEvent({ isComposing: true }), bindings), undefined);
+	assert.equal(matchPageShortcut(keyEvent({ defaultPrevented: true }), bindings), undefined);
+	assert.equal(ariaKeyShortcuts(bindings), "y Control+s");
+	assert.equal(
+		shouldIgnorePageShortcutEvent(keyEvent(), {
+			enabled: true,
+			blockedTarget: true,
+			nestedKeyboardScope: false,
+		}),
+		true,
+	);
+	assert.equal(
+		shouldIgnorePageShortcutEvent(keyEvent(), {
+			enabled: true,
+			blockedTarget: false,
+			nestedKeyboardScope: true,
+		}),
+		true,
+	);
+	assert.equal(
+		shouldIgnorePageShortcutEvent(keyEvent(), {
+			enabled: false,
+			blockedTarget: false,
+			nestedKeyboardScope: false,
+		}),
+		true,
+	);
 }
 
 console.log("focused checks passed");

@@ -4,7 +4,7 @@ import { FigureBlock } from "./FigureBlock";
 
 export const figureBlockWidget = defineWidget<FigureBlockWidgetProps>({
 	type: "FigureBlock",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children, ctx) => (
 		<FigureBlock
 			className={props.className}

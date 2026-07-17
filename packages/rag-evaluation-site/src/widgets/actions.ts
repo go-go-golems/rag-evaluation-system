@@ -21,6 +21,9 @@ export interface ServerActionResult {
 	toast?: string;
 	patch?: JsonObject;
 	data?: JsonObject;
+	error?: string;
+	fieldErrors?: Record<string, string>;
+	undo?: ActionSpec;
 }
 
 export type WidgetActionHandler = (
@@ -83,9 +86,15 @@ export function dispatchWidgetAction(
 		return;
 	}
 
+	if (action.kind === "openOverlay" || action.kind === "closeOverlay") {
+		window.dispatchEvent(new CustomEvent("widget:overlay", { detail: { action, context } }));
+		return;
+	}
+
 	if (action.kind === "navigate") {
-		const target = interpolate(action.to, context);
-		window.history.pushState(action.params ?? {}, "", target);
+		const target = structuredNavigationTarget(action, context);
+		if (action.replace) window.history.replaceState(action.params ?? {}, "", target);
+		else window.history.pushState(action.params ?? {}, "", target);
 		window.dispatchEvent(new PopStateEvent("popstate"));
 		return;
 	}
@@ -111,11 +120,45 @@ export function dispatchWidgetAction(
 			const result = (await response.json().catch(() => undefined)) as
 				| ServerActionResult
 				| undefined;
-			if (response.ok && result?.refresh) {
-				window.dispatchEvent(new PopStateEvent("popstate"));
-			}
+			window.dispatchEvent(
+				new CustomEvent("widget:action-result", {
+					detail: { action, context, responseOk: response.ok, result },
+				}),
+			);
+			if (result?.toast || result?.error)
+				window.dispatchEvent(
+					new CustomEvent("widget:toast", {
+						detail: {
+							message: result.toast ?? result.error,
+							tone: response.ok && result.ok !== false ? "success" : "danger",
+						},
+					}),
+				);
+			if (response.ok && result?.refresh) window.dispatchEvent(new PopStateEvent("popstate"));
 		});
 	}
+}
+
+export function structuredNavigationTarget(
+	action: Extract<ActionSpec, { kind: "navigate" }>,
+	context: WidgetActionContext,
+): string {
+	const base = new URL(interpolate(action.to, context), window.location.href);
+	const next = new URLSearchParams();
+	for (const key of action.preserveQuery ?? []) {
+		for (const value of new URL(window.location.href).searchParams.getAll(key))
+			next.append(key, value);
+	}
+	for (const [key, raw] of Object.entries(action.query ?? {})) {
+		const values = Array.isArray(raw) ? raw : [raw];
+		for (const value of values) {
+			const resolved = resolveTemplatePartOrLiteral(value, context);
+			if (action.omitEmpty && (resolved == null || resolved === "")) continue;
+			next.append(key, String(resolved ?? ""));
+		}
+	}
+	if (action.query || action.preserveQuery) base.search = next.toString();
+	return `${base.pathname}${base.search}${base.hash}`;
 }
 
 export function bindAction(

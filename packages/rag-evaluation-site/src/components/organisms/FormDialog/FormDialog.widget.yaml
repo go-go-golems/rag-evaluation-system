@@ -1,0 +1,19 @@
+schemaVersion: widget-manifest/v1
+type: FormDialog
+module: widget.dsl
+helper: formDialog
+props: FormDialogWidgetProps
+adapter:
+  path: ./FormDialog.widget.tsx
+  export: formDialogWidget
+reactComponent: FormDialog
+children: false
+slots:
+  - title
+  - body
+  - submitLabel
+  - cancelLabel
+actions:
+  - onSubmitAction
+status: experimental
+docs: Accessible modal form dialog opened and closed by overlay actions; freezes opener context, serializes context.form, preserves server field errors, and restores focus.

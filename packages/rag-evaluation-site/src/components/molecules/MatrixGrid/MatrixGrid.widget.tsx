@@ -94,7 +94,7 @@ function renderMatrixCell(
 
 export const matrixGridWidget = defineWidget<MatrixGridWidgetProps>({
 	type: "MatrixGrid",
-	module: "data.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => {
 		const columns = props.columns.map((column: MatrixColumnWidgetSpec) => ({
 			id: column.id,

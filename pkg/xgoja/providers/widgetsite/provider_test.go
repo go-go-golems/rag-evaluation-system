@@ -12,22 +12,12 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl"
 )
 
-func TestRegisterExposesSplitAndWidgetV3Modules(t *testing.T) {
+func TestRegisterExposesOnlyWidgetDSL(t *testing.T) {
 	registry := providerapi.NewProviderRegistry()
 	if err := Register(registry); err != nil {
 		t.Fatalf("register provider: %v", err)
 	}
-	cases := []struct {
-		name   string
-		helper string
-	}{
-		{widgetdsl.UIModuleName, "panel"},
-		{widgetdsl.DataModuleName, "dataTable"},
-		{widgetdsl.DataV2ModuleName, "collection"},
-		{widgetdsl.WidgetV3ModuleName, "raw"},
-		{widgetdsl.ContextWindowModuleName, "contextDiagramPanel"},
-		{widgetdsl.CourseModuleName, "courseStudioShell"},
-	}
+	cases := []struct{ name, helper string }{{widgetdsl.WidgetV3ModuleName, "page"}}
 	for _, tc := range cases {
 		mod, ok := registry.ResolveModule(PackageID, tc.name)
 		if !ok {
@@ -51,7 +41,7 @@ func TestRegisterExposesSplitAndWidgetV3Modules(t *testing.T) {
 			t.Fatalf("module %s did not expose %s(): %#v", tc.name, tc.helper, got)
 		}
 	}
-	for _, oldName := range []string{"rag.dsl"} {
+	for _, oldName := range []string{"rag.dsl", widgetdsl.UIModuleName, widgetdsl.DataModuleName, widgetdsl.DataV2ModuleName, widgetdsl.ContextWindowModuleName, widgetdsl.CourseModuleName, widgetdsl.CmsModuleName} {
 		if _, ok := registry.ResolveModule(PackageID, oldName); ok {
 			t.Fatalf("old bucket module %q should not be exposed", oldName)
 		}
@@ -97,20 +87,15 @@ func TestRegisterExposesWidgetDSLHelpSource(t *testing.T) {
 	}
 }
 
-func TestGeneratedRuntimeCanRequireSplitWidgetDSLModules(t *testing.T) {
+func TestGeneratedRuntimeCanRequireWidgetDSL(t *testing.T) {
 	registry := providerapi.NewProviderRegistry()
 	if err := Register(registry); err != nil {
 		t.Fatalf("register provider: %v", err)
 	}
 	runtimePlan := &app.RuntimePlan{
-		Schema: app.RuntimePlanSchema,
-		Name:   "widgetsite-provider-test",
-		Runtime: app.RuntimeSection{Modules: []app.RuntimeModulePlan{
-			{Provider: PackageID, Name: widgetdsl.UIModuleName, As: widgetdsl.UIModuleName},
-			{Provider: PackageID, Name: widgetdsl.DataModuleName, As: widgetdsl.DataModuleName},
-			{Provider: PackageID, Name: widgetdsl.ContextWindowModuleName, As: widgetdsl.ContextWindowModuleName},
-			{Provider: PackageID, Name: widgetdsl.CourseModuleName, As: widgetdsl.CourseModuleName},
-		}},
+		Schema:  app.RuntimePlanSchema,
+		Name:    "widgetsite-provider-test",
+		Runtime: app.RuntimeSection{Modules: []app.RuntimeModulePlan{{Provider: PackageID, Name: widgetdsl.WidgetV3ModuleName, As: widgetdsl.WidgetV3ModuleName}}},
 	}
 	host := app.NewHost(registry, runtimePlan)
 	rt, err := host.Factory.NewRuntime(context.Background())
@@ -119,18 +104,11 @@ func TestGeneratedRuntimeCanRequireSplitWidgetDSLModules(t *testing.T) {
 	}
 	defer func() { _ = rt.Close(context.Background()) }()
 
-	ret, err := rt.Owner.Call(context.Background(), "widgetsite-provider.require-split-dsl", func(_ context.Context, vm *goja.Runtime) (any, error) {
+	ret, err := rt.Owner.Call(context.Background(), "widgetsite-provider.require-widget-dsl", func(_ context.Context, vm *goja.Runtime) (any, error) {
 		value, runErr := vm.RunString(`
-			const ui = require("ui.dsl");
-			const data = require("data.dsl");
-			const contextWindow = require("context_window.dsl");
-			const course = require("course.dsl");
-			const node = ui.panel({ title: "Demo" },
-				data.dataTable({ rows: [], getRowKey: "id", columns: [{ id: "name", header: "Name", cell: data.cell.field("name") }] }),
-				contextWindow.contextDiagramPanel({ snapshot: { id: "ctx", title: "Window", limit: 0, parts: [] } }),
-				course.courseStudioShell({ sections: [], title: "Course" })
-			);
-			JSON.stringify(node);
+			const widget = require("widget.dsl");
+			const page = widget.page("Demo", p => p.section("Content", s => s.view(widget.ui.text("Ready"))));
+			JSON.stringify(page.toPage());
 		`)
 		if runErr != nil {
 			return nil, runErr
@@ -141,7 +119,7 @@ func TestGeneratedRuntimeCanRequireSplitWidgetDSLModules(t *testing.T) {
 		t.Fatalf("run script: %v", err)
 	}
 	json := ret.(string)
-	for _, want := range []string{`"kind":"component"`, `"type":"Panel"`, `"title":"Demo"`, `"type":"DataTable"`, `"type":"ContextDiagramPanel"`, `"type":"CourseStudioShell"`} {
+	for _, want := range []string{`"kind":"component"`, `"type":"SectionBlock"`, `"title":"Demo"`, `"type":"Text"`} {
 		if !strings.Contains(json, want) {
 			t.Fatalf("result missing %s: %s", want, json)
 		}

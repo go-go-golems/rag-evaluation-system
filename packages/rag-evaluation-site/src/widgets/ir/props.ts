@@ -48,7 +48,7 @@ import type {
 } from "../../context";
 import type { ActionSpec } from "./actions";
 import type { DataTableColumnSpec, RowKeySpec } from "./cells";
-import type { BaseWidgetProps, JsonObject, RenderableValue, WidgetNode } from "./core";
+import type { BaseWidgetProps, JsonObject, JsonValue, RenderableValue, WidgetNode } from "./core";
 import type {
 	ActivityFeedWidgetProps,
 	BoardEngineWidgetProps,
@@ -86,6 +86,13 @@ export interface ButtonWidgetProps extends BaseWidgetProps {
 	type?: "button" | "submit" | "reset";
 }
 
+export interface IconButtonWidgetProps extends BaseWidgetProps {
+	label: string;
+	size?: "compact" | "normal" | "large";
+	variant?: "bare" | "boxed";
+	disabled?: boolean;
+}
+
 export interface TextWidgetProps extends BaseWidgetProps {
 	as?: TextAs;
 	size?: TextSize;
@@ -104,6 +111,11 @@ export interface CodeTextWidgetProps extends BaseWidgetProps {
 
 export interface DividerWidgetProps extends BaseWidgetProps {
 	orientation?: "horizontal" | "vertical";
+}
+
+export interface DisclosureWidgetProps extends BaseWidgetProps {
+	title: RenderableValue;
+	open?: boolean;
 }
 
 export interface ContextStudioNavIconWidgetProps extends BaseWidgetProps {
@@ -181,6 +193,7 @@ export interface ContextDiagramPanelWidgetProps extends BaseWidgetProps {
 	showLegend?: boolean;
 	showPartDetails?: boolean;
 	chrome?: "panel" | "inline";
+	onPartSelectAction?: ActionSpec;
 }
 
 export interface ContextTurnPagerPanelWidgetProps extends BaseWidgetProps {
@@ -430,6 +443,8 @@ export interface ContextUploadDropAreaWidgetProps extends BaseWidgetProps {
 	disabled?: boolean;
 	active?: boolean;
 	onFilesSelectedAction?: ActionSpec;
+	items?: Array<{ id: string; label?: RenderableValue }>;
+	onDeleteAction?: ActionSpec;
 }
 
 export interface CaptionWidgetProps extends BaseWidgetProps {
@@ -448,7 +463,35 @@ export interface DataTableWidgetProps extends BaseWidgetProps {
 	getRowKey: RowKeySpec;
 	selectedKey?: string | null;
 	onRowSelect?: ActionSpec;
+	keyboard?: {
+		mode?: "rows";
+		selection?: "manual" | "followFocus";
+		vimAliases?: boolean;
+		enterSelect?: boolean;
+	};
+	commands?: Array<{
+		id: string;
+		key: string;
+		label: string;
+		danger?: boolean;
+		action: ActionSpec;
+	}>;
+	styleRules?: Array<{
+		field: string;
+		equals: JsonValue;
+		tone: "muted" | "success" | "warning" | "danger" | "accent";
+	}>;
 	emptyMessage?: RenderableValue;
+}
+
+export interface FormDialogWidgetProps extends BaseWidgetProps {
+	id: string;
+	title: RenderableValue;
+	body?: WidgetNode;
+	initialFocus?: string;
+	submitLabel?: RenderableValue;
+	cancelLabel?: RenderableValue;
+	onSubmitAction: ActionSpec;
 }
 
 export interface FormPanelWidgetProps extends BaseWidgetProps {
@@ -528,7 +571,7 @@ export interface SplitPaneWidgetProps extends BaseWidgetProps {
 	right: WidgetNode;
 	ratio?: "balanced" | "leftNarrow" | "rightNarrow" | "course" | "sidebar";
 	divider?: boolean;
-	gutter?: "none" | "md" | "lg";
+	gutter?: "none" | "divider" | "md" | "lg";
 }
 
 export interface SidebarShellWidgetProps extends BaseWidgetProps {
@@ -628,9 +671,11 @@ export type WidgetProps =
 	| AppShellWidgetProps
 	| AppNavWidgetProps
 	| ButtonWidgetProps
+	| IconButtonWidgetProps
 	| TextWidgetProps
 	| CodeTextWidgetProps
 	| DividerWidgetProps
+	| DisclosureWidgetProps
 	| ContextStyleSwatchWidgetProps
 	| ContextStudioNavIconWidgetProps
 	| AnnotationBadgeWidgetProps
@@ -681,6 +726,7 @@ export type WidgetProps =
 	| BoardEngineWidgetProps
 	| ActivityFeedWidgetProps
 	| StatTileWidgetProps
+	| FormDialogWidgetProps
 	| FormPanelWidgetProps
 	| FormRowWidgetProps
 	| InlineWidgetProps
@@ -773,7 +819,9 @@ export interface PaginationWidgetProps extends BaseWidgetProps {
 	page: number;
 	pageCount: number;
 	onPageChangeAction?: ActionSpec;
+	onPageSizeChangeAction?: ActionSpec;
 	pageSize?: number;
+	pageSizes?: number[];
 	totalItems?: number;
 }
 
@@ -783,6 +831,8 @@ export interface SearchFieldWidgetProps extends BaseWidgetProps {
 	placeholder?: string;
 	disabled?: boolean;
 	onSubmitAction?: ActionSpec;
+	onClearAction?: ActionSpec;
+	resultCount?: number;
 }
 
 export interface EmptyStateWidgetProps extends BaseWidgetProps {
@@ -796,6 +846,8 @@ export interface EmptyStateWidgetProps extends BaseWidgetProps {
 export interface MarkdownEditorWidgetProps extends BaseWidgetProps {
 	name?: string;
 	defaultValue?: string;
+	onChangeAction?: ActionSpec;
+	onSubmitAction?: ActionSpec;
 	minRows?: number;
 	maxLength?: number;
 	disabled?: boolean;
@@ -830,6 +882,9 @@ export interface ArticleListPanelWidgetProps extends BaseWidgetProps {
 	onArticleSelectAction?: ActionSpec;
 	onCreateAction?: ActionSpec;
 	onRowActionAction?: ActionSpec;
+	onPublishAction?: ActionSpec;
+	onArchiveAction?: ActionSpec;
+	onPreviewAction?: ActionSpec;
 	statusFilter?: CmsContentStatus | "all";
 	onStatusFilterChangeAction?: ActionSpec;
 	query?: string;

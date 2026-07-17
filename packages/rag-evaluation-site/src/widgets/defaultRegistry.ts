@@ -3,6 +3,7 @@ import { buttonWidget } from "../components/atoms/Button/Button.widget";
 import { contentStatusBadgeWidget } from "../components/atoms/ContentStatusBadge/ContentStatusBadge.widget";
 import { contextStudioNavIconWidget } from "../components/atoms/ContextStudioNavIcon/ContextStudioNavIcon.widget";
 import { contextStyleSwatchWidget } from "../components/atoms/ContextStyleSwatch/ContextStyleSwatch.widget";
+import { iconButtonWidget } from "../components/atoms/IconButton/IconButton.widget";
 import { mediaThumbWidget } from "../components/atoms/MediaThumb/MediaThumb.widget";
 import { meterBarWidget } from "../components/atoms/MeterBar/MeterBar.widget";
 import { selectInputWidget } from "../components/atoms/SelectInput/SelectInput.widget";
@@ -29,10 +30,12 @@ import { splitPaneWidget } from "../components/layout/SplitPane/SplitPane.widget
 import { stackWidget } from "../components/layout/Stack/Stack.widget";
 import { tabListWidget } from "../components/layout/TabList/TabList.widget";
 import { tileGridWidget } from "../components/layout/TileGrid/TileGrid.widget";
+import { activityFeedWidget } from "../components/molecules/ActivityFeed/ActivityFeed.widget";
 import { anchoredCommentCardWidget } from "../components/molecules/AnchoredCommentCard/AnchoredCommentCard.widget";
 import { annotationNoteCardWidget } from "../components/molecules/AnnotationNoteCard/AnnotationNoteCard.widget";
 import { appNavWidget } from "../components/molecules/AppNav/AppNav.widget";
 import { assetTileWidget } from "../components/molecules/AssetTile/AssetTile.widget";
+import { boardEngineWidget } from "../components/molecules/BoardEngine/BoardEngine.widget";
 import { breadcrumbsWidget } from "../components/molecules/Breadcrumbs/Breadcrumbs.widget";
 import { checkListWidget } from "../components/molecules/CheckList/CheckList.widget";
 import { contextBudgetBarWidget } from "../components/molecules/ContextBudgetBar/ContextBudgetBar.widget";
@@ -42,31 +45,30 @@ import { contextStackDiagramWidget } from "../components/molecules/ContextStackD
 import { contextStripDiagramWidget } from "../components/molecules/ContextStripDiagram/ContextStripDiagram.widget";
 import { contextTreemapWidget } from "../components/molecules/ContextTreemap/ContextTreemap.widget";
 import { courseStepNavWidget } from "../components/molecules/CourseStepNav/CourseStepNav.widget";
-import { activityFeedWidget } from "../components/molecules/ActivityFeed/ActivityFeed.widget";
-import { boardEngineWidget } from "../components/molecules/BoardEngine/BoardEngine.widget";
 import { dataTableWidget } from "../components/molecules/DataTable/DataTable.widget";
-import { fieldRendererWidget } from "../components/molecules/FieldRenderer/FieldRenderer.widget";
-import { matrixGridWidget } from "../components/molecules/MatrixGrid/MatrixGrid.widget";
-import { recordFieldListWidget } from "../components/molecules/RecordFieldList/RecordFieldList.widget";
-import { monthGridWidget } from "../components/molecules/MonthGrid/MonthGrid.widget";
-import { segmentedBarWidget } from "../components/molecules/SegmentedBar/SegmentedBar.widget";
-import { statTileWidget } from "../components/molecules/StatTile/StatTile.widget";
-import { timeGridWidget } from "../components/molecules/TimeGrid/TimeGrid.widget";
+import { disclosureWidget } from "../components/molecules/Disclosure/Disclosure.widget";
 import { documentListPanelWidget } from "../components/molecules/DocumentListPanel/DocumentListPanel.widget";
 import { documentPreviewToolbarWidget } from "../components/molecules/DocumentPreviewToolbar/DocumentPreviewToolbar.widget";
 import { emptyStateWidget } from "../components/molecules/EmptyState/EmptyState.widget";
+import { fieldRendererWidget } from "../components/molecules/FieldRenderer/FieldRenderer.widget";
 import { figureBlockWidget } from "../components/molecules/FigureBlock/FigureBlock.widget";
 import { keyPointListWidget } from "../components/molecules/KeyPointList/KeyPointList.widget";
 import { keyValueStripWidget } from "../components/molecules/KeyValueStrip/KeyValueStrip.widget";
 import { markdownArticleWidget } from "../components/molecules/MarkdownArticle/MarkdownArticle.widget";
 import { markdownEditorWidget } from "../components/molecules/MarkdownEditor/MarkdownEditor.widget";
+import { matrixGridWidget } from "../components/molecules/MatrixGrid/MatrixGrid.widget";
 import { metadataGridWidget } from "../components/molecules/MetadataGrid/MetadataGrid.widget";
+import { monthGridWidget } from "../components/molecules/MonthGrid/MonthGrid.widget";
 import { paginationWidget } from "../components/molecules/Pagination/Pagination.widget";
 import { personSummaryWidget } from "../components/molecules/PersonSummary/PersonSummary.widget";
+import { recordFieldListWidget } from "../components/molecules/RecordFieldList/RecordFieldList.widget";
 import { searchFieldWidget } from "../components/molecules/SearchField/SearchField.widget";
+import { segmentedBarWidget } from "../components/molecules/SegmentedBar/SegmentedBar.widget";
 import { shareLinkWidget } from "../components/molecules/ShareLink/ShareLink.widget";
 import { sidebarNavWidget } from "../components/molecules/SidebarNav/SidebarNav.widget";
+import { statTileWidget } from "../components/molecules/StatTile/StatTile.widget";
 import { stepListWidget } from "../components/molecules/StepList/StepList.widget";
+import { timeGridWidget } from "../components/molecules/TimeGrid/TimeGrid.widget";
 import { transcriptMessageCardWidget } from "../components/molecules/TranscriptMessageCard/TranscriptMessageCard.widget";
 import { transcriptSessionHeaderWidget } from "../components/molecules/TranscriptSessionHeader/TranscriptSessionHeader.widget";
 import { anchoredCommentRailWidget } from "../components/organisms/AnchoredCommentRail/AnchoredCommentRail.widget";
@@ -79,6 +81,7 @@ import { contextUploadDropAreaWidget } from "../components/organisms/ContextUplo
 import { courseLessonPanelWidget } from "../components/organisms/CourseLessonPanel/CourseLessonPanel.widget";
 import { courseSlidePanelWidget } from "../components/organisms/CourseSlidePanel/CourseSlidePanel.widget";
 import { courseStudioShellWidget } from "../components/organisms/CourseStudioShell/CourseStudioShell.widget";
+import { formDialogWidget } from "../components/organisms/FormDialog/FormDialog.widget";
 import { formPanelWidget } from "../components/organisms/FormPanel/FormPanel.widget";
 import { handoutDocumentShellWidget } from "../components/organisms/HandoutDocumentShell/HandoutDocumentShell.widget";
 import { mediaLibraryPanelWidget } from "../components/organisms/MediaLibraryPanel/MediaLibraryPanel.widget";
@@ -91,12 +94,15 @@ export const uiWidgetRegistry = createWidgetRegistry([
 	appNavWidget,
 	appShellWidget,
 	buttonWidget,
+	iconButtonWidget,
 	captionWidget,
 	checkListWidget,
 	codeTextWidget,
 	dashboardGridWidget,
+	disclosureWidget,
 	dividerWidget,
 	figureBlockWidget,
+	formDialogWidget,
 	formPanelWidget,
 	formRowWidget,
 	inlineWidget,

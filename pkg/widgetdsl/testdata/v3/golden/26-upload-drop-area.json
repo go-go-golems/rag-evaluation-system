@@ -9,7 +9,7 @@
 						"props": {
 							"accept": "application/json,.json",
 							"description": "Drop a trace JSON file",
-							"onUploadAction": {
+							"onFilesSelectedAction": {
 								"kind": "server",
 								"name": "upload.trace"
 							},

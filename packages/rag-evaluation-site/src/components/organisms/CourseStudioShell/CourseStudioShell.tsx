@@ -40,6 +40,7 @@ export function CourseStudioShell({
 		<SidebarShell
 			className={className}
 			sidebarWidth={188}
+			sidebarAriaLabel="Course navigation"
 			header={header}
 			footer={sidebarFooter}
 			sidebar={

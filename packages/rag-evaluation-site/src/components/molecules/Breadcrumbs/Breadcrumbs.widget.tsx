@@ -4,7 +4,7 @@ import { Breadcrumbs } from "./Breadcrumbs";
 
 export const breadcrumbsWidget = defineWidget<BreadcrumbsWidgetProps>({
 	type: "Breadcrumbs",
-	module: "cms.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => {
 		const onNavigateAction = props.onNavigateAction;
 		return (

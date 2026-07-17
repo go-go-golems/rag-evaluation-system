@@ -17,19 +17,31 @@ function titleFromId(id) {
 		.join(" ");
 }
 
-function navItems(active) {
+function navItems() {
 	return [{ id: "index", label: "Index" }].concat(
 		exampleIds.map((id) => ({ id, label: titleFromId(id) })),
 	);
 }
 
-function attachMeta(page, active) {
-	page.meta = {
-		shell: "app",
-		activeNavItemId: active,
-		maxWidth: "wide",
-		navItems: navItems(active),
-	};
+function attachShell(page, active) {
+	if (!page.shell) {
+		page.shell = widget.app.shell((shell) =>
+			shell
+				.brand(page.title || "widget.dsl v3 examples")
+				.navigation((navigation) =>
+					navigation
+						.placement("top")
+						.active(active)
+						.ariaLabel("Examples")
+						.section("examples", "Examples", (items) => {
+							navItems().forEach((item) => {
+								items.item(item.id, item.label, widget.act.navigate(`/pages/${item.id}`));
+							});
+						}),
+				)
+				.content((content) => content.maxWidth("wide").padding("none")),
+		);
+	}
 	return page;
 }
 
@@ -73,13 +85,13 @@ app
 	.public()
 	.handle((ctx, res) => {
 		const id = ctx.params.id || "index";
-		const query = (ctx.request && ctx.request.query) || {};
+		const query = ctx.request?.query || {};
 		const page = id === "index" ? indexPage() : renderExample(id, query);
 		if (!page) {
 			res.status(404).json({ error: { code: "page_not_found", message: `Unknown page ${id}` } });
 			return;
 		}
-		res.json(attachMeta(page, id));
+		res.json(attachShell(page, id));
 	});
 
 app

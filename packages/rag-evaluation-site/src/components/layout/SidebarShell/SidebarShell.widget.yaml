@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: SidebarShell
-module: ui.dsl
+module: widget.dsl
 helper: sidebarShell
 props: SidebarShellWidgetProps
 adapter:

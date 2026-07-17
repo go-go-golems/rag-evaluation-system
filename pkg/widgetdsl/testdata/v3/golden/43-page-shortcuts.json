@@ -1,0 +1,133 @@
+{
+	"id": "triage",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"children": [
+							{
+								"children": [
+									{
+										"children": [
+											{
+												"kind": "text",
+												"text": "Yes"
+											}
+										],
+										"kind": "component",
+										"props": {
+											"action": {
+												"kind": "server",
+												"name": "triage.accept"
+											}
+										},
+										"type": "Button"
+									},
+									{
+										"children": [
+											{
+												"kind": "text",
+												"text": "No"
+											}
+										],
+										"kind": "component",
+										"props": {
+											"action": {
+												"kind": "server",
+												"name": "triage.reject"
+											}
+										},
+										"type": "Button"
+									},
+									{
+										"children": [
+											{
+												"kind": "text",
+												"text": "Skip"
+											}
+										],
+										"kind": "component",
+										"props": {
+											"action": {
+												"kind": "server",
+												"name": "triage.skip"
+											}
+										},
+										"type": "Button"
+									}
+								],
+								"kind": "component",
+								"type": "Inline"
+							}
+						],
+						"kind": "component",
+						"props": {
+							"title": "Go API engineer"
+						},
+						"type": "Panel"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"caption": "Use the visible controls or their keyboard accelerators.",
+					"density": "flush",
+					"label": "Current job",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"shortcuts": {
+		"bindings": [
+			{
+				"action": {
+					"event": "server",
+					"kind": "server",
+					"name": "triage.accept"
+				},
+				"allowRepeat": false,
+				"id": "accept",
+				"key": "y",
+				"label": "Yes",
+				"modifiers": [],
+				"preventDefault": true
+			},
+			{
+				"action": {
+					"event": "server",
+					"kind": "server",
+					"name": "triage.reject"
+				},
+				"allowRepeat": false,
+				"id": "reject",
+				"key": "n",
+				"label": "No",
+				"modifiers": [],
+				"preventDefault": true
+			},
+			{
+				"action": {
+					"event": "server",
+					"kind": "server",
+					"name": "triage.skip"
+				},
+				"allowRepeat": false,
+				"id": "skip",
+				"key": "s",
+				"label": "Skip",
+				"modifiers": [],
+				"preventDefault": true
+			}
+		]
+	},
+	"title": "Triage"
+}

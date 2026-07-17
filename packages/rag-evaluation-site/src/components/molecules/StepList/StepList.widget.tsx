@@ -4,7 +4,7 @@ import { StepList } from "./StepList";
 
 export const stepListWidget = defineWidget<StepListWidgetProps>({
 	type: "StepList",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<StepList
 			className={props.className}

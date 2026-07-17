@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: ActivityFeed
-module: data.dsl
+module: widget.dsl
 helper: activityFeed
 props: ActivityFeedWidgetProps
 adapter:

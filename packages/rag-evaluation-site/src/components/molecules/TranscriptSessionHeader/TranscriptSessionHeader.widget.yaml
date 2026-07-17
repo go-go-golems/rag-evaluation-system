@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: TranscriptSessionHeader
-module: context_window.dsl
+module: widget.dsl
 helper: transcriptSessionHeader
 props: TranscriptSessionHeaderWidgetProps
 adapter:

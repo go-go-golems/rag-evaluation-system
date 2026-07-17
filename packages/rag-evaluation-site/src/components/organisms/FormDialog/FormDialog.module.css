@@ -1,0 +1,22 @@
+.dialog {
+	width: min(560px, calc(100vw - 32px));
+	border: 1px solid var(--mac-border);
+	box-shadow: 8px 8px 0 rgb(0 0 0 / 24%);
+	background: var(--mac-surface);
+	color: var(--mac-text);
+	padding: 16px;
+}
+.dialog::backdrop {
+	background: rgb(0 0 0 / 42%);
+}
+.title {
+	margin: 0;
+	font: 700 15px var(--font-mono);
+}
+.error,
+.errors {
+	border: 1px solid #b42318;
+	background: #fff0ee;
+	color: #8f1710;
+	padding: 6px;
+}

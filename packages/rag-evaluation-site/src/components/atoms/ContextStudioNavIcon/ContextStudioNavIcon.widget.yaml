@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: ContextStudioNavIcon
-module: course.dsl
+module: widget.dsl
 helper: contextStudioNavIcon
 props: ContextStudioNavIconWidgetProps
 adapter:
@@ -11,4 +11,4 @@ children: false
 slots: []
 actions: []
 status: stable
-docs: Course/studio navigation icon atom, owned by course.dsl by accepted Phase 0 decision.
+docs: Course/studio navigation icon atom, owned by widget.dsl by accepted Phase 0 decision.

@@ -29,6 +29,7 @@
 									"title": "Email sent"
 								}
 							],
+							"glyphs": {},
 							"groupByDay": true
 						},
 						"type": "ActivityFeed"

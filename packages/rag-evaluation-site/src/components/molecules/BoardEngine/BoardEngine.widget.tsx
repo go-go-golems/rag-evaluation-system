@@ -18,7 +18,7 @@ function accentFor(
 
 export const boardEngineWidget = defineWidget<BoardEngineWidgetProps>({
 	type: "BoardEngine",
-	module: "data.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx: RenderContext) => {
 		const columns = props.columns.map((column) => ({
 			id: column.id,

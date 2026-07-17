@@ -4,7 +4,7 @@ import { StatTile } from "./StatTile";
 
 export const statTileWidget = defineWidget<StatTileWidgetProps>({
 	type: "StatTile",
-	module: "data.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<StatTile
 			label={ctx.renderValue(props.label)}

@@ -15,7 +15,7 @@ func Register(registry *providerapi.ProviderRegistry) error {
 			DefaultAs:   "widget.dsl",
 			Description: "RAG Widget IR authoring DSL for xgoja experiments",
 			NewModuleFactory: func(providerapi.ModuleSetupContext) (require.ModuleLoader, error) {
-				return widgetdsl.NewLoader(), nil
+				return widgetdsl.NewLoader(widgetdsl.WidgetV3ModuleName), nil
 			},
 		},
 		providerapi.Module{
@@ -23,7 +23,7 @@ func Register(registry *providerapi.ProviderRegistry) error {
 			DefaultAs:   "rag.dsl",
 			Description: "Alias for widget.dsl",
 			NewModuleFactory: func(providerapi.ModuleSetupContext) (require.ModuleLoader, error) {
-				return widgetdsl.NewLoader(), nil
+				return widgetdsl.NewLoader(widgetdsl.WidgetV3ModuleName), nil
 			},
 		},
 	)

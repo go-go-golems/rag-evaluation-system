@@ -4,7 +4,7 @@ import { TranscriptReaderPanel } from "./TranscriptReaderPanel";
 
 export const transcriptReaderPanelWidget = defineWidget<TranscriptReaderPanelWidgetProps>({
 	type: "TranscriptReaderPanel",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<TranscriptReaderPanel
 			className={props.className}

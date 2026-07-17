@@ -1,6 +1,6 @@
 schemaVersion: recipe-manifest/v1
 name: courseStudio
-module: course.dsl
+module: widget.dsl
 input: CourseStudioRecipeOptions
 output: WidgetNode
 implementation:

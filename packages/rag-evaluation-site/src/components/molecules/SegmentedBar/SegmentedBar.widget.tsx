@@ -4,7 +4,7 @@ import { SegmentedBar } from "./SegmentedBar";
 
 export const segmentedBarWidget = defineWidget<SegmentedBarWidgetProps>({
 	type: "SegmentedBar",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<SegmentedBar
 			className={props.className}

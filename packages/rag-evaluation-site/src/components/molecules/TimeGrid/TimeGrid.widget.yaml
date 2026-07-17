@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: TimeGrid
-module: time.dsl
+module: widget.dsl
 helper: timeGrid
 props: TimeGridWidgetProps
 adapter:

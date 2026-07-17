@@ -19,6 +19,6 @@ const activities = [
 ];
 const page = widget.page("Activity feed", (p) =>
 	p.section("Timeline", (s) =>
-		s.view(widget.raw.component("ActivityFeed", { activities, groupByDay: true })),
+		s.view(widget.data.activityFeed(activities, (feed) => feed.groupByDay(true))),
 	),
 );

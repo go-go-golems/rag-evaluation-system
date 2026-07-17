@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: ContentStatusBadge
-module: cms.dsl
+module: widget.dsl
 helper: contentStatusBadge
 props: ContentStatusBadgeWidgetProps
 adapter:

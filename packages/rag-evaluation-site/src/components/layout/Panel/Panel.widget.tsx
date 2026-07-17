@@ -4,7 +4,7 @@ import { Panel } from "./Panel";
 
 export const panelWidget = defineWidget<PanelWidgetProps>({
 	type: "Panel",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children, ctx) => (
 		<Panel
 			className={props.className}

@@ -8,6 +8,8 @@ export interface PaginationProps extends HTMLAttributes<HTMLDivElement> {
 	pageCount: number;
 	onPageChange: (page: number) => void;
 	pageSize?: number;
+	pageSizes?: number[];
+	onPageSizeChange?: (pageSize: number) => void;
 	totalItems?: number;
 }
 
@@ -16,6 +18,8 @@ export function Pagination({
 	pageCount,
 	onPageChange,
 	pageSize,
+	pageSizes = [],
+	onPageSizeChange,
 	totalItems,
 	className,
 	...rest
@@ -55,6 +59,22 @@ export function Pagination({
 				<Caption className={styles.totals}>
 					{first}–{last} of {totalItems}
 				</Caption>
+			)}
+			{pageSizes.length > 0 && onPageSizeChange && (
+				<label>
+					<Caption>rows</Caption>{" "}
+					<select
+						aria-label="Rows per page"
+						value={pageSize}
+						onChange={(event) => onPageSizeChange(Number(event.currentTarget.value))}
+					>
+						{pageSizes.map((size) => (
+							<option key={size} value={size}>
+								{size}
+							</option>
+						))}
+					</select>
+				</label>
 			)}
 		</div>
 	);

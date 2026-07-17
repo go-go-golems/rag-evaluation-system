@@ -4,7 +4,7 @@ import { ContextStripDiagram } from "./ContextStripDiagram";
 
 export const contextStripDiagramWidget = defineWidget<ContextStripDiagramWidgetProps>({
 	type: "ContextStripDiagram",
-	module: "context_window.dsl",
+	module: "widget.dsl",
 	render: (props) => (
 		<ContextStripDiagram
 			className={props.className}

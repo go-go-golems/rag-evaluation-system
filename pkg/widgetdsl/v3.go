@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	v2spec "github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/v2/spec"
+	widgetspec "github.com/go-go-golems/rag-evaluation-system/pkg/widgetdsl/spec"
 )
 
 type v3PageSpec struct {
@@ -14,7 +14,9 @@ type v3PageSpec struct {
 	ID            string
 	Title         string
 	Meta          map[string]any
-	Shell         any
+	Shell         *widgetspec.PageShellSpec
+	Shortcuts     []widgetspec.PageShortcutSpec
+	Root          *v3NodeSpec
 	Density       string
 	Breadcrumbs   []map[string]any
 	Sections      []v3SectionSpec
@@ -88,6 +90,108 @@ func (r *runtime) v3Page(call goja.FunctionCall) goja.Value {
 		r.applyV3BuilderCallback(builder, call.Arguments[1], "page")
 	}
 	return builder
+}
+
+func (r *runtime) v3AppObject() *goja.Object {
+	app := r.vm.NewObject()
+	setExport(app, "shell", r.v3AppShell)
+	setExport(app, "none", func() widgetspec.JSONObject {
+		return widgetspec.PageShellSpec{Kind: widgetspec.PageShellKindNone}.ToJSON()
+	})
+	setExport(app, "rootOwned", func() widgetspec.JSONObject {
+		return widgetspec.PageShellSpec{Kind: widgetspec.PageShellKindRootOwned}.ToJSON()
+	})
+	return app
+}
+
+func (r *runtime) v3AppShell(cb ...goja.Value) widgetspec.JSONObject {
+	spec := &widgetspec.PageShellSpec{
+		Kind: widgetspec.PageShellKindApp,
+		Navigation: &widgetspec.NavigationSpec{
+			Placement: widgetspec.NavigationPlacementTop,
+			AriaLabel: "Primary",
+		},
+		Content: widgetspec.ContentViewportSpec{MaxWidth: "wide", Padding: "md", Scroll: "page"},
+	}
+	builder := r.v3AppShellBuilder(spec)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "app.shell")
+	}
+	return spec.ToJSON()
+}
+
+func (r *runtime) v3AppShellBuilder(spec *widgetspec.PageShellSpec) *goja.Object {
+	obj := r.newV3Builder("app.shell")
+	setExport(obj, "brand", func(value goja.Value) *goja.Object {
+		spec.Navigation.Brand = r.v3Renderable(value)
+		return obj
+	})
+	setExport(obj, "navigation", func(cb goja.Value) *goja.Object {
+		r.applyV3BuilderCallback(r.v3NavigationBuilder(spec.Navigation), cb, "app.shell.navigation")
+		return obj
+	})
+	setExport(obj, "content", func(cb goja.Value) *goja.Object {
+		r.applyV3BuilderCallback(r.v3ContentViewportBuilder(&spec.Content), cb, "app.shell.content")
+		return obj
+	})
+	return obj
+}
+
+func (r *runtime) v3NavigationBuilder(spec *widgetspec.NavigationSpec) *goja.Object {
+	obj := r.newV3Builder("app.shell.navigation")
+	setExport(obj, "placement", func(value string) *goja.Object {
+		spec.Placement = widgetspec.NavigationPlacement(value)
+		return obj
+	})
+	setExport(obj, "active", func(value string) *goja.Object { spec.ActiveItem = value; return obj })
+	setExport(obj, "width", func(value int) *goja.Object { spec.SidebarWidth = value; return obj })
+	setExport(obj, "narrowMode", func(value string) *goja.Object { spec.NarrowMode = value; return obj })
+	setExport(obj, "ariaLabel", func(value string) *goja.Object { spec.AriaLabel = value; return obj })
+	setExport(obj, "section", func(id string, label goja.Value, cb goja.Value) *goja.Object {
+		section := widgetspec.NavigationSectionSpec{ID: id, Label: r.v3Renderable(label)}
+		r.applyV3BuilderCallback(r.v3NavigationItemsBuilder(&section), cb, "app.shell.navigation.section")
+		spec.Sections = append(spec.Sections, section)
+		return obj
+	})
+	return obj
+}
+
+func (r *runtime) v3NavigationItemsBuilder(section *widgetspec.NavigationSectionSpec) *goja.Object {
+	obj := r.newV3Builder("app.shell.navigation.items")
+	setExport(obj, "item", func(id string, label goja.Value, action goja.Value, options ...goja.Value) *goja.Object {
+		item := widgetspec.NavigationItemSpec{ID: id, Label: r.v3Renderable(label)}
+		if action != nil && !goja.IsUndefined(action) && !goja.IsNull(action) {
+			if actionMap, ok := toStringAnyMap(action.Export()); ok {
+				item.Action = widgetspec.JSONObject{}
+				for key, value := range actionMap {
+					item.Action[key] = value
+				}
+			}
+		}
+		if len(options) > 0 {
+			opts := exportObject(options[0])
+			if icon, ok := opts["icon"]; ok {
+				item.Icon = icon
+			}
+			if badge, ok := opts["badge"]; ok {
+				item.Badge = badge
+			}
+			if disabled, ok := opts["disabled"].(bool); ok {
+				item.Disabled = disabled
+			}
+		}
+		section.Items = append(section.Items, item)
+		return obj
+	})
+	return obj
+}
+
+func (r *runtime) v3ContentViewportBuilder(spec *widgetspec.ContentViewportSpec) *goja.Object {
+	obj := r.newV3Builder("app.shell.content")
+	setExport(obj, "maxWidth", func(value string) *goja.Object { spec.MaxWidth = value; return obj })
+	setExport(obj, "padding", func(value string) *goja.Object { spec.Padding = value; return obj })
+	setExport(obj, "scroll", func(value string) *goja.Object { spec.Scroll = value; return obj })
+	return obj
 }
 
 func (r *runtime) v3ScheduleObject() *goja.Object {
@@ -178,7 +282,7 @@ func (r *runtime) v3ScheduleBookingPicker(availability goja.Value, cb ...goja.Va
 }
 
 func (r *runtime) v3SchedulePollBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("schedule.poll")
 	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
 	setExport(obj, "readOnly", func(readOnly ...bool) *goja.Object { props["readOnly"] = len(readOnly) == 0 || readOnly[0]; return obj })
 	setExport(obj, "editableRow", func(rowKey string) *goja.Object { props["editableRowKey"] = rowKey; return obj })
@@ -268,7 +372,7 @@ func (r *runtime) v3TimeMonth(eventsOrMarkers goja.Value, cb ...goja.Value) map[
 }
 
 func (r *runtime) v3TimeMonthBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("time.month")
 	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
 	setExport(obj, "selected", func(dayISO string) *goja.Object { props["selectedDateISO"] = dayISO; return obj })
 	setExport(obj, "today", func(dayISO string) *goja.Object { props["todayISO"] = dayISO; return obj })
@@ -294,7 +398,7 @@ func (r *runtime) v3TimeWeek(events goja.Value, cb ...goja.Value) map[string]any
 }
 
 func (r *runtime) v3TimeWeekBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("time.week")
 	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
 	setExport(obj, "range", func(rangeSpec goja.Value) *goja.Object {
 		props["days"] = weekDaysFromRange(exportObject(rangeSpec))
@@ -500,7 +604,7 @@ func (r *runtime) v3ContextStyleSet(args ...goja.Value) map[string]any {
 }
 
 func (r *runtime) v3ContextStyleSetBuilder(styleSet map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("context.styleSet")
 	setExport(obj, "style", func(id string, options goja.Value) *goja.Object {
 		styles, _ := styleSet["styles"].(map[string]any)
 		if styles == nil {
@@ -546,7 +650,7 @@ func (r *runtime) v3ContextDiagram(snapshot goja.Value, cb ...goja.Value) map[st
 }
 
 func (r *runtime) v3ContextDiagramBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("context.diagram")
 	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
 	setExport(obj, "palette", func(nameOrOptions goja.Value, entries ...goja.Value) *goja.Object {
 		props["styleSet"] = r.v3ContextPalette(nameOrOptions, entries...)
@@ -580,7 +684,7 @@ func (r *runtime) v3ContextWorkspace(session goja.Value, cb ...goja.Value) map[s
 }
 
 func (r *runtime) v3ContextWorkspaceBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("context.workspace")
 	setExport(obj, "selectedAnnotation", func(id string) *goja.Object { props["selectedAnnotationId"] = id; return obj })
 	setExport(obj, "showNotes", func(show bool) *goja.Object { props["showNotes"] = show; return obj })
 	setExport(obj, "styleSet", func(styleSet goja.Value) *goja.Object { props["styleSet"] = styleSet.Export(); return obj })
@@ -648,7 +752,7 @@ func (r *runtime) v3CourseShell(definition goja.Value, cb ...goja.Value) map[str
 }
 
 func (r *runtime) v3CourseShellBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("course.shell")
 	setExport(obj, "active", func(id string) *goja.Object { props["activeItemId"] = id; return obj })
 	setExport(obj, "subtitle", func(value goja.Value) *goja.Object { props["subtitle"] = r.v3Renderable(value); return obj })
 	setExport(obj, "contentPadding", func(value string) *goja.Object { props["contentPadding"] = value; return obj })
@@ -668,7 +772,7 @@ func (r *runtime) v3CourseLanding(definition goja.Value, cb ...goja.Value) map[s
 }
 
 func (r *runtime) v3CourseLandingBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("course.landing")
 	setExport(obj, "activeAgenda", func(id string) *goja.Object { props["activeAgendaItemId"] = id; return obj })
 	setExport(obj, "onAgendaSelect", func(action goja.Value) *goja.Object { props["onAgendaItemSelectAction"] = action.Export(); return obj })
 	setExport(obj, "onPrimary", func(action goja.Value) *goja.Object { props["onPrimaryCtaAction"] = action.Export(); return obj })
@@ -697,7 +801,7 @@ func (r *runtime) v3CourseSlideDeck(deck goja.Value, cb ...goja.Value) map[strin
 }
 
 func (r *runtime) v3CourseSlideBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("course.slideDeck")
 	setExport(obj, "mode", func(mode string) *goja.Object { props["mode"] = mode; return obj })
 	setExport(obj, "visualSide", func(side string) *goja.Object { props["visualSide"] = side; return obj })
 	setExport(obj, "onPrevious", func(action goja.Value) *goja.Object { props["onPreviousAction"] = action.Export(); return obj })
@@ -718,7 +822,7 @@ func (r *runtime) v3CourseHandouts(bundle goja.Value, cb ...goja.Value) map[stri
 }
 
 func (r *runtime) v3CourseHandoutsBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("course.handouts")
 	setExport(obj, "selected", func(id string) *goja.Object { props["selectedDocumentId"] = id; return obj })
 	setExport(obj, "title", func(title goja.Value) *goja.Object { props["title"] = r.v3Renderable(title); return obj })
 	setExport(obj, "empty", func(message goja.Value) *goja.Object { props["emptyMessage"] = r.v3Renderable(message); return obj })
@@ -738,7 +842,7 @@ func (r *runtime) v3CourseMetadataForm(metadata goja.Value, cb ...goja.Value) ma
 }
 
 func (r *runtime) v3CourseFormBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("course.metadataForm")
 	setExport(obj, "title", func(title string) *goja.Object { props["title"] = title; return obj })
 	setExport(obj, "onSubmit", func(action goja.Value) *goja.Object { props["onSubmitAction"] = action.Export(); return obj })
 	return obj
@@ -754,7 +858,7 @@ func (r *runtime) v3CourseMaterialUploads(material goja.Value, cb ...goja.Value)
 	if _, ok := props["title"]; !ok {
 		props["title"] = "Course materials"
 	}
-	builder := r.vm.NewObject()
+	builder := r.newV3Builder("course.materialUploads")
 	setExport(builder, "accept", func(list goja.Value) *goja.Object { props["accept"] = anySlice(list.Export()); return builder })
 	setExport(builder, "onUpload", func(action goja.Value) *goja.Object { props["onFilesSelectedAction"] = action.Export(); return builder })
 	setExport(builder, "onDelete", func(action goja.Value) *goja.Object { props["onDeleteAction"] = action.Export(); return builder })
@@ -766,11 +870,43 @@ func (r *runtime) v3CourseMaterialUploads(material goja.Value, cb ...goja.Value)
 
 func (r *runtime) v3CMSObject() *goja.Object {
 	cms := r.vm.NewObject()
+	setExport(cms, "shell", r.v3CMSShell)
 	setExport(cms, "mediaLibrary", r.v3CMSMediaLibrary)
 	setExport(cms, "articleQueue", r.v3CMSArticleQueue)
 	setExport(cms, "markdownEditor", r.v3CMSMarkdownEditor)
 	setExport(cms, "intent", r.v3CMSIntentObject())
 	return cms
+}
+
+func (r *runtime) v3CMSShell(definition goja.Value, cb ...goja.Value) map[string]any {
+	def := exportObject(definition)
+	props := map[string]any{
+		"sections": anySlice(valueOrDefault(def["sections"], []any{})),
+		"title":    valueOrDefault(def["title"], "CMS"),
+	}
+	copyIfPresent(props, def, "subtitle")
+	builder := r.v3CMSShellBuilder(props)
+	if len(cb) > 0 {
+		r.applyV3BuilderCallback(builder, cb[0], "cms.shell")
+	}
+	children := []any{}
+	if main, ok := widgetNodeFromAny(props["main"]); ok {
+		children = append(children, main)
+		delete(props, "main")
+	}
+	return componentNode("CmsShell", props, children...)
+}
+
+func (r *runtime) v3CMSShellBuilder(props map[string]any) *goja.Object {
+	obj := r.newV3Builder("cms.shell")
+	setExport(obj, "active", func(id string) *goja.Object { props["activeItemId"] = id; return obj })
+	setExport(obj, "subtitle", func(value goja.Value) *goja.Object { props["subtitle"] = r.v3Renderable(value); return obj })
+	setExport(obj, "contentPadding", func(value string) *goja.Object { props["contentPadding"] = value; return obj })
+	setExport(obj, "main", func(node goja.Value) *goja.Object { props["main"] = r.v3Renderable(node); return obj })
+	setExport(obj, "header", func(node goja.Value) *goja.Object { props["headerSlot"] = r.v3Renderable(node); return obj })
+	setExport(obj, "footer", func(node goja.Value) *goja.Object { props["sidebarFooter"] = r.v3Renderable(node); return obj })
+	setExport(obj, "onNavigate", func(action goja.Value) *goja.Object { props["onNavigateAction"] = action.Export(); return obj })
+	return obj
 }
 
 func (r *runtime) v3CMSIntentObject() *goja.Object {
@@ -808,7 +944,7 @@ func (r *runtime) v3CMSMediaLibrary(assets goja.Value, cb ...goja.Value) map[str
 }
 
 func (r *runtime) v3CMSMediaLibraryBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("cms.mediaLibrary")
 	setExport(obj, "selection", func(mode string) *goja.Object { props["selectionMode"] = mode; return obj })
 	setExport(obj, "selected", func(ids goja.Value) *goja.Object { props["selectedAssetIds"] = anySlice(ids.Export()); return obj })
 	setExport(obj, "query", func(value string) *goja.Object { props["query"] = value; return obj })
@@ -842,7 +978,7 @@ func (r *runtime) v3CMSArticleQueue(articles goja.Value, cb ...goja.Value) map[s
 }
 
 func (r *runtime) v3CMSArticleQueueBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("cms.articleQueue")
 	setExport(obj, "selected", func(id string) *goja.Object { props["selectedArticleId"] = id; return obj })
 	setExport(obj, "status", func(status string) *goja.Object { props["statusFilter"] = status; return obj })
 	setExport(obj, "query", func(query string) *goja.Object { props["query"] = query; return obj })
@@ -865,9 +1001,9 @@ func (r *runtime) v3CMSArticleQueueBuilder(props map[string]any) *goja.Object {
 }
 
 func (r *runtime) v3CMSMarkdownEditor(body goja.Value, cb ...goja.Value) map[string]any {
-	props := map[string]any{"value": body.Export()}
+	props := map[string]any{"defaultValue": body.Export()}
 	if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
-		builder := r.vm.NewObject()
+		builder := r.newV3Builder("cms.markdownEditor")
 		setExport(builder, "title", func(title string) *goja.Object { props["title"] = title; return builder })
 		setExport(builder, "placeholder", func(placeholder string) *goja.Object { props["placeholder"] = placeholder; return builder })
 		setExport(builder, "onChange", func(action goja.Value) *goja.Object { props["onChangeAction"] = action.Export(); return builder })
@@ -892,6 +1028,7 @@ func (r *runtime) v3UIObject() *goja.Object {
 	setExport(ui, "splitPane", r.v3UISplitPane)
 	setExport(ui, "card", r.v3ComponentFactory("Panel", nil))
 	setExport(ui, "button", r.v3UIButton)
+	setExport(ui, "iconButton", r.v3UIIconButton)
 	setExport(ui, "caption", r.v3ComponentFactory("Caption", nil))
 	setExport(ui, "badge", r.v3ComponentFactory("Tag", nil))
 	setExport(ui, "metadata", r.v3UIMetadata)
@@ -903,6 +1040,38 @@ func (r *runtime) v3UIObject() *goja.Object {
 	setExport(ui, "selectInput", r.v3ComponentFactory("SelectInput", nil))
 	setExport(ui, "status", r.v3UIStatus)
 	setExport(ui, "emptyState", r.v3UIEmptyState)
+	setExport(ui, "text", r.v3ComponentFactory("Text", nil))
+	setExport(ui, "code", r.v3ComponentFactory("CodeText", nil))
+	setExport(ui, "divider", r.v3ComponentFactory("Divider", nil))
+	setExport(ui, "disclosure", r.v3UIDisclosure)
+	setExport(ui, "scroll", r.v3ComponentFactory("ScrollRegion", nil))
+	setExport(ui, "tabs", func(items goja.Value, options ...goja.Value) map[string]any {
+		props := exportOptions(options)
+		props["items"] = anySlice(items.Export())
+		return componentNode("TabList", props)
+	})
+	setExport(ui, "summary", func(items goja.Value, options ...goja.Value) map[string]any {
+		props := exportOptions(options)
+		props["items"] = anySlice(items.Export())
+		return componentNode("KeyValueStrip", props)
+	})
+	setExport(ui, "checkList", func(items goja.Value, options ...goja.Value) map[string]any {
+		props := exportOptions(options)
+		props["items"] = anySlice(items.Export())
+		return componentNode("CheckList", props)
+	})
+	setExport(ui, "stepList", func(items goja.Value, options ...goja.Value) map[string]any {
+		props := exportOptions(options)
+		props["items"] = anySlice(items.Export())
+		return componentNode("StepList", props)
+	})
+	setExport(ui, "markdownArticle", func(source string, options ...goja.Value) map[string]any {
+		props := exportOptions(options)
+		props["source"] = source
+		return componentNode("MarkdownArticle", props)
+	})
+	setExport(ui, "upload", r.v3ComponentFactory("ContextUploadDropArea", nil))
+	setExport(ui, "formDialog", r.v3UIFormDialog)
 	return ui
 }
 
@@ -919,6 +1088,7 @@ func (r *runtime) v3DataObject() *goja.Object {
 	setExport(data, "item", r.v3ListItem)
 	setExport(data, "cell", r.v3CellObject())
 	setExport(data, "matrix", r.v3Matrix)
+	setExport(data, "activityFeed", r.v3DataActivityFeed)
 	return data
 }
 
@@ -945,6 +1115,21 @@ func (r *runtime) v3UIButton(label goja.Value, action goja.Value, options ...goj
 		props["action"] = action.Export()
 	}
 	return componentNode("Button", props, r.v3NodeSpecsToIR(r.v3ExportChild(label))...)
+}
+
+func (r *runtime) v3UIIconButton(glyph goja.Value, label string, action goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	props["label"] = label
+	if action != nil && !goja.IsUndefined(action) && !goja.IsNull(action) {
+		props["action"] = action.Export()
+	}
+	return componentNode("IconButton", props, r.v3NodeSpecsToIR(r.v3ExportChild(glyph))...)
+}
+
+func (r *runtime) v3UIDisclosure(title goja.Value, content goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	props["title"] = r.v3Renderable(title)
+	return componentNode("Disclosure", props, r.v3NodeSpecsToIR(r.v3ExportChild(content))...)
 }
 
 func (r *runtime) v3UISplitPane(left goja.Value, right goja.Value, options ...goja.Value) map[string]any {
@@ -985,6 +1170,19 @@ func (r *runtime) v3UIMetadata(record goja.Value, options ...goja.Value) map[str
 	return componentNode("MetadataGrid", props)
 }
 
+func (r *runtime) v3UIFormDialog(id string, cb goja.Value) map[string]any {
+	props := map[string]any{"id": id, "title": id, "onSubmitAction": map[string]any{"kind": "closeOverlay", "target": id}}
+	obj := r.newV3Builder("ui.formDialog")
+	setExport(obj, "title", func(value goja.Value) *goja.Object { props["title"] = r.v3Renderable(value); return obj })
+	setExport(obj, "body", func(value goja.Value) *goja.Object { props["body"] = value.Export(); return obj })
+	setExport(obj, "initialFocus", func(value string) *goja.Object { props["initialFocus"] = value; return obj })
+	setExport(obj, "submitLabel", func(value goja.Value) *goja.Object { props["submitLabel"] = r.v3Renderable(value); return obj })
+	setExport(obj, "cancelLabel", func(value goja.Value) *goja.Object { props["cancelLabel"] = r.v3Renderable(value); return obj })
+	setExport(obj, "submit", func(value goja.Value) *goja.Object { props["onSubmitAction"] = value.Export(); return obj })
+	r.applyV3BuilderCallback(obj, cb, "ui.formDialog")
+	return componentNode("FormDialog", props)
+}
+
 func (r *runtime) v3UIShareLink(href goja.Value, options ...goja.Value) map[string]any {
 	props := exportOptions(options)
 	url := href.String()
@@ -996,7 +1194,7 @@ func (r *runtime) v3UIShareLink(href goja.Value, options ...goja.Value) map[stri
 }
 
 func (r *runtime) v3ActionsBuilder(actions *[]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("actions")
 	setExport(obj, "add", func(label goja.Value, action goja.Value, options ...goja.Value) *goja.Object {
 		item := exportOptions(options)
 		item["label"] = r.v3Renderable(label)
@@ -1024,7 +1222,7 @@ func (r *runtime) v3Fields(args ...goja.Value) *goja.Object {
 	if len(args) > 1 {
 		cb = args[1]
 	}
-	schema := &v2spec.SchemaSpec{Name: name}
+	schema := &widgetspec.SchemaSpec{Name: name}
 	builder := r.v3FieldsBuilder(schema)
 	if cb != nil && !goja.IsUndefined(cb) && !goja.IsNull(cb) {
 		r.applyV3BuilderCallback(builder, cb, "data.fields")
@@ -1032,10 +1230,10 @@ func (r *runtime) v3Fields(args ...goja.Value) *goja.Object {
 	return builder
 }
 
-func (r *runtime) v3FieldsBuilder(schema *v2spec.SchemaSpec) *goja.Object {
-	obj := r.vm.NewObject()
+func (r *runtime) v3FieldsBuilder(schema *widgetspec.SchemaSpec) *goja.Object {
+	obj := r.newV3Builder("data.fields")
 	r.attachV2Ref(obj, &v2Ref{kind: "schemaBuilder", schema: schema})
-	addField := func(name string, field v2spec.FieldSpec, options ...goja.Value) *goja.Object {
+	addField := func(name string, field widgetspec.FieldSpec, options ...goja.Value) *goja.Object {
 		if strings.TrimSpace(name) == "" {
 			panic(r.vm.NewGoError(fmt.Errorf("widget.dsl data.fields field name must not be empty")))
 		}
@@ -1043,6 +1241,9 @@ func (r *runtime) v3FieldsBuilder(schema *v2spec.SchemaSpec) *goja.Object {
 		opts := exportOptions(options)
 		field.Label = stringFromMap(opts, "label", field.Label)
 		field.Layout.Width = stringFromMap(opts, "width", field.Layout.Width)
+		if elide, ok := opts["elide"].(bool); ok {
+			field.Summary.Elide = elide
+		}
 		if required, ok := opts["required"].(bool); ok {
 			field.Validation.Required = required
 		}
@@ -1050,45 +1251,45 @@ func (r *runtime) v3FieldsBuilder(schema *v2spec.SchemaSpec) *goja.Object {
 		return obj
 	}
 	setExport(obj, "key", func(name string, options ...goja.Value) *goja.Object {
-		return addField(name, v3Field(v2spec.FieldKindString, v2spec.FieldSemanticKey, "caption", v2spec.EditorControlText), options...)
+		return addField(name, v3Field(widgetspec.FieldKindString, widgetspec.FieldSemanticKey, "caption", widgetspec.EditorControlText), options...)
 	})
 	setExport(obj, "primary", func(name string, options ...goja.Value) *goja.Object {
-		return addField(name, v3Field(v2spec.FieldKindString, v2spec.FieldSemanticPrimary, "field", v2spec.EditorControlText), options...)
+		return addField(name, v3Field(widgetspec.FieldKindString, widgetspec.FieldSemanticPrimary, "field", widgetspec.EditorControlText), options...)
 	})
 	setExport(obj, "short", func(name string, options ...goja.Value) *goja.Object {
-		return addField(name, v3Field(v2spec.FieldKindString, v2spec.FieldSemanticShort, "field", v2spec.EditorControlText), options...)
+		return addField(name, v3Field(widgetspec.FieldKindString, widgetspec.FieldSemanticShort, "field", widgetspec.EditorControlText), options...)
 	})
 	setExport(obj, "prose", func(name string, options ...goja.Value) *goja.Object {
-		field := v3Field(v2spec.FieldKindString, v2spec.FieldSemanticProse, "", v2spec.EditorControlTextarea)
+		field := v3Field(widgetspec.FieldKindString, widgetspec.FieldSemanticProse, "", widgetspec.EditorControlTextarea)
 		field.Editor.Rows = 4
 		field.Summary.Elide = true
 		return addField(name, field, options...)
 	})
 	setExport(obj, "count", func(name string, options ...goja.Value) *goja.Object {
-		return addField(name, v3Field(v2spec.FieldKindNumber, v2spec.FieldSemanticCount, "number", v2spec.EditorControlText), options...)
+		return addField(name, v3Field(widgetspec.FieldKindNumber, widgetspec.FieldSemanticCount, "number", widgetspec.EditorControlText), options...)
 	})
 	setExport(obj, "status", func(name string, options ...goja.Value) *goja.Object {
-		return addField(name, v3Field(v2spec.FieldKindString, v2spec.FieldSemanticStatus, "status", v2spec.EditorControlText), options...)
+		return addField(name, v3Field(widgetspec.FieldKindString, widgetspec.FieldSemanticStatus, "status", widgetspec.EditorControlText), options...)
 	})
 	setExport(obj, "date", func(name string, options ...goja.Value) *goja.Object {
-		return addField(name, v3Field(v2spec.FieldKindDate, v2spec.FieldSemanticShort, "field", v2spec.EditorControlText), options...)
+		return addField(name, v3Field(widgetspec.FieldKindDate, widgetspec.FieldSemanticShort, "field", widgetspec.EditorControlText), options...)
 	})
 	setExport(obj, "currency", func(name string, options ...goja.Value) *goja.Object {
-		return addField(name, v3Field(v2spec.FieldKindNumber, v2spec.FieldSemanticMeasure, "number", v2spec.EditorControlText), options...)
+		return addField(name, v3Field(widgetspec.FieldKindNumber, widgetspec.FieldSemanticMeasure, "number", widgetspec.EditorControlText), options...)
 	})
 	setExport(obj, "media", func(name string, options ...goja.Value) *goja.Object {
-		return addField(name, v3Field(v2spec.FieldKindMedia, v2spec.FieldSemanticShort, "field", v2spec.EditorControlText), options...)
+		return addField(name, v3Field(widgetspec.FieldKindMedia, widgetspec.FieldSemanticShort, "field", widgetspec.EditorControlText), options...)
 	})
 	setExport(obj, "url", func(name string, options ...goja.Value) *goja.Object {
-		return addField(name, v3Field(v2spec.FieldKindURL, v2spec.FieldSemanticShort, "link", v2spec.EditorControlText), options...)
+		return addField(name, v3Field(widgetspec.FieldKindURL, widgetspec.FieldSemanticShort, "link", widgetspec.EditorControlText), options...)
 	})
 	setExport(obj, "build", func() *goja.Object { built := *schema; return r.v2SchemaValue(&built) })
 	setExport(obj, "validate", func() []map[string]any { return validationIssuesForJS(schema.Validate("fields")) })
 	return obj
 }
 
-func v3Field(kind v2spec.FieldKind, semantic v2spec.FieldSemantic, cellKind string, control v2spec.EditorControl) v2spec.FieldSpec {
-	return v2spec.FieldSpec{Kind: kind, Semantic: semantic, Editor: v2spec.EditorSpec{Control: control}, Summary: v2spec.SummarySpec{CellKind: cellKind}}
+func v3Field(kind widgetspec.FieldKind, semantic widgetspec.FieldSemantic, cellKind string, control widgetspec.EditorControl) widgetspec.FieldSpec {
+	return widgetspec.FieldSpec{Kind: kind, Semantic: semantic, Editor: widgetspec.EditorSpec{Control: control}, Summary: widgetspec.SummarySpec{CellKind: cellKind}}
 }
 
 func (r *runtime) v3Collection(args ...goja.Value) *goja.Object {
@@ -1109,7 +1310,7 @@ func (r *runtime) v3Collection(args ...goja.Value) *goja.Object {
 			}
 		}
 	}
-	collection := &v2spec.CollectionSpec{Name: name, Rows: v2Rows(rowsArg.Export()), Mode: v2spec.CollectionModeShow, Arrangement: v2spec.ArrangementSpec{Kind: v2spec.ArrangementKindTable}}
+	collection := &widgetspec.CollectionSpec{Name: name, Rows: v2Rows(rowsArg.Export()), Mode: widgetspec.CollectionModeShow, Arrangement: widgetspec.ArrangementSpec{Kind: widgetspec.ArrangementKindTable}}
 	builder := r.v3CollectionBuilder(collection)
 	if cb != nil && !goja.IsUndefined(cb) && !goja.IsNull(cb) {
 		r.applyV3BuilderCallback(builder, cb, "data.collection")
@@ -1117,8 +1318,8 @@ func (r *runtime) v3Collection(args ...goja.Value) *goja.Object {
 	return builder
 }
 
-func (r *runtime) v3CollectionBuilder(collection *v2spec.CollectionSpec) *goja.Object {
-	obj := r.vm.NewObject()
+func (r *runtime) v3CollectionBuilder(collection *widgetspec.CollectionSpec) *goja.Object {
+	obj := r.newV3Builder("data.collection")
 	r.attachV2Ref(obj, &v2Ref{kind: "collectionBuilder", collection: collection})
 	setExport(obj, "id", func(name string) *goja.Object {
 		if strings.TrimSpace(name) != "" {
@@ -1135,32 +1336,90 @@ func (r *runtime) v3CollectionBuilder(collection *v2spec.CollectionSpec) *goja.O
 		collection.Selection = v3SelectionToV2(selectionValue.Export())
 		return obj
 	})
+	setExport(obj, "search", func(cb ...goja.Value) *goja.Object {
+		collection.Shaping.Search = &widgetspec.SearchSpec{ResultCount: -1}
+		if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
+			r.applyV3BuilderCallback(r.v3SearchBuilder(collection.Shaping.Search), cb[0], "data.collection.search")
+		}
+		return obj
+	})
+	setExport(obj, "paginate", func(cb ...goja.Value) *goja.Object {
+		collection.Shaping.Pagination = &widgetspec.PaginationSpec{Page: 1, PageSize: 20, Position: "bottom"}
+		if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
+			r.applyV3BuilderCallback(r.v3PaginationBuilder(collection.Shaping.Pagination), cb[0], "data.collection.paginate")
+		}
+		return obj
+	})
 	setExport(obj, "table", func(args ...goja.Value) *goja.Object {
-		collection.Arrangement = v2spec.ArrangementSpec{Kind: v2spec.ArrangementKindTable}
+		collection.Arrangement = widgetspec.ArrangementSpec{Kind: widgetspec.ArrangementKindTable}
 		if len(args) > 0 && !goja.IsUndefined(args[0]) && !goja.IsNull(args[0]) {
 			r.applyV3BuilderCallback(r.v3TableBuilder(collection), args[0], "data.collection.table")
 		}
 		return obj
 	})
 	setExport(obj, "edit", func(args ...goja.Value) *goja.Object {
-		collection.Mode = v2spec.CollectionModeEdit
+		collection.Mode = widgetspec.CollectionModeEdit
 		if len(args) > 0 && !goja.IsUndefined(args[0]) && !goja.IsNull(args[0]) {
 			r.applyV3BuilderCallback(r.v3EditorBuilder(collection), args[0], "data.collection.edit")
 		}
 		return obj
 	})
 	setExport(obj, "masterDetail", func(args ...goja.Value) *goja.Object {
-		collection.Arrangement = v2spec.ArrangementSpec{Kind: v2spec.ArrangementKindMasterDetail}
+		collection.Arrangement = widgetspec.ArrangementSpec{Kind: widgetspec.ArrangementKindMasterDetail}
 		return obj
 	})
 	setExport(obj, "validate", func() []map[string]any { return validationIssuesForJS(collection.Validate("collection")) })
-	setExport(obj, "toNode", func() any { return collection.ToNode().ToWidgetNode() })
-	setExport(obj, "toIR", func() any { return collection.ToNode().ToWidgetNode() })
+	setExport(obj, "toNode", func() widgetspec.JSONObject { return collection.ToNode().ToWidgetNode() })
+	setExport(obj, "toIR", func() widgetspec.JSONObject { return collection.ToNode().ToWidgetNode() })
 	return obj
 }
 
-func (r *runtime) v3TableBuilder(collection *v2spec.CollectionSpec) *goja.Object {
-	obj := r.vm.NewObject()
+func (r *runtime) v3SearchBuilder(search *widgetspec.SearchSpec) *goja.Object {
+	obj := r.newV3Builder("data.collection.search")
+	setExport(obj, "value", func(value string) *goja.Object { search.Value = value; return obj })
+	setExport(obj, "query", func(name string, options ...goja.Value) *goja.Object {
+		search.Name = name
+		search.Placeholder = stringFromMap(exportOptions(options), "placeholder", search.Placeholder)
+		return obj
+	})
+	setExport(obj, "placeholder", func(value string) *goja.Object { search.Placeholder = value; return obj })
+	setExport(obj, "resultCount", func(value int) *goja.Object { search.ResultCount = value; return obj })
+	setExport(obj, "submit", func(actionValue goja.Value) *goja.Object {
+		action := v3ActionFromAny(actionValue.Export())
+		search.Submit = &action
+		return obj
+	})
+	setExport(obj, "clear", func(actionValue goja.Value) *goja.Object {
+		action := v3ActionFromAny(actionValue.Export())
+		search.Clear = &action
+		return obj
+	})
+	return obj
+}
+
+func (r *runtime) v3PaginationBuilder(pager *widgetspec.PaginationSpec) *goja.Object {
+	obj := r.newV3Builder("data.collection.paginate")
+	setExport(obj, "current", func(value int) *goja.Object { pager.Page = value; return obj })
+	setExport(obj, "size", func(value int) *goja.Object { pager.PageSize = value; return obj })
+	setExport(obj, "total", func(value int) *goja.Object { pager.TotalItems = value; return obj })
+	setExport(obj, "sizes", func(call goja.FunctionCall) goja.Value {
+		pager.Sizes = nil
+		for _, value := range call.Arguments {
+			pager.Sizes = append(pager.Sizes, int(value.ToInteger()))
+		}
+		return obj
+	})
+	setExport(obj, "position", func(value string) *goja.Object { pager.Position = value; return obj })
+	setExport(obj, "onChange", func(actionValue goja.Value) *goja.Object {
+		action := v3ActionFromAny(actionValue.Export())
+		pager.OnChange = &action
+		return obj
+	})
+	return obj
+}
+
+func (r *runtime) v3TableBuilder(collection *widgetspec.CollectionSpec) *goja.Object {
+	obj := r.newV3Builder("data.collection.table")
 	setExport(obj, "className", func(className string) *goja.Object { collection.Table.ClassName = className; return obj })
 	setExport(obj, "rowSelect", func(actionValue goja.Value) *goja.Object {
 		action := v3ActionFromAny(actionValue.Export())
@@ -1169,16 +1428,78 @@ func (r *runtime) v3TableBuilder(collection *v2spec.CollectionSpec) *goja.Object
 	})
 	setExport(obj, "actionColumn", func(id string, header string, label string, actionValue goja.Value, options ...goja.Value) *goja.Object {
 		action := v3ActionFromAny(actionValue.Export())
-		column := v2spec.TableActionColumnSpec{ID: id, Header: header, Label: label, Action: action}
+		column := widgetspec.TableActionColumnSpec{ID: id, Header: header, Label: label, Action: action}
 		column.MaxWidth = stringFromMap(exportOptions(options), "maxWidth", column.MaxWidth)
 		collection.Table.ActionColumns = append(collection.Table.ActionColumns, column)
+		return obj
+	})
+	setExport(obj, "sortable", func(field string, actionValue goja.Value, options ...goja.Value) *goja.Object {
+		if strings.TrimSpace(field) == "" {
+			panic(r.vm.NewGoError(fmt.Errorf("widget.dsl data.collection.table.sortable field must not be empty")))
+		}
+		sortColumn := widgetspec.TableSortColumnSpec{Field: field, Action: v3ActionFromAny(actionValue.Export())}
+		sortColumn.Direction = stringFromMap(exportOptions(options), "direction", "")
+		collection.Table.SortColumns = append(collection.Table.SortColumns, sortColumn)
+		return obj
+	})
+	setExport(obj, "keyboard", func(cb ...goja.Value) *goja.Object {
+		collection.Table.Keyboard = widgetspec.TableKeyboardSpec{Enabled: true, Mode: "rows", Selection: "manual", EnterSelect: true}
+		if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
+			r.applyV3BuilderCallback(r.v3TableKeyboardBuilder(&collection.Table.Keyboard), cb[0], "data.collection.table.keyboard")
+		}
+		return obj
+	})
+	setExport(obj, "command", func(id string, cb goja.Value) *goja.Object {
+		command := widgetspec.RowCommandSpec{ID: id, Key: id, Label: id}
+		r.applyV3BuilderCallback(r.v3RowCommandBuilder(&command), cb, "data.collection.table.command")
+		collection.Table.Commands = append(collection.Table.Commands, command)
+		return obj
+	})
+	setExport(obj, "styleWhen", func(field string, equals goja.Value, tone string) *goja.Object {
+		collection.Table.StyleRules = append(collection.Table.StyleRules, widgetspec.SemanticStyleRule{Field: field, Equals: equals.Export(), Tone: tone})
 		return obj
 	})
 	return obj
 }
 
-func (r *runtime) v3EditorBuilder(collection *v2spec.CollectionSpec) *goja.Object {
-	obj := r.vm.NewObject()
+func (r *runtime) v3TableKeyboardBuilder(keyboard *widgetspec.TableKeyboardSpec) *goja.Object {
+	obj := r.newV3Builder("data.collection.table.keyboard")
+	setExport(obj, "mode", func(value string) *goja.Object { keyboard.Mode = value; return obj })
+	setExport(obj, "selection", func(value string) *goja.Object { keyboard.Selection = value; return obj })
+	setExport(obj, "vimAliases", func(value ...bool) *goja.Object { keyboard.VimAliases = len(value) == 0 || value[0]; return obj })
+	setExport(obj, "enterSelect", func(value ...bool) *goja.Object { keyboard.EnterSelect = len(value) == 0 || value[0]; return obj })
+	return obj
+}
+
+func (r *runtime) v3RowCommandBuilder(command *widgetspec.RowCommandSpec) *goja.Object {
+	obj := r.newV3Builder("data.collection.table.command")
+	setExport(obj, "key", func(value string) *goja.Object { command.Key = value; return obj })
+	setExport(obj, "label", func(value string) *goja.Object { command.Label = value; return obj })
+	setExport(obj, "danger", func(value ...bool) *goja.Object { command.Danger = len(value) == 0 || value[0]; return obj })
+	setExport(obj, "action", func(value goja.Value) *goja.Object { command.Action = v3ActionFromAny(value.Export()); return obj })
+	return obj
+}
+
+func (r *runtime) v3DataActivityFeed(activities goja.Value, cb ...goja.Value) map[string]any {
+	props := map[string]any{"activities": anySlice(activities.Export()), "glyphs": map[string]any{}, "groupByDay": true}
+	obj := r.newV3Builder("data.activityFeed")
+	setExport(obj, "groupByDay", func(value bool) *goja.Object { props["groupByDay"] = value; return obj })
+	setExport(obj, "glyph", func(kind string, glyph goja.Value) *goja.Object {
+		props["glyphs"].(map[string]any)[kind] = glyph.Export()
+		return obj
+	})
+	setExport(obj, "glyphs", func(value goja.Value) *goja.Object { props["glyphs"] = value.Export(); return obj })
+	setExport(obj, "styleSet", func(value goja.Value) *goja.Object { props["styleSet"] = value.Export(); return obj })
+	setExport(obj, "onOpen", func(action goja.Value) *goja.Object { props["onOpenAction"] = action.Export(); return obj })
+	setExport(obj, "onLoadMore", func(action goja.Value) *goja.Object { props["onLoadMoreAction"] = action.Export(); return obj })
+	if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
+		r.applyV3BuilderCallback(obj, cb[0], "data.activityFeed")
+	}
+	return componentNode("ActivityFeed", props)
+}
+
+func (r *runtime) v3EditorBuilder(collection *widgetspec.CollectionSpec) *goja.Object {
+	obj := r.newV3Builder("data.collection.edit")
 	setExport(obj, "create", func(value goja.Value) *goja.Object {
 		label := "New item"
 		if !goja.IsUndefined(value) && !goja.IsNull(value) {
@@ -1188,15 +1509,15 @@ func (r *runtime) v3EditorBuilder(collection *v2spec.CollectionSpec) *goja.Objec
 				label = value.String()
 			}
 		}
-		collection.Actions.Create = &v2spec.CreateActionSpec{Label: label}
+		collection.Actions.Create = &widgetspec.CreateActionSpec{Label: label}
 		return obj
 	})
 	setExport(obj, "submit", func(formAction string) *goja.Object {
-		collection.Actions.Submit = &v2spec.SubmitSpec{FormAction: formAction, Method: "post"}
+		collection.Actions.Submit = &widgetspec.SubmitSpec{FormAction: formAction, Method: "post"}
 		return obj
 	})
 	setExport(obj, "submitPost", func(formAction string) *goja.Object {
-		collection.Actions.Submit = &v2spec.SubmitSpec{FormAction: formAction, Method: "post"}
+		collection.Actions.Submit = &widgetspec.SubmitSpec{FormAction: formAction, Method: "post"}
 		return obj
 	})
 	setExport(obj, "reorder", func(actionValue goja.Value) *goja.Object {
@@ -1278,7 +1599,7 @@ func (r *runtime) v3Matrix(rows goja.Value, cb ...goja.Value) *goja.Object {
 }
 
 func (r *runtime) v3MatrixBuilder(spec map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("data.matrix")
 	setExport(obj, "id", func(id string) *goja.Object { spec["id"] = id; return obj })
 	setExport(obj, "columns", func(columns goja.Value) *goja.Object { spec["columns"] = columns.Export(); return obj })
 	setExport(obj, "column", func(id string, label goja.Value, options ...goja.Value) *goja.Object {
@@ -1317,7 +1638,7 @@ func (r *runtime) v3ListItem(id string, label goja.Value, options ...goja.Value)
 }
 
 func (r *runtime) v3PageBuilder(spec *v3PageSpec) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("page")
 	setExport(obj, "id", func(id string) *goja.Object {
 		if strings.TrimSpace(id) != "" {
 			spec.ID = id
@@ -1338,7 +1659,23 @@ func (r *runtime) v3PageBuilder(spec *v3PageSpec) *goja.Object {
 		return obj
 	})
 	setExport(obj, "shell", func(shell goja.Value) *goja.Object {
-		spec.Shell = shell.Export()
+		parsed, err := v3ParsePageShell(shell.Export())
+		if err != nil {
+			panic(r.vm.NewGoError(err))
+		}
+		spec.Shell = parsed
+		return obj
+	})
+	setExport(obj, "shortcuts", func(cb goja.Value) *goja.Object {
+		r.applyV3BuilderCallback(r.v3ShortcutsBuilder(&spec.Shortcuts), cb, "page.shortcuts")
+		return obj
+	})
+	setExport(obj, "root", func(value goja.Value) *goja.Object {
+		nodes := r.v3ExportChild(value)
+		if len(nodes) != 1 {
+			panic(r.vm.NewGoError(fmt.Errorf("widget.dsl page.root(node) requires exactly one widget node")))
+		}
+		spec.Root = &nodes[0]
 		return obj
 	})
 	setExport(obj, "density", func(density string) *goja.Object {
@@ -1351,10 +1688,6 @@ func (r *runtime) v3PageBuilder(spec *v3PageSpec) *goja.Object {
 			item["href"] = href[0]
 		}
 		spec.Breadcrumbs = append(spec.Breadcrumbs, item)
-		return obj
-	})
-	setExport(obj, "use", func(fragment goja.Value) *goja.Object {
-		r.applyV3BuilderCallback(obj, fragment, "page.use")
 		return obj
 	})
 	setExport(obj, "section", func(title goja.Value, cb ...goja.Value) *goja.Object {
@@ -1376,16 +1709,44 @@ func (r *runtime) v3PageBuilder(spec *v3PageSpec) *goja.Object {
 	})
 	setExport(obj, "toPage", func() map[string]any {
 		issues := v3PageValidationIssues(spec)
-		if len(issues) > 0 {
-			panic(r.vm.NewGoError(fmt.Errorf("widget.dsl page is invalid: %s", issues[0]["message"])))
+		for _, issue := range issues {
+			if issue["severity"] == "error" {
+				panic(r.vm.NewGoError(fmt.Errorf("widget.dsl page is invalid: %s", issue["message"])))
+			}
 		}
 		return r.v3PageToIR(spec)
 	})
 	return obj
 }
 
+func (r *runtime) v3ShortcutsBuilder(shortcuts *[]widgetspec.PageShortcutSpec) *goja.Object {
+	obj := r.newV3Builder("page.shortcuts")
+	setExport(obj, "bind", func(id string, key string, actionValue goja.Value, options ...goja.Value) *goja.Object {
+		opts := exportOptions(options)
+		shortcut := widgetspec.PageShortcutSpec{
+			ID:             id,
+			Key:            key,
+			Label:          stringFromMap(opts, "label", ""),
+			Action:         v3ActionFromAny(actionValue.Export()),
+			PreventDefault: true,
+		}
+		if value, ok := opts["preventDefault"].(bool); ok {
+			shortcut.PreventDefault = value
+		}
+		if value, ok := opts["allowRepeat"].(bool); ok {
+			shortcut.AllowRepeat = value
+		}
+		for _, raw := range anySlice(opts["modifiers"]) {
+			shortcut.Modifiers = append(shortcut.Modifiers, widgetspec.ShortcutModifier(fmt.Sprint(raw)))
+		}
+		*shortcuts = append(*shortcuts, shortcut)
+		return obj
+	})
+	return obj
+}
+
 func (r *runtime) v3SectionBuilder(spec *v3SectionSpec) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("section")
 	setExport(obj, "caption", func(caption string) *goja.Object {
 		spec.Caption = caption
 		return obj
@@ -1396,10 +1757,6 @@ func (r *runtime) v3SectionBuilder(spec *v3SectionSpec) *goja.Object {
 	})
 	setExport(obj, "tone", func(tone string) *goja.Object {
 		spec.Tone = tone
-		return obj
-	})
-	setExport(obj, "use", func(fragment goja.Value) *goja.Object {
-		r.applyV3BuilderCallback(obj, fragment, "section.use")
 		return obj
 	})
 	setExport(obj, "text", func(value goja.Value) *goja.Object {
@@ -1437,6 +1794,15 @@ func (r *runtime) v3SectionBuilder(spec *v3SectionSpec) *goja.Object {
 		return obj
 	})
 	return obj
+}
+
+func (r *runtime) newV3Builder(path string) *goja.Object {
+	builder := r.vm.NewObject()
+	setExport(builder, "use", func(fragment goja.Value) *goja.Object {
+		r.applyV3BuilderCallback(builder, fragment, path+".use")
+		return builder
+	})
+	return builder
 }
 
 func (r *runtime) applyV3BuilderCallback(builder *goja.Object, cb goja.Value, name string) {
@@ -1587,28 +1953,53 @@ func (r *runtime) v3Renderable(value goja.Value) any {
 }
 
 func (r *runtime) v3PageToIR(spec *v3PageSpec) map[string]any {
-	children := make([]any, 0, len(spec.Sections)+1)
-	if len(spec.Breadcrumbs) > 0 {
-		children = append(children, componentNode("Breadcrumbs", map[string]any{"items": spec.Breadcrumbs}))
-	}
-	for _, section := range spec.Sections {
-		children = append(children, r.v3SectionToNode(section))
-	}
-	rootProps := map[string]any{"gap": "lg"}
-	if spec.Density != "" {
-		rootProps["density"] = spec.Density
+	var root any
+	if spec.Root != nil {
+		root = spec.Root.toIR()
+	} else {
+		children := make([]any, 0, len(spec.Sections)+1)
+		if len(spec.Breadcrumbs) > 0 {
+			children = append(children, componentNode("Breadcrumbs", map[string]any{"items": spec.Breadcrumbs}))
+		}
+		for _, section := range spec.Sections {
+			children = append(children, r.v3SectionToNode(section))
+		}
+		rootProps := map[string]any{"gap": "lg"}
+		if spec.Density != "" {
+			rootProps["density"] = spec.Density
+		}
+		root = componentNode("Stack", rootProps, children...)
 	}
 	out := map[string]any{
 		"schemaVersion": spec.SchemaVersion,
 		"id":            spec.ID,
 		"title":         spec.Title,
-		"root":          componentNode("Stack", rootProps, children...),
+		"root":          root,
 	}
 	if len(spec.Meta) > 0 {
 		out["meta"] = spec.Meta
 	}
 	if spec.Shell != nil {
-		out["shell"] = spec.Shell
+		out["shell"] = spec.Shell.ToJSON()
+	}
+	if len(spec.Shortcuts) > 0 {
+		bindings := make([]any, 0, len(spec.Shortcuts))
+		for _, shortcut := range spec.Shortcuts {
+			modifiers := make([]string, 0, len(shortcut.Modifiers))
+			for _, modifier := range shortcut.Modifiers {
+				modifiers = append(modifiers, string(modifier))
+			}
+			bindings = append(bindings, map[string]any{
+				"id":             shortcut.ID,
+				"key":            shortcut.Key,
+				"modifiers":      modifiers,
+				"label":          shortcut.Label,
+				"action":         shortcut.Action.ToWidgetAction(),
+				"preventDefault": shortcut.PreventDefault,
+				"allowRepeat":    shortcut.AllowRepeat,
+			})
+		}
+		out["shortcuts"] = map[string]any{"bindings": bindings}
 	}
 	return out
 }
@@ -1750,6 +2141,71 @@ func isV3EmptySlotResult(value goja.Value) bool {
 	return false
 }
 
+func v3ParsePageShell(value any) (*widgetspec.PageShellSpec, error) {
+	object, ok := toStringAnyMap(value)
+	if !ok {
+		return nil, fmt.Errorf("widget.dsl page.shell requires a PageShellSpec from widget.app")
+	}
+	shell := &widgetspec.PageShellSpec{Kind: widgetspec.PageShellKind(stringFromMap(object, "kind", ""))}
+	if content, ok := toStringAnyMap(object["content"]); ok {
+		shell.Content = widgetspec.ContentViewportSpec{
+			MaxWidth: stringFromMap(content, "maxWidth", ""),
+			Padding:  stringFromMap(content, "padding", ""),
+			Scroll:   stringFromMap(content, "scroll", ""),
+		}
+	}
+	if navigation, ok := toStringAnyMap(object["navigation"]); ok {
+		nav := &widgetspec.NavigationSpec{
+			Placement:    widgetspec.NavigationPlacement(stringFromMap(navigation, "placement", "")),
+			Brand:        navigation["brand"],
+			AriaLabel:    stringFromMap(navigation, "ariaLabel", ""),
+			ActiveItem:   stringFromMap(navigation, "activeItemId", ""),
+			SidebarWidth: intFromAny(navigation["sidebarWidth"]),
+			NarrowMode:   stringFromMap(navigation, "narrowMode", ""),
+		}
+		for _, rawSection := range anySlice(navigation["sections"]) {
+			sectionMap, ok := toStringAnyMap(rawSection)
+			if !ok {
+				continue
+			}
+			section := widgetspec.NavigationSectionSpec{ID: stringFromMap(sectionMap, "id", ""), Label: sectionMap["label"]}
+			for _, rawItem := range anySlice(sectionMap["items"]) {
+				itemMap, ok := toStringAnyMap(rawItem)
+				if !ok {
+					continue
+				}
+				item := widgetspec.NavigationItemSpec{ID: stringFromMap(itemMap, "id", ""), Label: itemMap["label"], Icon: itemMap["icon"], Badge: itemMap["badge"]}
+				if disabled, ok := itemMap["disabled"].(bool); ok {
+					item.Disabled = disabled
+				}
+				if action, ok := toStringAnyMap(itemMap["action"]); ok {
+					item.Action = widgetspec.JSONObject{}
+					for key, actionValue := range action {
+						item.Action[key] = actionValue
+					}
+				}
+				section.Items = append(section.Items, item)
+			}
+			nav.Sections = append(nav.Sections, section)
+		}
+		shell.Navigation = nav
+	}
+	return shell, nil
+}
+
+func intFromAny(value any) int {
+	switch typed := value.(type) {
+	case int:
+		return typed
+	case int64:
+		return int(typed)
+	case float64:
+		return int(typed)
+	default:
+		return 0
+	}
+}
+
 func v3PageValidationIssues(spec *v3PageSpec) []map[string]any {
 	issues := []map[string]any{}
 	if strings.TrimSpace(spec.ID) == "" {
@@ -1757,6 +2213,29 @@ func v3PageValidationIssues(spec *v3PageSpec) []map[string]any {
 	}
 	if strings.TrimSpace(spec.Title) == "" {
 		issues = append(issues, v3ValidationIssue("page_title_required", "page.title", "page title is required"))
+	}
+	shortcutIssues := (widgetspec.PageSpec{ID: "page", Shortcuts: spec.Shortcuts}).Validate()
+	for _, issue := range shortcutIssues {
+		if strings.HasPrefix(string(issue.Code), "page.shortcut") {
+			issues = append(issues, map[string]any{
+				"severity": string(issue.Severity),
+				"code":     string(issue.Code),
+				"path":     "page." + issue.Path,
+				"message":  issue.Message,
+				"hint":     issue.Hint,
+			})
+		}
+	}
+	if spec.Shell != nil {
+		for _, issue := range spec.Shell.Validate("page.shell") {
+			issues = append(issues, v3ValidationIssue(string(issue.Code), issue.Path, issue.Message))
+		}
+	}
+	if spec.Root != nil && (len(spec.Sections) > 0 || len(spec.Breadcrumbs) > 0) {
+		issues = append(issues, v3ValidationIssue("page_root_sections_conflict", "page.root", "page.root cannot be combined with sections or breadcrumbs"))
+	}
+	if spec.Root != nil {
+		issues = append(issues, v3NodeValidationIssues(*spec.Root, "page.root")...)
 	}
 	for sectionIndex, section := range spec.Sections {
 		sectionPath := fmt.Sprintf("page.sections[%d]", sectionIndex)
@@ -1816,65 +2295,77 @@ func v3ValidationIssue(code string, path string, message string) map[string]any 
 	return map[string]any{"severity": "error", "code": code, "path": path, "message": message}
 }
 
-func v3SelectionToV2(value any) *v2spec.SelectionSpec {
+func v3SelectionToV2(value any) *widgetspec.SelectionSpec {
 	m, ok := value.(map[string]any)
 	if !ok || m == nil {
 		return nil
 	}
 	kind, _ := m["kind"].(string)
 	if kind == "urlParam" {
-		return &v2spec.SelectionSpec{Kind: v2spec.SelectionKindURLParam, Param: stringFromMap(m, "param", "id"), Value: stringFromMap(m, "value", "")}
+		return &widgetspec.SelectionSpec{Kind: widgetspec.SelectionKindURLParam, Param: stringFromMap(m, "param", "id"), Value: stringFromMap(m, "value", "")}
 	}
 	if selected, ok := m["selected"].(string); ok && selected != "" {
-		return &v2spec.SelectionSpec{Kind: v2spec.SelectionKindURLParam, Param: stringFromMap(m, "keyField", "id"), Value: selected}
+		return &widgetspec.SelectionSpec{Kind: widgetspec.SelectionKindURLParam, Param: stringFromMap(m, "keyField", "id"), Value: selected}
 	}
 	return nil
 }
 
-func v3ActionFromAny(value any) v2spec.ActionSpec {
+func v3ActionFromAny(value any) widgetspec.ActionSpec {
 	m, _ := value.(map[string]any)
 	kind, _ := m["kind"].(string)
-	action := v2spec.ActionSpec{Kind: v2spec.ActionKindEvent, Event: kind}
+	action := widgetspec.ActionSpec{Kind: widgetspec.ActionKindEvent, Event: kind}
 	switch kind {
 	case "server":
-		action.Kind = v2spec.ActionKindServer
+		action.Kind = widgetspec.ActionKindServer
 		action.Name = stringFromMap(m, "name", "")
 	case "navigate":
-		action.Kind = v2spec.ActionKindNavigate
+		action.Kind = widgetspec.ActionKindNavigate
 		action.To = stringFromMap(m, "to", "")
 	case "download":
-		action.Kind = v2spec.ActionKindDownload
+		action.Kind = widgetspec.ActionKindDownload
 		action.To = stringFromMap(m, "to", "")
 	case "copy":
-		action.Kind = v2spec.ActionKindCopy
-		if v, ok := m["value"].(string); ok {
-			action.Payload.Fields = append(action.Payload.Fields, v2spec.PayloadFieldSpec{Name: "value", Value: v2spec.TemplateValue{Kind: v2spec.TemplateValueLiteral, Value: v}})
-		}
+		action.Kind = widgetspec.ActionKindCopy
+	case "openOverlay":
+		action.Kind = widgetspec.ActionKindOpenOverlay
+		action.Options = widgetspec.JSONObject{"target": m["target"]}
+	case "closeOverlay":
+		action.Kind = widgetspec.ActionKindCloseOverlay
 	default:
-		action.Kind = v2spec.ActionKindEvent
+		action.Kind = widgetspec.ActionKindEvent
 		action.Event = stringFromMap(m, "event", kind)
 	}
+	for key, value := range m {
+		switch key {
+		case "kind", "name", "to", "event", "payload", "confirm":
+			continue
+		}
+		if action.Options == nil {
+			action.Options = widgetspec.JSONObject{}
+		}
+		action.Options[key] = value
+	}
 	if confirm, ok := m["confirm"].(string); ok && confirm != "" {
-		action.Confirm = &v2spec.TemplateSpec{Parts: []v2spec.TemplateValue{{Kind: v2spec.TemplateValueText, Text: confirm}}}
+		action.Confirm = &widgetspec.TemplateSpec{Parts: []widgetspec.TemplateValue{{Kind: widgetspec.TemplateValueText, Text: confirm}}}
 	}
 	if payload, ok := m["payload"].(map[string]any); ok {
 		for name, raw := range payload {
-			action.Payload.Fields = append(action.Payload.Fields, v2spec.PayloadFieldSpec{Name: name, Value: v3TemplateValueFromAny(raw)})
+			action.Payload.Fields = append(action.Payload.Fields, widgetspec.PayloadFieldSpec{Name: name, Value: v3TemplateValueFromAny(raw)})
 		}
 	}
 	return action
 }
 
-func v3TemplateValueFromAny(value any) v2spec.TemplateValue {
+func v3TemplateValueFromAny(value any) widgetspec.TemplateValue {
 	if m, ok := value.(map[string]any); ok {
 		if kind, _ := m["kind"].(string); kind == "accessor" {
-			return v2spec.TemplateValue{Kind: v2spec.TemplateValuePath, Path: stringFromMap(m, "path", stringFromMap(m, "field", stringFromMap(m, "mapField", "")))}
+			return widgetspec.TemplateValue{Kind: widgetspec.TemplateValuePath, Path: stringFromMap(m, "path", stringFromMap(m, "field", stringFromMap(m, "mapField", "")))}
 		}
 		if kind, _ := m["kind"].(string); kind == "const" {
-			return v2spec.TemplateValue{Kind: v2spec.TemplateValueLiteral, Value: m["value"]}
+			return widgetspec.TemplateValue{Kind: widgetspec.TemplateValueLiteral, Value: m["value"]}
 		}
 	}
-	return v2spec.TemplateValue{Kind: v2spec.TemplateValueLiteral, Value: value}
+	return widgetspec.TemplateValue{Kind: widgetspec.TemplateValueLiteral, Value: value}
 }
 
 func v3AccessorSpec(mode string, valueKey string, value string) map[string]any {

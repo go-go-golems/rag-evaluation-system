@@ -5,7 +5,7 @@ import { ActivityFeed } from "./ActivityFeed";
 
 export const activityFeedWidget = defineWidget<ActivityFeedWidgetProps>({
 	type: "ActivityFeed",
-	module: "data.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => {
 		const glyphs: Record<string, ReactNode> | undefined = props.glyphs
 			? Object.fromEntries(

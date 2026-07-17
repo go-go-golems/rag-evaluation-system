@@ -29,7 +29,38 @@
 .error {
 	color: var(--mac-accent-2);
 }
-.canceled {
+.canceled,
+.new,
+.not_started {
+	color: var(--mac-text-dim);
+}
+
+.shortlisted,
+.won,
+.ready {
+	color: var(--mac-green);
+}
+
+.applied,
+.planning,
+.drafting,
+.submitted {
+	color: var(--mac-accent);
+}
+
+.interviewing,
+.review {
+	color: var(--mac-amber);
+}
+
+.rejected,
+.expired,
+.withdrawn {
+	color: var(--mac-accent-2);
+}
+
+.archived,
+.skipped {
 	color: var(--mac-text-dim);
 	text-decoration: line-through;
 }

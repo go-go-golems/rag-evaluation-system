@@ -39,8 +39,14 @@
 	white-space: nowrap;
 }
 
-.item:hover {
+.item:hover:not(:disabled) {
 	border: 1px solid var(--mac-border);
+}
+
+.item:disabled {
+	color: var(--mac-text-dim);
+	cursor: not-allowed;
+	opacity: 0.58;
 }
 
 .item:focus-visible {

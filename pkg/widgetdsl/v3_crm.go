@@ -35,7 +35,7 @@ func (r *runtime) v3CRMObject() *goja.Object {
 	setExport(crm, "pipeline", r.v3CRMPipeline)
 	setExport(crm, "pipelineBoard", r.v3CRMPipelineBoard)
 	setExport(crm, "recordFields", r.v3CRMRecordFields)
-	setExport(crm, "activityFeed", r.v3CRMActivityFeed)
+	setExport(crm, "field", r.v3CRMField)
 	setExport(crm, "tasksInbox", r.v3CRMTasksInbox)
 	setExport(crm, "stat", r.v3CRMStat)
 	setExport(crm, "funnel", r.v3CRMFunnel)
@@ -65,7 +65,7 @@ func (r *runtime) v3CRMFields(args ...goja.Value) *goja.Object {
 }
 
 func (r *runtime) v3CRMFieldsBuilder(spec *v3CRMFieldsSpec) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("crm.fields")
 	r.attachCRMRef(obj, &v3CRMRef{kind: "fields", fields: spec})
 	add := func(kind, key string, options ...goja.Value) *goja.Object {
 		if strings.TrimSpace(key) == "" {
@@ -120,7 +120,7 @@ func (r *runtime) v3CRMPipeline(nameOrOptions goja.Value, cb ...goja.Value) *goj
 }
 
 func (r *runtime) v3CRMPipelineBuilder(spec *v3CRMPipelineSpec) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("crm.pipeline")
 	r.attachCRMRef(obj, &v3CRMRef{kind: "pipeline", pipeline: spec})
 	setExport(obj, "stage", func(id, label string, options ...goja.Value) *goja.Object {
 		if strings.TrimSpace(id) == "" || strings.TrimSpace(label) == "" {
@@ -154,7 +154,7 @@ func (r *runtime) v3CRMPipelineBoard(pipelineValue, dealsValue goja.Value, cb ..
 }
 
 func (r *runtime) v3CRMPipelineBoardBuilder(props map[string]any, pipeline map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("crm.pipelineBoard")
 	setExport(obj, "summaries", func(value goja.Value) *goja.Object {
 		mergeOptions(props, v3CRMBoardProps(pipeline, anySlice(props["cards"]), anySlice(value.Export())))
 		return obj
@@ -164,6 +164,13 @@ func (r *runtime) v3CRMPipelineBoardBuilder(props map[string]any, pipeline map[s
 	setExport(obj, "onMove", func(action goja.Value) *goja.Object { props["onMoveAction"] = action.Export(); return obj })
 	setExport(obj, "onOpen", func(action goja.Value) *goja.Object { props["onCardSelectAction"] = action.Export(); return obj })
 	return obj
+}
+
+func (r *runtime) v3CRMField(value goja.Value, fieldSpec goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	props["value"] = value.Export()
+	props["spec"] = fieldSpec.Export()
+	return componentNode("FieldRenderer", props)
 }
 
 func (r *runtime) v3CRMRecordFields(valuesValue, fieldsValue goja.Value, cb ...goja.Value) map[string]any {
@@ -181,23 +188,11 @@ func (r *runtime) v3CRMRecordFields(valuesValue, fieldsValue goja.Value, cb ...g
 }
 
 func (r *runtime) v3CRMRecordFieldsBuilder(props map[string]any) *goja.Object {
-	obj := r.vm.NewObject()
+	obj := r.newV3Builder("crm.recordFields")
 	setExport(obj, "mode", func(mode string) *goja.Object { props["mode"] = mode; return obj })
 	setExport(obj, "refs", func(refs goja.Value) *goja.Object { props["refs"] = refs.Export(); return obj })
 	setExport(obj, "onChange", func(action goja.Value) *goja.Object { props["onFieldChangeAction"] = action.Export(); return obj })
 	return obj
-}
-
-func (r *runtime) v3CRMActivityFeed(activities goja.Value, cb ...goja.Value) map[string]any {
-	props := map[string]any{"activities": anySlice(activities.Export()), "styleSet": v3CRMActivityStyleSet(), "glyphs": map[string]any{"note": "📝", "email": "✉", "call": "☎", "meeting": "◎", "task": "□", "stage_change": "→", "field_change": "•"}, "groupByDay": true}
-	obj := r.vm.NewObject()
-	setExport(obj, "groupByDay", func(value bool) *goja.Object { props["groupByDay"] = value; return obj })
-	setExport(obj, "onOpen", func(action goja.Value) *goja.Object { props["onOpenAction"] = action.Export(); return obj })
-	setExport(obj, "onLoadMore", func(action goja.Value) *goja.Object { props["onLoadMoreAction"] = action.Export(); return obj })
-	if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {
-		r.applyV3BuilderCallback(obj, cb[0], "crm.activityFeed")
-	}
-	return componentNode("ActivityFeed", props)
 }
 
 func (r *runtime) v3CRMTasksInbox(tasks goja.Value, cb ...goja.Value) map[string]any {
@@ -380,16 +375,6 @@ func v3CRMStageStyleSet() map[string]any {
 		"negotiation": map[string]any{"fill": "color-mix(in srgb, var(--mac-accent-2) 24%, var(--mac-surface))", "line": "var(--mac-accent-2)", "labelColor": "var(--mac-text)"},
 		"won":         map[string]any{"fill": "color-mix(in srgb, var(--mac-green) 26%, var(--mac-surface))", "line": "var(--mac-green)", "labelColor": "var(--mac-text)"},
 		"lost":        map[string]any{"fill": "color-mix(in srgb, var(--mac-accent-2) 30%, var(--mac-surface))", "line": "var(--mac-accent-2)", "labelColor": "var(--mac-text)"},
-	}}
-}
-
-func v3CRMActivityStyleSet() map[string]any {
-	return map[string]any{"id": "crm-activities", "styles": map[string]any{
-		"note":    map[string]any{"fill": "color-mix(in srgb, var(--mac-amber) 22%, var(--mac-surface))", "line": "var(--mac-amber)", "labelColor": "var(--mac-text)"},
-		"email":   map[string]any{"fill": "color-mix(in srgb, var(--mac-accent) 20%, var(--mac-surface))", "line": "var(--mac-accent)", "labelColor": "var(--mac-text)"},
-		"call":    map[string]any{"fill": "color-mix(in srgb, var(--mac-green) 22%, var(--mac-surface))", "line": "var(--mac-green)", "labelColor": "var(--mac-text)"},
-		"meeting": map[string]any{"fill": "color-mix(in srgb, var(--mac-accent) 26%, var(--mac-surface))", "line": "var(--mac-accent)", "labelColor": "var(--mac-text)"},
-		"task":    map[string]any{"fill": "color-mix(in srgb, var(--mac-text-dim) 18%, var(--mac-surface))", "line": "var(--mac-text-dim)", "labelColor": "var(--mac-text)"},
 	}}
 }
 

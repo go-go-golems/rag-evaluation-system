@@ -4,7 +4,7 @@ import { TileGrid } from "./TileGrid";
 
 export const tileGridWidget = defineWidget<TileGridWidgetProps>({
 	type: "TileGrid",
-	module: "cms.dsl",
+	module: "widget.dsl",
 	render: (props, children) => (
 		<TileGrid className={props.className} minTileWidth={props.minTileWidth} gap={props.gap}>
 			{children}

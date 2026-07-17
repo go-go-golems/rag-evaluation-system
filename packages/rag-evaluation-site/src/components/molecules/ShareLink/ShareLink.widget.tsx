@@ -4,7 +4,7 @@ import { ShareLink } from "./ShareLink";
 
 export const shareLinkWidget = defineWidget<ShareLinkWidgetProps>({
 	type: "ShareLink",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => {
 		const copyAction: ActionSpec = props.copyAction ?? { kind: "copy", value: props.href };
 		return (

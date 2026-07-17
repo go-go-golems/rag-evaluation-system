@@ -1,7 +1,7 @@
 ---
 Title: "Widget DSL v3 Examples"
 Slug: widget-dsl-v3-examples
-Short: "Build v3 Widget IR pages with composition, bindings, scheduling, time, and CRM helpers."
+Short: "Build v3 Widget IR pages with composition, actions, keyboard shortcuts, scheduling, time, and CRM helpers."
 Topics:
 - xgoja
 - widget-dsl
@@ -43,6 +43,48 @@ const page = widget.page("Workshop overview", (p) =>
 ```
 
 A page builder returns a handle. Route handlers return `page.toPage()` when they need a plain page object, while page-aware xgoja helpers may accept the handle directly.
+
+## Add page-level keyboard shortcuts
+
+Page shortcuts are serializable command accelerators for workflows that are not naturally table-shaped. Each binding gives the command a stable id, a logical key, a visible help label, and an ordinary action. Reuse the same action object in the shortcut and visible button so keyboard and pointer activation cannot drift.
+
+```js
+const accept = widget.act.server("triage.accept")
+const reject = widget.act.server("triage.reject")
+const skip = widget.act.server("triage.skip")
+
+const page = widget.page("Triage", (page) =>
+  page
+    .shortcuts((keys) =>
+      keys
+        .bind("accept", "y", accept, { label: "Yes" })
+        .bind("reject", "n", reject, { label: "No" })
+        .bind("skip", "s", skip, { label: "Skip" }),
+    )
+    .section("Current job", (section) =>
+      section.view(widget.ui.inline(
+        widget.ui.button("Yes", accept, { variant: "success" }),
+        widget.ui.button("No", reject, { variant: "danger" }),
+        widget.ui.button("Skip", skip),
+      )),
+    ),
+)
+```
+
+Use separate modifier values rather than embedding them in the key string:
+
+```js
+page.shortcuts((keys) =>
+  keys.bind("save", "s", widget.act.server("record.save"), {
+    label: "Save",
+    modifiers: ["Control"],
+  }),
+)
+```
+
+The default React app displays generated shortcut help and a persisted enable/disable control. It suppresses page commands in editable fields, dialogs, IME composition, repeated keydown events, and nested keyboard scopes. Keep table row commands on `table.command(...)`; page shortcuts should not replace component-owned keyboard interaction.
+
+The executable version is `pkg/widgetdsl/testdata/v3/examples/43-page-shortcuts.js`, with stable output checked by its golden JSON fixture.
 
 ## Bind interaction context to an action
 
@@ -151,6 +193,9 @@ Most authoring failures occur at the boundary between build-time module selectio
 | `Cannot find module "widget.dsl"` | The build specification does not select the provider runtime module. | Add the `runtime.modules` entry shown above and rebuild the xgoja binary. |
 | A grid action receives an accessor object rather than an id. | An accessor was placed in ordinary application data rather than an action `payload` or `detail`. | Use `widget.bind.context(...)` only inside an action contract. |
 | An event listener gets no action values. | The listener reads `payload`, but browser event actions dispatch values in `CustomEvent.detail`. | Read `event.detail`; reserve `payload` for server actions. |
+| `page.shortcuts is not a function` | The generated host uses an older `widget.dsl` provider. | Rebuild the xgoja host against the updated `rag-widget-site` provider. |
+| A shortcut does not run while focus is in a table or form. | Component keyboard scopes and editable controls intentionally take precedence. | Use `table.command(...)` for row actions and keep page shortcuts outside editing contexts. |
+| A single-character shortcut is active but no disable control is visible. | A custom host installed behavior without the default help/preference UI. | Use `RagEvaluationSiteApp` or provide equivalent `usePageShortcuts` help and preference integration. |
 | A pipeline stage is empty or has an invalid width. | The host did not provide a summary for that stage. | Pass sparse summaries safely; `widget.crm.funnel` defaults missing counts to zero. |
 | The browser receives `index.html` from an API route. | The SPA fallback catches `/api`. | Configure `spaFromAssetsModule` with `excludePrefixes: ["/api"]`. |
 
@@ -162,5 +207,5 @@ These related entries separate host configuration, API discovery, and executable
 - `widget-dsl-v3-api-reference` — descriptor-derived namespace inventory.
 - `widget-dsl-js-api-reference` — action contracts and legacy migration details.
 - `widget-dsl-spa-bundling` — bundle provider help and browser assets.
-- [`pkg/widgetdsl/testdata/v3/examples`](../../../../widgetdsl/testdata/v3/examples) — executable golden examples, including scheduling, time, and CRM.
+- [`pkg/widgetdsl/testdata/v3/examples`](../../../../widgetdsl/testdata/v3/examples) — executable golden examples, including page shortcuts, scheduling, time, and CRM.
 - [`examples/xgoja/workshop-crm-site`](../../../../../examples/xgoja/workshop-crm-site) — SQLite-backed CRM host.

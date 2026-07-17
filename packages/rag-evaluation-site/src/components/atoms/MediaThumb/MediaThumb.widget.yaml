@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: MediaThumb
-module: cms.dsl
+module: widget.dsl
 helper: mediaThumb
 props: MediaThumbWidgetProps
 adapter:

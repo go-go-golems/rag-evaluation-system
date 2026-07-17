@@ -1,0 +1,89 @@
+{
+	"id": "keyboard-triage",
+	"root": {
+		"children": [
+			{
+				"children": [
+					{
+						"kind": "text",
+						"text": "[object Object]"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Jobs",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			},
+			{
+				"children": [
+					{
+						"kind": "component",
+						"props": {
+							"body": {
+								"kind": "component",
+								"props": {
+									"control": {
+										"kind": "component",
+										"props": {
+											"name": "tag",
+											"readOnly": false,
+											"required": true
+										},
+										"type": "TextInput"
+									},
+									"label": {
+										"kind": "text",
+										"text": "Tag"
+									}
+								},
+								"type": "FormRow"
+							},
+							"id": "add-tag",
+							"initialFocus": "tag",
+							"onSubmitAction": {
+								"kind": "server",
+								"name": "job.add-tag",
+								"payload": {
+									"jobId": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "row.id"
+									},
+									"tag": {
+										"kind": "accessor",
+										"mode": "context",
+										"path": "form.tag"
+									}
+								}
+							},
+							"title": {
+								"kind": "text",
+								"text": "[object Object]"
+							}
+						},
+						"type": "FormDialog"
+					}
+				],
+				"kind": "component",
+				"props": {
+					"density": "flush",
+					"label": "Content",
+					"level": 1,
+					"rule": true
+				},
+				"type": "SectionBlock"
+			}
+		],
+		"kind": "component",
+		"props": {
+			"gap": "lg"
+		},
+		"type": "Stack"
+	},
+	"schemaVersion": "0.1.0",
+	"title": "Keyboard triage"
+}

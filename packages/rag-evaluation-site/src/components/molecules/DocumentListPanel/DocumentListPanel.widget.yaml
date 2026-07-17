@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: DocumentListPanel
-module: course.dsl
+module: widget.dsl
 helper: documentListPanel
 props: DocumentListPanelWidgetProps
 adapter:

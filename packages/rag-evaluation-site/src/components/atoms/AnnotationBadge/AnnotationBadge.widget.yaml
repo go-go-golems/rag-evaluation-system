@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: AnnotationBadge
-module: context_window.dsl
+module: widget.dsl
 helper: annotationBadge
 props: AnnotationBadgeWidgetProps
 adapter:

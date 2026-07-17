@@ -1,7 +1,12 @@
+schemaVersion: widget-manifest/v1
 type: ContextTurnPagerPanel
+module: widget.dsl
+helper: contextTurnPagerPanel
 category: organism
 props: ContextTurnPagerPanelWidgetProps
-entry:
+adapter:
   path: ./ContextTurnPagerPanel.widget.tsx
   export: contextTurnPagerPanelWidget
 reactComponent: ContextTurnPagerPanel
+status: stable
+docs: Paginated context-turn inspector combining grouped context strips with turn navigation.

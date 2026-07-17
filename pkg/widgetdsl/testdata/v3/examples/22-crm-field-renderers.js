@@ -4,13 +4,15 @@ const page = widget.page("CRM field renderers", (p) =>
 		s.view(
 			widget.ui.stack(
 				{},
-				widget.raw.component("FieldRenderer", {
-					spec: { key: "email", type: "email", label: "Email" },
-					value: "ops@example.com",
+				widget.crm.field("ops@example.com", {
+					key: "email",
+					type: "email",
+					label: "Email",
 				}),
-				widget.raw.component("FieldRenderer", {
-					spec: { key: "status", type: "select", label: "Status" },
-					value: "Active",
+				widget.crm.field("Active", {
+					key: "status",
+					type: "select",
+					label: "Status",
 				}),
 			),
 		),

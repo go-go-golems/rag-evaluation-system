@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: CheckList
-module: ui.dsl
+module: widget.dsl
 helper: checkList
 props: CheckListWidgetProps
 adapter:

@@ -1,10 +1,18 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { ErrorCallout } from "../components/atoms";
 import { Caption } from "../components/foundation";
-import { AppShell, Panel } from "../components/layout";
-import { AppNav } from "../components/molecules";
+import { AppShell, Panel, SidebarShell } from "../components/layout";
+import { AppNav, KeyboardShortcutHelp, SidebarNav } from "../components/molecules";
 import { CourseStudioShell } from "../components/organisms";
-import { useWidgetPage, type WidgetPageResponse } from "../hooks/useWidgetPage";
+import { ariaKeyShortcuts, formatShortcutChord } from "../hooks/pageShortcuts.logic";
+import { usePageShortcuts } from "../hooks/usePageShortcuts";
+import {
+	type PageNavigationItemSpec,
+	type PageShellSpec,
+	type PageShortcutSpec,
+	useWidgetPage,
+	type WidgetPageResponse,
+} from "../hooks/useWidgetPage";
 import {
 	confirmWidgetAction,
 	dispatchWidgetAction,
@@ -20,7 +28,7 @@ import type {
 	RenderableValue,
 	WidgetNode,
 } from "../widgets/ir";
-import { WidgetRenderer } from "../widgets/WidgetRenderer";
+import { WidgetRenderer, WidgetToastRegion } from "../widgets/WidgetRenderer";
 import "./app.css";
 
 export interface RagEvaluationSiteAppProps {
@@ -38,6 +46,18 @@ interface WidgetPageMeta {
 	maxWidth?: PageMaxWidth;
 }
 
+const SHORTCUT_PREFERENCE_KEY = "rag-evaluation-site:page-shortcuts-enabled";
+const EMPTY_PAGE_SHORTCUTS: PageShortcutSpec[] = [];
+
+function readShortcutPreference(): boolean {
+	if (typeof window === "undefined") return true;
+	try {
+		return window.localStorage.getItem(SHORTCUT_PREFERENCE_KEY) !== "false";
+	} catch {
+		return true;
+	}
+}
+
 const DEFAULT_NAV_ITEMS: AppNavItemSpec[] = [
 	{ id: "index", label: "Overview" },
 	{ id: "demo", label: "Demo" },
@@ -49,6 +69,7 @@ export function RagEvaluationSiteApp({
 	defaultPageId = "index",
 }: RagEvaluationSiteAppProps) {
 	const [locationVersion, setLocationVersion] = useState(0);
+	const [shortcutsEnabled, setShortcutsEnabled] = useState(readShortcutPreference);
 
 	useEffect(() => {
 		const handleLocationChange = () => setLocationVersion((version) => version + 1);
@@ -63,28 +84,69 @@ export function RagEvaluationSiteApp({
 		`${cleanApiBase}/pages/${encodeURIComponent(pageId)}${pageSearch}`,
 	);
 
-	async function handleAction(action: ActionSpec, context: WidgetActionContext): Promise<void> {
-		if (!confirmWidgetAction(action, context)) {
-			return;
+	const handleAction = useCallback(
+		async (action: ActionSpec, context: WidgetActionContext): Promise<void> => {
+			if (!confirmWidgetAction(action, context)) {
+				return;
+			}
+			if (action.kind !== "server") {
+				dispatchWidgetAction(action, context);
+				return;
+			}
+			const response = await fetch(`${cleanApiBase}/actions/${encodeURIComponent(action.name)}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ payload: resolveActionPayload(action.payload, context), context }),
+			});
+			const result = (await response.json().catch(() => ({
+				ok: false,
+				error: `Widget action failed: ${response.status} ${response.statusText}`,
+			}))) as {
+				ok?: boolean;
+				refresh?: boolean;
+				toast?: string;
+				error?: string;
+				fieldErrors?: Record<string, string>;
+			};
+			if (typeof window !== "undefined") {
+				window.dispatchEvent(
+					new CustomEvent("widget:action-result", {
+						detail: { action, context, responseOk: response.ok, result },
+					}),
+				);
+				if (result.toast || result.error)
+					window.dispatchEvent(
+						new CustomEvent("widget:toast", {
+							detail: {
+								message: result.toast ?? result.error,
+								tone: response.ok && result.ok !== false ? "success" : "danger",
+							},
+						}),
+					);
+			}
+			if (response.ok && result.refresh) refresh();
+		},
+		[cleanApiBase, refresh],
+	);
+
+	const shortcutBindings = page?.shortcuts?.bindings ?? EMPTY_PAGE_SHORTCUTS;
+	usePageShortcuts({
+		pageId: page?.id ?? pageId,
+		bindings: shortcutBindings,
+		enabled: shortcutsEnabled,
+		onAction: handleAction,
+	});
+
+	const updateShortcutsEnabled = (enabled: boolean) => {
+		setShortcutsEnabled(enabled);
+		if (typeof window !== "undefined") {
+			try {
+				window.localStorage.setItem(SHORTCUT_PREFERENCE_KEY, String(enabled));
+			} catch {
+				// The in-memory preference still applies when storage is unavailable.
+			}
 		}
-		if (action.kind !== "server") {
-			dispatchWidgetAction(action, context);
-			return;
-		}
-		const response = await fetch(`${cleanApiBase}/actions/${encodeURIComponent(action.name)}`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ payload: resolveActionPayload(action.payload, context), context }),
-		});
-		if (!response.ok) {
-			throw new Error(`Widget action failed: ${response.status} ${response.statusText}`);
-		}
-		const result = (await response.json()) as { refresh?: boolean; toast?: string };
-		if (result.toast && typeof window !== "undefined") {
-			window.dispatchEvent(new CustomEvent("widget:toast", { detail: result }));
-		}
-		if (result.refresh) refresh();
-	}
+	};
 
 	if (loading && !page) {
 		return (
@@ -112,9 +174,19 @@ export function RagEvaluationSiteApp({
 
 	return (
 		<>
-			{renderPage(page, pageId, (action, context) => {
+			{renderPage(page, pageId, shortcutsEnabled, (action, context) => {
 				void handleAction(action, context);
 			})}
+			<WidgetToastRegion />
+			<KeyboardShortcutHelp
+				items={shortcutBindings.map((binding) => ({
+					id: binding.id,
+					label: binding.label,
+					chord: formatShortcutChord(binding),
+				}))}
+				enabled={shortcutsEnabled}
+				onEnabledChange={updateShortcutsEnabled}
+			/>
 			{loading && <RoutePendingIndicator />}
 			{error && (
 				<ErrorCallout className="rag-evaluation-site-inline-error">
@@ -142,28 +214,35 @@ function RoutePendingIndicator(): ReactNode {
 function renderPage(
 	page: WidgetPageResponse,
 	pageId: string,
+	shortcutsEnabled: boolean,
 	onAction: (action: ActionSpec, context: WidgetActionContext) => void,
 ): ReactNode {
 	const meta = normalizeMeta(page.meta);
+	const shell = resolvePageShell(page, pageId, meta);
+	const shortcutKeys = shortcutsEnabled
+		? ariaKeyShortcuts(page.shortcuts?.bindings ?? EMPTY_PAGE_SHORTCUTS)
+		: undefined;
+	const usesFramedAppShell = shell.kind === "app" && shell.navigation.placement === "top";
 	const rootClassName = [
 		"rag-evaluation-site-root",
-		shouldUseDefaultShell(page, meta)
-			? "rag-evaluation-site-root--shell"
-			: "rag-evaluation-site-root--raw",
+		usesFramedAppShell ? "rag-evaluation-site-root--shell" : "rag-evaluation-site-root--raw",
 	]
 		.filter(Boolean)
 		.join(" ");
 
-	const courseShellNode = findRootCourseStudioShellNode(page.root);
-	if (courseShellNode) {
+	// Preserve historical course pages while typed root-owned pages use the
+	// ordinary registry path shared by every other full-viewport organism.
+	const legacyCourseShellNode = page.shell ? null : findRootCourseStudioShellNode(page.root);
+	if (legacyCourseShellNode) {
 		return (
 			<div
 				className={rootClassName}
 				data-rag-page="RagEvaluationSiteApp"
 				data-page-id={page.id}
 				data-rag-shell="course-studio"
+				aria-keyshortcuts={shortcutKeys}
 			>
-				{renderCourseStudioShellPage(courseShellNode, onAction)}
+				{renderCourseStudioShellPage(legacyCourseShellNode, onAction)}
 			</div>
 		);
 	}
@@ -172,28 +251,93 @@ function renderPage(
 		<WidgetRenderer node={page.root} registry={defaultWidgetRegistry} onAction={onAction} />
 	);
 
-	if (!shouldUseDefaultShell(page, meta)) {
+	if (shell.kind !== "app") {
 		return (
 			<div
 				className={rootClassName}
 				data-rag-page="RagEvaluationSiteApp"
 				data-page-id={page.id}
-				data-rag-shell="none"
+				data-rag-shell={shell.kind}
+				aria-keyshortcuts={shortcutKeys}
 			>
 				{renderedRoot}
 			</div>
 		);
 	}
 
-	const navItems = meta.navItems?.length ? meta.navItems : DEFAULT_NAV_ITEMS;
-	const activeNavItemId = meta.activeNavItemId ?? pageId;
+	const navigation = shell.navigation;
+	const activeItemId = navigation.activeItemId ?? pageId;
+	const dispatchNavigation = (itemId: string, componentType: "AppNav" | "SidebarNav") => {
+		const item = navigation.sections
+			.flatMap((section) => section.items)
+			.find((candidate) => candidate.id === itemId);
+		if (item?.action) {
+			dispatchWidgetAction(item.action, { itemId, value: itemId, componentType }, onAction);
+			return;
+		}
+		navigateToPage(itemId);
+	};
+	const content = (
+		<div
+			className={contentClassName(shell.content?.maxWidth)}
+			data-rag-layout="PageContent"
+			data-rag-scroll={shell.content?.scroll ?? "page"}
+		>
+			{renderedRoot}
+		</div>
+	);
 
+	if (navigation.placement === "sidebar") {
+		return (
+			<div
+				className={rootClassName}
+				data-rag-page="RagEvaluationSiteApp"
+				data-page-id={page.id}
+				data-rag-shell="app-sidebar"
+				aria-keyshortcuts={shortcutKeys}
+			>
+				<SidebarShell
+					sidebarWidth={navigation.sidebarWidth ?? 188}
+					sidebarAriaLabel={navigation.ariaLabel ?? "Primary navigation"}
+					narrowMode={navigation.narrowMode ?? "stack"}
+					contentPadding={shell.content?.padding ?? "md"}
+					header={
+						<span className="rag-evaluation-site-brand">
+							{renderRenderableValue(navigation.brand ?? page.title, onAction)}
+						</span>
+					}
+					sidebar={
+						<SidebarNav
+							ariaLabel={navigation.ariaLabel ?? "Primary navigation"}
+							sections={navigation.sections.map((section) => ({
+								...section,
+								label: renderRenderableValue(section.label, onAction),
+								items: section.items.map((item) => ({
+									...item,
+									label: renderRenderableValue(item.label, onAction),
+									icon: renderRenderableValue(item.icon, onAction),
+									badge: renderRenderableValue(item.badge, onAction),
+								})),
+							}))}
+							activeItemId={activeItemId}
+							onItemSelect={(itemId) => dispatchNavigation(itemId, "SidebarNav")}
+						/>
+					}
+				>
+					{content}
+				</SidebarShell>
+			</div>
+		);
+	}
+
+	const items = navigation.sections.flatMap((section) => section.items);
 	return (
 		<div
 			className={rootClassName}
 			data-rag-page="RagEvaluationSiteApp"
 			data-page-id={page.id}
-			data-rag-shell="default"
+			data-rag-shell="app-top"
+			aria-keyshortcuts={shortcutKeys}
 		>
 			<AppShell
 				className="rag-evaluation-site-shell"
@@ -201,32 +345,45 @@ function renderPage(
 					<AppNav
 						brand={
 							<span className="rag-evaluation-site-brand">
-								{page.title || "RAG Evaluation Site"}
+								{renderRenderableValue(navigation.brand ?? page.title, onAction)}
 							</span>
 						}
-						items={navItems.map((item) => ({ id: item.id, label: renderNavLabel(item.label) }))}
-						activeItemId={activeNavItemId}
-						onItemSelect={(itemId) => {
-							const item = navItems.find((candidate) => candidate.id === itemId);
-							if (item?.action) {
-								dispatchWidgetAction(
-									item.action,
-									{ value: itemId, componentType: "AppNav" },
-									onAction,
-								);
-								return;
-							}
-							navigateToPage(itemId);
-						}}
+						items={items.map((item) => ({
+							id: item.id,
+							label: renderPageNavigationLabel(item, onAction),
+							disabled: item.disabled,
+						}))}
+						activeItemId={activeItemId}
+						onItemSelect={(itemId) => dispatchNavigation(itemId, "AppNav")}
 					/>
 				}
 			>
-				<div className={contentClassName(meta.maxWidth)} data-rag-layout="PageContent">
-					{renderedRoot}
-				</div>
+				{content}
 			</AppShell>
 		</div>
 	);
+}
+
+function resolvePageShell(
+	page: WidgetPageResponse,
+	pageId: string,
+	meta: WidgetPageMeta,
+): PageShellSpec {
+	if (page.shell) return page.shell;
+	if (meta.shell === "none" || isAppShellNode(page.root)) return { kind: "none" };
+	if (findRootCourseStudioShellNode(page.root)) return { kind: "root-owned" };
+	const items = meta.navItems?.length ? meta.navItems : DEFAULT_NAV_ITEMS;
+	return {
+		kind: "app",
+		navigation: {
+			placement: "top",
+			brand: page.title || "RAG Evaluation Site",
+			activeItemId: meta.activeNavItemId ?? pageId,
+			ariaLabel: "Primary",
+			sections: [{ id: "primary", label: "Primary", items }],
+		},
+		content: { maxWidth: meta.maxWidth ?? "wide", padding: "none", scroll: "page" },
+	};
 }
 
 function renderCourseStudioShellPage(
@@ -286,13 +443,6 @@ function renderCourseStudioShellPage(
 	);
 }
 
-function shouldUseDefaultShell(page: WidgetPageResponse, meta: WidgetPageMeta): boolean {
-	if (meta.shell === "none") return false;
-	if (isAppShellNode(page.root)) return false;
-	if (findRootCourseStudioShellNode(page.root)) return false;
-	return true;
-}
-
 function isAppShellNode(node: WidgetNode): boolean {
 	return node.kind === "component" && node.type === "AppShell";
 }
@@ -334,8 +484,19 @@ function isAppNavItemSpec(value: unknown): value is AppNavItemSpec {
 	return typeof candidate.id === "string" && candidate.label !== undefined;
 }
 
-function renderNavLabel(label: RenderableValue): ReactNode {
-	return renderRenderableValue(label);
+function renderPageNavigationLabel(
+	item: PageNavigationItemSpec,
+	onAction: (action: ActionSpec, context: WidgetActionContext) => void,
+): ReactNode {
+	return (
+		<>
+			{item.icon ? (
+				<span aria-hidden="true">{renderRenderableValue(item.icon, onAction)}</span>
+			) : null}
+			{renderRenderableValue(item.label, onAction)}
+			{item.badge ? <span>{renderRenderableValue(item.badge, onAction)}</span> : null}
+		</>
+	);
 }
 
 function renderRenderableValue(
@@ -407,10 +568,10 @@ function readSearchFromLocation(_locationVersion: number): string {
 function readPageIdFromLocation(defaultPageId: string): string {
 	if (typeof window === "undefined") return defaultPageId;
 	const url = new URL(window.location.href);
-	const queryPage = url.searchParams.get("page");
-	if (queryPage) return queryPage;
 	const parts = url.pathname.split("/").filter(Boolean);
 	if (parts[0] === "pages" && parts[1]) return parts[1];
+	const queryPage = url.searchParams.get("page");
+	if (queryPage) return queryPage;
 	if (parts[0] === "print" && parts[1] === "handouts") return "print-handout";
 	if (parts[0] === "present" && parts[1] === "slides") return "present-slide";
 	return defaultPageId;

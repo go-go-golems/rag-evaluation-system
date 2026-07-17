@@ -1,4 +1,11 @@
-import { type CSSProperties, createElement, Fragment, type ReactNode } from "react";
+import {
+	type CSSProperties,
+	createElement,
+	Fragment,
+	type ReactNode,
+	useEffect,
+	useState,
+} from "react";
 import { ErrorCallout } from "../components/atoms";
 import { bindAction, dispatchWidgetAction, type WidgetActionHandler } from "./actions";
 import type { ComponentNode, WidgetNode } from "./ir";
@@ -13,6 +20,38 @@ export interface WidgetRendererProps {
 export function WidgetRenderer({ node, registry, onAction }: WidgetRendererProps) {
 	const ctx = createRenderContext(registry, onAction);
 	return <>{renderWidgetNode(node, ctx, registry)}</>;
+}
+
+export function WidgetToastRegion() {
+	const [toast, setToast] = useState<{ message: string; tone?: string }>();
+	useEffect(() => {
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		const listener = (event: Event) => {
+			const detail = (event as CustomEvent<{ message?: string; toast?: string; tone?: string }>)
+				.detail;
+			const message = detail.message ?? detail.toast;
+			if (!message) return;
+			setToast({ message, tone: detail.tone });
+			if (timer) clearTimeout(timer);
+			timer = setTimeout(() => setToast(undefined), 4000);
+		};
+		window.addEventListener("widget:toast", listener);
+		return () => {
+			window.removeEventListener("widget:toast", listener);
+			if (timer) clearTimeout(timer);
+		};
+	}, []);
+	return (
+		<div
+			aria-live="polite"
+			aria-atomic="true"
+			role="status"
+			data-widget-toast-tone={toast?.tone}
+			style={{ position: "fixed", right: 16, bottom: 16, zIndex: 1000, maxWidth: 420 }}
+		>
+			{toast?.message}
+		</div>
+	);
 }
 
 function createRenderContext(

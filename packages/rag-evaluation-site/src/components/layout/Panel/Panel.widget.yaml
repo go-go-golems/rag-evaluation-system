@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: Panel
-module: ui.dsl
+module: widget.dsl
 helper: panel
 props: PanelWidgetProps
 adapter:

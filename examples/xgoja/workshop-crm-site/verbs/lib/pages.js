@@ -20,19 +20,36 @@ function createPages({ widget, store }) {
 			.date("workshopDate", { label: "Scheduled date", group: "Workshop" }),
 	);
 
-	function nav(active) {
-		return [
-			{ id: "index", label: "Command center", action: act.navigate("/pages/index") },
-			{ id: "pipeline", label: "Pipeline", action: act.navigate("/pages/pipeline") },
-			{ id: "lead", label: "New lead", action: act.navigate("/pages/lead") },
-			{ id: "runs", label: "Workshop runs", action: act.navigate("/pages/runs") },
-		].map((item) => ({ ...item, active: item.id === active }));
+	const navItems = [
+		{ id: "index", label: "Command center" },
+		{ id: "pipeline", label: "Pipeline" },
+		{ id: "lead", label: "New lead" },
+		{ id: "runs", label: "Workshop runs" },
+	];
+
+	function appShell(active) {
+		return widget.app.shell((shell) =>
+			shell
+				.brand("Workshop CRM")
+				.navigation((navigation) =>
+					navigation
+						.placement("top")
+						.active(active)
+						.ariaLabel("Workspace")
+						.section("workspace", "Workspace", (items) => {
+							navItems.forEach((item) => {
+								items.item(item.id, item.label, act.navigate(`/pages/${item.id}`));
+							});
+						}),
+				)
+				.content((content) => content.maxWidth("wide").padding("none")),
+		);
 	}
 
 	function asPage(title, id, configure) {
 		return widget
 			.page(title, (p) => {
-				p.id(id).meta("activeNavItemId", id).meta("navItems", nav(id)).meta("maxWidth", "wide");
+				p.id(id).shell(appShell(id));
 				configure(p);
 			})
 			.toPage();
@@ -241,7 +258,7 @@ function createPages({ widget, store }) {
 						),
 				)
 				.section("Opportunity record", (s) => s.view(widget.crm.recordFields(values, dealFields)))
-				.section("Activity", (s) => s.view(widget.crm.activityFeed(activities))),
+				.section("Activity", (s) => s.view(widget.data.activityFeed(activities))),
 		);
 	}
 

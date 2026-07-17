@@ -1,0 +1,39 @@
+.root {
+	position: fixed;
+	right: 16px;
+	bottom: 16px;
+	z-index: 900;
+}
+
+.dialog {
+	width: min(420px, calc(100vw - 32px));
+	padding: 16px;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-surface);
+	color: var(--mac-text);
+}
+
+.dialog[open] {
+	display: grid;
+	gap: 16px;
+}
+
+.dialog::backdrop {
+	background: color-mix(in srgb, var(--mac-text) 42%, transparent);
+}
+
+.header,
+.item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.list {
+	display: grid;
+	gap: 8px;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}

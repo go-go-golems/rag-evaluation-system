@@ -4,7 +4,7 @@ import { AppShell } from "./AppShell";
 
 export const appShellWidget = defineWidget<AppShellWidgetProps>({
 	type: "AppShell",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children, ctx) => (
 		<AppShell
 			className={props.className}

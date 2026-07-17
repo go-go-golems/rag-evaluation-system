@@ -4,7 +4,7 @@ import { FormRow } from "./FormRow";
 
 export const formRowWidget = defineWidget<FormRowWidgetProps>({
 	type: "FormRow",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, _children, ctx) => (
 		<FormRow
 			className={props.className}

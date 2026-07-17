@@ -5,7 +5,9 @@ export type ActionSpec =
 	| DownloadActionSpec
 	| ServerActionSpec
 	| EventActionSpec
-	| CopyActionSpec;
+	| CopyActionSpec
+	| OpenOverlayActionSpec
+	| CloseOverlayActionSpec;
 
 export interface ActionSpecBase {
 	/**
@@ -48,6 +50,10 @@ export interface NavigateActionSpec extends ActionSpecBase {
 	kind: "navigate";
 	to: string;
 	params?: JsonObject;
+	query?: Record<string, JsonValue | JsonValue[]>;
+	preserveQuery?: string[];
+	omitEmpty?: boolean;
+	replace?: boolean;
 }
 
 export interface DownloadActionSpec extends ActionSpecBase {
@@ -72,4 +78,14 @@ export interface CopyActionSpec extends ActionSpecBase {
 	kind: "copy";
 	value?: string;
 	field?: string;
+}
+
+export interface OpenOverlayActionSpec extends ActionSpecBase {
+	kind: "openOverlay";
+	target: string;
+}
+
+export interface CloseOverlayActionSpec extends ActionSpecBase {
+	kind: "closeOverlay";
+	target?: string;
 }

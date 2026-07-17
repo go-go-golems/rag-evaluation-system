@@ -1,6 +1,6 @@
 schemaVersion: widget-manifest/v1
 type: BoardEngine
-module: data.dsl
+module: widget.dsl
 helper: board
 props: BoardEngineWidgetProps
 adapter:

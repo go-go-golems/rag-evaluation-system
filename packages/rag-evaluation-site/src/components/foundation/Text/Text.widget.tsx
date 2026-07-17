@@ -4,7 +4,7 @@ import { Text } from "./Text";
 
 export const textWidget = defineWidget<TextWidgetProps>({
 	type: "Text",
-	module: "ui.dsl",
+	module: "widget.dsl",
 	render: (props, children) => (
 		<Text
 			className={props.className}
