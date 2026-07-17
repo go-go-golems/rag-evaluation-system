@@ -45,7 +45,7 @@ func TestGeneratedRuntimeCanRequireRagModule(t *testing.T) {
 	defer func() { _ = runtime.Close(context.Background()) }()
 
 	result, err := runtime.Owner.Call(context.Background(), "rag-provider-test.require", func(_ context.Context, vm *goja.Runtime) (any, error) {
-		value, runErr := vm.RunString(`const rag = require("rag"); ({ experiment: typeof rag.experiment, version: rag.version });`)
+		value, runErr := vm.RunString(`const rag = require("rag"); ({ pipeline: typeof rag.pipeline, study: typeof rag.study, version: rag.version });`)
 		if runErr != nil {
 			return nil, runErr
 		}
@@ -55,7 +55,7 @@ func TestGeneratedRuntimeCanRequireRagModule(t *testing.T) {
 		t.Fatalf("require rag: %v", err)
 	}
 	got := result.(map[string]any)
-	if got["experiment"] != "function" || got["version"] != "v1" {
+	if got["pipeline"] != "function" || got["study"] != "function" || got["version"] != "v2" {
 		t.Fatalf("unexpected RAG module exports: %#v", got)
 	}
 }
