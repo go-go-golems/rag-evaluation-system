@@ -105,22 +105,32 @@ func FuseWeightedRRF(channels map[string][]ChunkHit, rankConstant int, weights m
 		limit = 10
 	}
 	fused := map[string]*FusedHit{}
+	winningContribution := map[string]float64{}
+	winningChannel := map[string]string{}
 	for name, hits := range channels {
 		weight := 1.0
 		if configured, ok := weights[name]; ok {
 			weight = configured
 		}
 		for _, hit := range CollapseDocuments(hits) {
+			contribution := weight / float64(rankConstant+hit.Rank)
 			item := fused[hit.DocumentRevisionID]
 			if item == nil {
-				copy := FusedHit{ChunkHit: hit, Components: map[string]RRFComponent{}}
-				// The output score is the RRF score, not the raw score from
-				// whichever channel happens to be visited first.
-				copy.Score = 0
-				item = &copy
+				candidate := FusedHit{ChunkHit: hit, Components: map[string]RRFComponent{}}
+				candidate.Score = 0
+				item = &candidate
 				fused[hit.DocumentRevisionID] = item
+				winningContribution[hit.DocumentRevisionID] = contribution
+				winningChannel[hit.DocumentRevisionID] = name
+			} else if contribution > winningContribution[hit.DocumentRevisionID] ||
+				(contribution == winningContribution[hit.DocumentRevisionID] && (name < winningChannel[hit.DocumentRevisionID] ||
+					(name == winningChannel[hit.DocumentRevisionID] && hit.ChunkID < item.ChunkID))) {
+				fusedScore := item.Score
+				item.ChunkHit = hit
+				item.Score = fusedScore
+				winningContribution[hit.DocumentRevisionID] = contribution
+				winningChannel[hit.DocumentRevisionID] = name
 			}
-			contribution := weight / float64(rankConstant+hit.Rank)
 			item.Score += contribution
 			item.Components[name] = RRFComponent{hit.Rank, hit.Score, hit.ChunkID, contribution}
 		}

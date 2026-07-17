@@ -21,6 +21,19 @@ func TestCollapseDocumentsAndFuseRRF(t *testing.T) {
 	}
 }
 
+func TestFuseWeightedRRFSelectsRepresentativeChunkDeterministically(t *testing.T) {
+	channels := map[string][]ChunkHit{
+		"lexical":  {{Rank: 1, ChunkID: "lexical-chunk", DocumentRevisionID: "doc", Score: 4}},
+		"semantic": {{Rank: 2, ChunkID: "semantic-chunk", DocumentRevisionID: "doc", Score: 0.9}},
+	}
+	for i := 0; i < 100; i++ {
+		fused := FuseWeightedRRF(channels, 60, map[string]float64{"semantic": 2}, 10)
+		if len(fused) != 1 || fused[0].ChunkID != "semantic-chunk" {
+			t.Fatalf("iteration %d representative = %#v", i, fused)
+		}
+	}
+}
+
 func TestFuseWeightedRRFUsesConfiguredChannelWeight(t *testing.T) {
 	channels := map[string][]ChunkHit{
 		"bm25":   {{Rank: 1, ChunkID: "a-1", DocumentRevisionID: "a", Score: 4}},
