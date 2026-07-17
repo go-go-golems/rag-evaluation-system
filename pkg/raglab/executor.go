@@ -67,7 +67,7 @@ func NewExecutor(backend ChannelRetriever, recorder RunRecorder) *Executor {
 	return &Executor{backend: backend, recorder: recorder}
 }
 
-func (e *Executor) Execute(ctx context.Context, runID string, specification ExperimentSpecification, cards []EvaluationCard, options ExecutionOptions) (_ *ExecutionResult, retErr error) {
+func (e *Executor) Execute(ctx context.Context, runID string, specification ExperimentSpecification, cards []EvaluationCard, options ExecutionOptions) (*ExecutionResult, error) {
 	if e == nil || e.backend == nil || e.recorder == nil {
 		return nil, errors.New("RAG_EXECUTOR_REQUIRED: retrieval backend and run recorder are required")
 	}
@@ -146,6 +146,9 @@ func (e *Executor) fail(ctx context.Context, runID string, cause error) (*Execut
 }
 
 func executable(specification ExperimentSpecification, options ExecutionOptions) error {
+	if !emptyFilter(specification.Retrieval.Filter) {
+		return errors.New("RAG_EXECUTION_UNSUPPORTED: global filters are not executable until every channel enforces and traces them")
+	}
 	for _, representation := range specification.Inputs.Representations {
 		if representation.Kind != RawChunksRepresentation {
 			return errors.New("RAG_EXECUTION_UNSUPPORTED: materialized representations need a representation executor")
@@ -155,6 +158,9 @@ func executable(specification ExperimentSpecification, options ExecutionOptions)
 		return errors.New("RAG_EXECUTION_UNSUPPORTED: parentChunk collapse needs materialized parent mappings")
 	}
 	for _, channel := range specification.Retrieval.Channels {
+		if !emptyFilter(channel.Filter) {
+			return errors.Errorf("RAG_EXECUTION_UNSUPPORTED: channel %q filter is not executable until retrieval enforces and traces it", channel.Name)
+		}
 		if channel.Backend == VectorBackend && options.Embedder == nil {
 			return errors.New("RAG_EMBEDDER_REQUIRED: vector retrieval needs an explicit query embedder")
 		}
@@ -163,6 +169,10 @@ func executable(specification ExperimentSpecification, options ExecutionOptions)
 		return errors.New("RAG_RERANKER_REQUIRED: reranking needs an explicit reranker")
 	}
 	return nil
+}
+
+func emptyFilter(filter FilterSpec) bool {
+	return len(filter.SourceIDs) == 0 && len(filter.DocumentIDs) == 0 && len(filter.ContentTypes) == 0 && len(filter.MetadataEquals) == 0
 }
 
 type executionTrace struct {
@@ -193,6 +203,7 @@ type executionTiming struct {
 	EmbeddingMilliseconds int64 `json:"embeddingMilliseconds"`
 	RetrievalMilliseconds int64 `json:"retrievalMilliseconds"`
 	FusionMilliseconds    int64 `json:"fusionMilliseconds"`
+	RerankingMilliseconds int64 `json:"rerankingMilliseconds"`
 	TotalMilliseconds     int64 `json:"totalMilliseconds"`
 }
 
@@ -205,6 +216,9 @@ func (e *Executor) executeCard(ctx context.Context, specification ExperimentSpec
 	var queryVector []float32
 	var embeddingMilliseconds int64
 	for _, channel := range specification.Retrieval.Channels {
+		if err := ctx.Err(); err != nil {
+			return executionTrace{}, err
+		}
 		channelStarted := time.Now()
 		var hits []immutableretrieval.ChunkHit
 		var err error
@@ -259,12 +273,19 @@ func (e *Executor) executeCard(ctx context.Context, specification ExperimentSpec
 			trace.Results[i] = trace.Fusion[i].ChunkHit
 		}
 	}
+	fusionMilliseconds := time.Since(fusionStarted).Milliseconds()
+	var rerankingMilliseconds int64
 	if specification.Retrieval.Reranking != nil {
+		if err := ctx.Err(); err != nil {
+			return executionTrace{}, err
+		}
+		rerankingStarted := time.Now()
 		if err := applyReranking(ctx, &trace, card.Query, specification.Retrieval, options.Reranker); err != nil {
 			return executionTrace{}, err
 		}
+		rerankingMilliseconds = time.Since(rerankingStarted).Milliseconds()
 	}
-	trace.Timing = executionTiming{EmbeddingMilliseconds: embeddingMilliseconds, RetrievalMilliseconds: retrievalMilliseconds, FusionMilliseconds: time.Since(fusionStarted).Milliseconds(), TotalMilliseconds: time.Since(started).Milliseconds()}
+	trace.Timing = executionTiming{EmbeddingMilliseconds: embeddingMilliseconds, RetrievalMilliseconds: retrievalMilliseconds, FusionMilliseconds: fusionMilliseconds, RerankingMilliseconds: rerankingMilliseconds, TotalMilliseconds: time.Since(started).Milliseconds()}
 	trace.FirstRelevantRank, trace.RecallAtResults = relevance(trace.Results, card.RelevantDocumentRevisionIDs, specification.Retrieval.Results)
 	return trace, nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/go-go-golems/rag-evaluation-system/internal/services/experimentrun"
@@ -167,6 +168,26 @@ func TestExecutorReranksBoundedCandidatesAndPersistsBothOrders(t *testing.T) {
 	}
 	if trace.Results[0].ChunkID != "b-1" || trace.Results[0].Rank != 1 || trace.Results[0].Score != 2 {
 		t.Fatalf("reranked results = %#v", trace.Results)
+	}
+}
+
+func TestExecutorRejectsFiltersBeforeRecordingEvents(t *testing.T) {
+	specification, err := NewExperiment("filtered").
+		Corpus(CorpusSnapshot("snapshot")).Chunks(ChunkSet("chunks")).BM25(BM25Index("bm25")).Evaluation(EvaluationDataset("evaluation")).
+		Retrieval(func(builder *RetrievalBuilder) {
+			builder.Channel("lexical", func(channel *ChannelBuilder) {
+				channel.BM25().TopK(10).Filter(func(filter *FilterBuilder) { filter.SourceIDs("wp:1") })
+			}).Results(10)
+		}).Metrics(func(metrics *MetricsBuilder) {
+		metrics.RelevanceAt(RelevanceGrade{Name: "2_SUBSTANTIAL", Ordinal: 2}).MRR()
+	}).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	recorder := &fakeRunRecorder{}
+	_, err = NewExecutor(fakeRetrievalBackend{}, recorder).Execute(context.Background(), "run-filter", specification, []EvaluationCard{{ID: "q", Query: "query"}}, ExecutionOptions{})
+	if err == nil || !strings.Contains(err.Error(), "channel \"lexical\" filter is not executable") || len(recorder.events) != 0 {
+		t.Fatalf("err=%v events=%#v", err, recorder.events)
 	}
 }
 
