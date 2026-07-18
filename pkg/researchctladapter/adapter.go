@@ -264,5 +264,5 @@ func WrapExecution(execution ragcontract.PipelineExecution, resolved ResolvedInp
 		return lab.SpecificationRecord{}, err
 	}
 	provenance, _ := ragcontract.CanonicalJSON(map[string]any{"cellId": execution.CellID, "variantId": execution.VariantID, "factors": execution.Factors})
-	return lab.SpecificationRecord{ID: id, IdentityScheme: lab.ExecutionIdentityScheme, CanonicalIdentity: identity, DisplayName: displayName, Provenance: provenance, Labels: map[string]string{"rag.cell": execution.CellID, "rag.variant": execution.VariantID}}, nil
+	return lab.SpecificationRecord{ID: id, IdentityScheme: lab.ExecutionIdentityScheme, CanonicalIdentity: identity, DisplayName: displayName, Provenance: provenance, Labels: map[string]string{"rag.cell": execution.CellID, "rag.variant": execution.VariantID, "evaluation.status": execution.Dataset.Status, "evaluation.split": execution.Dataset.Split}}, nil
 }

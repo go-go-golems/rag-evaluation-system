@@ -1,0 +1,27 @@
+{
+	"schemaVersion": "rag-sol2-parity-fixture/v1",
+	"oracle": {
+		"unitCount": 2,
+		"chunkCount": 4,
+		"representationCount": 16,
+		"representationKinds": {
+			"raw": 4,
+			"summary": 4,
+			"question": 8
+		},
+		"metricFixture": {
+			"precisionAt3": 0.6666666666666666,
+			"recallAt3": 1,
+			"hitRateAt3": 1,
+			"mrr": 1,
+			"ndcgAt3": 0.9828422279067397
+		}
+	},
+	"intentionalCorrections": [
+		"Canonical units omit rag-sol2 synthetic separator bytes so every byte is attributable to source records.",
+		"Canonical IDs use Go-owned v2 manifest and record identities rather than rag-sol2 JavaScript keys and hashes.",
+		"Canonical retrieval collapses each channel before weighted fusion and hydrates source chunks explicitly.",
+		"Fixture generation and hash embeddings are named smoke/parity providers and make no model-quality claim."
+	],
+	"blockingDiscrepancies": []
+}

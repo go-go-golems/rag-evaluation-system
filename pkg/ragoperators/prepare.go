@@ -32,12 +32,16 @@ func (o unitOperator) Execute(ctx context.Context, node ragcontract.Node, inputs
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
-		if o.kind == "transcript.units.agents-view-runs" && record.Role == "assistant" && len(groups) > 0 {
-			last := groups[len(groups)-1]
-			tail := last[len(last)-1]
-			if tail.Role == "assistant" && tail.SessionID == record.SessionID && tail.Ordinal+1 == record.Ordinal {
-				groups[len(groups)-1] = append(last, record)
+		if o.kind == "transcript.units.agents-view-runs" {
+			if record.Text == "" || (record.Role != "user" && record.Role != "assistant") {
 				continue
+			}
+			if record.Role == "assistant" && len(groups) > 0 {
+				last := groups[len(groups)-1]
+				if last[0].Role == "assistant" && last[0].SessionID == record.SessionID {
+					groups[len(groups)-1] = append(last, record)
+					continue
+				}
 			}
 		}
 		groups = append(groups, []SourceRecord{record})

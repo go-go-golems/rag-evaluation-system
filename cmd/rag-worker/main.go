@@ -124,7 +124,8 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	engine := ragengine.New(nil)
-	_, err = engine.Execute(ctx, execution, corpusArtifact.Corpus, evaluationArtifact.Dataset, observer{encoder: encoder}, ragengine.Options{Cache: ragoperators.NewMemoryCache()})
+	fixtures := ragoperators.NewFixtureProviders()
+	_, err = engine.Execute(ctx, execution, corpusArtifact.Corpus, evaluationArtifact.Dataset, observer{encoder: encoder}, ragengine.Options{Manifests: fixtures.Resolver, Schemas: fixtures, Generator: fixtures, Embedder: fixtures, Cache: ragoperators.NewMemoryCache()})
 	if err != nil {
 		fail(encoder, "RAG_WORKER_EXECUTE", err)
 		return

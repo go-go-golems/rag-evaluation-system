@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
@@ -103,7 +104,11 @@ func (c *TTCCatalog) resolveEvaluation(ctx context.Context, db *sql.DB, referenc
 		sort.Strings(query.RelevantIDs)
 		dataset.Queries = append(dataset.Queries, query)
 	}
-	envelope := ragoperators.NewEvaluationArtifact(dataset, reference.Catalog.ID, "smoke", status, "unit", corpusArtifact.Manifest.Digest)
+	split := "candidate"
+	if strings.Contains(reference.Catalog.ID, "baseline") {
+		split = "smoke"
+	}
+	envelope := ragoperators.NewEvaluationArtifact(dataset, reference.Catalog.ID, split, status, "unit", corpusArtifact.Manifest.Digest)
 	data, _ := json.Marshal(envelope)
 	reference.ID = reference.Catalog.ID
 	reference.SchemaVersion = ragcontract.EvaluationManifestSchema

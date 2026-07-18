@@ -11,6 +11,9 @@ import (
 )
 
 func Evaluate(query Query, evidence []Evidence, answer *Answer, measures []ragcontract.Measure, timing map[string]int64, usage Usage, failures []ragcontract.FailureTrace, storageBytes int64) []Metric {
+	return EvaluateForTarget(query, evidence, answer, measures, timing, usage, failures, storageBytes, "")
+}
+func EvaluateForTarget(query Query, evidence []Evidence, answer *Answer, measures []ragcontract.Measure, timing map[string]int64, usage Usage, failures []ragcontract.FailureTrace, storageBytes int64, target string) []Metric {
 	relevant := map[string]float64{}
 	for _, id := range query.RelevantIDs {
 		relevant[id] = 1
@@ -18,13 +21,26 @@ func Evaluate(query Query, evidence []Evidence, answer *Answer, measures []ragco
 	for id, grade := range query.Grades {
 		relevant[id] = grade
 	}
-	ids := make([]string, len(evidence))
-	for i, item := range evidence {
-		ids[i] = item.Collapse.ID
-		if _, ok := relevant[ids[i]]; !ok {
-			if _, exists := relevant[item.Chunk.Record.ID]; exists {
-				ids[i] = item.Chunk.Record.ID
+	ids := make([]string, 0, len(evidence))
+	seenTargets := map[string]bool{}
+	for _, item := range evidence {
+		id := item.Collapse.ID
+		if target == "unit" && item.Chunk.Record.ParentUnitID != "" {
+			id = item.Chunk.Record.ParentUnitID
+		}
+		if target == "chunk" && item.Chunk.Record.ID != "" {
+			id = item.Chunk.Record.ID
+		}
+		if _, ok := relevant[id]; !ok {
+			if _, exists := relevant[item.Chunk.Record.ParentUnitID]; exists {
+				id = item.Chunk.Record.ParentUnitID
+			} else if _, exists := relevant[item.Chunk.Record.ID]; exists {
+				id = item.Chunk.Record.ID
 			}
+		}
+		if !seenTargets[id] {
+			seenTargets[id] = true
+			ids = append(ids, id)
 		}
 	}
 	out := []Metric{}
@@ -170,10 +186,11 @@ func (evaluateOperator) Execute(_ context.Context, node ragcontract.Node, inputs
 	}
 	var config struct {
 		Measures []ragcontract.Measure `json:"measures"`
+		Target   string                `json:"target"`
 	}
 	if err := decodeConfig(node.Config, &config); err != nil {
 		return nil, err
 	}
-	metrics := Evaluate(env.CurrentQuery, evidence, nil, config.Measures, map[string]int64{}, env.Usage, nil, 0)
+	metrics := EvaluateForTarget(env.CurrentQuery, evidence, nil, config.Measures, map[string]int64{}, env.Usage, nil, 0, config.Target)
 	return map[string]any{"evaluation": metrics}, nil
 }

@@ -83,11 +83,21 @@ func (e *Engine) Execute(ctx context.Context, execution ragcontract.PipelineExec
 	if err := observer.Artifact(ctx, pipelineArtifact); err != nil {
 		return nil, err
 	}
-	for _, query := range dataset.Queries {
+	staticNodes := staticNodeIDs(execution.Pipeline)
+	var prepared map[string]any
+	defer func() { closeIndexes(prepared) }()
+	for queryIndex, query := range dataset.Queries {
 		if err := ctx.Err(); err != nil {
 			return result, err
 		}
-		trace, metrics, artifacts, err := e.executeQuery(ctx, execution, corpus, query, options, observer)
+		skip := map[string]bool{}
+		if queryIndex > 0 {
+			skip = staticNodes
+		}
+		trace, metrics, artifacts, values, err := e.executeQuery(ctx, execution, corpus, query, options, observer, prepared, skip)
+		if queryIndex == 0 {
+			prepared = selectPrepared(values, staticNodes)
+		}
 		result.Metrics = append(result.Metrics, metrics...)
 		result.Artifacts = append(result.Artifacts, artifacts...)
 		if err != nil {
@@ -117,26 +127,32 @@ func (e *Engine) Execute(ctx context.Context, execution ragcontract.PipelineExec
 	}
 	return result, nil
 }
-func (e *Engine) executeQuery(ctx context.Context, execution ragcontract.PipelineExecution, corpus ragoperators.Corpus, query ragoperators.Query, options Options, observer Observer) (ragcontract.QueryTrace, []ragoperators.Metric, []ragoperators.Artifact, error) {
+func (e *Engine) executeQuery(ctx context.Context, execution ragcontract.PipelineExecution, corpus ragoperators.Corpus, query ragoperators.Query, options Options, observer Observer, prepared map[string]any, skip map[string]bool) (ragcontract.QueryTrace, []ragoperators.Metric, []ragoperators.Artifact, map[string]any, error) {
 	digest, _ := ragcontract.Digest(query.Text)
 	trace := ragcontract.QueryTrace{SchemaVersion: ragcontract.TraceSchemaVersion, Query: ragcontract.QueryInputTrace{ID: query.ID, TextDigest: digest, DatasetSplit: execution.Dataset.Split}, Operators: []ragcontract.OperatorTrace{}, Channels: []ragcontract.ChannelTrace{}, Collapses: []ragcontract.CollapseTrace{}, Results: []ragcontract.ResultTrace{}, Timing: ragcontract.TimingTrace{ByOperator: map[string]int64{}}, Usage: ragcontract.UsageTrace{}, Failures: []ragcontract.FailureTrace{}}
 	env := &ragoperators.Environment{Manifests: options.Manifests, Schemas: options.Schemas, Generator: options.Generator, Embedder: options.Embedder, Reranker: options.Reranker, Cache: options.Cache, Trace: &trace, CurrentQuery: query, QueryText: query.Text, Usage: ragoperators.Usage{Cost: map[string]float64{}}}
 	values := map[string]any{"corpus/out": corpus, "query/out": query}
+	for key, value := range prepared {
+		values[key] = value
+	}
 	artifacts := []ragoperators.Artifact{}
 	started := time.Now()
 	for _, node := range execution.Pipeline.Nodes {
+		if skip[node.ID] {
+			continue
+		}
 		if err := ctx.Err(); err != nil {
-			return trace, nil, artifacts, err
+			return trace, nil, artifacts, values, err
 		}
 		operator, ok := e.Registry.Lookup(node.Operator)
 		if !ok {
-			return trace, nil, artifacts, fmt.Errorf("RAG_OPERATOR_UNAVAILABLE: %s", node.Operator.ID())
+			return trace, nil, artifacts, values, fmt.Errorf("RAG_OPERATOR_UNAVAILABLE: %s", node.Operator.ID())
 		}
 		inputs := map[string]any{}
 		for _, binding := range node.Inputs {
 			value, exists := values[binding.From.NodeID+"/"+binding.From.Port]
 			if !exists {
-				return trace, nil, artifacts, fmt.Errorf("RAG_RUNTIME_INPUT: %s.%s", binding.From.NodeID, binding.From.Port)
+				return trace, nil, artifacts, values, fmt.Errorf("RAG_RUNTIME_INPUT: %s.%s", binding.From.NodeID, binding.From.Port)
 			}
 			inputs[binding.Port] = value
 		}
@@ -150,14 +166,14 @@ func (e *Engine) executeQuery(ctx context.Context, execution ragcontract.Pipelin
 		trace.Operators = append(trace.Operators, ragcontract.OperatorTrace{NodeID: node.ID, Operator: node.Operator, Status: status, InputCount: len(inputs), OutputCount: len(outputs), DurationMilliseconds: duration})
 		trace.Timing.ByOperator[node.ID] = duration
 		if err != nil {
-			return trace, nil, artifacts, fmt.Errorf("operator %s: %w", node.Operator.ID(), err)
+			return trace, nil, artifacts, values, fmt.Errorf("operator %s: %w", node.Operator.ID(), err)
 		}
 		if len(outputs) == 0 {
-			return trace, nil, artifacts, fmt.Errorf("RAG_RUNTIME_OUTPUT_EMPTY: %s", node.ID)
+			return trace, nil, artifacts, values, fmt.Errorf("RAG_RUNTIME_OUTPUT_EMPTY: %s", node.ID)
 		}
 		definition, known := e.Definitions.Definition(node.Operator)
 		if !known {
-			return trace, nil, artifacts, fmt.Errorf("RAG_RUNTIME_DEFINITION: %s", node.Operator.ID())
+			return trace, nil, artifacts, values, fmt.Errorf("RAG_RUNTIME_DEFINITION: %s", node.Operator.ID())
 		}
 		allowedOutputs := map[string]bool{}
 		for _, output := range definition.Outputs {
@@ -170,18 +186,18 @@ func (e *Engine) executeQuery(ctx context.Context, execution ragcontract.Pipelin
 			if port == "artifact" {
 				artifact, ok := value.(ragoperators.Artifact)
 				if !ok {
-					return trace, nil, artifacts, fmt.Errorf("RAG_RUNTIME_ARTIFACT: %s", node.ID)
+					return trace, nil, artifacts, values, fmt.Errorf("RAG_RUNTIME_ARTIFACT: %s", node.ID)
 				}
 				ext := filepath.Ext(artifact.Name)
 				artifact.Name = artifact.Name[:len(artifact.Name)-len(ext)] + "-" + query.ID + ext
 				artifacts = append(artifacts, artifact)
 				if err := observer.Artifact(ctx, artifact); err != nil {
-					return trace, nil, artifacts, err
+					return trace, nil, artifacts, values, err
 				}
 				continue
 			}
 			if !allowedOutputs[port] {
-				return trace, nil, artifacts, fmt.Errorf("RAG_RUNTIME_OUTPUT_PORT: %s.%s", node.ID, port)
+				return trace, nil, artifacts, values, fmt.Errorf("RAG_RUNTIME_OUTPUT_PORT: %s.%s", node.ID, port)
 			}
 			values[node.ID+"/"+port] = value
 			if index, ok := value.(*ragoperators.MultiIndex); ok {
@@ -189,18 +205,17 @@ func (e *Engine) executeQuery(ctx context.Context, execution ragcontract.Pipelin
 				artifact := ragoperators.Artifact{Role: "index-manifest", Kind: "rag-index-manifest", Name: "index-manifest-" + query.ID + ".json", SchemaVersion: ragcontract.IndexManifestSchema, MediaType: "application/json", Data: manifest}
 				artifacts = append(artifacts, artifact)
 				if err := observer.Artifact(ctx, artifact); err != nil {
-					return trace, nil, artifacts, err
+					return trace, nil, artifacts, values, err
 				}
 				records := ragoperators.Artifact{Role: "index-records", Kind: "rag-index-records", Name: "index-records-" + query.ID + ".json", SchemaVersion: "rag-index-records/v1", MediaType: "application/json", Data: index.Artifact}
 				artifacts = append(artifacts, records)
 				if err := observer.Artifact(ctx, records); err != nil {
-					return trace, nil, artifacts, err
+					return trace, nil, artifacts, values, err
 				}
-				defer func() { _ = index.Close() }()
 			}
 		}
 		if err := observer.Event(ctx, event("rag.operator.completed", map[string]any{"queryId": query.ID, "nodeId": node.ID, "operator": node.Operator.ID()})); err != nil {
-			return trace, nil, artifacts, err
+			return trace, nil, artifacts, values, err
 		}
 	}
 	trace.Timing.TotalMilliseconds = time.Since(started).Milliseconds()
@@ -239,8 +254,52 @@ func (e *Engine) executeQuery(ctx context.Context, execution ragcontract.Pipelin
 	for key, value := range trace.Timing.ByOperator {
 		timing[key] = value
 	}
-	metrics := ragoperators.Evaluate(query, evidence, answer, execution.Measures, timing, env.Usage, trace.Failures, storage)
-	return trace, metrics, artifacts, nil
+	metrics := ragoperators.EvaluateForTarget(query, evidence, answer, execution.Measures, timing, env.Usage, trace.Failures, storage, execution.Dataset.RelevanceTarget)
+	return trace, metrics, artifacts, values, nil
+}
+func staticNodeIDs(pipeline ragcontract.PipelineIR) map[string]bool {
+	dynamic := map[string]bool{"query": true}
+	static := map[string]bool{}
+	for _, node := range pipeline.Nodes {
+		isDynamic := false
+		for _, input := range node.Inputs {
+			if dynamic[input.From.NodeID] {
+				isDynamic = true
+				break
+			}
+		}
+		if isDynamic {
+			dynamic[node.ID] = true
+		} else {
+			static[node.ID] = true
+		}
+	}
+	return static
+}
+func selectPrepared(values map[string]any, static map[string]bool) map[string]any {
+	prepared := map[string]any{}
+	for key, value := range values {
+		nodeID := key
+		for index, character := range key {
+			if character == '/' {
+				nodeID = key[:index]
+				break
+			}
+		}
+		if nodeID == "corpus" || static[nodeID] {
+			prepared[key] = value
+		}
+	}
+	return prepared
+}
+func closeIndexes(values map[string]any) {
+	seen := map[*ragoperators.MultiIndex]bool{}
+	for _, value := range values {
+		if index, ok := value.(*ragoperators.MultiIndex); ok && !seen[index] {
+			seen[index] = true
+			_ = index.Close()
+		}
+	}
 }
 func event(kind string, value any) ragoperators.Event {
 	raw, _ := json.Marshal(value)

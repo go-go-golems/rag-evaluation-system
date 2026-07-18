@@ -116,6 +116,29 @@ func (failingGenerator) Generate(context.Context, ragoperators.GenerationRequest
 	return ragoperators.GenerationResult{}, errors.New("fixture generation failed")
 }
 
+func TestEnginePreparesStaticPipelineOnceForMultipleQueries(t *testing.T) {
+	execution := rawExecution(t)
+	corpus, dataset := fixtureData()
+	dataset.Queries = append(dataset.Queries, ragoperators.Query{ID: "q2", Text: "fusion"})
+	observer := &collector{}
+	result, err := New(nil).Execute(context.Background(), execution, corpus, dataset, observer, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	unitArtifacts := 0
+	for _, artifact := range observer.artifacts {
+		if artifact.Role == "unit-set" {
+			unitArtifacts++
+		}
+	}
+	if unitArtifacts != 1 {
+		t.Fatalf("unit artifacts=%d", unitArtifacts)
+	}
+	if len(result.Traces) != 2 || len(result.Traces[1].Operators) >= len(result.Traces[0].Operators) {
+		t.Fatalf("traces=%#v", result.Traces)
+	}
+}
+
 func TestEngineRecordsGeneratedFailureAsPartialEvidence(t *testing.T) {
 	execution := executionWithRepresentation(t, ragmodel.StructuredSummary("summary", ragmodel.StructuredSummaryConfig{Generator: ragmodel.StructuredGenerationConfig{Model: "m", Prompt: "p", OutputSchema: "summary/v1"}}), "summary")
 	modelDigest := "sha256:" + strings.Repeat("a", 64)
