@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"strings"
@@ -89,8 +90,8 @@ func main() {
 		fail(encoder, "RAG_WORKER_EXECUTION", err)
 		return
 	}
-	var corpus ragoperators.Corpus
-	var dataset ragoperators.EvaluationDataset
+	var corpusArtifact ragoperators.CorpusArtifact
+	var evaluationArtifact ragoperators.EvaluationArtifact
 	for _, resolved := range input.Inputs {
 		if resolved.Path == "" {
 			continue
@@ -102,9 +103,9 @@ func main() {
 		}
 		switch {
 		case resolved.Reference.SchemaVersion == ragcontract.CorpusManifestSchema || resolved.Reference.Role == "corpus":
-			err = json.NewDecoder(file).Decode(&corpus)
+			err = decodeStrict(file, &corpusArtifact)
 		case resolved.Reference.SchemaVersion == ragcontract.EvaluationManifestSchema || resolved.Reference.Role == "evaluation-dataset":
-			err = json.NewDecoder(file).Decode(&dataset)
+			err = decodeStrict(file, &evaluationArtifact)
 		}
 		_ = file.Close()
 		if err != nil {
@@ -112,19 +113,38 @@ func main() {
 			return
 		}
 	}
-	if len(corpus.Records) == 0 || len(dataset.Queries) == 0 {
+	if err := ragoperators.ValidateInputArtifacts(execution, corpusArtifact, evaluationArtifact); err != nil {
+		fail(encoder, "RAG_WORKER_INPUT_LINEAGE", err)
+		return
+	}
+	if len(corpusArtifact.Corpus.Records) == 0 || len(evaluationArtifact.Dataset.Queries) == 0 {
 		fail(encoder, "RAG_WORKER_INPUT", fmt.Errorf("corpus and evaluation dataset are required"))
 		return
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	engine := ragengine.New(nil)
-	_, err = engine.Execute(ctx, execution, corpus, dataset, observer{encoder: encoder}, ragengine.Options{Cache: ragoperators.NewMemoryCache()})
+	_, err = engine.Execute(ctx, execution, corpusArtifact.Corpus, evaluationArtifact.Dataset, observer{encoder: encoder}, ragengine.Options{Cache: ragoperators.NewMemoryCache()})
 	if err != nil {
 		fail(encoder, "RAG_WORKER_EXECUTE", err)
 		return
 	}
 	_ = encoder.Encode(frame{Type: "complete", Complete: map[string]any{"status": "succeeded", "payload": map[string]any{"domain": ragcontract.Domain}}})
+}
+func decodeStrict(reader io.Reader, target any) error {
+	decoder := json.NewDecoder(reader)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(target); err != nil {
+		return err
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		if err == nil {
+			return fmt.Errorf("trailing JSON value")
+		}
+		return err
+	}
+	return nil
 }
 func fail(encoder *json.Encoder, code string, err error) {
 	_ = encoder.Encode(frame{Type: "error", Error: map[string]any{"code": code, "message": err.Error(), "retryable": false}})

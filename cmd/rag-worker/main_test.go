@@ -16,10 +16,12 @@ import (
 
 func TestExternalWorkerSpeaksGenericProtocol(t *testing.T) {
 	binary := buildWorker(t)
-	execution := workerExecution(t)
+	corpusArtifact := ragoperators.NewCorpusArtifact(ragoperators.Corpus{Records: []ragoperators.SourceRecord{{ID: "s1", SessionID: "s", Ordinal: 1, Role: "user", Text: "reciprocal rank fusion"}}}, "fixture")
+	evaluationArtifact := ragoperators.NewEvaluationArtifact(ragoperators.EvaluationDataset{Queries: []ragoperators.Query{{ID: "q1", Text: "rank fusion"}}}, "fixture", "smoke", "candidate", "unit", corpusArtifact.Manifest.Digest)
+	execution := workerExecution(t, corpusArtifact.Manifest.Digest, evaluationArtifact.Manifest.Digest)
 	root := t.TempDir()
-	corpusPath := writeJSON(t, root, "corpus.json", ragoperators.Corpus{Records: []ragoperators.SourceRecord{{ID: "s1", SessionID: "s", Ordinal: 1, Role: "user", Text: "reciprocal rank fusion"}}})
-	datasetPath := writeJSON(t, root, "dataset.json", ragoperators.EvaluationDataset{Queries: []ragoperators.Query{{ID: "q1", Text: "rank fusion"}}})
+	corpusPath := writeJSON(t, root, "corpus.json", corpusArtifact)
+	datasetPath := writeJSON(t, root, "dataset.json", evaluationArtifact)
 	request := map[string]any{"protocolVersion": protocolVersion, "attempt": map[string]any{"specification": map[string]any{"canonicalIdentity": map[string]any{"domain": ragcontract.Domain, "domainSchemaVersion": ragcontract.DomainSchemaVersion, "domainConfig": execution}}}, "inputs": []map[string]any{{"reference": map[string]any{"role": "corpus", "schemaVersion": ragcontract.CorpusManifestSchema}, "path": corpusPath}, {"reference": map[string]any{"role": "evaluation-dataset", "schemaVersion": ragcontract.EvaluationManifestSchema}, "path": datasetPath}}}
 	frames, stderr, err := runWorker(binary, request)
 	if err != nil {
@@ -92,7 +94,7 @@ func writeJSON(t *testing.T, root, name string, value any) string {
 	}
 	return path
 }
-func workerExecution(t *testing.T) ragcontract.PipelineExecution {
+func workerExecution(t *testing.T, corpusDigest, evaluationDigest string) ragcontract.PipelineExecution {
 	t.Helper()
 	pipeline := ragmodel.NewPipeline("raw", func(p *ragmodel.PipelineBuilder) {
 		p.CorpusInput(ragmodel.Corpus("corpus")).Units(ragmodel.UnitsIdentity()).Chunks(ragmodel.RecursiveChunks(ragmodel.RecursiveChunkConfig{MaxRunes: 100})).Represent(ragmodel.RawRepresentation("raw")).IndexNamed("representations", ragmodel.BleveMulti(ragmodel.BleveMultiConfig{Lexical: true}))
@@ -103,11 +105,11 @@ func workerExecution(t *testing.T) ragcontract.PipelineExecution {
 	product := ragmodel.NewProduct("raw", func(p *ragmodel.ProductBuilder) {
 		p.PipelineValue(pipeline).QueryPlan(query).ResponseContract(func(r *ragmodel.ResponseBuilder) { r.Citations("source") })
 	})
-	plan, err := ragmodel.CompileProduct(product, ragmodel.CompileOptions{Inputs: map[string]ragcontract.ArtifactBinding{"corpus": {Role: "corpus", Kind: "json", Digest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", SchemaVersion: ragcontract.CorpusManifestSchema}}})
+	plan, err := ragmodel.CompileProduct(product, ragmodel.CompileOptions{Inputs: map[string]ragcontract.ArtifactBinding{"corpus": {Role: "corpus", Kind: "json", Digest: corpusDigest, SchemaVersion: ragcontract.CorpusManifestSchema}}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	execution := ragcontract.PipelineExecution{SchemaVersion: ragcontract.ExecutionSchemaVersion, Pipeline: plan.Pipeline, Bindings: plan.Bindings, Dataset: ragcontract.DatasetBinding{Split: "smoke", Status: "candidate", RelevanceTarget: "unit"}, Measures: []ragcontract.Measure{{Name: "rag.mrr", Version: "v1", ValueKind: "number", Unit: "ratio", Required: true, Config: json.RawMessage(`{}`)}}, VariantID: "raw", Factors: []ragcontract.FactorSelection{}}
+	execution := ragcontract.PipelineExecution{SchemaVersion: ragcontract.ExecutionSchemaVersion, Pipeline: plan.Pipeline, Bindings: plan.Bindings, Dataset: ragcontract.DatasetBinding{ManifestDigest: evaluationDigest, Split: "smoke", Status: "candidate", RelevanceTarget: "unit"}, Measures: []ragcontract.Measure{{Name: "rag.mrr", Version: "v1", ValueKind: "number", Unit: "ratio", Required: true, Config: json.RawMessage(`{}`)}}, VariantID: "raw", Factors: []ragcontract.FactorSelection{}}
 	execution.CellID, _ = ragcontract.Digest(execution)
 	return execution
 }

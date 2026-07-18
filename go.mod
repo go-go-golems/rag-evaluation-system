@@ -5,11 +5,11 @@ go 1.26.5
 require (
 	github.com/blevesearch/bleve/v2 v2.6.0
 	github.com/blevesearch/bleve_index_api v1.3.11
-	github.com/dop251/goja v0.0.0-20260311135729-065cd970411c
+	github.com/dop251/goja v0.0.0-20260629171413-2a84ae0cf10d
 	github.com/dop251/goja_nodejs v0.0.0-20260212111938-1f56ff5bcf14
 	github.com/go-go-golems/geppetto v0.13.5
 	github.com/go-go-golems/glazed v1.3.6
-	github.com/go-go-golems/go-go-goja v0.9.6
+	github.com/go-go-golems/go-go-goja v0.10.3
 	github.com/go-go-golems/logcopter v0.1.1
 	github.com/go-go-golems/scraper v0.0.4
 	github.com/mattn/go-sqlite3 v1.14.44
@@ -20,6 +20,13 @@ require (
 	github.com/tree-sitter/tree-sitter-javascript v0.25.0
 	github.com/tree-sitter/tree-sitter-typescript v0.23.2
 	gopkg.in/yaml.v3 v3.0.1
+)
+
+require (
+	github.com/coreos/go-oidc/v3 v3.18.0 // indirect
+	github.com/dlclark/regexp2/v2 v2.2.1 // indirect
+	github.com/lib/pq v1.12.3 // indirect
+	golang.org/x/oauth2 v0.36.0 // indirect
 )
 
 require (
@@ -80,6 +87,7 @@ require (
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/go-go-golems/bobatea v0.1.6 // indirect
 	github.com/go-go-golems/go-emrichen v0.0.11 // indirect
+	github.com/go-go-golems/researchctl v0.0.0
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-openapi/errors v0.22.0 // indirect
 	github.com/go-openapi/strfmt v0.23.0 // indirect
@@ -135,33 +143,33 @@ require (
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/pb33f/ordered-map/v2 v2.3.1 // indirect
-	github.com/richardlehane/mscfb v1.0.4 // indirect
-	github.com/richardlehane/msoleps v1.0.4 // indirect
+	github.com/richardlehane/mscfb v1.0.7 // indirect
+	github.com/richardlehane/msoleps v1.0.6 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/sahilm/fuzzy v0.1.1 // indirect
 	github.com/sashabaranov/go-openai v1.41.1 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	github.com/tiendc/go-deepcopy v1.7.1 // indirect
+	github.com/tiendc/go-deepcopy v1.7.2 // indirect
 	github.com/tj/go-naturaldate v1.3.0 // indirect
 	github.com/ugorji/go/codec v1.3.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/xuri/efp v0.0.1 // indirect
-	github.com/xuri/excelize/v2 v2.10.0 // indirect
+	github.com/xuri/excelize/v2 v2.11.0 // indirect
 	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	github.com/yuin/goldmark v1.8.2 // indirect
 	github.com/yuin/goldmark-emoji v1.0.6 // indirect
 	go.etcd.io/bbolt v1.4.0 // indirect
 	go.mongodb.org/mongo-driver v1.17.7 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
-	golang.org/x/crypto v0.53.0 // indirect
+	golang.org/x/crypto v0.54.0 // indirect
 	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/net v0.56.0 // indirect
-	golang.org/x/sync v0.21.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/term v0.44.0 // indirect
-	golang.org/x/text v0.38.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/term v0.45.0 // indirect
+	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.47.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260622175928-b703f567277d // indirect
@@ -173,3 +181,5 @@ require (
 )
 
 tool github.com/go-go-golems/logcopter/cmd/logcopter-gen
+
+replace github.com/go-go-golems/researchctl => ../../../2026-06-30/benchmark-cpu-inference/researchctl

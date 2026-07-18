@@ -233,7 +233,7 @@ func toPrototype(input request) (raglab.ExperimentSpecification, string, error) 
 }
 
 func toFilter(input raglab.PrototypeFilterSpec) raglab.FilterSpec {
-	return raglab.FilterSpec{SourceIDs: input.SourceIDs, DocumentIDs: input.DocumentIDs, ContentTypes: input.ContentTypes, MetadataEquals: input.MetadataEquals}
+	return raglab.FilterSpec(input)
 }
 
 func hasBackend(specification raglab.ExperimentSpecification, backend raglab.RetrievalBackend) bool {
