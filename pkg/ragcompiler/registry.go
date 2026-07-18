@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
+	"strings"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 )
@@ -15,10 +17,13 @@ type PortDefinition struct {
 	Kind ragcontract.PortKind
 }
 type OperatorDefinition struct {
-	Ref             ragcontract.OperatorRef
-	Inputs, Outputs []PortDefinition
-	Defaults        map[string]any
-	Recipe          bool
+	Ref                ragcontract.OperatorRef
+	Inputs, Outputs    []PortDefinition
+	Defaults           map[string]any
+	Capabilities       []string
+	Resources          []string
+	ObservationSchemas []string
+	Recipe             bool
 }
 type Registry struct{ definitions map[string]OperatorDefinition }
 
@@ -42,6 +47,17 @@ func (r *Registry) Definition(ref ragcontract.OperatorRef) (OperatorDefinition, 
 	}
 	d, ok := r.definitions[ref.ID()]
 	return d, ok
+}
+func (r *Registry) Definitions() []OperatorDefinition {
+	if r == nil {
+		return nil
+	}
+	values := make([]OperatorDefinition, 0, len(r.definitions))
+	for _, definition := range r.definitions {
+		values = append(values, definition)
+	}
+	sort.Slice(values, func(i, j int) bool { return values[i].Ref.ID() < values[j].Ref.ID() })
+	return values
 }
 
 func BuiltinRegistry() *Registry {
@@ -79,7 +95,33 @@ func p(name string, kind ragcontract.PortKind) PortDefinition {
 	return PortDefinition{Name: name, Kind: kind}
 }
 func op(kind, version string, inputs []PortDefinition, output PortDefinition) OperatorDefinition {
-	return OperatorDefinition{Ref: ragcontract.OperatorRef{Kind: kind, Version: version}, Inputs: inputs, Outputs: []PortDefinition{output}}
+	capabilities, resources, observations := operatorMetadata(kind)
+	return OperatorDefinition{Ref: ragcontract.OperatorRef{Kind: kind, Version: version}, Inputs: inputs, Outputs: []PortDefinition{output}, Capabilities: capabilities, Resources: resources, ObservationSchemas: observations}
+}
+func operatorMetadata(kind string) ([]string, []string, []string) {
+	observations := []string{"rag-operator-event/v2", ragcontract.TraceSchemaVersion}
+	switch {
+	case strings.HasPrefix(kind, "units.") || strings.HasPrefix(kind, "transcript.units."):
+		return []string{"immutable-unitization"}, []string{"memory", "artifact-store"}, append(observations, ragcontract.UnitSetManifestSchema)
+	case strings.HasPrefix(kind, "chunks."):
+		return []string{"unicode-safe-chunking"}, []string{"memory", "artifact-store"}, append(observations, ragcontract.ChunkSetManifestSchema)
+	case kind == "representations.raw" || kind == "representations.merge":
+		return []string{"materialize-representations"}, []string{"memory", "artifact-store"}, append(observations, ragcontract.RepresentationManifestSchema)
+	case strings.HasPrefix(kind, "representations."):
+		return []string{"materialize-generated-representations"}, []string{"model-manifest", "prompt-manifest", "generator-provider", "content-cache", "artifact-store"}, append(observations, ragcontract.RepresentationManifestSchema)
+	case kind == "embed.model":
+		return []string{"batch-embedding"}, []string{"model-manifest", "embedding-provider"}, append(observations, ragcontract.EmbeddingManifestSchema)
+	case strings.HasPrefix(kind, "index."):
+		return []string{"immutable-index"}, []string{"memory", "artifact-store"}, append(observations, ragcontract.IndexManifestSchema)
+	case strings.HasPrefix(kind, "retrieve."):
+		return []string{"filtered-retrieval"}, []string{"index"}, observations
+	case kind == "rerank.cross-encoder":
+		return []string{"explicit-reranking"}, []string{"model-manifest", "reranker-provider"}, observations
+	case kind == "generate.answer":
+		return []string{"grounded-generation"}, []string{"model-manifest", "prompt-manifest", "generator-provider"}, observations
+	default:
+		return []string{"native-execution"}, []string{"memory"}, observations
+	}
 }
 func op2(kind, version string, inputs []PortDefinition, output PortDefinition) OperatorDefinition {
 	return op(kind, version, inputs, output)
@@ -128,7 +170,7 @@ func configFields(kind string) map[string]bool {
 		"collapse.parent":                     {"scope", "representative"},
 		"fusion.weighted-rrf":                 {"rankConstant", "weights", "missingChannelPolicy", "tieBreak"},
 		"collapse.final":                      {"scope", "representative"},
-		"hydrate.source-evidence":             {"policy", "allSupportingChunks"},
+		"hydrate.source-evidence":             {"policy", "allSupportingChunks", "results"},
 		"rerank.cross-encoder":                {"model", "candidateCount", "results", "truncation", "tokenization", "inputTemplate", "timeoutMilliseconds"},
 		"generate.answer":                     {"model", "prompt", "citations", "contextBudgetTokens", "decoding", "seedPolicy"},
 		"evaluate.relevance":                  {"target", "gradeThreshold", "measures"},

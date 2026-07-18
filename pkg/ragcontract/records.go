@@ -28,17 +28,19 @@ type ChunkRecord struct {
 	Citation     CitationRef `json:"citation"`
 }
 type DerivationRef struct {
-	Operator             OperatorRef     `json:"operator"`
-	ModelManifestDigest  string          `json:"modelManifestDigest,omitempty"`
-	PromptManifestDigest string          `json:"promptManifestDigest,omitempty"`
-	Parameters           json.RawMessage `json:"parameters"`
-	SeedPolicy           *SeedPolicy     `json:"seedPolicy,omitempty"`
-	ParentDigest         string          `json:"parentDigest"`
-	OutputDigest         string          `json:"outputDigest"`
-	InputTokens          int64           `json:"inputTokens,omitempty"`
-	OutputTokens         int64           `json:"outputTokens,omitempty"`
-	DurationMilliseconds int64           `json:"durationMilliseconds,omitempty"`
-	CacheOutcome         string          `json:"cacheOutcome,omitempty"`
+	Operator                OperatorRef     `json:"operator"`
+	ModelManifestDigest     string          `json:"modelManifestDigest,omitempty"`
+	PromptManifestDigest    string          `json:"promptManifestDigest,omitempty"`
+	Parameters              json.RawMessage `json:"parameters"`
+	SeedPolicy              *SeedPolicy     `json:"seedPolicy,omitempty"`
+	ParentDigest            string          `json:"parentDigest"`
+	ParentRepresentationIDs []string        `json:"parentRepresentationIds,omitempty"`
+	SourceRecordIDs         []string        `json:"sourceRecordIds"`
+	OutputDigest            string          `json:"outputDigest"`
+	InputTokens             int64           `json:"inputTokens,omitempty"`
+	OutputTokens            int64           `json:"outputTokens,omitempty"`
+	DurationMilliseconds    int64           `json:"durationMilliseconds,omitempty"`
+	CacheOutcome            string          `json:"cacheOutcome,omitempty"`
 }
 type RepresentationRecord struct {
 	ID            string         `json:"id"`

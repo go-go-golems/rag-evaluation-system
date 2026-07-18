@@ -266,19 +266,19 @@ func (b *MetricsBuilder) add(name, kind, unit string, config any) *MetricsBuilde
 	return b
 }
 func (b *MetricsBuilder) PrecisionAt(v []int) *MetricsBuilder {
-	return b.add("rag.precision", "number", "ratio", map[string]any{"cutoffs": v})
+	return b.add("rag.precision", "object", "ratio", map[string]any{"cutoffs": v})
 }
 func (b *MetricsBuilder) RecallAt(v []int) *MetricsBuilder {
-	return b.add("rag.recall", "number", "ratio", map[string]any{"cutoffs": v})
+	return b.add("rag.recall", "object", "ratio", map[string]any{"cutoffs": v})
 }
 func (b *MetricsBuilder) HitRateAt(v []int) *MetricsBuilder {
-	return b.add("rag.hit-rate", "number", "ratio", map[string]any{"cutoffs": v})
+	return b.add("rag.hit-rate", "object", "ratio", map[string]any{"cutoffs": v})
 }
 func (b *MetricsBuilder) MRR() *MetricsBuilder {
 	return b.add("rag.mrr", "number", "ratio", map[string]any{})
 }
 func (b *MetricsBuilder) NDCGAt(v []int) *MetricsBuilder {
-	return b.add("rag.ndcg", "number", "ratio", map[string]any{"cutoffs": v})
+	return b.add("rag.ndcg", "object", "ratio", map[string]any{"cutoffs": v})
 }
 func (b *MetricsBuilder) Latency(v []string) *MetricsBuilder {
 	return b.add("rag.latency", "object", "milliseconds", map[string]any{"stages": v})

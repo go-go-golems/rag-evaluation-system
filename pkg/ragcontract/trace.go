@@ -127,7 +127,12 @@ type RerankingTrace struct {
 	Operator             OperatorRef      `json:"operator"`
 	ModelManifestDigest  string           `json:"modelManifestDigest"`
 	InputPolicy          string           `json:"inputPolicy"`
+	InputTemplate        string           `json:"inputTemplate"`
 	Truncation           string           `json:"truncation"`
+	Tokenization         string           `json:"tokenization"`
+	CandidateCount       int              `json:"candidateCount"`
+	ResultsLimit         int              `json:"resultsLimit"`
+	TimeoutMilliseconds  int64            `json:"timeoutMilliseconds"`
 	Entries              []RerankingEntry `json:"entries"`
 	DurationMilliseconds int64            `json:"durationMilliseconds"`
 }

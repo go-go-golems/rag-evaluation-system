@@ -86,7 +86,15 @@ func BuildIR(pipeline *Pipeline, query *QueryPlan, reranker, generator *Descript
 		ir.Nodes = append(ir.Nodes, node("fusion", query.Fusion, fusionInputs))
 		final := cloneDescriptor(query.FinalCollapse)
 		final.Operator = ragcontract.OperatorRef{Kind: "collapse.final", Version: "v1"}
-		ir.Nodes = append(ir.Nodes, node("final", final, map[string]ragcontract.PortRef{"parents": {NodeID: "fusion", Port: "parents"}}), node("hydrate", query.Hydration, map[string]ragcontract.PortRef{"parents": {NodeID: "final", Port: "parents"}, "chunks": {NodeID: "chunks", Port: "chunks"}}))
+		hydration := cloneDescriptor(query.Hydration)
+		var hydrationConfig map[string]any
+		_ = json.Unmarshal(hydration.Config, &hydrationConfig)
+		if hydrationConfig == nil {
+			hydrationConfig = map[string]any{}
+		}
+		hydrationConfig["results"] = query.Results
+		hydration.Config, _ = json.Marshal(hydrationConfig)
+		ir.Nodes = append(ir.Nodes, node("final", final, map[string]ragcontract.PortRef{"parents": {NodeID: "fusion", Port: "parents"}}), node("hydrate", hydration, map[string]ragcontract.PortRef{"parents": {NodeID: "final", Port: "parents"}, "chunks": {NodeID: "chunks", Port: "chunks"}}))
 		last = ragcontract.PortRef{NodeID: "hydrate", Port: "evidence"}
 		lastKind = ragcontract.PortEvidence
 	}
