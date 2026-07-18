@@ -81,3 +81,28 @@ func FuzzDecodePipelineNeverPanics(f *testing.F) {
 	f.Add([]byte(`{"schemaVersion":"rag-pipeline-ir/v2","inputs":[],"nodes":[],"outputs":[]}`))
 	f.Fuzz(func(t *testing.T, data []byte) { _, _ = DecodePipeline(bytes.NewReader(data)) })
 }
+
+func FuzzCanonicalRawIsIdempotent(f *testing.F) {
+	f.Add([]byte(`{"z":1,"a":[true,null,"x"]}`))
+	f.Fuzz(func(t *testing.T, data []byte) {
+		first, err := CanonicalRaw(data, "{}")
+		if err != nil {
+			return
+		}
+		second, err := CanonicalRaw(first, "{}")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Equal(first, second) {
+			t.Fatalf("canonicalization changed: %s != %s", first, second)
+		}
+	})
+}
+
+func FuzzManifestValidationNeverPanics(f *testing.F) {
+	f.Add("rag-chunk-set-manifest/v1", "sha256:"+strings.Repeat("a", 64), "chunks.recursive", "v1")
+	f.Fuzz(func(t *testing.T, schema, digest, operator, version string) {
+		base := ManifestBase{SchemaVersion: schema, Digest: digest, Parents: []ParentDigest{{Role: "parent", Digest: digest, SchemaVersion: UnitSetManifestSchema}}, Production: &Production{Operator: OperatorRef{Kind: operator, Version: version}, Config: json.RawMessage(`{}`)}}
+		_ = ValidateManifestBase(base, ChunkSetManifestSchema, true)
+	})
+}

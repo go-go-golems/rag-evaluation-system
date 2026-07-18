@@ -1,8 +1,8 @@
 import { Caption, Panel, Stack, Text } from "@go-go-golems/rag-evaluation-site";
-import { useGetLabCatalogQuery } from "../../../services/api";
+import { useGetRAGArtifactCatalogQuery } from "../../../services/api";
 
 export function EvaluationPage() {
-	const catalog = useGetLabCatalogQuery();
+	const catalog = useGetRAGArtifactCatalogQuery();
 	const snapshots = catalog.data?.snapshots.length ?? 0;
 	const chunkSets = catalog.data?.chunk_sets.length ?? 0;
 	const embeddingSets = catalog.data?.embedding_sets.length ?? 0;
@@ -10,25 +10,27 @@ export function EvaluationPage() {
 
 	return (
 		<Stack gap="lg">
-			<Panel title="Researchctl RAG laboratory">
+			<Panel title="Canonical RAG studies">
 				<Stack gap="md">
 					<Text>
-						Native RAG execution, run lifecycle, traces, metrics, export, and import now belong
-						exclusively to the project-local researchctl laboratory.
+						RAG authoring, compilation, artifact resolution, and worker semantics belong to
+						rag-eval. Researchctl provides only the domain-neutral run lifecycle.
 					</Text>
 					<Caption>
-						The former writable rag-eval experiment specification and run endpoints were removed
-						after external-import and native-rerun parity validation.
+						Validate and explain a study before submitting its canonical cells through the RAG-owned
+						adapter.
 					</Caption>
-					<pre>{`researchctl experiment run-rag experiment.js \\
+					<pre>{`rag-eval study validate experiments/rag-sol2/study.js \\
+  --inputs experiments/rag-sol2/inputs.json \\
+  --ttc-database /path/to/rag-eval.db
+
+rag-eval study run experiments/rag-sol2/study.js \\
   --project project.yaml \\
   --experiment-id EXP-RAG \\
-  --inputs inputs.json \\
+  --inputs experiments/rag-sol2/inputs.json \\
   --ttc-database /path/to/rag-eval.db \\
-  --runner /path/to/rag-lab-worker
-
-researchctl lab runs list --project project.yaml --output json
-researchctl lab runs show RUN_ID --project project.yaml --output json`}</pre>
+  --researchctl-command researchctl \\
+  --worker-command rag-worker`}</pre>
 				</Stack>
 			</Panel>
 

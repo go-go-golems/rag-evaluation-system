@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { WidgetNode } from "@go-go-golems/rag-evaluation-site/ir";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export interface DslPageResponse {
 	id: string;
@@ -291,13 +291,13 @@ export interface EmbeddingCoverageResult {
 
 // --- Immutable experiment laboratory ---
 
-export interface LabSnapshot {
+export interface RAGArtifactSnapshot {
 	id: string;
 	document_count: number;
 	created_at: string;
 }
 
-export interface LabChunkSet {
+export interface RAGArtifactChunkSet {
 	id: string;
 	corpus_snapshot_id: string;
 	chunk_plan_id: string;
@@ -305,7 +305,7 @@ export interface LabChunkSet {
 	created_at: string;
 }
 
-export interface LabEmbeddingSet {
+export interface RAGArtifactEmbeddingSet {
 	id: string;
 	chunk_set_id: string;
 	embedding_plan_id: string;
@@ -313,18 +313,18 @@ export interface LabEmbeddingSet {
 	created_at: string;
 }
 
-export interface LabBM25Artifact {
+export interface RAGArtifactBM25Index {
 	id: string;
 	chunk_set_id: string;
 	chunk_count: number;
 	created_at: string;
 }
 
-export interface LabCatalog {
-	snapshots: LabSnapshot[];
-	chunk_sets: LabChunkSet[];
-	embedding_sets: LabEmbeddingSet[];
-	bm25_artifacts: LabBM25Artifact[];
+export interface RAGArtifactCatalog {
+	snapshots: RAGArtifactSnapshot[];
+	chunk_sets: RAGArtifactChunkSet[];
+	embedding_sets: RAGArtifactEmbeddingSet[];
+	bm25_artifacts: RAGArtifactBM25Index[];
 }
 
 function filterIdentityParams(
@@ -532,9 +532,9 @@ export const ragApi = createApi({
 		}),
 
 		// --- Read-only immutable domain artifact catalog ---
-		getLabCatalog: builder.query<LabCatalog, void>({
-			query: () => "lab/catalog",
-			providesTags: ["Lab"],
+		getRAGArtifactCatalog: builder.query<RAGArtifactCatalog, void>({
+			query: () => "artifacts/rag/catalog",
+			providesTags: ["Artifacts"],
 		}),
 	}),
 });
@@ -824,7 +824,7 @@ export const {
 	useGetDocumentProcessingArtifactsQuery,
 	useGetChunkEnrichmentsQuery,
 	// Read-only immutable domain artifact catalog
-	useGetLabCatalogQuery,
+	useGetRAGArtifactCatalogQuery,
 	// Op result
 	useGetOpResultQuery,
 } = ragApi;

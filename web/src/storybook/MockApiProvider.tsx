@@ -1,10 +1,10 @@
+import type { WidgetNode } from "@go-go-golems/rag-evaluation-site/ir";
+import { component, text } from "@go-go-golems/rag-evaluation-site/ir";
 import { configureStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
 import { useEffect, useMemo } from "react";
 import { Provider } from "react-redux";
 import { ragApi } from "../services/api";
-import type { WidgetNode } from "@go-go-golems/rag-evaluation-site/ir";
-import { component, text } from "@go-go-golems/rag-evaluation-site/ir";
 
 interface MockApiProviderProps {
 	children: ReactNode;
@@ -279,7 +279,7 @@ function mockPayload(url: URL, method: string): unknown {
 	}
 
 	if (path === "sources") return { items: sources };
-	if (path === "lab/catalog")
+	if (path === "artifacts/rag/catalog")
 		return {
 			snapshots: [{ id: "sha256:corpus-001", document_count: 200, created_at: now }],
 			chunk_sets: [

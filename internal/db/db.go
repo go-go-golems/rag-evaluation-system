@@ -59,8 +59,7 @@ func Migrate(db *sql.DB) error {
 		migrationV2EmbeddingPlans,
 		migrationV2EmbeddingSets,
 		migrationV2RetrievalArtifacts,
-		migrationV3ExperimentRuns,
-		migrationV4EvaluationArtifacts,
+		migrationV3EvaluationArtifacts,
 	}
 
 	for i, m := range migrations {
@@ -395,91 +394,9 @@ CREATE TABLE IF NOT EXISTS retrieval_artifacts (
 );
 `
 
-// Experiment specifications and run evidence are append-only. A specification
-// identifies immutable inputs and retrieval settings. A run is an observation
-// of that specification; its lifecycle is represented by ordered events and
-// one optional terminal summary rather than mutable status columns.
-const migrationV3ExperimentRuns = `
-CREATE TABLE IF NOT EXISTS experiment_specs (
-    id TEXT PRIMARY KEY,
-    schema_version TEXT NOT NULL,
-    corpus_snapshot_id TEXT NOT NULL REFERENCES corpus_snapshots(id),
-    chunk_set_id TEXT NOT NULL REFERENCES chunk_sets(id),
-    bm25_artifact_id TEXT REFERENCES retrieval_artifacts(id),
-    embedding_set_id TEXT REFERENCES embedding_sets(id),
-    evaluation_dataset_id TEXT NOT NULL DEFAULT '',
-    config_json TEXT NOT NULL,
-    manifest_json TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE TABLE IF NOT EXISTS experiment_runs (
-    id TEXT PRIMARY KEY,
-    experiment_spec_id TEXT NOT NULL REFERENCES experiment_specs(id),
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE TABLE IF NOT EXISTS experiment_run_events (
-    run_id TEXT NOT NULL REFERENCES experiment_runs(id),
-    sequence INTEGER NOT NULL,
-    event_type TEXT NOT NULL,
-    occurred_at TEXT NOT NULL,
-    payload_json TEXT NOT NULL,
-    PRIMARY KEY (run_id, sequence)
-);
-
-CREATE TABLE IF NOT EXISTS experiment_run_summaries (
-    run_id TEXT PRIMARY KEY REFERENCES experiment_runs(id),
-    status TEXT NOT NULL,
-    finished_at TEXT NOT NULL,
-    metrics_json TEXT NOT NULL,
-    cost_json TEXT NOT NULL,
-    storage_json TEXT NOT NULL,
-    error_json TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS experiment_query_traces (
-    run_id TEXT NOT NULL REFERENCES experiment_runs(id),
-    query_card_id TEXT NOT NULL,
-    trace_json TEXT NOT NULL,
-    metrics_json TEXT NOT NULL,
-    timing_json TEXT NOT NULL,
-    cost_json TEXT NOT NULL,
-    storage_json TEXT NOT NULL,
-    PRIMARY KEY (run_id, query_card_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_experiment_runs_spec_created
-    ON experiment_runs(experiment_spec_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_experiment_events_run_sequence
-    ON experiment_run_events(run_id, sequence);
-
-CREATE TRIGGER IF NOT EXISTS experiment_specs_no_update
-BEFORE UPDATE ON experiment_specs BEGIN SELECT RAISE(ABORT, 'experiment specs are immutable'); END;
-CREATE TRIGGER IF NOT EXISTS experiment_specs_no_delete
-BEFORE DELETE ON experiment_specs BEGIN SELECT RAISE(ABORT, 'experiment specs are immutable'); END;
-CREATE TRIGGER IF NOT EXISTS experiment_runs_no_update
-BEFORE UPDATE ON experiment_runs BEGIN SELECT RAISE(ABORT, 'experiment runs are immutable'); END;
-CREATE TRIGGER IF NOT EXISTS experiment_runs_no_delete
-BEFORE DELETE ON experiment_runs BEGIN SELECT RAISE(ABORT, 'experiment runs are immutable'); END;
-CREATE TRIGGER IF NOT EXISTS experiment_events_no_update
-BEFORE UPDATE ON experiment_run_events BEGIN SELECT RAISE(ABORT, 'experiment events are append-only'); END;
-CREATE TRIGGER IF NOT EXISTS experiment_events_no_delete
-BEFORE DELETE ON experiment_run_events BEGIN SELECT RAISE(ABORT, 'experiment events are append-only'); END;
-CREATE TRIGGER IF NOT EXISTS experiment_summaries_no_update
-BEFORE UPDATE ON experiment_run_summaries BEGIN SELECT RAISE(ABORT, 'experiment summaries are immutable'); END;
-CREATE TRIGGER IF NOT EXISTS experiment_summaries_no_delete
-BEFORE DELETE ON experiment_run_summaries BEGIN SELECT RAISE(ABORT, 'experiment summaries are immutable'); END;
-CREATE TRIGGER IF NOT EXISTS experiment_query_traces_no_update
-BEFORE UPDATE ON experiment_query_traces BEGIN SELECT RAISE(ABORT, 'query traces are immutable'); END;
-CREATE TRIGGER IF NOT EXISTS experiment_query_traces_no_delete
-BEFORE DELETE ON experiment_query_traces BEGIN SELECT RAISE(ABORT, 'query traces are immutable'); END;
-`
-
-// Evaluation datasets are immutable corpus-bound truth artifacts. The older
-// eval_queries tables remain legacy workflow state and must not be used to
-// validate a reproducible experiment specification.
-const migrationV4EvaluationArtifacts = `
+// Evaluation datasets and representation sets are immutable domain artifacts.
+// Scientific run lifecycle and evidence are owned exclusively by researchctl.
+const migrationV3EvaluationArtifacts = `
 CREATE TABLE IF NOT EXISTS evaluation_datasets (
     id TEXT PRIMARY KEY,
     schema_version TEXT NOT NULL,

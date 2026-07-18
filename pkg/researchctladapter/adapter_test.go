@@ -64,6 +64,16 @@ func TestWrapExecuteAndReconstructCanonicalSpecification(t *testing.T) {
 		t.Fatal(err)
 	}
 	resolved := ResolvedInputs{ByRole: map[string]ResolvedInput{"corpus": corpusInput, "evaluation-dataset": datasetInput}}
+	corpusPath := filepath.Join(root, filepath.FromSlash(corpusInput.Reference.URI))
+	datasetPath := filepath.Join(root, filepath.FromSlash(datasetInput.Reference.URI))
+	corpusBefore, err := os.ReadFile(corpusPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	datasetBefore, err := os.ReadFile(datasetPath)
+	if err != nil {
+		t.Fatal(err)
+	}
 	execution := fixtureExecution(t, corpus.Manifest.Digest, dataset.Manifest.Digest)
 	specification, err := WrapExecution(execution, resolved, "fixture")
 	if err != nil {
@@ -85,9 +95,37 @@ func TestWrapExecuteAndReconstructCanonicalSpecification(t *testing.T) {
 	if collector.complete == nil || len(collector.metrics) != 1 || len(collector.traces) != 1 || len(collector.artifacts) < 4 {
 		t.Fatalf("sink=%#v", collector)
 	}
+	corpusAfter, err := os.ReadFile(corpusPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	datasetAfter, err := os.ReadFile(datasetPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(corpusBefore, corpusAfter) || !bytes.Equal(datasetBefore, datasetAfter) {
+		t.Fatal("read-only worker mutated staged input bytes")
+	}
 	if collector.traces[0].Kind != ragcontract.TraceSchemaVersion {
 		t.Fatalf("trace=%#v", collector.traces[0])
 	}
+	var artifactBytes int64
+	for _, artifact := range collector.artifacts {
+		info, statErr := os.Stat(filepath.Join(root, filepath.FromSlash(artifact.URI)))
+		if statErr != nil {
+			t.Fatal(statErr)
+		}
+		artifactBytes += info.Size()
+	}
+	var trace ragcontract.QueryTrace
+	if err := json.Unmarshal(collector.traces[0].Value, &trace); err != nil {
+		t.Fatal(err)
+	}
+	var metricBytes int
+	for _, metric := range collector.metrics {
+		metricBytes += len(metric.Value) + len(metric.Metadata)
+	}
+	t.Logf("study_fixture artifacts=%d artifact_bytes=%d trace_bytes=%d metric_bytes=%d cost=%v", len(collector.artifacts), artifactBytes, len(collector.traces[0].Value), metricBytes, trace.Usage.ProviderCost)
 	export := lab.RunExport{Specification: specification}
 	reconstructed, err := ReconstructSpecification(export)
 	if err != nil {

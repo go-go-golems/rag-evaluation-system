@@ -88,8 +88,8 @@ func RegisterHandlersWithOptions(mux *http.ServeMux, database *sql.DB, opts Opti
 	mux.HandleFunc("GET /api/v1/corpus/documents", h.handleCorpusDocuments)
 	mux.HandleFunc("GET /api/v1/corpus/documents/{id}", h.handleCorpusDocumentDetail)
 
-	// Immutable experiment laboratory
-	mux.HandleFunc("GET /api/v1/lab/catalog", h.handleLabCatalog)
+	// Immutable RAG domain artifacts (read-only; no experiment lifecycle)
+	mux.HandleFunc("GET /api/v1/artifacts/rag/catalog", h.handleRAGArtifactCatalog)
 }
 
 type handler struct {

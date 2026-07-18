@@ -2,7 +2,7 @@ package api
 
 import "net/http"
 
-func (h *handler) handleLabCatalog(w http.ResponseWriter, r *http.Request) {
+func (h *handler) handleRAGArtifactCatalog(w http.ResponseWriter, r *http.Request) {
 	type snapshot struct {
 		ID            string `json:"id"`
 		DocumentCount int    `json:"document_count"`
