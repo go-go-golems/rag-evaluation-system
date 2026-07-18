@@ -10,6 +10,7 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/document"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/embedding"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/preview"
+	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/providers"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/search"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/serve"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/source"
@@ -39,9 +40,6 @@ func main() {
 	if err := rageval.AddDocToHelpSystem(helpSystem); err != nil {
 		cobra.CheckErr(err)
 	}
-	help_cmd.SetupCobraRootCommand(helpSystem, rootCmd)
-
-	helpSystem := help.NewHelpSystem()
 	if err := ragdoc.AddDocToHelpSystem(helpSystem); err != nil {
 		cobra.CheckErr(err)
 	}
@@ -58,6 +56,9 @@ func main() {
 	rootCmd.AddCommand(serve.NewCommand())
 	rootCmd.AddCommand(study.NewCommand())
 	rootCmd.AddCommand(preview.NewCommand())
+	providerCommands, err := providers.NewCommand()
+	cobra.CheckErr(err)
+	rootCmd.AddCommand(providerCommands)
 
 	cobra.CheckErr(rootCmd.Execute())
 }
