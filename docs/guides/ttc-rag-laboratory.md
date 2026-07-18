@@ -18,29 +18,33 @@ Open `http://127.0.0.1:8772` and select **Evaluation**. The page reports immutab
 
 ## Execute through researchctl
 
-Build the observation-only worker:
+Build the canonical RAG worker and RAG-owned CLI:
 
 ```bash
-go build -o .bin/rag-lab-worker ./cmd/rag-lab-worker
+go build -o .bin/rag-worker ./cmd/rag-worker
+go build -o .bin/rag-eval ./cmd/rag-eval
 ```
 
-Execute a pure `rag-retrieval-spec/v1` program with explicit input references:
+Execute a pure `rag-study/v2` program with explicit input references:
 
 ```bash
-researchctl experiment run-rag experiment.js \
+rag-eval study validate experiments/rag-sol2/study.js \
+  --inputs experiments/rag-sol2/inputs.json \
+  --ttc-database data/rag-eval.db
+
+rag-eval study run experiments/rag-sol2/study.js \
   --project project.yaml \
   --experiment-id EXP-RAG \
-  --inputs inputs.json \
+  --inputs experiments/rag-sol2/inputs.json \
   --ttc-database data/rag-eval.db \
-  --runner .bin/rag-lab-worker \
-  --runner-arg=--db --runner-arg=data/rag-eval.db \
-  --runner-has-embedder --timeout 10m
+  --researchctl-command researchctl \
+  --worker-command .bin/rag-worker
 
 researchctl lab runs list --project project.yaml --output json
 researchctl lab runs show RUN_ID --project project.yaml --output json
 ```
 
-The worker opens the source catalog with WAL-aware `mode=ro` and query-only access. It emits events, query traces, metrics, and artifacts through `researchctl-rag-runner-stdio/v1`; it has no researchctl database handle.
+The adapter reads the source catalog with WAL-aware `mode=ro` and query-only access, stages verified artifacts, and delegates lifecycle to researchctl. The worker speaks generic `researchctl-runner-stdio/v1`, advertises only `rag-pipeline/v2`, emits `rag-query-trace/v2`, and has no researchctl database handle.
 
 ## Frozen domain identities
 

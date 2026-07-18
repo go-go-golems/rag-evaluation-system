@@ -15,4 +15,4 @@ Operator identifiers use `<namespace>.<operation>/<version>`, for example `fusio
 
 Generated representations, collapse identities, and source-evidence identities are distinct. A trace may report a matched generated question, a winning unit, and a hydrated source chunk without treating generated text as evidence.
 
-The disposable v1 laboratory remains isolated under `pkg/raglab` only until the planned destructive cutover. It no longer owns or imports the canonical contract package.
+The disposable v1 laboratory and worker were removed after the one-time parity extraction. No compatibility DTO, adapter, runner, or schema remains in the active source tree.

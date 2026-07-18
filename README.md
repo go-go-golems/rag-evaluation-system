@@ -126,19 +126,22 @@ packages/rag-evaluation-site/  React component library
 
 ## Researchctl laboratory integration
 
-The authoritative cross-purpose execution path exports a pure `rag-retrieval-spec/v1` value and emits observations through `pkg/raglab.ObservationExecutor`. Researchctl owns runs, attempts, retries, timestamps, terminal state, SQLite, artifact custody, import, and export. This repository owns retrieval, fusion, reranking, relevance, and query-trace semantics.
+The authoritative path compiles pure JavaScript authoring to `rag-pipeline-execution/v2`, adapts it to researchctl's generic laboratory, and executes it with `cmd/rag-worker`. Researchctl owns runs, attempts, retries, timestamps, terminal state, SQLite, generic artifact custody, import, and export. This repository owns RAG compilation, operators, manifests, lineage, retrieval, fusion, reranking, evaluation, and `rag-query-trace/v2`.
 
 ```bash
-# Inspect a lifecycle-free JavaScript specification export.
-go run ./cmd/rag-eval js run examples/rag-lab-js/04-export-researchctl-spec.js
+# Validate and explain a lifecycle-free five-variant study.
+go run ./cmd/rag-eval study validate experiments/rag-sol2/study.js \
+  --inputs experiments/rag-sol2/inputs.json --ttc-database data/rag-eval.db
+go run ./cmd/rag-eval study explain experiments/rag-sol2/study.js \
+  --inputs experiments/rag-sol2/inputs.json --ttc-database data/rag-eval.db
 
-# Build the strict NDJSON worker used by researchctl experiment run-rag.
-go build -o .bin/rag-lab-worker ./cmd/rag-lab-worker
+# Build the strict generic NDJSON worker used by the RAG-owned adapter.
+go build -o .bin/rag-worker ./cmd/rag-worker
 ```
 
-The worker speaks `researchctl-rag-runner-stdio/v1`, accepts one request on stdin, writes protocol frames only to stdout, and sends diagnostics to stderr. It opens the TTC SQLite catalog with WAL-aware `mode=ro` and query-only access. Filters, generated representations, parent-chunk collapse, missing embedders, and missing rerankers fail explicitly before observations.
+The worker speaks `researchctl-runner-stdio/v1`, advertises only `rag-pipeline/v2`, writes protocol frames only to stdout, and sends diagnostics to stderr. Both adapter and worker validate canonical configuration and RAG-owned manifest lineage. Missing providers, unsafe paths, unsupported operations, invalid traces, and malformed lineage fail explicitly.
 
-See [`pkg/ragcontract/README.md`](pkg/ragcontract/README.md) for the dependency-free boundary and `examples/rag-lab-js/04-export-researchctl-spec.js` for pure authoring. Candidate TTC datasets and metrics remain provisional development evidence until human adjudication and holdout freeze.
+See [`pkg/ragcontract/README.md`](pkg/ragcontract/README.md), `examples/rag-v2`, and [`experiments/rag-sol2/README.md`](experiments/rag-sol2/README.md). Candidate TTC datasets and fixture-provider metrics remain provisional development evidence until human adjudication and holdout freeze.
 
 ## Widget IR frontend
 
