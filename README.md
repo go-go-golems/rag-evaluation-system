@@ -141,7 +141,18 @@ go build -o .bin/rag-worker ./cmd/rag-worker
 
 The worker speaks `researchctl-runner-stdio/v1`, advertises only `rag-pipeline/v2`, writes protocol frames only to stdout, and sends diagnostics to stderr. Both adapter and worker validate canonical configuration and RAG-owned manifest lineage. Missing providers, unsafe paths, unsupported operations, invalid traces, and malformed lineage fail explicitly.
 
-See [`pkg/ragcontract/README.md`](pkg/ragcontract/README.md), `examples/rag-v2`, and [`experiments/rag-sol2/README.md`](experiments/rag-sol2/README.md). Candidate TTC datasets and fixture-provider metrics remain provisional development evidence until human adjudication and holdout freeze.
+Online execution uses `pkg/ragproduct` and `cmd/rag-product-server`; those dependency graphs contain no researchctl package. Product qualification freezes exact deployment manifests into the same normalized pipeline under a study target.
+
+Final RAG documentation:
+
+- [API and contract reference](docs/guides/rag-v2-api-reference.md)
+- [Native operator authoring](docs/guides/rag-operator-authoring.md)
+- [Product runtime](docs/guides/rag-product-runtime.md)
+- [Study playbook](docs/guides/rag-study-playbook.md)
+- [Destructive cutover](docs/guides/rag-v2-destructive-cutover.md)
+- [Intern onboarding](docs/guides/rag-v2-intern-onboarding.md)
+
+See also [`pkg/ragcontract/README.md`](pkg/ragcontract/README.md), `examples/rag-v2`, and [`experiments/rag-sol2/README.md`](experiments/rag-sol2/README.md). Candidate TTC datasets and fixture-provider metrics remain provisional development evidence until human adjudication and holdout freeze.
 
 ## Widget IR frontend
 

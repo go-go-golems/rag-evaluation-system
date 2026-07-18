@@ -63,9 +63,9 @@ Candidate datasets are provisional and not human-adjudicated holdouts.
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET /api/v1/lab/catalog` | Read immutable snapshots, chunk sets, embedding sets, and BM25 artifacts. |
+| `GET /api/v1/artifacts/rag/catalog` | Read immutable snapshots, chunk sets, embedding sets, and BM25 artifacts. |
 
-Requests to the retired `/api/v1/lab/specifications`, `/api/v1/lab/runs`, and `/api/v1/lab/comparison` routes return 404. Historical SQLite tables remain append-only migration history but have no supported writer.
+The RAG server exposes no experiment specification, run, event, completion, or comparison lifecycle route. Fresh disposable databases contain only domain artifact tables; scientific lifecycle persistence belongs to researchctl.
 
 ## Validation
 
