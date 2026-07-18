@@ -26,24 +26,51 @@ func CompileProduct(input ragcontract.ProductPlan, registry *Registry) (ragcontr
 	if err != nil {
 		return input, fmt.Errorf("RAG_V2_PRODUCT_REQUEST: %w", err)
 	}
+	if string(input.Request) == "{}" || string(input.Request) == "{\"fields\":null}" {
+		input.Request = json.RawMessage(`{"fields":[{"maxLength":4096,"name":"query","required":true,"type":"string"}]}`)
+	}
 	input.Response, err = ragcontract.CanonicalRaw(input.Response, "{}")
 	if err != nil {
 		return input, fmt.Errorf("RAG_V2_PRODUCT_RESPONSE: %w", err)
 	}
+	if string(input.Response) == "{}" || string(input.Response) == "{\"answerFormat\":\"\",\"citationMode\":\"\",\"includeTraceId\":false}" {
+		input.Response = json.RawMessage(`{"answerFormat":"text","citationMode":"required","includeTraceId":true}`)
+	}
 	if input.Runtime.MaxResults <= 0 {
 		input.Runtime.MaxResults = 10
+	}
+	if input.Runtime.MaxConcurrent <= 0 {
+		input.Runtime.MaxConcurrent = 1
 	}
 	if input.Runtime.TracePolicy == "" {
 		input.Runtime.TracePolicy = "authoritative"
 	}
 	if input.Runtime.FailurePolicy == "" {
-		input.Runtime.FailurePolicy = "fail-closed"
+		input.Runtime.FailurePolicy = "fail"
 	}
 	if input.Citations.Mode == "" {
 		input.Citations.Mode = "required"
 	}
-	if input.Citations.Mode == "required" {
+	if !oneOf(input.Runtime.TracePolicy, "authoritative", "metadata-only", "artifact-backed", "none") {
+		return input, fmt.Errorf("RAG_V2_PRODUCT_TRACE_POLICY: %s", input.Runtime.TracePolicy)
+	}
+	if !oneOf(input.Runtime.FailurePolicy, "fail", "abstain", "retrieval-only") {
+		return input, fmt.Errorf("RAG_V2_PRODUCT_FAILURE_POLICY: %s", input.Runtime.FailurePolicy)
+	}
+	if !oneOf(input.Citations.Mode, "required", "source", "none") {
+		return input, fmt.Errorf("RAG_V2_PRODUCT_CITATION_POLICY: %s", input.Citations.Mode)
+	}
+	if input.Runtime.TimeoutMilliseconds < 0 || input.Runtime.MaxResults > 1000 || input.Runtime.MaxConcurrent > 1024 {
+		return input, fmt.Errorf("RAG_V2_PRODUCT_RUNTIME_LIMIT")
+	}
+	if input.Citations.Mode == "required" || input.Citations.Mode == "source" {
 		input.Citations.RequireSourceText = true
+	}
+	if err := validateProductContracts(input.Request, input.Response); err != nil {
+		return input, err
+	}
+	if err := validateModelBindings(input.Models); err != nil {
+		return input, err
 	}
 	if err := validateBindings(pipeline, input.Bindings, false); err != nil {
 		return input, err
@@ -174,6 +201,63 @@ func StudySemanticIdentity(input ragcontract.Study) (string, error) {
 		Acceptance    json.RawMessage            `json:"acceptance,omitempty"`
 	}{SchemaVersion: ragcontract.StudySchemaVersion, Cells: cells, Acceptance: input.Acceptance}
 	return ragcontract.Digest(identity)
+}
+
+func oneOf(value string, allowed ...string) bool {
+	for _, candidate := range allowed {
+		if value == candidate {
+			return true
+		}
+	}
+	return false
+}
+
+func validateProductContracts(request, response json.RawMessage) error {
+	var req struct {
+		Fields []struct {
+			Name, Type string
+			Required   bool
+			MaxLength  int
+		} `json:"fields"`
+	}
+	if err := ragcontract.DecodeStrict(request, &req); err != nil {
+		return fmt.Errorf("RAG_V2_PRODUCT_REQUEST: %w", err)
+	}
+	seen := map[string]bool{}
+	for _, field := range req.Fields {
+		if field.Name == "" || seen[field.Name] || !oneOf(field.Type, "string", "number", "boolean", "object", "array") || field.MaxLength < 0 {
+			return fmt.Errorf("RAG_V2_PRODUCT_REQUEST_FIELD: %s", field.Name)
+		}
+		seen[field.Name] = true
+	}
+	if !seen["query"] {
+		return fmt.Errorf("RAG_V2_PRODUCT_REQUEST_QUERY")
+	}
+	var res struct {
+		AnswerFormat, CitationMode string
+		IncludeTraceID             bool `json:"includeTraceId"`
+	}
+	if err := ragcontract.DecodeStrict(response, &res); err != nil {
+		return fmt.Errorf("RAG_V2_PRODUCT_RESPONSE: %w", err)
+	}
+	if res.AnswerFormat != "" && !oneOf(res.AnswerFormat, "text", "markdown", "json") {
+		return fmt.Errorf("RAG_V2_PRODUCT_RESPONSE_FORMAT: %s", res.AnswerFormat)
+	}
+	if res.CitationMode != "" && !oneOf(res.CitationMode, "required", "source", "none") {
+		return fmt.Errorf("RAG_V2_PRODUCT_RESPONSE_CITATIONS: %s", res.CitationMode)
+	}
+	return nil
+}
+
+func validateModelBindings(bindings []ragcontract.ModelBinding) error {
+	seen := map[string]bool{}
+	for _, binding := range bindings {
+		if binding.Reference == "" || binding.Manifest == "" || binding.Digest == "" || seen[binding.Reference] {
+			return fmt.Errorf("RAG_V2_PRODUCT_MODEL_BINDING: %s", binding.Reference)
+		}
+		seen[binding.Reference] = true
+	}
+	return nil
 }
 
 func validateBindings(p ragcontract.PipelineIR, bindings []ragcontract.ArtifactBinding, allowExtra bool) error {

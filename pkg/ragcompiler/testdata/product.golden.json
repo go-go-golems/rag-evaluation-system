@@ -293,12 +293,26 @@
 		"mode": "required",
 		"requireSourceText": true
 	},
-	"request": {},
-	"response": {},
+	"request": {
+		"fields": [
+			{
+				"maxLength": 4096,
+				"name": "query",
+				"required": true,
+				"type": "string"
+			}
+		]
+	},
+	"response": {
+		"answerFormat": "text",
+		"citationMode": "required",
+		"includeTraceId": true
+	},
 	"runtime": {
 		"maxResults": 10,
+		"maxConcurrent": 1,
 		"tracePolicy": "authoritative",
-		"failurePolicy": "fail-closed"
+		"failurePolicy": "fail"
 	},
 	"display": {
 		"name": "qualification"

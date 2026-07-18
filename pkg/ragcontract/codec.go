@@ -9,6 +9,10 @@ import (
 	"io"
 )
 
+func DecodeStrict(raw json.RawMessage, target any) error {
+	return decodeStrict(bytes.NewReader(raw), target)
+}
+
 func DecodePipeline(reader io.Reader) (PipelineIR, error) {
 	var value PipelineIR
 	if err := decodeStrict(reader, &value); err != nil {

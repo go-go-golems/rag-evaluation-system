@@ -33,9 +33,11 @@ type Options struct {
 	Embedder  ragoperators.Embedder
 	Reranker  ragoperators.Reranker
 	Cache     ragoperators.Cache
+	Prepared  *Prepared
 }
 type Result struct {
 	Traces    []ragcontract.QueryTrace   `json:"traces"`
+	Answers   []ragoperators.Answer      `json:"answers,omitempty"`
 	Metrics   []ragoperators.Metric      `json:"metrics"`
 	Artifacts []ragoperators.Artifact    `json:"artifacts"`
 	Failures  []ragcontract.FailureTrace `json:"failures"`
@@ -58,14 +60,19 @@ func (e *Engine) Execute(ctx context.Context, execution ragcontract.PipelineExec
 	if execution.SchemaVersion != ragcontract.ExecutionSchemaVersion {
 		return nil, fmt.Errorf("RAG_ENGINE_SCHEMA: %s", execution.SchemaVersion)
 	}
-	normalized, err := ragcompiler.Normalize(execution.Pipeline, nil)
-	if err != nil {
-		return nil, fmt.Errorf("RAG_ENGINE_PIPELINE: %w", err)
+	if execution.Pipeline.SchemaVersion != ragcontract.PipelineSchemaVersion {
+		return nil, fmt.Errorf("RAG_ENGINE_PIPELINE_SCHEMA: %s", execution.Pipeline.SchemaVersion)
 	}
-	gotPipeline, _ := ragcontract.CanonicalJSON(execution.Pipeline)
-	wantPipeline, _ := ragcontract.CanonicalJSON(normalized)
-	if string(gotPipeline) != string(wantPipeline) {
-		return nil, fmt.Errorf("RAG_ENGINE_PIPELINE_NONCANONICAL")
+	if options.Prepared == nil {
+		normalized, err := ragcompiler.Normalize(execution.Pipeline, nil)
+		if err != nil {
+			return nil, fmt.Errorf("RAG_ENGINE_PIPELINE: %w", err)
+		}
+		gotPipeline, _ := ragcontract.CanonicalJSON(execution.Pipeline)
+		wantPipeline, _ := ragcontract.CanonicalJSON(normalized)
+		if string(gotPipeline) != string(wantPipeline) {
+			return nil, fmt.Errorf("RAG_ENGINE_PIPELINE_NONCANONICAL")
+		}
 	}
 	identity := execution
 	identity.CellID = ""
@@ -85,21 +92,37 @@ func (e *Engine) Execute(ctx context.Context, execution ragcontract.PipelineExec
 	}
 	staticNodes := staticNodeIDs(execution.Pipeline)
 	var prepared map[string]any
-	defer func() { closeIndexes(prepared) }()
+	ownsPrepared := options.Prepared == nil
+	if options.Prepared != nil {
+		var closed bool
+		prepared, closed = options.Prepared.snapshot()
+		if closed {
+			return nil, fmt.Errorf("RAG_ENGINE_PREPARED_CLOSED")
+		}
+		if options.Prepared.pipelineDigest != mustDigest(execution.Pipeline) {
+			return nil, fmt.Errorf("RAG_ENGINE_PREPARED_PIPELINE")
+		}
+	}
+	if ownsPrepared {
+		defer func() { closeIndexes(prepared) }()
+	}
 	for queryIndex, query := range dataset.Queries {
 		if err := ctx.Err(); err != nil {
 			return result, err
 		}
 		skip := map[string]bool{}
-		if queryIndex > 0 {
+		if queryIndex > 0 || options.Prepared != nil {
 			skip = staticNodes
 		}
 		trace, metrics, artifacts, values, err := e.executeQuery(ctx, execution, corpus, query, options, observer, prepared, skip)
-		if queryIndex == 0 {
+		if queryIndex == 0 && options.Prepared == nil {
 			prepared = selectPrepared(values, staticNodes)
 		}
 		result.Metrics = append(result.Metrics, metrics...)
 		result.Artifacts = append(result.Artifacts, artifacts...)
+		if answer, ok := answerFromValues(values); ok {
+			result.Answers = append(result.Answers, answer)
+		}
 		if err != nil {
 			failure := ragcontract.FailureTrace{Code: "RAG_QUERY_FAILED", Path: "$.queries[" + query.ID + "]", Message: err.Error()}
 			result.Failures = append(result.Failures, failure)
@@ -301,6 +324,15 @@ func closeIndexes(values map[string]any) {
 		}
 	}
 }
+func answerFromValues(values map[string]any) (ragoperators.Answer, bool) {
+	for _, value := range values {
+		if answer, ok := value.(ragoperators.Answer); ok {
+			return answer, true
+		}
+	}
+	return ragoperators.Answer{}, false
+}
+
 func event(kind string, value any) ragoperators.Event {
 	raw, _ := json.Marshal(value)
 	return ragoperators.Event{Type: kind, Payload: raw}
