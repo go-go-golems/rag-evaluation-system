@@ -7,7 +7,7 @@ require (
 	github.com/blevesearch/bleve_index_api v1.3.11
 	github.com/dop251/goja v0.0.0-20260629171413-2a84ae0cf10d
 	github.com/dop251/goja_nodejs v0.0.0-20260212111938-1f56ff5bcf14
-	github.com/go-go-golems/geppetto v0.13.5
+	github.com/go-go-golems/geppetto v0.13.8-0.20260718223621-4c0b1f9b779e
 	github.com/go-go-golems/glazed v1.3.6
 	github.com/go-go-golems/go-go-goja v0.10.3
 	github.com/go-go-golems/logcopter v0.1.1
