@@ -16,6 +16,9 @@ func (s PageSpec) ToWidgetPage() JSONObject {
 	if s.Shell != nil {
 		page["shell"] = s.Shell.ToJSON()
 	}
+	if len(s.Shortcuts) > 0 {
+		page["shortcuts"] = JSONObject{"bindings": pageShortcutsToJSON(s.Shortcuts)}
+	}
 	if s.Root.Kind != "" {
 		page["root"] = s.Root.ToWidgetNode()
 	}
@@ -96,6 +99,26 @@ func (s ContentViewportSpec) ToJSON() JSONObject {
 	}
 	if s.Scroll != "" {
 		out["scroll"] = s.Scroll
+	}
+	return out
+}
+
+func pageShortcutsToJSON(shortcuts []PageShortcutSpec) []JSONValue {
+	out := make([]JSONValue, 0, len(shortcuts))
+	for _, shortcut := range shortcuts {
+		modifiers := make([]JSONValue, 0, len(shortcut.Modifiers))
+		for _, modifier := range shortcut.Modifiers {
+			modifiers = append(modifiers, string(modifier))
+		}
+		out = append(out, JSONObject{
+			"id":             shortcut.ID,
+			"key":            shortcut.Key,
+			"modifiers":      modifiers,
+			"label":          shortcut.Label,
+			"action":         shortcut.Action.ToWidgetAction(),
+			"preventDefault": shortcut.PreventDefault,
+			"allowRepeat":    shortcut.AllowRepeat,
+		})
 	}
 	return out
 }
@@ -255,6 +278,10 @@ func (s CollectionSpec) tableNode(keyField string) NodeSpec {
 
 func (s CollectionSpec) tableColumns() []JSONValue {
 	columns := []JSONValue{}
+	sortColumns := map[string]TableSortColumnSpec{}
+	for _, sortColumn := range s.Table.SortColumns {
+		sortColumns[sortColumn.Field] = sortColumn
+	}
 	for _, field := range s.Schema.Fields {
 		if field.Summary.Elide || field.Semantic == FieldSemanticProse || field.Kind == FieldKindMedia {
 			continue
@@ -266,6 +293,13 @@ func (s CollectionSpec) tableColumns() []JSONValue {
 		column := JSONObject{"id": field.Name, "header": fieldLabel(field), "cell": cell}
 		if field.Layout.Width != "" {
 			column["maxWidth"] = field.Layout.Width
+		}
+		if sortColumn, ok := sortColumns[field.Name]; ok {
+			column["sortable"] = true
+			column["onSort"] = sortColumn.Action.ToWidgetAction()
+			if sortColumn.Direction != "" {
+				column["sortDirection"] = sortColumn.Direction
+			}
 		}
 		columns = append(columns, column)
 	}

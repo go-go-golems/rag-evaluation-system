@@ -36,10 +36,27 @@ export type PageShellSpec =
 	| { kind: "none" | "root-owned" }
 	| { kind: "app"; navigation: PageNavigationSpec; content?: PageContentViewportSpec };
 
+export type ShortcutModifier = "Alt" | "Control" | "Meta" | "Shift";
+
+export interface PageShortcutSpec {
+	id: string;
+	key: string;
+	modifiers?: ShortcutModifier[];
+	label: string;
+	action: ActionSpec;
+	preventDefault?: boolean;
+	allowRepeat?: boolean;
+}
+
+export interface PageShortcutsSpec {
+	bindings: PageShortcutSpec[];
+}
+
 export interface WidgetPageResponse {
 	id: string;
 	title: string;
 	shell?: PageShellSpec;
+	shortcuts?: PageShortcutsSpec;
 	root: WidgetNode;
 	meta?: Record<string, unknown>;
 }

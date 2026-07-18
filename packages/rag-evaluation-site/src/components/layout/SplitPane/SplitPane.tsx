@@ -6,7 +6,7 @@ export interface SplitPaneProps extends HTMLAttributes<HTMLDivElement> {
 	right: ReactNode;
 	ratio?: "balanced" | "leftNarrow" | "rightNarrow" | "course" | "sidebar";
 	divider?: boolean;
-	gutter?: "none" | "md" | "lg";
+	gutter?: "none" | "divider" | "md" | "lg";
 }
 
 export function SplitPane({

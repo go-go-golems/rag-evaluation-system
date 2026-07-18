@@ -162,6 +162,32 @@ func TestCollectionSpecLowersShapingKeyboardCommandsAndSemanticStyles(t *testing
 	}
 }
 
+func TestCollectionSpecLowersSortableColumns(t *testing.T) {
+	collection := CollectionSpec{
+		Name:        "jobs",
+		Rows:        []JSONObject{{"sessionId": "j1", "title": "Go"}},
+		Schema:      sessionSchema(),
+		Arrangement: ArrangementSpec{Kind: ArrangementKindTable},
+		Table: TableSpec{SortColumns: []TableSortColumnSpec{{
+			Field:     "title",
+			Direction: "ascending",
+			Action:    ActionSpec{Kind: ActionKindNavigate, To: "/jobs?sort=title-desc"},
+		}}},
+	}
+	tableProps := collection.ToNode().ToWidgetNode()["children"].([]JSONValue)[0].(JSONObject)["props"].(JSONObject)
+	for _, value := range tableProps["columns"].([]JSONValue) {
+		column := value.(JSONObject)
+		if column["id"] != "title" {
+			continue
+		}
+		if column["sortable"] != true || column["sortDirection"] != "ascending" || column["onSort"] == nil {
+			t.Fatalf("sortable title column = %#v", column)
+		}
+		return
+	}
+	t.Fatalf("title column was not lowered: %#v", tableProps["columns"])
+}
+
 func TestCollectionSpecValidationRejectsBadArrangement(t *testing.T) {
 	collection := CollectionSpec{
 		Name:        "sessions",

@@ -7,6 +7,9 @@ export interface DataTableColumn<T> {
 	cell: (row: T) => ReactNode;
 	align?: "start" | "end" | "center";
 	maxWidth?: number | string;
+	sortable?: boolean;
+	sortDirection?: "ascending" | "descending";
+	onSort?: () => void;
 }
 
 export interface DataTableKeyboard {
@@ -92,6 +95,7 @@ export function DataTable<T>({
 
 	const handleKeyDown = (event: KeyboardEvent<HTMLTableRowElement>, row: T) => {
 		if (!keyboard || isEditableTarget(event.target)) return;
+		if (event.ctrlKey || event.metaKey || event.altKey) return;
 		if (event.key === "ArrowDown" || (keyboard.vimAliases && event.key.toLowerCase() === "j")) {
 			event.preventDefault();
 			moveFocus(1);
@@ -120,16 +124,31 @@ export function DataTable<T>({
 		<table
 			className={[styles.root, className ?? ""].filter(Boolean).join(" ")}
 			data-rag-component="DataTable"
+			data-rag-keyboard-scope={keyboard ? "DataTable" : undefined}
 		>
 			<thead>
 				<tr>
 					{columns.map((column) => (
 						<th
 							key={column.id}
+							aria-sort={column.sortDirection ?? "none"}
 							className={styles[column.align ?? "start"]}
 							style={column.maxWidth ? { maxWidth: column.maxWidth } : undefined}
 						>
-							{column.header}
+							{column.sortable ? (
+								<button className={styles.sortButton} onClick={column.onSort} type="button">
+									{column.header}
+									<span aria-hidden="true" className={styles.sortIndicator}>
+										{column.sortDirection === "ascending"
+											? "↑"
+											: column.sortDirection === "descending"
+												? "↓"
+												: "↕"}
+									</span>
+								</button>
+							) : (
+								column.header
+							)}
 						</th>
 					))}
 				</tr>

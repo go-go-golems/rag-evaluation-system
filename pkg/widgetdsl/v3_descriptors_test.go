@@ -89,6 +89,7 @@ func TestWidgetV3DescriptorMatchesBuilderRuntimeMethods(t *testing.T) {
 
 		widget.page("Probe", page => {
 			capture("PageBuilder")(page);
+			page.shortcuts(capture("ShortcutsBuilder"));
 			page.section("Section", section => {
 				capture("SectionBuilder")(section);
 				section.actions(capture("ActionsBuilder"));

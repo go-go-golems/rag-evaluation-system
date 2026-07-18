@@ -15,6 +15,7 @@ type PageSpec struct {
 	Title         string
 	Meta          JSONObject
 	Shell         *PageShellSpec
+	Shortcuts     []PageShortcutSpec
 	Root          NodeSpec
 	Diagnostics   []ValidationIssue
 }
@@ -76,6 +77,30 @@ type ContentViewportSpec struct {
 	MaxWidth string
 	Padding  string
 	Scroll   string
+}
+
+// ShortcutModifier is a DOM KeyboardEvent modifier represented without
+// platform-specific aliases such as Cmd or Ctrl.
+type ShortcutModifier string
+
+const (
+	ShortcutModifierAlt     ShortcutModifier = "Alt"
+	ShortcutModifierControl ShortcutModifier = "Control"
+	ShortcutModifierMeta    ShortcutModifier = "Meta"
+	ShortcutModifierShift   ShortcutModifier = "Shift"
+)
+
+// PageShortcutSpec binds a page-scoped key chord to an existing serializable
+// action. ID and Label keep the binding useful for diagnostics, help UI, and
+// future user remapping in addition to event dispatch.
+type PageShortcutSpec struct {
+	ID             string
+	Key            string
+	Modifiers      []ShortcutModifier
+	Label          string
+	Action         ActionSpec
+	PreventDefault bool
+	AllowRepeat    bool
 }
 
 // NodeSpec is the common typed representation used before lowering to the
@@ -265,11 +290,18 @@ type PaginationSpec struct {
 
 type TableSpec struct {
 	ActionColumns []TableActionColumnSpec
+	SortColumns   []TableSortColumnSpec
 	RowSelect     *ActionSpec
 	ClassName     string
 	Keyboard      TableKeyboardSpec
 	Commands      []RowCommandSpec
 	StyleRules    []SemanticStyleRule
+}
+
+type TableSortColumnSpec struct {
+	Field     string
+	Action    ActionSpec
+	Direction string
 }
 
 type TableKeyboardSpec struct {

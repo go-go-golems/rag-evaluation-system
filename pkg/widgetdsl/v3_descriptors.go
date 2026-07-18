@@ -116,7 +116,7 @@ var widgetV3Module = v3ModuleDescriptor{
 			Description:    "Generic composition widgets.",
 			RuntimeFactory: "v3UIObject",
 			Members: v3Members([]string{
-				"callout", "stack", "inline", "splitPane", "card", "button", "caption", "badge", "metadata",
+				"callout", "stack", "inline", "splitPane", "card", "button", "iconButton", "caption", "badge", "metadata",
 				"shareLink", "form", "formRow", "textInput", "textareaInput", "selectInput", "status", "emptyState",
 				"text", "code", "divider", "disclosure", "scroll", "tabs", "summary", "checkList", "stepList", "markdownArticle", "upload", "formDialog",
 			}),
@@ -202,7 +202,8 @@ var widgetV3Module = v3ModuleDescriptor{
 		{Path: "time.intent", TypeName: "TimeIntentNamespace", Members: v3Members([]string{"selectDay", "selectEvent"})},
 	},
 	Builders: []v3BuilderDescriptor{
-		v3Builder("PageBuilder", "id", "title", "meta", "shell", "root", "density", "breadcrumb", "section", "view", "validate", "toPage"),
+		v3Builder("PageBuilder", "id", "title", "meta", "shell", "shortcuts", "root", "density", "breadcrumb", "section", "view", "validate", "toPage"),
+		v3Builder("ShortcutsBuilder", "bind"),
 		v3Builder("AppShellBuilder", "brand", "navigation", "content"),
 		v3Builder("NavigationBuilder", "placement", "active", "width", "narrowMode", "ariaLabel", "section"),
 		v3Builder("NavigationItemsBuilder", "item"),
@@ -214,7 +215,7 @@ var widgetV3Module = v3ModuleDescriptor{
 		v3Builder("CollectionBuilder", "id", "schema", "empty", "select", "search", "paginate", "table", "edit", "masterDetail", "validate", "toNode", "toIR"),
 		v3Builder("SearchBuilder", "value", "query", "placeholder", "resultCount", "submit", "clear"),
 		v3Builder("PaginationBuilder", "current", "size", "total", "sizes", "position", "onChange"),
-		v3Builder("TableBuilder", "className", "rowSelect", "actionColumn", "keyboard", "command", "styleWhen"),
+		v3Builder("TableBuilder", "className", "rowSelect", "actionColumn", "sortable", "keyboard", "command", "styleWhen"),
 		v3Builder("TableKeyboardBuilder", "mode", "selection", "vimAliases", "enterSelect"),
 		v3Builder("RowCommandBuilder", "key", "label", "danger", "action"),
 		v3Builder("EditorBuilder", "create", "submit", "submitPost", "reorder", "remove", "actions"),
@@ -242,6 +243,7 @@ var widgetV3Module = v3ModuleDescriptor{
 		v3Builder("ActivityFeedBuilder", "groupByDay", "glyph", "glyphs", "styleSet", "onOpen", "onLoadMore"),
 	},
 	ActionContexts: []v3ActionContextDescriptor{
+		{Name: "page.shortcut", Component: "PageShortcut", Fields: []string{"pageId", "shortcutId", "key", "componentType"}, Description: "Context dispatched when a page-level keyboard shortcut activates."},
 		{Name: "app.navigate", Component: "SidebarNav", Fields: []string{"itemId", "value", "componentType"}, Description: "Context dispatched by typed application navigation."},
 		{Name: "table.rowSelect", Component: "DataTable", Fields: []string{"row", "rowKey", "componentType"}, Description: "Context dispatched when a collection row is selected."},
 		{Name: "table.cellAction", Component: "DataTableCell", Fields: []string{"row", "rowKey", "componentType"}, Description: "Context dispatched by an action-button cell."},
@@ -322,7 +324,6 @@ func WidgetV3APIReferenceMarkdown() string {
 	for _, context := range widgetV3Module.ActionContexts {
 		out += fmt.Sprintf("- `%s` (`%s`): `%v`. %s\n", context.Name, context.Component, context.Fields, context.Description)
 	}
-	out += "\n"
 	return out
 }
 

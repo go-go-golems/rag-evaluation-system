@@ -23,6 +23,7 @@ export type RagWidgetType =
 	| "AppShell"
 	| "AppNav"
 	| "Button"
+	| "IconButton"
 	| "Caption"
 	| "CodeText"
 	| "ContextStyleSwatch"

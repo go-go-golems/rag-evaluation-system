@@ -15,6 +15,7 @@ type v3PageSpec struct {
 	Title         string
 	Meta          map[string]any
 	Shell         *widgetspec.PageShellSpec
+	Shortcuts     []widgetspec.PageShortcutSpec
 	Root          *v3NodeSpec
 	Density       string
 	Breadcrumbs   []map[string]any
@@ -1027,6 +1028,7 @@ func (r *runtime) v3UIObject() *goja.Object {
 	setExport(ui, "splitPane", r.v3UISplitPane)
 	setExport(ui, "card", r.v3ComponentFactory("Panel", nil))
 	setExport(ui, "button", r.v3UIButton)
+	setExport(ui, "iconButton", r.v3UIIconButton)
 	setExport(ui, "caption", r.v3ComponentFactory("Caption", nil))
 	setExport(ui, "badge", r.v3ComponentFactory("Tag", nil))
 	setExport(ui, "metadata", r.v3UIMetadata)
@@ -1113,6 +1115,15 @@ func (r *runtime) v3UIButton(label goja.Value, action goja.Value, options ...goj
 		props["action"] = action.Export()
 	}
 	return componentNode("Button", props, r.v3NodeSpecsToIR(r.v3ExportChild(label))...)
+}
+
+func (r *runtime) v3UIIconButton(glyph goja.Value, label string, action goja.Value, options ...goja.Value) map[string]any {
+	props := exportOptions(options)
+	props["label"] = label
+	if action != nil && !goja.IsUndefined(action) && !goja.IsNull(action) {
+		props["action"] = action.Export()
+	}
+	return componentNode("IconButton", props, r.v3NodeSpecsToIR(r.v3ExportChild(glyph))...)
 }
 
 func (r *runtime) v3UIDisclosure(title goja.Value, content goja.Value, options ...goja.Value) map[string]any {
@@ -1230,6 +1241,9 @@ func (r *runtime) v3FieldsBuilder(schema *widgetspec.SchemaSpec) *goja.Object {
 		opts := exportOptions(options)
 		field.Label = stringFromMap(opts, "label", field.Label)
 		field.Layout.Width = stringFromMap(opts, "width", field.Layout.Width)
+		if elide, ok := opts["elide"].(bool); ok {
+			field.Summary.Elide = elide
+		}
 		if required, ok := opts["required"].(bool); ok {
 			field.Validation.Required = required
 		}
@@ -1417,6 +1431,15 @@ func (r *runtime) v3TableBuilder(collection *widgetspec.CollectionSpec) *goja.Ob
 		column := widgetspec.TableActionColumnSpec{ID: id, Header: header, Label: label, Action: action}
 		column.MaxWidth = stringFromMap(exportOptions(options), "maxWidth", column.MaxWidth)
 		collection.Table.ActionColumns = append(collection.Table.ActionColumns, column)
+		return obj
+	})
+	setExport(obj, "sortable", func(field string, actionValue goja.Value, options ...goja.Value) *goja.Object {
+		if strings.TrimSpace(field) == "" {
+			panic(r.vm.NewGoError(fmt.Errorf("widget.dsl data.collection.table.sortable field must not be empty")))
+		}
+		sortColumn := widgetspec.TableSortColumnSpec{Field: field, Action: v3ActionFromAny(actionValue.Export())}
+		sortColumn.Direction = stringFromMap(exportOptions(options), "direction", "")
+		collection.Table.SortColumns = append(collection.Table.SortColumns, sortColumn)
 		return obj
 	})
 	setExport(obj, "keyboard", func(cb ...goja.Value) *goja.Object {
@@ -1643,6 +1666,10 @@ func (r *runtime) v3PageBuilder(spec *v3PageSpec) *goja.Object {
 		spec.Shell = parsed
 		return obj
 	})
+	setExport(obj, "shortcuts", func(cb goja.Value) *goja.Object {
+		r.applyV3BuilderCallback(r.v3ShortcutsBuilder(&spec.Shortcuts), cb, "page.shortcuts")
+		return obj
+	})
 	setExport(obj, "root", func(value goja.Value) *goja.Object {
 		nodes := r.v3ExportChild(value)
 		if len(nodes) != 1 {
@@ -1682,10 +1709,38 @@ func (r *runtime) v3PageBuilder(spec *v3PageSpec) *goja.Object {
 	})
 	setExport(obj, "toPage", func() map[string]any {
 		issues := v3PageValidationIssues(spec)
-		if len(issues) > 0 {
-			panic(r.vm.NewGoError(fmt.Errorf("widget.dsl page is invalid: %s", issues[0]["message"])))
+		for _, issue := range issues {
+			if issue["severity"] == "error" {
+				panic(r.vm.NewGoError(fmt.Errorf("widget.dsl page is invalid: %s", issue["message"])))
+			}
 		}
 		return r.v3PageToIR(spec)
+	})
+	return obj
+}
+
+func (r *runtime) v3ShortcutsBuilder(shortcuts *[]widgetspec.PageShortcutSpec) *goja.Object {
+	obj := r.newV3Builder("page.shortcuts")
+	setExport(obj, "bind", func(id string, key string, actionValue goja.Value, options ...goja.Value) *goja.Object {
+		opts := exportOptions(options)
+		shortcut := widgetspec.PageShortcutSpec{
+			ID:             id,
+			Key:            key,
+			Label:          stringFromMap(opts, "label", ""),
+			Action:         v3ActionFromAny(actionValue.Export()),
+			PreventDefault: true,
+		}
+		if value, ok := opts["preventDefault"].(bool); ok {
+			shortcut.PreventDefault = value
+		}
+		if value, ok := opts["allowRepeat"].(bool); ok {
+			shortcut.AllowRepeat = value
+		}
+		for _, raw := range anySlice(opts["modifiers"]) {
+			shortcut.Modifiers = append(shortcut.Modifiers, widgetspec.ShortcutModifier(fmt.Sprint(raw)))
+		}
+		*shortcuts = append(*shortcuts, shortcut)
+		return obj
 	})
 	return obj
 }
@@ -1927,6 +1982,25 @@ func (r *runtime) v3PageToIR(spec *v3PageSpec) map[string]any {
 	if spec.Shell != nil {
 		out["shell"] = spec.Shell.ToJSON()
 	}
+	if len(spec.Shortcuts) > 0 {
+		bindings := make([]any, 0, len(spec.Shortcuts))
+		for _, shortcut := range spec.Shortcuts {
+			modifiers := make([]string, 0, len(shortcut.Modifiers))
+			for _, modifier := range shortcut.Modifiers {
+				modifiers = append(modifiers, string(modifier))
+			}
+			bindings = append(bindings, map[string]any{
+				"id":             shortcut.ID,
+				"key":            shortcut.Key,
+				"modifiers":      modifiers,
+				"label":          shortcut.Label,
+				"action":         shortcut.Action.ToWidgetAction(),
+				"preventDefault": shortcut.PreventDefault,
+				"allowRepeat":    shortcut.AllowRepeat,
+			})
+		}
+		out["shortcuts"] = map[string]any{"bindings": bindings}
+	}
 	return out
 }
 
@@ -2140,6 +2214,18 @@ func v3PageValidationIssues(spec *v3PageSpec) []map[string]any {
 	if strings.TrimSpace(spec.Title) == "" {
 		issues = append(issues, v3ValidationIssue("page_title_required", "page.title", "page title is required"))
 	}
+	shortcutIssues := (widgetspec.PageSpec{ID: "page", Shortcuts: spec.Shortcuts}).Validate()
+	for _, issue := range shortcutIssues {
+		if strings.HasPrefix(string(issue.Code), "page.shortcut") {
+			issues = append(issues, map[string]any{
+				"severity": string(issue.Severity),
+				"code":     string(issue.Code),
+				"path":     "page." + issue.Path,
+				"message":  issue.Message,
+				"hint":     issue.Hint,
+			})
+		}
+	}
 	if spec.Shell != nil {
 		for _, issue := range spec.Shell.Validate("page.shell") {
 			issues = append(issues, v3ValidationIssue(string(issue.Code), issue.Path, issue.Message))
@@ -2240,9 +2326,6 @@ func v3ActionFromAny(value any) widgetspec.ActionSpec {
 		action.To = stringFromMap(m, "to", "")
 	case "copy":
 		action.Kind = widgetspec.ActionKindCopy
-		if v, ok := m["value"].(string); ok {
-			action.Payload.Fields = append(action.Payload.Fields, widgetspec.PayloadFieldSpec{Name: "value", Value: widgetspec.TemplateValue{Kind: widgetspec.TemplateValueLiteral, Value: v}})
-		}
 	case "openOverlay":
 		action.Kind = widgetspec.ActionKindOpenOverlay
 		action.Options = widgetspec.JSONObject{"target": m["target"]}
@@ -2252,13 +2335,15 @@ func v3ActionFromAny(value any) widgetspec.ActionSpec {
 		action.Kind = widgetspec.ActionKindEvent
 		action.Event = stringFromMap(m, "event", kind)
 	}
-	for _, key := range []string{"query", "preserveQuery", "omitEmpty", "replace", "target"} {
-		if value, ok := m[key]; ok {
-			if action.Options == nil {
-				action.Options = widgetspec.JSONObject{}
-			}
-			action.Options[key] = value
+	for key, value := range m {
+		switch key {
+		case "kind", "name", "to", "event", "payload", "confirm":
+			continue
 		}
+		if action.Options == nil {
+			action.Options = widgetspec.JSONObject{}
+		}
+		action.Options[key] = value
 	}
 	if confirm, ok := m["confirm"].(string); ok && confirm != "" {
 		action.Confirm = &widgetspec.TemplateSpec{Parts: []widgetspec.TemplateValue{{Kind: widgetspec.TemplateValueText, Text: confirm}}}

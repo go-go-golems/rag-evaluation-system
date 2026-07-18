@@ -86,6 +86,13 @@ export interface ButtonWidgetProps extends BaseWidgetProps {
 	type?: "button" | "submit" | "reset";
 }
 
+export interface IconButtonWidgetProps extends BaseWidgetProps {
+	label: string;
+	size?: "compact" | "normal" | "large";
+	variant?: "bare" | "boxed";
+	disabled?: boolean;
+}
+
 export interface TextWidgetProps extends BaseWidgetProps {
 	as?: TextAs;
 	size?: TextSize;
@@ -564,7 +571,7 @@ export interface SplitPaneWidgetProps extends BaseWidgetProps {
 	right: WidgetNode;
 	ratio?: "balanced" | "leftNarrow" | "rightNarrow" | "course" | "sidebar";
 	divider?: boolean;
-	gutter?: "none" | "md" | "lg";
+	gutter?: "none" | "divider" | "md" | "lg";
 }
 
 export interface SidebarShellWidgetProps extends BaseWidgetProps {
@@ -664,6 +671,7 @@ export type WidgetProps =
 	| AppShellWidgetProps
 	| AppNavWidgetProps
 	| ButtonWidgetProps
+	| IconButtonWidgetProps
 	| TextWidgetProps
 	| CodeTextWidgetProps
 	| DividerWidgetProps

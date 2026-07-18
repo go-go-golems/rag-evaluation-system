@@ -22,7 +22,14 @@ export function Panel({
 }: PanelProps) {
 	return (
 		<section
-			className={[styles.root, fill ? styles.fill : "", className ?? ""].filter(Boolean).join(" ")}
+			className={[
+				styles.root,
+				density === "condensed" ? styles.rootCondensed : "",
+				fill ? styles.fill : "",
+				className ?? "",
+			]
+				.filter(Boolean)
+				.join(" ")}
 			data-rag-layout="Panel"
 			{...rest}
 		>

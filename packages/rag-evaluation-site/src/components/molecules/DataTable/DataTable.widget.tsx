@@ -12,20 +12,32 @@ export const dataTableWidget = defineWidget<DataTableWidgetProps>({
 			<DataTable<JsonObject>
 				className={props.className}
 				rows={props.rows}
-				columns={props.columns.map((column) => ({
-					id: column.id,
-					header: ctx.renderValue(column.header),
-					align: column.align,
-					maxWidth: column.maxWidth,
-					cell: (row) =>
-						renderCell(
-							column.cell,
-							row,
-							ctx.renderNode,
-							(action, context) => ctx.dispatchAction(action, context),
-							props.getRowKey,
-						),
-				}))}
+				columns={props.columns.map((column) => {
+					const sortAction = column.onSort;
+					return {
+						id: column.id,
+						header: ctx.renderValue(column.header),
+						align: column.align,
+						maxWidth: column.maxWidth,
+						sortable: column.sortable,
+						sortDirection: column.sortDirection,
+						onSort: sortAction
+							? () =>
+									ctx.dispatchAction(sortAction, {
+										columnId: column.id,
+										componentType: "DataTable",
+									})
+							: undefined,
+						cell: (row) =>
+							renderCell(
+								column.cell,
+								row,
+								ctx.renderNode,
+								(action, context) => ctx.dispatchAction(action, context),
+								props.getRowKey,
+							),
+					};
+				})}
 				getRowKey={(row) => rowKey(row, props.getRowKey)}
 				selectedKey={props.selectedKey == null ? props.selectedKey : String(props.selectedKey)}
 				keyboard={props.keyboard}
