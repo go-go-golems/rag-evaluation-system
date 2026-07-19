@@ -4,6 +4,7 @@ This directory is the explicit candidate-only real-provider profile for RESEARCH
 
 - `study.js` compiles the candidate study with `fixtureProviders: false`.
 - `product.js` compiles the corresponding product plan.
+- `preview.js` is a bounded one-large-chunk diagnostic study; it exercises the full retrieval trace without sending thousands of generation requests.
 - `manifests/` and `schemas/` are public, immutable provider identity inputs.
 - `provider-config.example.yaml` is operational-only; copy it outside this directory and set the endpoint environment references before use.
 

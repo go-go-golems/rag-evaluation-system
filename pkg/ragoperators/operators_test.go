@@ -200,6 +200,9 @@ func TestRepresentationsDerivationMultiplicityCacheAndFailure(t *testing.T) {
 	if len(generatedQuestions) != 3 || generatedQuestions[0].Record.ID == generatedQuestions[1].Record.ID {
 		t.Fatal("question multiplicity and identity")
 	}
+	if generator.request.OutputSchema != "summary/v1" {
+		t.Fatalf("synthetic-question output schema = %q, want prompt manifest schema", generator.request.OutputSchema)
+	}
 	merged, err := (mergeOperator{}).Execute(context.Background(), ragcontract.Node{ID: "merge", Operator: (mergeOperator{}).Ref(), Config: json.RawMessage(`{}`)}, map[string]any{"summary": summaries, "questions": generatedQuestions}, nil)
 	if err != nil {
 		t.Fatal(err)

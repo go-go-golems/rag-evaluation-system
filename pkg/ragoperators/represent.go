@@ -105,7 +105,11 @@ func (o representationOperator) Execute(ctx context.Context, node ragcontract.No
 		if len(parentRepresentationIDs) > 0 {
 			parentID = parentRepresentationIDs[0]
 		}
-		request := GenerationRequest{Kind: o.kind, Model: modelManifest.ModelID, Prompt: promptManifest.PromptID, OutputSchema: config.OutputSchema, ParentID: parentID, Text: generationText, Count: count}
+		outputSchema := config.OutputSchema
+		if outputSchema == "" {
+			outputSchema = promptManifest.OutputSchema
+		}
+		request := GenerationRequest{Kind: o.kind, Model: modelManifest.ModelID, Prompt: promptManifest.PromptID, OutputSchema: outputSchema, ParentID: parentID, Text: generationText, Count: count}
 		key, _ := ragcontract.Digest(struct {
 			Ref    ragcontract.OperatorRef
 			Config json.RawMessage
