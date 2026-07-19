@@ -395,13 +395,23 @@ func TestRerankAndAnswerNeverFallback(t *testing.T) {
 	if _, err := (rerankOperator{}).Execute(context.Background(), rerankNode, map[string]any{"evidence": evidence}, &Environment{Manifests: fixtureResolver(), Reranker: fakeReranker{incomplete: true}}); err == nil || !strings.Contains(err.Error(), "INCOMPLETE") {
 		t.Fatalf("%v", err)
 	}
+	// Empty truncation/tokenization must default from the resolved model manifest.
+	defaultedNode := ragcontract.Node{Config: json.RawMessage(`{"model":"m","candidateCount":1,"results":1}`)}
+	out, err := (rerankOperator{}).Execute(context.Background(), defaultedNode, map[string]any{"evidence": evidence}, &Environment{Manifests: fixtureResolver(), Reranker: fakeReranker{}})
+	if err != nil {
+		t.Fatalf("defaulted rerank failed: %v", err)
+	}
+	result := out["evidence"].([]Evidence)[0]
+	if result.RerankerScore == nil {
+		t.Fatalf("reranker score not set")
+	}
 	answerNode := ragcontract.Node{Config: json.RawMessage(`{"model":"m","prompt":"p","citations":"required"}`)}
 	generator := &fakeGenerator{}
-	out, err := (answerOperator{}).Execute(context.Background(), answerNode, map[string]any{"evidence": evidence}, &Environment{Manifests: fixtureResolver(), Generator: generator, QueryText: "What does this source say?"})
+	out2, err := (answerOperator{}).Execute(context.Background(), answerNode, map[string]any{"evidence": evidence}, &Environment{Manifests: fixtureResolver(), Generator: generator, QueryText: "What does this source say?"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if out["answer"].(Answer).CitationChunkIDs[0] != "c1" {
+	if out2["answer"].(Answer).CitationChunkIDs[0] != "c1" {
 		t.Fatalf("%#v", out)
 	}
 	if generator.request.Kind != "generate.answer" || generator.request.Text != "What does this source say?" || generator.request.OutputSchema != "summary/v1" {

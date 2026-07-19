@@ -259,6 +259,12 @@ func (rerankOperator) Execute(ctx context.Context, node ragcontract.Node, inputs
 	if err != nil {
 		return nil, err
 	}
+	if config.Truncation == "" {
+		config.Truncation = modelManifest.Truncation
+	}
+	if config.Tokenization == "" {
+		config.Tokenization = modelManifest.Tokenization
+	}
 	if config.Truncation != modelManifest.Truncation || config.Tokenization != modelManifest.Tokenization {
 		return nil, fmt.Errorf("RAG_RERANK_MODEL_POLICY: configured truncation/tokenization do not match manifest")
 	}
