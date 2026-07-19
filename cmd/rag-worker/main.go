@@ -79,6 +79,7 @@ type workerCommand struct{ *cmds.CommandDescription }
 type workerSettings struct {
 	ProviderProfile string `glazed:"provider-profile"`
 	ProviderConfig  string `glazed:"provider-config"`
+	Capabilities    bool   `glazed:"capabilities"`
 }
 
 var _ cmds.BareCommand = (*workerCommand)(nil)
@@ -90,6 +91,7 @@ func newWorkerCommand() (*cobra.Command, error) {
 		cmds.WithFlags(
 			fields.New("provider-profile", fields.TypeString, fields.WithHelp("Explicit provider profile: fixtures or real"), fields.WithRequired(true)),
 			fields.New("provider-config", fields.TypeString, fields.WithHelp("Host-only real-provider configuration YAML; required for provider-profile=real")),
+			fields.New("capabilities", fields.TypeBool, fields.WithDefault(false), fields.WithHelp("Print the non-secret provider capability descriptor and exit")),
 		),
 	)
 	command := &workerCommand{CommandDescription: description}
@@ -100,6 +102,9 @@ func (c *workerCommand) Run(ctx context.Context, parsed *values.Values) error {
 	settings := &workerSettings{}
 	if err := parsed.DecodeSectionInto(schema.DefaultSlug, settings); err != nil {
 		return err
+	}
+	if settings.Capabilities {
+		return printCapabilities(ctx, settings)
 	}
 	executeWorker(ctx, settings)
 	return nil
@@ -118,6 +123,15 @@ func executeWorker(parent context.Context, settings *workerSettings) {
 		fail(encoder, "RAG_WORKER_REQUEST", err)
 		return
 	}
+	ctx, cancel := signal.NotifyContext(parent, os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	options, capabilities, checkExecution, closeProviders, err := loadWorkerProviders(ctx, settings)
+	if err != nil {
+		fail(encoder, "RAG_WORKER_PROVIDERS", err)
+		return
+	}
+	defer closeProviders()
+	_ = capabilities
 	hello := map[string]any{"protocolVersion": protocolVersion, "runner": map[string]any{"name": "rag-worker", "resolvedVersion": "rag-worker/v2"}, "domains": []map[string]any{{"domain": ragcontract.Domain, "schemaVersion": ragcontract.DomainSchemaVersion}}}
 	if err := encoder.Encode(frame{Type: "hello", Hello: hello}); err != nil {
 		return
@@ -166,38 +180,11 @@ func executeWorker(parent context.Context, settings *workerSettings) {
 		fail(encoder, "RAG_WORKER_INPUT", fmt.Errorf("corpus and evaluation dataset are required"))
 		return
 	}
-	ctx, cancel := signal.NotifyContext(parent, os.Interrupt, syscall.SIGTERM)
-	defer cancel()
-	engine := ragengine.New(nil)
-	var options ragengine.Options
-	switch settings.ProviderProfile {
-	case "fixtures":
-		if settings.ProviderConfig != "" {
-			fail(encoder, "RAG_WORKER_PROVIDER_PROFILE", fmt.Errorf("fixture profile does not accept provider config"))
-			return
-		}
-		fixtures := ragoperators.NewFixtureProviders()
-		options = ragengine.Options{Manifests: fixtures.Resolver, Schemas: fixtures, Generator: fixtures, Embedder: fixtures, Cache: ragoperators.NewMemoryCache()}
-	case "real":
-		if settings.ProviderConfig == "" {
-			fail(encoder, "RAG_WORKER_PROVIDER_PROFILE", fmt.Errorf("real profile requires provider config"))
-			return
-		}
-		providerSet, loadErr := ragproviders.Load(ctx, settings.ProviderConfig)
-		if loadErr != nil {
-			fail(encoder, "RAG_WORKER_PROVIDERS", loadErr)
-			return
-		}
-		defer func() { _ = providerSet.Close() }()
-		if err := providerSet.CheckExecution(execution); err != nil {
-			fail(encoder, "RAG_WORKER_PROVIDER_REQUIREMENTS", err)
-			return
-		}
-		options = providerSet.EngineOptions()
-	default:
-		fail(encoder, "RAG_WORKER_PROVIDER_PROFILE", fmt.Errorf("unsupported provider profile"))
+	if err := checkExecution(execution); err != nil {
+		fail(encoder, "RAG_WORKER_PROVIDER_REQUIREMENTS", err)
 		return
 	}
+	engine := ragengine.New(nil)
 	_, err = engine.Execute(ctx, execution, corpusArtifact.Corpus, evaluationArtifact.Dataset, observer{encoder: encoder}, options)
 	if err != nil {
 		fail(encoder, "RAG_WORKER_EXECUTE", err)
@@ -205,6 +192,41 @@ func executeWorker(parent context.Context, settings *workerSettings) {
 	}
 	_ = encoder.Encode(frame{Type: "complete", Complete: map[string]any{"status": "succeeded", "payload": map[string]any{"domain": ragcontract.Domain}}})
 }
+func printCapabilities(ctx context.Context, settings *workerSettings) error {
+	_, capabilities, _, closeProviders, err := loadWorkerProviders(ctx, settings)
+	if err != nil {
+		return err
+	}
+	defer closeProviders()
+	return json.NewEncoder(os.Stdout).Encode(capabilities)
+}
+
+func loadWorkerProviders(ctx context.Context, settings *workerSettings) (ragengine.Options, any, func(ragcontract.PipelineExecution) error, func(), error) {
+	if settings == nil {
+		return ragengine.Options{}, nil, nil, nil, fmt.Errorf("worker settings required")
+	}
+	switch settings.ProviderProfile {
+	case "fixtures":
+		if settings.ProviderConfig != "" {
+			return ragengine.Options{}, nil, nil, nil, fmt.Errorf("fixture profile does not accept provider config")
+		}
+		fixtures := ragoperators.NewFixtureProviders()
+		capabilities := map[string]any{"schemaVersion": "rag-provider-capabilities/v1", "profileId": "fixtures", "fixtureProviders": true, "capabilities": []string{"embedder", "generator", "schema-validator"}}
+		return ragengine.Options{Manifests: fixtures.Resolver, Schemas: fixtures, Generator: fixtures, Embedder: fixtures, Cache: ragoperators.NewMemoryCache()}, capabilities, func(ragcontract.PipelineExecution) error { return nil }, func() {}, nil
+	case "real":
+		if settings.ProviderConfig == "" {
+			return ragengine.Options{}, nil, nil, nil, fmt.Errorf("real profile requires provider config")
+		}
+		set, err := ragproviders.Load(ctx, settings.ProviderConfig)
+		if err != nil {
+			return ragengine.Options{}, nil, nil, nil, err
+		}
+		return set.EngineOptions(), set.CapabilityDescriptor(), set.CheckExecution, func() { _ = set.Close() }, nil
+	default:
+		return ragengine.Options{}, nil, nil, nil, fmt.Errorf("unsupported provider profile")
+	}
+}
+
 func decodeStrict(reader io.Reader, target any) error {
 	decoder := json.NewDecoder(reader)
 	decoder.DisallowUnknownFields()

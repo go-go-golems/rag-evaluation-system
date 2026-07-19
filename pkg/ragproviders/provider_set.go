@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"sort"
 	"sync"
 
 	"github.com/go-go-golems/geppetto/pkg/embeddings"
@@ -21,6 +22,15 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
 	geppettoadapter "github.com/go-go-golems/rag-evaluation-system/pkg/ragproviders/geppetto"
 )
+
+type CapabilityDescriptor struct {
+	SchemaVersion         string   `json:"schemaVersion"`
+	ProfileID             string   `json:"profileId"`
+	FixtureProviders      bool     `json:"fixtureProviders"`
+	Capabilities          []string `json:"capabilities"`
+	ModelManifestDigests  []string `json:"modelManifestDigests"`
+	PromptManifestDigests []string `json:"promptManifestDigests"`
+}
 
 type ProviderSet struct {
 	ProfileID string
@@ -129,6 +139,41 @@ func Load(ctx context.Context, path string) (*ProviderSet, error) {
 	_ = ctx
 	return set, nil
 }
+func (p *ProviderSet) CapabilityDescriptor() CapabilityDescriptor {
+	if p == nil {
+		return CapabilityDescriptor{SchemaVersion: "rag-provider-capabilities/v1"}
+	}
+	descriptor := CapabilityDescriptor{SchemaVersion: "rag-provider-capabilities/v1", ProfileID: p.ProfileID, Capabilities: []string{"schema-validator", "persistent-cache"}}
+	if p.Generator != nil {
+		descriptor.Capabilities = append(descriptor.Capabilities, "generator")
+	}
+	if p.Embedder != nil {
+		descriptor.Capabilities = append(descriptor.Capabilities, "embedder")
+	}
+	if p.Reranker != nil {
+		descriptor.Capabilities = append(descriptor.Capabilities, "reranker")
+	}
+	seenModels, seenPrompts := map[string]bool{}, map[string]bool{}
+	if p.Manifests != nil {
+		for _, manifest := range p.Manifests.models {
+			if !seenModels[manifest.Digest] {
+				seenModels[manifest.Digest] = true
+				descriptor.ModelManifestDigests = append(descriptor.ModelManifestDigests, manifest.Digest)
+			}
+		}
+		for _, manifest := range p.Manifests.prompts {
+			if !seenPrompts[manifest.Digest] {
+				seenPrompts[manifest.Digest] = true
+				descriptor.PromptManifestDigests = append(descriptor.PromptManifestDigests, manifest.Digest)
+			}
+		}
+	}
+	sort.Strings(descriptor.Capabilities)
+	sort.Strings(descriptor.ModelManifestDigests)
+	sort.Strings(descriptor.PromptManifestDigests)
+	return descriptor
+}
+
 func (p *ProviderSet) EngineOptions() ragengine.Options {
 	return ragengine.Options{Manifests: p.Manifests, Schemas: p.Schemas, Generator: p.Generator, Embedder: p.Embedder, Reranker: p.Reranker, Cache: p.Cache}
 }

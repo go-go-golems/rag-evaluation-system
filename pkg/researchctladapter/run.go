@@ -81,7 +81,51 @@ func CheckWorker(ctx context.Context, worker WorkerCommand) error {
 	if len(frame.Hello.Domains) != 1 || frame.Hello.Domains[0].Domain != ragcontract.Domain || frame.Hello.Domains[0].SchemaVersion != ragcontract.DomainSchemaVersion {
 		return fmt.Errorf("RAG_WORKER_DOMAIN_CAPABILITY")
 	}
+	if workerUsesRealProfile(worker.Args) {
+		if err := checkWorkerCapabilities(ctx, worker); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+func checkWorkerCapabilities(ctx context.Context, worker WorkerCommand) error {
+	command := exec.CommandContext(ctx, worker.Executable, append(append([]string{}, worker.Args...), "--capabilities")...)
+	output, err := command.Output()
+	if err != nil {
+		return fmt.Errorf("RAG_WORKER_PROVIDER_CAPABILITY")
+	}
+	var capabilities struct {
+		SchemaVersion    string   `json:"schemaVersion"`
+		FixtureProviders bool     `json:"fixtureProviders"`
+		Capabilities     []string `json:"capabilities"`
+	}
+	if err := json.Unmarshal(output, &capabilities); err != nil || capabilities.SchemaVersion != "rag-provider-capabilities/v1" || capabilities.FixtureProviders || !hasCapabilities(capabilities.Capabilities, "generator", "embedder", "reranker", "schema-validator", "persistent-cache") {
+		return fmt.Errorf("RAG_WORKER_PROVIDER_CAPABILITY")
+	}
+	return nil
+}
+
+func workerUsesRealProfile(args []string) bool {
+	for i := 0; i+1 < len(args); i++ {
+		if args[i] == "--provider-profile" && args[i+1] == "real" {
+			return true
+		}
+	}
+	return false
+}
+
+func hasCapabilities(got []string, required ...string) bool {
+	available := map[string]bool{}
+	for _, capability := range got {
+		available[capability] = true
+	}
+	for _, capability := range required {
+		if !available[capability] {
+			return false
+		}
+	}
+	return true
 }
 
 func WriteSpecification(path string, specification lab.SpecificationRecord) error {
