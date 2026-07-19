@@ -1,0 +1,9 @@
+{
+	"schemaVersion": "rag-prompt-manifest/v1",
+	"digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+	"parents": [],
+	"promptId": "ttc-grounded-answer-v1",
+	"templateDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+	"inputSchema": "rag-evidence/v1",
+	"outputSchema": "transcript-rag-answer/v1"
+}

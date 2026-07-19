@@ -1,0 +1,9 @@
+{
+	"schemaVersion": "rag-prompt-manifest/v1",
+	"digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+	"parents": [],
+	"promptId": "ttc-questions-v1",
+	"templateDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+	"inputSchema": "text/plain",
+	"outputSchema": "transcript-rag-questions/v1"
+}

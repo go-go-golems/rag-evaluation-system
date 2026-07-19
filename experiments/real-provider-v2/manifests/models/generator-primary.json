@@ -1,0 +1,13 @@
+{
+	"schemaVersion": "rag-model-manifest/v1",
+	"digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+	"parents": [],
+	"providerAdapterVersion": "geppetto-generation/v1",
+	"modelId": "qwen3:8b",
+	"modelDigest": "sha256:e4b5fd7f8af048d3c02e0357274238a9e93da51936665599ccb957aa42bfe173",
+	"tokenization": "manifest-exact/v1",
+	"truncation": "none",
+	"normalization": "none",
+	"implementationVersion": "ollama/v0.6.6",
+	"requestParameters": { "temperature": 0, "stream": true }
+}

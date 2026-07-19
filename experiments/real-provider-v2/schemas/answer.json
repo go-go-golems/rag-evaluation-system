@@ -1,0 +1,11 @@
+{
+	"$id": "transcript-rag-answer/v1",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["answer", "citationChunkIds", "abstained"],
+	"properties": {
+		"answer": { "type": "string" },
+		"citationChunkIds": { "type": "array", "items": { "type": "string" } },
+		"abstained": { "type": "boolean" }
+	}
+}
