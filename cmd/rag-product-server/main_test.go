@@ -14,6 +14,21 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragproduct"
 )
 
+func TestProductBindingsRequireExplicitProviderProfile(t *testing.T) {
+	corpus := ragoperators.NewCorpusArtifact(ragoperators.Corpus{SchemaVersion: "rag-corpus-data/v1"}, "test")
+	bindings, closeProviders, err := productBindings(context.Background(), &serverSettings{ProviderProfile: "fixtures"}, corpus)
+	if err != nil || bindings.Cache == nil || bindings.Generator == nil {
+		t.Fatalf("fixture bindings = %#v, %v", bindings, err)
+	}
+	closeProviders()
+	if _, _, err := productBindings(context.Background(), &serverSettings{ProviderProfile: "fixtures", ProviderConfig: "unexpected"}, corpus); err == nil {
+		t.Fatal("fixture profile accepted provider config")
+	}
+	if _, _, err := productBindings(context.Background(), &serverSettings{ProviderProfile: "real"}, corpus); err == nil {
+		t.Fatal("real profile accepted missing provider config")
+	}
+}
+
 func TestHTTPReferenceHost(t *testing.T) {
 	corpus := ragoperators.Corpus{SchemaVersion: "rag-corpus-data/v1", Records: []ragoperators.SourceRecord{{ID: "s1", SessionID: "s", Ordinal: 1, Role: "user", Text: "reciprocal rank fusion"}}}
 	artifact := ragoperators.NewCorpusArtifact(corpus, "http-test")
