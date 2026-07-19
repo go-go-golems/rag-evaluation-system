@@ -4,198 +4,181 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"sort"
-	"strings"
-	"time"
-
+	"github.com/go-go-golems/glazed/pkg/cli"
+	"github.com/go-go-golems/glazed/pkg/cmds"
+	"github.com/go-go-golems/glazed/pkg/cmds/fields"
+	"github.com/go-go-golems/glazed/pkg/cmds/schema"
+	"github.com/go-go-golems/glazed/pkg/cmds/values"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/researchctladapter"
 	"github.com/spf13/cobra"
+	"io"
+	"os"
+	"path/filepath"
+	"sort"
+	"time"
 )
 
-type commonFlags struct{ inputs, artifactRoot, ttcDatabase, output string }
-type runFlags struct {
-	project, database, experiment, researchctl, worker, outputDirectory string
-	workerArgs, secrets                                                 []string
-	maxAttempts                                                         int
-	timeout                                                             time.Duration
-}
 type compiled struct {
 	Study          ragcontract.Study          `json:"study"`
 	Cells          []ragcontract.ExpandedCell `json:"cells"`
 	Specifications []any                      `json:"specifications"`
 }
+type studyCommand struct {
+	*cmds.CommandDescription
+	action string
+	writer io.Writer
+}
+
+var _ cmds.WriterCommand = (*studyCommand)(nil)
+
+type settings struct {
+	StudyPath     string   `glazed:"study"`
+	Inputs        string   `glazed:"inputs"`
+	ArtifactRoot  string   `glazed:"artifact-root"`
+	TTCDatabase   string   `glazed:"ttc-database"`
+	SpecOutputDir string   `glazed:"spec-output-dir"`
+	Project       string   `glazed:"project"`
+	Database      string   `glazed:"database"`
+	Experiment    string   `glazed:"experiment-id"`
+	Researchctl   string   `glazed:"researchctl-command"`
+	Worker        string   `glazed:"worker-command"`
+	WorkerArgs    []string `glazed:"worker-arg"`
+	Secrets       []string `glazed:"secret-env"`
+	MaxAttempts   int      `glazed:"max-attempts"`
+	Timeout       string   `glazed:"timeout"`
+}
 
 func NewCommand() *cobra.Command {
-	root := &cobra.Command{Use: "study", Short: "Validate, explain, compile, and run RAG v2 studies"}
-	root.AddCommand(newValidate(), newExplain(), newCompile(), newRun())
-	return root
-}
-func addCommon(command *cobra.Command, flags *commonFlags) {
-	command.Flags().StringVar(&flags.inputs, "inputs", "", "RAG input bindings/catalog aliases JSON")
-	command.Flags().StringVar(&flags.artifactRoot, "artifact-root", "", "Researchctl artifact root used to stage verified inputs")
-	command.Flags().StringVar(&flags.ttcDatabase, "ttc-database", "", "Read-only TTC catalog SQLite database")
-	command.Flags().StringVarP(&flags.output, "output", "o", "json", "Output format (json only)")
-	_ = command.MarkFlagRequired("inputs")
-}
-func addRun(command *cobra.Command, flags *runFlags) {
-	command.Flags().StringVarP(&flags.project, "project", "p", "project.yaml", "Researchctl project file")
-	command.Flags().StringVar(&flags.database, "database", "", "Researchctl laboratory database")
-	command.Flags().StringVar(&flags.experiment, "experiment-id", "", "Researchctl experiment receiving runs")
-	command.Flags().StringVar(&flags.researchctl, "researchctl-command", "researchctl", "Researchctl executable")
-	command.Flags().StringVar(&flags.worker, "worker-command", "rag-worker", "RAG worker executable")
-	command.Flags().StringSliceVar(&flags.workerArgs, "worker-arg", nil, "RAG worker argument (repeatable)")
-	command.Flags().StringSliceVar(&flags.secrets, "secret-env", nil, "Secret environment variable inherited by the worker")
-	command.Flags().IntVar(&flags.maxAttempts, "max-attempts", 1, "Maximum attempts per replicate")
-	command.Flags().DurationVar(&flags.timeout, "timeout", 0, "Attempt timeout")
-	command.Flags().StringVar(&flags.outputDirectory, "spec-output-dir", "", "Directory for canonical generic specifications")
-	_ = command.MarkFlagRequired("experiment-id")
-}
-func resolve(ctx context.Context, path string, flags commonFlags) (ragcontract.Study, researchctladapter.ResolvedInputs, []ragcontract.ExpandedCell, func(), error) {
-	study, err := LoadStudy(path)
-	if err != nil {
-		return study, researchctladapter.ResolvedInputs{}, nil, func() {}, err
+	r := &cobra.Command{Use: "study", Short: "Validate, explain, compile, and run RAG v2 studies"}
+	for _, a := range []string{"validate", "explain", "compile", "run"} {
+		c, e := newCommand(a)
+		cobra.CheckErr(e)
+		cc, e := cli.BuildCobraCommandFromCommand(c, cli.WithParserConfig(cli.CobraParserConfig{AppName: "rag-eval", ShortHelpSections: []string{schema.DefaultSlug}}))
+		cobra.CheckErr(e)
+		cc.PreRunE = func(cmd *cobra.Command, _ []string) error { c.writer = cmd.OutOrStdout(); return nil }
+		r.AddCommand(cc)
 	}
-	document, base, err := researchctladapter.LoadInputs(flags.inputs)
-	if err != nil {
-		return study, researchctladapter.ResolvedInputs{}, nil, func() {}, err
+	return r
+}
+func newCommand(action string) (*studyCommand, error) {
+	f := []*fields.Definition{fields.New("inputs", fields.TypeString, fields.WithRequired(true), fields.WithHelp("RAG input bindings/catalog aliases JSON")), fields.New("artifact-root", fields.TypeString, fields.WithHelp("Researchctl artifact root")), fields.New("ttc-database", fields.TypeString, fields.WithHelp("Read-only TTC catalog SQLite database"))}
+	if action == "compile" {
+		f = append(f, fields.New("spec-output-dir", fields.TypeString, fields.WithHelp("Write canonical specifications here")))
 	}
-	root := flags.artifactRoot
-	cleanup := func() {}
+	if action == "run" {
+		f = append(f, fields.New("project", fields.TypeString, fields.WithDefault("project.yaml"), fields.WithHelp("Researchctl project file")), fields.New("database", fields.TypeString, fields.WithHelp("Researchctl laboratory database")), fields.New("experiment-id", fields.TypeString, fields.WithRequired(true), fields.WithHelp("Researchctl experiment receiving runs")), fields.New("researchctl-command", fields.TypeString, fields.WithDefault("researchctl"), fields.WithHelp("Researchctl executable")), fields.New("worker-command", fields.TypeString, fields.WithDefault("rag-worker"), fields.WithHelp("RAG worker executable")), fields.New("worker-arg", fields.TypeStringList, fields.WithDefault([]string{}), fields.WithHelp("RAG worker argument")), fields.New("secret-env", fields.TypeStringList, fields.WithDefault([]string{}), fields.WithHelp("Secret environment variable")), fields.New("max-attempts", fields.TypeInteger, fields.WithDefault(1), fields.WithHelp("Maximum attempts")), fields.New("timeout", fields.TypeString, fields.WithDefault("0s"), fields.WithHelp("Attempt timeout")), fields.New("spec-output-dir", fields.TypeString, fields.WithHelp("Canonical spec directory")))
+	}
+	return &studyCommand{CommandDescription: cmds.NewCommandDescription(action, cmds.WithShort(action+" RAG v2 study"), cmds.WithFlags(f...), cmds.WithArguments(fields.New("study", fields.TypeString, fields.WithIsArgument(true), fields.WithRequired(true), fields.WithHelp("Study JavaScript file")))), action: action}, nil
+}
+func resolve(ctx context.Context, path string, s *settings) (ragcontract.Study, researchctladapter.ResolvedInputs, []ragcontract.ExpandedCell, func(), error) {
+	study, e := LoadStudy(path)
+	if e != nil {
+		return study, researchctladapter.ResolvedInputs{}, nil, func() {}, e
+	}
+	doc, base, e := researchctladapter.LoadInputs(s.Inputs)
+	if e != nil {
+		return study, researchctladapter.ResolvedInputs{}, nil, func() {}, e
+	}
+	root := s.ArtifactRoot
+	clean := func() {}
 	if root == "" {
-		root, err = os.MkdirTemp("", "rag-study-inputs-")
-		if err != nil {
-			return study, researchctladapter.ResolvedInputs{}, nil, cleanup, err
+		root, e = os.MkdirTemp("", "rag-study-inputs-")
+		if e != nil {
+			return study, researchctladapter.ResolvedInputs{}, nil, clean, e
 		}
-		cleanup = func() { _ = os.RemoveAll(root) }
+		clean = func() { _ = os.RemoveAll(root) }
 	}
 	var catalog researchctladapter.CatalogResolver
-	if flags.ttcDatabase != "" {
-		catalog = researchctladapter.NewTTCCatalog(flags.ttcDatabase)
+	if s.TTCDatabase != "" {
+		catalog = researchctladapter.NewTTCCatalog(s.TTCDatabase)
 	}
-	resolved, err := researchctladapter.ResolveInputs(ctx, document, base, root, catalog)
-	if err != nil {
-		cleanup()
-		return study, resolved, nil, func() {}, err
+	resolved, e := researchctladapter.ResolveInputs(ctx, doc, base, root, catalog)
+	if e != nil {
+		clean()
+		return study, resolved, nil, func() {}, e
 	}
-	study, cells, err := researchctladapter.Expand(study, resolved)
-	return study, resolved, cells, cleanup, err
+	study, cells, e := researchctladapter.Expand(study, resolved)
+	return study, resolved, cells, clean, e
 }
-func newValidate() *cobra.Command {
-	var flags commonFlags
-	command := &cobra.Command{Use: "validate <study.js>", Short: "Deep-validate and expand one RAG v2 study", Args: cobra.ExactArgs(1), RunE: func(command *cobra.Command, args []string) error {
-		study, _, cells, cleanup, err := resolve(command.Context(), args[0], flags)
-		defer cleanup()
-		if err != nil {
-			return err
+func (c *studyCommand) RunIntoWriter(ctx context.Context, v *values.Values, w io.Writer) error {
+	s := &settings{}
+	if e := v.DecodeSectionInto(schema.DefaultSlug, s); e != nil {
+		return e
+	}
+	if c.action == "run" && s.ArtifactRoot == "" {
+		a, e := filepath.Abs(s.Project)
+		if e != nil {
+			return e
 		}
-		return write(command, map[string]any{"valid": true, "schemaVersion": study.SchemaVersion, "variants": len(study.Variants), "cells": len(cells)})
-	}}
-	addCommon(command, &flags)
-	return command
-}
-func newExplain() *cobra.Command {
-	var flags commonFlags
-	command := &cobra.Command{Use: "explain <study.js>", Short: "Explain expanded variants, factors, operators, and cells", Args: cobra.ExactArgs(1), RunE: func(command *cobra.Command, args []string) error {
-		study, _, cells, cleanup, err := resolve(command.Context(), args[0], flags)
-		defer cleanup()
-		if err != nil {
-			return err
-		}
-		operators := map[string]bool{}
-		for _, variant := range study.Variants {
-			for _, node := range variant.Pipeline.Nodes {
-				operators[node.Operator.ID()] = true
+		s.ArtifactRoot = filepath.Join(filepath.Dir(a), ".researchctl", "artifacts")
+	}
+	study, resolved, cells, clean, e := resolve(ctx, s.StudyPath, s)
+	defer clean()
+	if e != nil {
+		return e
+	}
+	var out any
+	switch c.action {
+	case "validate":
+		out = map[string]any{"valid": true, "schemaVersion": study.SchemaVersion, "variants": len(study.Variants), "cells": len(cells)}
+	case "explain":
+		ops := map[string]bool{}
+		for _, x := range study.Variants {
+			for _, n := range x.Pipeline.Nodes {
+				ops[n.Operator.ID()] = true
 			}
 		}
-		ids := make([]string, 0, len(operators))
-		for id := range operators {
-			ids = append(ids, id)
+		ids := []string{}
+		for x := range ops {
+			ids = append(ids, x)
 		}
 		sort.Strings(ids)
-		return write(command, map[string]any{"schemaVersion": "rag-study-explanation/v2", "name": study.Display.Name, "variants": study.Variants, "factors": study.Factors, "cellCount": len(cells), "operators": ids})
-	}}
-	addCommon(command, &flags)
-	return command
-}
-func newCompile() *cobra.Command {
-	var flags commonFlags
-	var directory string
-	command := &cobra.Command{Use: "compile <study.js>", Short: "Compile a study into ordered cells and generic researchctl specifications", Args: cobra.ExactArgs(1), RunE: func(command *cobra.Command, args []string) error {
-		study, resolved, cells, cleanup, err := resolve(command.Context(), args[0], flags)
-		defer cleanup()
-		if err != nil {
-			return err
-		}
-		specs := make([]any, 0, len(cells))
-		for _, cell := range cells {
-			spec, err := researchctladapter.WrapExecution(cell.Execution, resolved, study.Display.Name+" / "+cell.VariantID)
-			if err != nil {
-				return err
-			}
-			specs = append(specs, spec)
-			if directory != "" {
-				if err := researchctladapter.WriteSpecification(filepath.Join(directory, spec.ID+".json"), spec); err != nil {
-					return err
-				}
-			}
-		}
-		return write(command, compiled{Study: study, Cells: cells, Specifications: specs})
-	}}
-	addCommon(command, &flags)
-	command.Flags().StringVar(&directory, "spec-output-dir", "", "Write each canonical generic specification to this directory")
-	return command
-}
-func newRun() *cobra.Command {
-	var common commonFlags
-	var run runFlags
-	command := &cobra.Command{Use: "run <study.js>", Short: "Execute stable study cells and replicates through researchctl", Args: cobra.ExactArgs(1), RunE: func(command *cobra.Command, args []string) error {
-		if common.artifactRoot == "" {
-			absolute, err := filepath.Abs(run.project)
-			if err != nil {
-				return err
-			}
-			common.artifactRoot = filepath.Join(filepath.Dir(absolute), ".researchctl", "artifacts")
-		}
-		study, resolved, cells, cleanup, err := resolve(command.Context(), args[0], common)
-		defer cleanup()
-		if err != nil {
-			return err
-		}
+		out = map[string]any{"schemaVersion": "rag-study-explanation/v2", "name": study.Display.Name, "variants": study.Variants, "factors": study.Factors, "cellCount": len(cells), "operators": ids}
+	default:
+		specs := []any{}
 		results := []researchctladapter.RunResult{}
 		for _, cell := range cells {
-			spec, err := researchctladapter.WrapExecution(cell.Execution, resolved, study.Display.Name+" / "+cell.VariantID)
-			if err != nil {
-				return err
+			spec, e := researchctladapter.WrapExecution(cell.Execution, resolved, study.Display.Name+" / "+cell.VariantID)
+			if e != nil {
+				return e
 			}
-			replicates := cell.Replicates
-			if replicates < 1 {
-				replicates = 1
-			}
-			for replicate := 0; replicate < replicates; replicate++ {
-				result, err := researchctladapter.ExecuteSpecification(command.Context(), spec, runOptions(run))
-				if err != nil {
-					return err
+			specs = append(specs, spec)
+			if s.SpecOutputDir != "" {
+				if e = researchctladapter.WriteSpecification(filepath.Join(s.SpecOutputDir, spec.ID+".json"), spec); e != nil {
+					return e
 				}
-				results = append(results, result)
+			}
+			if c.action == "run" {
+				d, e := time.ParseDuration(s.Timeout)
+				if e != nil {
+					return e
+				}
+				for i := 0; i < max(1, cell.Replicates); i++ {
+					r, e := researchctladapter.ExecuteSpecification(ctx, spec, researchctladapter.RunOptions{ResearchctlCommand: s.Researchctl, Project: s.Project, Database: s.Database, ExperimentID: s.Experiment, Worker: researchctladapter.WorkerCommand{Executable: s.Worker, Args: s.WorkerArgs}, MaxAttempts: s.MaxAttempts, Timeout: d, SecretEnvironment: s.Secrets, OutputDirectory: s.SpecOutputDir})
+					if e != nil {
+						return e
+					}
+					results = append(results, r)
+				}
 			}
 		}
-		return write(command, map[string]any{"study": study.Display.Name, "cellCount": len(cells), "runCount": len(results), "results": results})
-	}}
-	addCommon(command, &common)
-	addRun(command, &run)
-	return command
-}
-func runOptions(flags runFlags) researchctladapter.RunOptions {
-	return researchctladapter.RunOptions{ResearchctlCommand: flags.researchctl, Project: flags.project, Database: flags.database, ExperimentID: flags.experiment, Worker: researchctladapter.WorkerCommand{Executable: flags.worker, Args: flags.workerArgs}, MaxAttempts: flags.maxAttempts, Timeout: flags.timeout, SecretEnvironment: flags.secrets, OutputDirectory: flags.outputDirectory}
-}
-func write(command *cobra.Command, value any) error {
-	if strings.ToLower(command.Flag("output").Value.String()) != "json" {
-		return fmt.Errorf("only json output is supported")
+		if c.action == "run" {
+			out = map[string]any{"study": study.Display.Name, "cellCount": len(cells), "runCount": len(results), "results": results}
+		} else {
+			out = compiled{study, cells, specs}
+		}
 	}
-	encoder := json.NewEncoder(command.OutOrStdout())
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(value)
+	if c.writer != nil {
+		w = c.writer
+	}
+	return json.NewEncoder(w).Encode(out)
 }
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+var _ = fmt.Sprintf

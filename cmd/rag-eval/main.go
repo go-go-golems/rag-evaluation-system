@@ -9,7 +9,6 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/corpus"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/document"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/embedding"
-	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/glazedcobra"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/preview"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/providers"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/search"
@@ -46,17 +45,16 @@ func main() {
 	}
 	help_cmd.SetupCobraRootCommand(helpSystem, rootCmd)
 
-	// Legacy command behavior is hosted by Glazed command descriptions at the
-	// boundary. The adapter is temporary while each implementation is migrated.
-	for _, legacy := range []*cobra.Command{
-		source.NewCommand(), corpus.NewCommand(), chunk.NewCommand(), document.NewCommand(),
-		embedding.NewCommand(), search.NewCommand(), workflowcmd.NewCommand(), serve.NewCommand(),
-		study.NewCommand(), preview.NewCommand(),
-	} {
-		wrapped, err := glazedcobra.WrapTree(legacy)
-		cobra.CheckErr(err)
-		rootCmd.AddCommand(wrapped)
-	}
+	rootCmd.AddCommand(source.NewCommand())
+	rootCmd.AddCommand(corpus.NewCommand())
+	rootCmd.AddCommand(chunk.NewCommand())
+	rootCmd.AddCommand(document.NewCommand())
+	rootCmd.AddCommand(embedding.NewCommand())
+	rootCmd.AddCommand(search.NewCommand())
+	rootCmd.AddCommand(workflowcmd.NewCommand())
+	rootCmd.AddCommand(serve.NewCommand())
+	rootCmd.AddCommand(study.NewCommand())
+	rootCmd.AddCommand(preview.NewCommand())
 	providerCommands, err := providers.NewCommand()
 	cobra.CheckErr(err)
 	rootCmd.AddCommand(providerCommands)
