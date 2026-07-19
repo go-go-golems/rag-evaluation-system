@@ -3,7 +3,7 @@
 	"digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
 	"parents": [],
 	"providerAdapterVersion": "geppetto-reranker/v1",
-	"modelId": "bge-reranker-v2-m3-q4",
+	"modelId": "bge-reranker-v2-m3:q4_k_m",
 	"modelDigest": "sha256:10a8e2b5ae9647ca14aa1454be765aa2114a4a179c93fe91a31e7bde4a9c44cd",
 	"tokenization": "manifest-exact/v1",
 	"truncation": "none",

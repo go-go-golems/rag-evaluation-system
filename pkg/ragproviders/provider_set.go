@@ -76,16 +76,24 @@ func Load(ctx context.Context, path string) (*ProviderSet, error) {
 		if err != nil {
 			return nil, err
 		}
-		endpoint, err := resolveEnvRef(spec.EndpointRef, true)
-		if err != nil {
-			return nil, err
-		}
-		if err := validateEndpoint(endpoint, spec); err != nil {
-			return nil, fmt.Errorf("RAG_PROVIDER_EMBEDDING_ENDPOINT: %w", err)
-		}
-		provider, err := newEmbeddingProvider(endpoint, model, spec)
-		if err != nil {
-			return nil, err
+		var provider embeddings.Provider
+		if spec.Profile != "" {
+			provider, err = newEmbeddingProviderFromProfile(ctx, spec, model, set)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			endpoint, err := resolveEnvRef(spec.EndpointRef, true)
+			if err != nil {
+				return nil, err
+			}
+			if err := validateEndpoint(endpoint, spec); err != nil {
+				return nil, fmt.Errorf("RAG_PROVIDER_EMBEDDING_ENDPOINT: %w", err)
+			}
+			provider, err = newEmbeddingProvider(endpoint, model, spec)
+			if err != nil {
+				return nil, err
+			}
 		}
 		set.Embedder, err = geppettoadapter.NewEmbedder(provider, model.ModelID, model.Dimensions)
 		if err != nil {
@@ -99,16 +107,24 @@ func Load(ctx context.Context, path string) (*ProviderSet, error) {
 		if err != nil {
 			return nil, err
 		}
-		endpoint, err := resolveEnvRef(spec.EndpointRef, true)
-		if err != nil {
-			return nil, err
-		}
-		if err := validateEndpoint(endpoint, spec); err != nil {
-			return nil, fmt.Errorf("RAG_PROVIDER_RERANK_ENDPOINT: %w", err)
-		}
-		provider, err := newRerankProvider(endpoint, model, spec)
-		if err != nil {
-			return nil, err
+		var provider rankprovider.Provider
+		if spec.Profile != "" {
+			provider, err = newRerankProviderFromProfile(ctx, spec, model, set)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			endpoint, err := resolveEnvRef(spec.EndpointRef, true)
+			if err != nil {
+				return nil, err
+			}
+			if err := validateEndpoint(endpoint, spec); err != nil {
+				return nil, fmt.Errorf("RAG_PROVIDER_RERANK_ENDPOINT: %w", err)
+			}
+			provider, err = newRerankProvider(endpoint, model, spec)
+			if err != nil {
+				return nil, err
+			}
 		}
 		set.Reranker, err = geppettoadapter.NewReranker(provider)
 		if err != nil {
@@ -328,6 +344,19 @@ func newEmbeddingProvider(endpoint string, model ragcontract.ModelManifest, spec
 	in.API.AllowLocalNetworks["ollama"] = spec.AllowLocalNetworks
 	return embeddings.NewSettingsFactoryFromInferenceSettings(in).NewProvider()
 }
+
+// newEmbeddingProviderFromProfile resolves embedding settings from a Geppetto
+// engine profile registry, mirroring the generator profile path.
+func newEmbeddingProviderFromProfile(ctx context.Context, spec ProviderSpec, model ragcontract.ModelManifest, set *ProviderSet) (embeddings.Provider, error) {
+	ss, err := resolveProfileSettings(ctx, spec, set)
+	if err != nil {
+		return nil, err
+	}
+	if ss.Embeddings == nil || ss.Embeddings.Type == "" {
+		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_NO_EMBEDDINGS")
+	}
+	return embeddings.NewSettingsFactoryFromInferenceSettings(ss).NewProvider()
+}
 func newRerankProvider(endpoint string, model ragcontract.ModelManifest, spec ProviderSpec) (rankprovider.Provider, error) {
 	in, err := settings.NewInferenceSettings()
 	if err != nil {
@@ -343,38 +372,32 @@ func newRerankProvider(endpoint string, model ragcontract.ModelManifest, spec Pr
 	}
 	return factory.NewProvider()
 }
-func newGeneratorSettings(endpoint string, model ragcontract.ModelManifest, spec ProviderSpec) (*settings.InferenceSettings, error) {
-	in, err := settings.NewInferenceSettings()
+
+// newRerankProviderFromProfile resolves reranker settings from a Geppetto
+// engine profile registry, mirroring the generator profile path.
+func newRerankProviderFromProfile(ctx context.Context, spec ProviderSpec, model ragcontract.ModelManifest, set *ProviderSet) (rankprovider.Provider, error) {
+	ss, err := resolveProfileSettings(ctx, spec, set)
 	if err != nil {
 		return nil, err
 	}
-	apiType := types.ApiTypeOpenAI
-	in.Chat.ApiType = &apiType
-	in.Chat.Engine = stringPtr(model.ModelID)
-	in.Chat.Stream = true
-	in.API.BaseUrls["openai-base-url"] = endpoint
-	in.API.AllowHTTP["openai"] = spec.AllowHTTP
-	in.API.AllowLocalNetworks["openai"] = spec.AllowLocalNetworks
-	key := "ollama"
-	if spec.CredentialRef != "" {
-		key, err = resolveEnvRef(spec.CredentialRef, true)
-		if err != nil {
-			return nil, err
-		}
+	if ss.Rerank == nil || ss.Rerank.Type == "" {
+		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_NO_RERANK")
 	}
-	in.API.APIKeys["openai-api-key"] = key
-	return in, nil
+	factory, err := geppettorerank.NewSettingsFactoryFromInferenceSettings(ss)
+	if err != nil {
+		return nil, err
+	}
+	return factory.NewProvider()
 }
 
-// newGeneratorSettingsFromProfile resolves InferenceSettings from a Geppetto
-// engine profile registry (e.g. ~/.config/pinocchio/profiles.yaml). This uses
-// the same profile stack resolution that Pinocchio and other Geppetto hosts
-// use, so credentials, base URLs, model_info, and cost rates all come from the
-// profile YAML rather than being manually constructed.
-func newGeneratorSettingsFromProfile(ctx context.Context, spec ProviderSpec, set *ProviderSet) (*settings.InferenceSettings, error) {
+// resolveProfileSettings is the shared profile resolution logic used by the
+// generator, embedding, and reranker profile paths. It loads the Geppetto
+// engine profile registry (defaulting to ~/.config/pinocchio/profiles.yaml),
+// resolves the named profile, and merges it onto a base InferenceSettings so
+// that default Client, API, and other infrastructure fields are initialized.
+func resolveProfileSettings(ctx context.Context, spec ProviderSpec, set *ProviderSet) (*settings.InferenceSettings, error) {
 	sources := spec.ProfileRegistries
 	if sources == "" {
-		// Default to the standard Pinocchio profiles.yaml location.
 		configDir, err := os.UserConfigDir()
 		if err != nil {
 			return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_CONFIG_DIR: %w", err)
@@ -404,26 +427,64 @@ func newGeneratorSettingsFromProfile(ctx context.Context, spec ProviderSpec, set
 	if err != nil {
 		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_RESOLVE: %w", err)
 	}
-	ss := resolved.InferenceSettings
-	if ss == nil {
+	if resolved.InferenceSettings == nil {
 		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_NO_SETTINGS")
 	}
-	// Merge the profile-resolved settings onto a base InferenceSettings so
-	// that default Client, API, and other infrastructure fields are
-	// initialized. This mirrors how Pinocchio bootstraps engines: it creates
-	// a hidden base from NewInferenceSettings() and then overlays the profile.
 	base, err := settings.NewInferenceSettings()
 	if err != nil {
 		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_BASE: %w", err)
 	}
-	merged, err := engineprofiles.MergeInferenceSettings(base, ss)
+	merged, err := engineprofiles.MergeInferenceSettings(base, resolved.InferenceSettings)
 	if err != nil {
 		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_MERGE: %w", err)
+	}
+	return merged, nil
+}
+
+func newGeneratorSettings(endpoint string, model ragcontract.ModelManifest, spec ProviderSpec) (*settings.InferenceSettings, error) {
+	in, err := settings.NewInferenceSettings()
+	if err != nil {
+		return nil, err
+	}
+	apiType := types.ApiTypeOpenAI
+	in.Chat.ApiType = &apiType
+	in.Chat.Engine = stringPtr(model.ModelID)
+	in.Chat.Stream = true
+	in.API.BaseUrls["openai-base-url"] = endpoint
+	in.API.AllowHTTP["openai"] = spec.AllowHTTP
+	in.API.AllowLocalNetworks["openai"] = spec.AllowLocalNetworks
+	key := "ollama"
+	if spec.CredentialRef != "" {
+		key, err = resolveEnvRef(spec.CredentialRef, true)
+		if err != nil {
+			return nil, err
+		}
+	}
+	in.API.APIKeys["openai-api-key"] = key
+	return in, nil
+}
+
+// newGeneratorSettingsFromProfile resolves InferenceSettings from a Geppetto
+// engine profile registry (e.g. ~/.config/pinocchio/profiles.yaml). This uses
+// the same profile stack resolution that Pinocchio and other Geppetto hosts
+// use, so credentials, base URLs, model_info, and cost rates all come from the
+// profile YAML rather than being manually constructed.
+func newGeneratorSettingsFromProfile(ctx context.Context, spec ProviderSpec, set *ProviderSet) (*settings.InferenceSettings, error) {
+	merged, err := resolveProfileSettings(ctx, spec, set)
+	if err != nil {
+		return nil, err
 	}
 	if merged.Chat == nil {
 		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_NO_CHAT")
 	}
 	merged.Chat.Stream = true
+	// Reasoning models (GLM-5.2, GPT-5, etc.) burn tokens on reasoning before
+	// producing visible output. Set a generous max_response_tokens so the
+	// model doesn't hit the token limit mid-reasoning and return empty content.
+	if merged.Chat.MaxResponseTokens == nil {
+		maxTokens := 8192
+		merged.Chat.MaxResponseTokens = &maxTokens
+	}
 	return merged, nil
 }
 func stringPtr(value string) *string { return &value }

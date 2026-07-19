@@ -71,24 +71,46 @@ func (o representationOperator) Execute(ctx context.Context, node ragcontract.No
 		}
 	}
 	out := []Representation{}
-	for _, chunk := range chunks {
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
-		if o.kind == "representations.raw" {
-			out = append(out, newRepresentation(config.Name, "raw", chunk, chunk.Text, "source", 0, nil))
-			continue
-		}
-		if env.Generator == nil {
-			return nil, fmt.Errorf("RAG_GENERATOR_UNAVAILABLE: %s", o.Ref().ID())
-		}
-		count := 1
-		if o.kind == "representations.synthetic-questions" {
-			count = config.Count
-			if count <= 0 {
-				return nil, fmt.Errorf("RAG_QUESTION_COUNT")
+	// Raw representations need no generation; process sequentially.
+	if o.kind == "representations.raw" {
+		for _, chunk := range chunks {
+			if err := ctx.Err(); err != nil {
+				return nil, err
 			}
+			out = append(out, newRepresentation(config.Name, "raw", chunk, chunk.Text, "source", 0, nil))
 		}
+		sort.Slice(out, func(i, j int) bool { return out[i].Record.ID < out[j].Record.ID })
+		parents := []ragcontract.ParentDigest{}
+		if len(chunks) > 0 {
+			parents = parent("chunk-set", chunks[0].ManifestDigest, ragcontract.ChunkSetManifestSchema)
+		}
+		return materializeRepresentations(node, parents, out)
+	}
+	if env.Generator == nil {
+		return nil, fmt.Errorf("RAG_GENERATOR_UNAVAILABLE: %s", o.Ref().ID())
+	}
+	count := 1
+	if o.kind == "representations.synthetic-questions" {
+		count = config.Count
+		if count <= 0 {
+			return nil, fmt.Errorf("RAG_QUESTION_COUNT")
+		}
+	}
+	outputSchema := config.OutputSchema
+	if outputSchema == "" {
+		outputSchema = promptManifest.OutputSchema
+	}
+	// Build per-chunk work items.
+	type workItem struct {
+		chunk          Chunk
+		generationText string
+		parentDigest   string
+		parentReprIDs  []string
+		request        GenerationRequest
+		key            string
+	}
+	items := make([]workItem, 0, len(chunks))
+	for _, chunk := range chunks {
 		generationText := chunk.Text
 		parentDigest := chunk.Record.TextDigest
 		parentRepresentationIDs := []string{}
@@ -105,64 +127,98 @@ func (o representationOperator) Execute(ctx context.Context, node ragcontract.No
 		if len(parentRepresentationIDs) > 0 {
 			parentID = parentRepresentationIDs[0]
 		}
-		outputSchema := config.OutputSchema
-		if outputSchema == "" {
-			outputSchema = promptManifest.OutputSchema
-		}
 		request := GenerationRequest{Kind: o.kind, Model: modelManifest.ModelID, Prompt: promptManifest.PromptID, OutputSchema: outputSchema, ParentID: parentID, Text: generationText, Count: count}
+		// Cache key includes the model and prompt manifest digests so that
+		// switching the underlying model (e.g. qwen3:8b -> umans-glm-5.2)
+		// does not return stale results from a different model.
 		key, _ := ragcontract.Digest(struct {
-			Ref    ragcontract.OperatorRef
-			Config json.RawMessage
-			Parent string
-		}{o.Ref(), node.Config, parentDigest})
-		var result GenerationResult
+			Ref            ragcontract.OperatorRef
+			Config         json.RawMessage
+			Parent         string
+			ModelManifest  string
+			PromptManifest string
+		}{o.Ref(), node.Config, parentDigest, modelManifest.Digest, promptManifest.Digest})
+		items = append(items, workItem{
+			chunk:          chunk,
+			generationText: generationText,
+			parentDigest:   parentDigest,
+			parentReprIDs:  parentRepresentationIDs,
+			request:        request,
+			key:            key,
+		})
+	}
+	// Process work items concurrently (max 3 in-flight) to amortize provider
+	// latency. Results are collected in order.
+	type resultItem struct {
+		reps []Representation
+		err  error
+	}
+	results := make([]resultItem, len(items))
+	maxConcurrency := 3
+	sem := make(chan struct{}, maxConcurrency)
+	var wg sync.WaitGroup
+	var firstErr error
+	var errOnce sync.Once
+	for i, item := range items {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		// Check cache first (no concurrency needed for cache reads).
+		var cached GenerationResult
 		cacheOutcome := "miss"
 		if env.Cache != nil {
-			if raw, found := env.Cache.Get(key); found {
-				if json.Unmarshal(raw, &result) == nil {
+			if raw, found := env.Cache.Get(item.key); found {
+				if json.Unmarshal(raw, &cached) == nil {
 					cacheOutcome = "hit"
 				}
 			}
 		}
-		if cacheOutcome == "miss" {
-			value, err := env.Generator.Generate(ctx, request)
+		if cacheOutcome == "hit" {
+			reps, err := buildRepresentations(o, config, modelManifest, promptManifest, item, cached, cacheOutcome, env)
 			if err != nil {
-				return nil, fmt.Errorf("RAG_GENERATION_FAILED: %s: %w", chunk.Record.ID, err)
+				return nil, err
 			}
-			result = value
+			results[i] = resultItem{reps: reps}
+			addGenerationUsage(env, config.Model, cached)
+			continue
+		}
+		// Cache miss: generate concurrently.
+		wg.Add(1)
+		go func(idx int, w workItem) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+			if err := ctx.Err(); err != nil {
+				errOnce.Do(func() { firstErr = err })
+				return
+			}
+			value, err := env.Generator.Generate(ctx, w.request)
+			if err != nil {
+				errOnce.Do(func() { firstErr = fmt.Errorf("RAG_GENERATION_FAILED: %s: %w", w.chunk.Record.ID, err) })
+				return
+			}
 			if env.Cache != nil {
-				raw, _ := json.Marshal(result)
-				env.Cache.Put(key, raw)
+				raw, _ := json.Marshal(value)
+				env.Cache.Put(w.key, raw)
 			}
+			reps, err := buildRepresentations(o, config, modelManifest, promptManifest, w, value, "miss", env)
+			if err != nil {
+				errOnce.Do(func() { firstErr = err })
+				return
+			}
+			results[idx] = resultItem{reps: reps}
+			addGenerationUsage(env, config.Model, value)
+		}(i, item)
+	}
+	wg.Wait()
+	if firstErr != nil {
+		return nil, firstErr
+	}
+	for _, r := range results {
+		if r.err != nil {
+			return nil, r.err
 		}
-		addGenerationUsage(env, config.Model, result)
-		if o.kind == "representations.structured-summary" {
-			if result.Text == "" || !json.Valid([]byte(result.Text)) {
-				return nil, fmt.Errorf("RAG_STRUCTURED_OUTPUT_INVALID: %s", chunk.Record.ID)
-			}
-			if config.OutputSchema == "" || promptManifest.OutputSchema != config.OutputSchema {
-				return nil, fmt.Errorf("RAG_STRUCTURED_OUTPUT_SCHEMA: configured schema does not match prompt manifest")
-			}
-			if env.Schemas == nil {
-				return nil, fmt.Errorf("RAG_OUTPUT_SCHEMA_VALIDATOR_UNAVAILABLE")
-			}
-			if err := env.Schemas.Validate(config.OutputSchema, json.RawMessage(result.Text)); err != nil {
-				return nil, fmt.Errorf("RAG_STRUCTURED_OUTPUT_SCHEMA: %w", err)
-			}
-			derivation := derivation(o.Ref(), modelManifest.Digest, promptManifest.Digest, parentDigest, parentRepresentationIDs, sourceRecordIDs(chunk), result.Text, result, cacheOutcome)
-			out = append(out, newRepresentation(config.Name, "summary", chunk, result.Text, "derived", 0, derivation))
-		} else {
-			if len(result.Questions) != count {
-				return nil, fmt.Errorf("RAG_QUESTION_COUNT_MISMATCH: got %d want %d", len(result.Questions), count)
-			}
-			for ordinal, question := range result.Questions {
-				if question == "" {
-					return nil, fmt.Errorf("RAG_QUESTION_EMPTY")
-				}
-				derivation := derivation(o.Ref(), modelManifest.Digest, promptManifest.Digest, parentDigest, parentRepresentationIDs, sourceRecordIDs(chunk), question, result, cacheOutcome)
-				out = append(out, newRepresentation(config.Name, "question", chunk, question, "derived", ordinal, derivation))
-			}
-		}
+		out = append(out, r.reps...)
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Record.ID < out[j].Record.ID })
 	parents := []ragcontract.ParentDigest{}
@@ -182,6 +238,55 @@ func (o representationOperator) Execute(ctx context.Context, node ragcontract.No
 	sort.Slice(parents, func(i, j int) bool { return parents[i].Digest < parents[j].Digest })
 	return materializeRepresentations(node, parents, out)
 }
+
+// buildRepresentations converts a GenerationResult into Representation records
+// for a single chunk. It handles schema validation for summaries and question
+// count validation for synthetic questions. This is the per-chunk logic that
+// was previously inline in the sequential loop; it is now called from both the
+// cache-hit path and the concurrent generation goroutines.
+func buildRepresentations(o representationOperator, config struct {
+	Name, From, Model, Prompt, OutputSchema string
+	Count                                   int
+	Parameters                              json.RawMessage
+	SeedPolicy                              *ragcontract.SeedPolicy
+}, modelManifest ragcontract.ModelManifest, promptManifest ragcontract.PromptManifest, w struct {
+	chunk          Chunk
+	generationText string
+	parentDigest   string
+	parentReprIDs  []string
+	request        GenerationRequest
+	key            string
+}, result GenerationResult, cacheOutcome string, env *Environment) ([]Representation, error) {
+	if o.kind == "representations.structured-summary" {
+		if result.Text == "" || !json.Valid([]byte(result.Text)) {
+			return nil, fmt.Errorf("RAG_STRUCTURED_OUTPUT_INVALID: %s", w.chunk.Record.ID)
+		}
+		if config.OutputSchema == "" || promptManifest.OutputSchema != config.OutputSchema {
+			return nil, fmt.Errorf("RAG_STRUCTURED_OUTPUT_SCHEMA: configured schema does not match prompt manifest")
+		}
+		if env.Schemas == nil {
+			return nil, fmt.Errorf("RAG_OUTPUT_SCHEMA_VALIDATOR_UNAVAILABLE")
+		}
+		if err := env.Schemas.Validate(config.OutputSchema, json.RawMessage(result.Text)); err != nil {
+			return nil, fmt.Errorf("RAG_STRUCTURED_OUTPUT_SCHEMA: %w", err)
+		}
+		derivation := derivation(o.Ref(), modelManifest.Digest, promptManifest.Digest, w.parentDigest, w.parentReprIDs, sourceRecordIDs(w.chunk), result.Text, result, cacheOutcome)
+		return []Representation{newRepresentation(config.Name, "summary", w.chunk, result.Text, "derived", 0, derivation)}, nil
+	}
+	if len(result.Questions) != w.request.Count {
+		return nil, fmt.Errorf("RAG_QUESTION_COUNT_MISMATCH: got %d want %d", len(result.Questions), w.request.Count)
+	}
+	reps := make([]Representation, 0, len(result.Questions))
+	for ordinal, question := range result.Questions {
+		if question == "" {
+			return nil, fmt.Errorf("RAG_QUESTION_EMPTY")
+		}
+		derivation := derivation(o.Ref(), modelManifest.Digest, promptManifest.Digest, w.parentDigest, w.parentReprIDs, sourceRecordIDs(w.chunk), question, result, cacheOutcome)
+		reps = append(reps, newRepresentation(config.Name, "question", w.chunk, question, "derived", ordinal, derivation))
+	}
+	return reps, nil
+}
+
 func representationKind(operator string) string {
 	switch operator {
 	case "representations.structured-summary":
