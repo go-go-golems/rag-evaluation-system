@@ -115,22 +115,42 @@ func (g *Generator) Generate(ctx context.Context, request ragoperators.Generatio
 	return result, nil
 }
 func buildUserPrompt(template string, request ragoperators.GenerationRequest) string {
+	switch request.Kind {
+	case "representations.structured-summary":
+		return renderSummaryPrompt(template, request.Text)
+	case "representations.synthetic-questions":
+		return renderQuestionsPrompt(template, request.Text)
+	case "generate.answer":
+		return renderAnswerPrompt(template, request.Text, request.Evidence)
+	default:
+		return renderTextPrompt(template, request.Text)
+	}
+}
+
+func renderSummaryPrompt(template, source string) string {
+	return renderLabeledTextPrompt(template, "SOURCE TEXT", source)
+}
+
+func renderQuestionsPrompt(template, source string) string {
+	return renderLabeledTextPrompt(template, "SOURCE TEXT", source)
+}
+
+func renderTextPrompt(template, text string) string {
+	return renderLabeledTextPrompt(template, "TEXT", text)
+}
+
+func renderLabeledTextPrompt(template, label, text string) string {
+	return fmt.Sprintf("%s\n\n%s:\n%s", template, label, text)
+}
+
+func renderAnswerPrompt(template, question string, evidence []ragoperators.Evidence) string {
 	var b strings.Builder
 	b.WriteString(template)
-	b.WriteString("\n\n")
-	switch request.Kind {
-	case "representations.structured-summary", "representations.synthetic-questions":
-		b.WriteString("SOURCE TEXT:\n")
-		b.WriteString(request.Text)
-	case "generate.answer":
-		b.WriteString("QUESTION:\n")
-		b.WriteString(request.Text)
-		b.WriteString("\n\nEVIDENCE:\n")
-		for _, evidence := range request.Evidence {
-			fmt.Fprintf(&b, "[%s]\n%s\n\n", evidence.Chunk.Record.ID, evidence.Chunk.Text)
-		}
-	default:
-		b.WriteString(request.Text)
+	b.WriteString("\n\nQUESTION:\n")
+	b.WriteString(question)
+	b.WriteString("\n\nEVIDENCE:\n")
+	for _, item := range evidence {
+		fmt.Fprintf(&b, "[%s]\n%s\n\n", item.Chunk.Record.ID, item.Chunk.Text)
 	}
 	return b.String()
 }
