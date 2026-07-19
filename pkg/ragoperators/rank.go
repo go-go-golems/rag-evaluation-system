@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
@@ -363,15 +364,29 @@ func (answerOperator) Execute(ctx context.Context, node ragcontract.Node, inputs
 	if config.Citations == "source" && len(evidence) > 0 && len(result.CitationChunkIDs) == 0 && !result.Abstained {
 		return nil, fmt.Errorf("RAG_ANSWER_CITATION_REQUIRED")
 	}
-	valid := map[string]bool{}
+	valid := map[string]string{}
 	for _, item := range evidence {
-		valid[item.Chunk.Record.ID] = true
+		valid[item.Chunk.Record.ID] = item.Chunk.Record.ID
 	}
+	normalized := make([]string, 0, len(result.CitationChunkIDs))
 	for _, id := range result.CitationChunkIDs {
-		if !valid[id] {
+		if canonical, ok := valid[id]; ok {
+			normalized = append(normalized, canonical)
+			continue
+		}
+		// Models may return a chunk ID without its "chunk:" prefix; accept suffix matches.
+		for validID := range valid {
+			if strings.HasSuffix(validID, ":"+id) || strings.HasSuffix(validID, id) {
+				normalized = append(normalized, validID)
+				id = validID
+				break
+			}
+		}
+		if _, ok := valid[id]; !ok {
 			return nil, fmt.Errorf("RAG_ANSWER_CITATION: %s", id)
 		}
 	}
+	result.CitationChunkIDs = normalized
 	if config.Citations == "required" && len(result.CitationChunkIDs) == 0 {
 		return nil, fmt.Errorf("RAG_ANSWER_CITATIONS_REQUIRED")
 	}
