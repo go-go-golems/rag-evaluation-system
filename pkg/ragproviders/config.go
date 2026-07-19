@@ -2,6 +2,7 @@ package ragproviders
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -55,6 +56,12 @@ func loadConfig(path string) (HostConfig, string, error) {
 	if err := dec.Decode(&cfg); err != nil {
 		return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_DECODE: %w", err)
 	}
+	var extra any
+	if err := dec.Decode(&extra); err == nil {
+		return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_MULTIPLE_DOCUMENTS")
+	} else if err != io.EOF {
+		return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_DECODE: %w", err)
+	}
 	if cfg.SchemaVersion != HostConfigSchemaVersion {
 		return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_SCHEMA")
 	}
@@ -65,16 +72,27 @@ func loadConfig(path string) (HostConfig, string, error) {
 		return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_PROVIDERS")
 	}
 	base := filepath.Dir(absolute)
-	resolve := func(value string) string {
-		if value == "" || filepath.IsAbs(value) {
-			return value
+	resolve := func(value string) (string, error) {
+		if value == "" {
+			return "", nil
 		}
-		return filepath.Join(base, value)
+		if filepath.IsAbs(value) {
+			return "", fmt.Errorf("RAG_PROVIDER_CONFIG_PATH_ABSOLUTE")
+		}
+		resolved := filepath.Clean(filepath.Join(base, value))
+		relative, err := filepath.Rel(base, resolved)
+		if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
+			return "", fmt.Errorf("RAG_PROVIDER_CONFIG_PATH_ESCAPE")
+		}
+		return resolved, nil
 	}
-	cfg.Manifests.ModelsDir = resolve(cfg.Manifests.ModelsDir)
-	cfg.Manifests.PromptsDir = resolve(cfg.Manifests.PromptsDir)
-	cfg.Schemas.Directory = resolve(cfg.Schemas.Directory)
-	cfg.Cache.Directory = resolve(cfg.Cache.Directory)
+	for _, target := range []*string{&cfg.Manifests.ModelsDir, &cfg.Manifests.PromptsDir, &cfg.Schemas.Directory, &cfg.Cache.Directory} {
+		resolved, err := resolve(*target)
+		if err != nil {
+			return HostConfig{}, "", err
+		}
+		*target = resolved
+	}
 	for name, spec := range cfg.Providers {
 		if strings.TrimSpace(name) == "" || strings.TrimSpace(spec.Kind) == "" || strings.TrimSpace(spec.ModelManifest) == "" {
 			return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_PROVIDER_INVALID")
