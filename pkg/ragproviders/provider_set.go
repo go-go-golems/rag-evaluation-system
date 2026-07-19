@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"os"
+	"path/filepath"
 	"sort"
 	"sync"
 
@@ -21,6 +23,8 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragengine"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
 	geppettoadapter "github.com/go-go-golems/rag-evaluation-system/pkg/ragproviders/geppetto"
+
+	"github.com/go-go-golems/geppetto/pkg/engineprofiles"
 )
 
 type CapabilityDescriptor struct {
@@ -118,16 +122,24 @@ func Load(ctx context.Context, path string) (*ProviderSet, error) {
 		if err != nil {
 			return nil, err
 		}
-		endpoint, err := resolveEnvRef(spec.EndpointRef, true)
-		if err != nil {
-			return nil, err
-		}
-		if err := validateEndpoint(endpoint, spec); err != nil {
-			return nil, fmt.Errorf("RAG_PROVIDER_GENERATOR_ENDPOINT: %w", err)
-		}
-		generatorSettings, err := newGeneratorSettings(endpoint, model, spec)
-		if err != nil {
-			return nil, err
+		var generatorSettings *settings.InferenceSettings
+		if spec.Profile != "" {
+			generatorSettings, err = newGeneratorSettingsFromProfile(ctx, spec, set)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			endpoint, err := resolveEnvRef(spec.EndpointRef, true)
+			if err != nil {
+				return nil, err
+			}
+			if err := validateEndpoint(endpoint, spec); err != nil {
+				return nil, fmt.Errorf("RAG_PROVIDER_GENERATOR_ENDPOINT: %w", err)
+			}
+			generatorSettings, err = newGeneratorSettings(endpoint, model, spec)
+			if err != nil {
+				return nil, err
+			}
 		}
 		set.Generator, err = geppettoadapter.NewGenerator(generatorSettings, manifests, schemas)
 		if err != nil {
@@ -352,6 +364,67 @@ func newGeneratorSettings(endpoint string, model ragcontract.ModelManifest, spec
 	}
 	in.API.APIKeys["openai-api-key"] = key
 	return in, nil
+}
+
+// newGeneratorSettingsFromProfile resolves InferenceSettings from a Geppetto
+// engine profile registry (e.g. ~/.config/pinocchio/profiles.yaml). This uses
+// the same profile stack resolution that Pinocchio and other Geppetto hosts
+// use, so credentials, base URLs, model_info, and cost rates all come from the
+// profile YAML rather than being manually constructed.
+func newGeneratorSettingsFromProfile(ctx context.Context, spec ProviderSpec, set *ProviderSet) (*settings.InferenceSettings, error) {
+	sources := spec.ProfileRegistries
+	if sources == "" {
+		// Default to the standard Pinocchio profiles.yaml location.
+		configDir, err := os.UserConfigDir()
+		if err != nil {
+			return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_CONFIG_DIR: %w", err)
+		}
+		defaultPath := filepath.Join(configDir, "pinocchio", "profiles.yaml")
+		if _, err := os.Stat(defaultPath); err != nil {
+			return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_REGISTRY_NOT_FOUND: %s", defaultPath)
+		}
+		sources = defaultPath
+	}
+	entries, err := engineprofiles.ParseEngineProfileRegistrySourceEntries(sources)
+	if err != nil {
+		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_SOURCE: %w", err)
+	}
+	specs, err := engineprofiles.ParseRegistrySourceSpecs(entries)
+	if err != nil {
+		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_SPEC: %w", err)
+	}
+	chain, err := engineprofiles.NewChainedRegistryFromSourceSpecs(ctx, specs)
+	if err != nil {
+		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_CHAIN: %w", err)
+	}
+	set.closers = append(set.closers, chain)
+	resolved, err := chain.ResolveEngineProfile(ctx, engineprofiles.ResolveInput{
+		EngineProfileSlug: engineprofiles.MustEngineProfileSlug(spec.Profile),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_RESOLVE: %w", err)
+	}
+	ss := resolved.InferenceSettings
+	if ss == nil {
+		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_NO_SETTINGS")
+	}
+	// Merge the profile-resolved settings onto a base InferenceSettings so
+	// that default Client, API, and other infrastructure fields are
+	// initialized. This mirrors how Pinocchio bootstraps engines: it creates
+	// a hidden base from NewInferenceSettings() and then overlays the profile.
+	base, err := settings.NewInferenceSettings()
+	if err != nil {
+		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_BASE: %w", err)
+	}
+	merged, err := engineprofiles.MergeInferenceSettings(base, ss)
+	if err != nil {
+		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_MERGE: %w", err)
+	}
+	if merged.Chat == nil {
+		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_NO_CHAT")
+	}
+	merged.Chat.Stream = true
+	return merged, nil
 }
 func stringPtr(value string) *string { return &value }
 func validateEndpoint(raw string, spec ProviderSpec) error {

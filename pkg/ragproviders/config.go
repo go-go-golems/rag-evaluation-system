@@ -39,6 +39,14 @@ type ProviderSpec struct {
 	CredentialRef      string `yaml:"credentialRef,omitempty"`
 	AllowHTTP          bool   `yaml:"allowHttp,omitempty"`
 	AllowLocalNetworks bool   `yaml:"allowLocalNetworks,omitempty"`
+	// Profile, when set, resolves InferenceSettings from a Geppetto engine
+	// profile registry (e.g. ~/.config/pinocchio/profiles.yaml) instead of
+	// manually constructing endpoint/credential settings. The value is a
+	// profile slug like "umans-glm-5.2". ProfileRegistries is an optional
+	// comma-separated list of registry source specs (YAML paths, sqlite:...
+	// etc.); when empty, the default Pinocchio profiles.yaml is used.
+	Profile           string `yaml:"profile,omitempty"`
+	ProfileRegistries string `yaml:"profileRegistries,omitempty"`
 }
 
 func loadConfig(path string) (HostConfig, string, error) {
