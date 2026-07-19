@@ -7,12 +7,14 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/go-go-golems/geppetto/pkg/steps/ai/settings"
 	"github.com/go-go-golems/geppetto/pkg/steps/ai/types"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
 )
 
@@ -85,6 +87,70 @@ func TestGeneratorConsumesStructuredStreamIntoCompleteResult(t *testing.T) {
 	}
 }
 
+func TestGeneratorLiveOllamaRequestKinds(t *testing.T) {
+	if os.Getenv("RAG_GENERATOR_LIVE_TEST") != "1" {
+		t.Skip("set RAG_GENERATOR_LIVE_TEST=1 and RAG_GENERATOR_LIVE_BASE_URL to run against a live Ollama service")
+	}
+	baseURL := strings.TrimRight(os.Getenv("RAG_GENERATOR_LIVE_BASE_URL"), "/")
+	if baseURL == "" {
+		t.Fatal("RAG_GENERATOR_LIVE_BASE_URL is required when RAG_GENERATOR_LIVE_TEST=1")
+	}
+	model := os.Getenv("RAG_GENERATOR_LIVE_MODEL")
+	if model == "" {
+		model = "qwen3:8b"
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+	tests := []struct {
+		name    string
+		request ragoperators.GenerationRequest
+		check   func(t *testing.T, result ragoperators.GenerationResult)
+	}{
+		{
+			name:    "structured summary",
+			request: ragoperators.GenerationRequest{Kind: "representations.structured-summary", Model: model, Prompt: "summary", OutputSchema: "summary/v1", Text: "A payroll adjustment corrects wages or deductions."},
+			check: func(t *testing.T, result ragoperators.GenerationResult) {
+				var output struct {
+					Summary string `json:"summary"`
+				}
+				if err := json.Unmarshal([]byte(result.Text), &output); err != nil || strings.TrimSpace(output.Summary) == "" {
+					t.Fatalf("text = %q, JSON summary error = %v", result.Text, err)
+				}
+			},
+		},
+		{
+			name:    "synthetic questions",
+			request: ragoperators.GenerationRequest{Kind: "representations.synthetic-questions", Model: model, Prompt: "questions", OutputSchema: "questions/v1", Text: "A payroll adjustment corrects wages or deductions.", Count: 4},
+			check: func(t *testing.T, result ragoperators.GenerationResult) {
+				if len(result.Questions) != 4 {
+					t.Fatalf("questions = %#v, want exactly four", result.Questions)
+				}
+			},
+		},
+		{
+			name:    "grounded answer",
+			request: ragoperators.GenerationRequest{Kind: "generate.answer", Model: model, Prompt: "answer", OutputSchema: "answer/v1", Text: "What does a payroll adjustment correct?", Evidence: []ragoperators.Evidence{{Chunk: ragoperators.Chunk{Record: ragcontract.ChunkRecord{ID: "chunk-1"}, Text: "A payroll adjustment corrects wages or deductions."}}}},
+			check: func(t *testing.T, result ragoperators.GenerationResult) {
+				if !result.Abstained && strings.TrimSpace(result.Text) == "" {
+					t.Fatal("answer is empty without abstention")
+				}
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result, err := newTestGenerator(t, baseURL).Generate(ctx, test.request)
+			if err != nil {
+				t.Fatalf("Generate() error = %v", err)
+			}
+			if result.FinishReason == "" {
+				t.Fatalf("finish reason is empty: %#v", result)
+			}
+			test.check(t, result)
+		})
+	}
+}
+
 func TestGeneratorHonorsCancellationAndRedactsProviderError(t *testing.T) {
 	t.Run("cancellation", func(t *testing.T) {
 		started := make(chan struct{})
@@ -145,7 +211,15 @@ func newTestGenerator(t *testing.T, baseURL string) *Generator {
 	in.API.APIKeys["openai-api-key"] = "test-key"
 	in.API.AllowHTTP["openai"] = true
 	in.API.AllowLocalNetworks["openai"] = true
-	generator, err := NewGenerator(in, staticPromptResolver{"summary": "Return JSON only."}, staticSchemaResolver{"summary/v1": json.RawMessage(`{"type":"object","properties":{"summary":{"type":"string"}},"required":["summary"],"additionalProperties":false}`)})
+	generator, err := NewGenerator(in, staticPromptResolver{
+		"summary":   "Return JSON only. Summarize the source text.",
+		"questions": "Return exactly four JSON questions based on the source text.",
+		"answer":    "Return a JSON answer grounded only in the supplied evidence, citing chunk IDs or abstaining.",
+	}, staticSchemaResolver{
+		"summary/v1":   json.RawMessage(`{"type":"object","properties":{"summary":{"type":"string"}},"required":["summary"],"additionalProperties":false}`),
+		"questions/v1": json.RawMessage(`{"type":"object","properties":{"questions":{"type":"array","minItems":4,"maxItems":4,"items":{"type":"string"}}},"required":["questions"],"additionalProperties":false}`),
+		"answer/v1":    json.RawMessage(`{"type":"object","properties":{"answer":{"type":"string"},"citationChunkIds":{"type":"array","items":{"type":"string"}},"abstained":{"type":"boolean"}},"required":["answer","citationChunkIds","abstained"],"additionalProperties":false}`),
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
