@@ -3,6 +3,7 @@ package geppetto
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"strings"
 
@@ -68,7 +69,10 @@ func (g *Generator) Generate(ctx context.Context, request ragoperators.Generatio
 	turn := turns.NewTurnBuilder().WithUserPrompt(user).Build()
 	out, inference, err := geppettoengine.RunInferenceWithResult(ctx, engine, turn)
 	if err != nil {
-		return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GEPPETTO_GENERATOR: %w", err)
+		if stderrors.Is(err, context.Canceled) || stderrors.Is(err, context.DeadlineExceeded) {
+			return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GEPPETTO_GENERATOR: %w", err)
+		}
+		return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GEPPETTO_GENERATOR_PROVIDER")
 	}
 	text := lastAssistantText(out)
 	if text == "" {
