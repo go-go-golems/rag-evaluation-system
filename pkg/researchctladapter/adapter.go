@@ -141,13 +141,15 @@ func stageEnvelope(reference InputReference, data []byte, artifactRoot string) (
 	if err != nil {
 		return ResolvedInput{}, err
 	}
+	// #nosec G703 -- PrepareArtifactPath rejects traversal and symlink escapes under artifactRoot.
 	if existing, readErr := os.ReadFile(destination); readErr == nil {
 		if !bytes.Equal(existing, data) {
 			return ResolvedInput{}, fmt.Errorf("RAG_INPUT_CONFLICT: %s", uri)
 		}
 	} else if !os.IsNotExist(readErr) {
 		return ResolvedInput{}, readErr
-	} else if err := os.WriteFile(destination, data, 0o644); err != nil {
+	} else if err := os.WriteFile(destination, data, 0o644); err != nil { // #nosec G703 -- destination was validated by PrepareArtifactPath.
+
 		return ResolvedInput{}, err
 	}
 	size := int64(len(data))

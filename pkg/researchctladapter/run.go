@@ -43,6 +43,7 @@ func CheckWorker(ctx context.Context, worker WorkerCommand) error {
 	if worker.Executable == "" {
 		return fmt.Errorf("RAG_WORKER_COMMAND_REQUIRED")
 	}
+	// #nosec G204 -- the worker executable and args are explicit host configuration, not provider data.
 	command := exec.CommandContext(ctx, worker.Executable, worker.Args...)
 	request := map[string]any{"protocolVersion": ProtocolVersion, "attempt": map[string]any{"specification": map[string]any{"canonicalIdentity": map[string]any{"domain": ragcontract.Domain, "domainSchemaVersion": ragcontract.DomainSchemaVersion, "domainConfig": map[string]any{}}}}}
 	payload, _ := json.Marshal(request)
@@ -90,6 +91,7 @@ func CheckWorker(ctx context.Context, worker WorkerCommand) error {
 }
 
 func checkWorkerCapabilities(ctx context.Context, worker WorkerCommand) error {
+	// #nosec G204 -- the capability probe uses the same explicit host worker command and args.
 	command := exec.CommandContext(ctx, worker.Executable, append(append([]string{}, worker.Args...), "--capabilities")...)
 	output, err := command.Output()
 	if err != nil {
@@ -176,6 +178,7 @@ func ExecuteSpecification(ctx context.Context, specification lab.SpecificationRe
 	for _, name := range options.SecretEnvironment {
 		args = append(args, "--secret-env", name)
 	}
+	// #nosec G204 -- researchctlCommand is an explicit operator-selected executable; args are constructed from typed run options.
 	command := exec.CommandContext(ctx, options.ResearchctlCommand, args...)
 	output, runErr := command.CombinedOutput()
 	if runErr != nil {
