@@ -53,3 +53,8 @@ Step 3: Ported study and preview, deleted the Glazed-Cobra adapter, and made cmd
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/Makefile — Mandatory command-directory Glazed lint
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-eval/main.go — Native command-group registration
 
+
+## 2026-07-18
+
+Ticket closed
+

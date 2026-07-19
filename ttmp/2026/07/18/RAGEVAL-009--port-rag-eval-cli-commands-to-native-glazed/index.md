@@ -1,7 +1,7 @@
 ---
 Title: Port rag-eval CLI commands to native Glazed
 Ticket: RAGEVAL-009
-Status: active
+Status: complete
 Topics:
     - rag
 DocType: index
@@ -10,10 +10,11 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2026-07-18T19:50:51.738544693-04:00
+LastUpdated: 2026-07-18T20:15:08.679488302-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 # Port rag-eval CLI commands to native Glazed
 
