@@ -65,7 +65,7 @@ func buildWorker(t *testing.T) string {
 }
 func runWorker(binary string, request any) ([]map[string]any, string, error) {
 	payload, _ := json.Marshal(request)
-	command := exec.Command(binary)
+	command := exec.Command(binary, "--provider-profile", "fixtures")
 	command.Stdin = bytes.NewReader(append(payload, '\n'))
 	var stdout, stderr bytes.Buffer
 	command.Stdout = &stdout

@@ -122,9 +122,11 @@ type GenerationResult struct {
 	Questions                 []string
 	CitationChunkIDs          []string
 	InputTokens, OutputTokens int64
-	Cost                      float64
-	FinishReason              string
-	Abstained                 bool
+	// Cost is nil when the provider does not report a price. A zero value means
+	// the provider explicitly reported zero cost.
+	Cost         *float64
+	FinishReason string
+	Abstained    bool
 }
 type Embedder interface {
 	Embed(context.Context, string, []string) ([][]float64, Usage, error)

@@ -16,10 +16,12 @@ type fakeGenerator struct {
 	calls   int
 	fail    bool
 	invalid bool
+	request GenerationRequest
 }
 
 func (g *fakeGenerator) Generate(_ context.Context, r GenerationRequest) (GenerationResult, error) {
 	g.calls++
+	g.request = r
 	if g.fail {
 		return GenerationResult{}, errors.New("generated failure")
 	}
@@ -79,6 +81,22 @@ func (r fakeReranker) Rerank(_ context.Context, request RerankRequest) ([]Rerank
 		out = append(out, RerankScore{ChunkID: e.Chunk.Record.ID, Score: float64(len(request.Candidates) - i)})
 	}
 	return out, nil
+}
+
+func TestGenerationUsageKeepsUnknownCostAbsent(t *testing.T) {
+	env := &Environment{Usage: Usage{Cost: map[string]float64{}}}
+	addGenerationUsage(env, "generator-primary", GenerationResult{InputTokens: 2, OutputTokens: 3})
+	if _, found := env.Usage.Cost["generator-primary"]; found {
+		t.Fatalf("unknown provider cost was recorded as %#v", env.Usage.Cost)
+	}
+	cost := 0.25
+	addGenerationUsage(env, "generator-primary", GenerationResult{Cost: &cost})
+	if got := env.Usage.Cost["generator-primary"]; got != cost {
+		t.Fatalf("provider cost = %v, want %v", got, cost)
+	}
+	if env.Usage.InputTokens != 2 || env.Usage.OutputTokens != 3 {
+		t.Fatalf("usage = %#v", env.Usage)
+	}
 }
 
 func TestRuntimeRegistryCoversCompilerDefinitionsAndMetadata(t *testing.T) {
@@ -348,12 +366,16 @@ func TestRerankAndAnswerNeverFallback(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 	answerNode := ragcontract.Node{Config: json.RawMessage(`{"model":"m","prompt":"p","citations":"required"}`)}
-	out, err := (answerOperator{}).Execute(context.Background(), answerNode, map[string]any{"evidence": evidence}, &Environment{Manifests: fixtureResolver(), Generator: &fakeGenerator{}})
+	generator := &fakeGenerator{}
+	out, err := (answerOperator{}).Execute(context.Background(), answerNode, map[string]any{"evidence": evidence}, &Environment{Manifests: fixtureResolver(), Generator: generator, QueryText: "What does this source say?"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if out["answer"].(Answer).CitationChunkIDs[0] != "c1" {
 		t.Fatalf("%#v", out)
+	}
+	if generator.request.Kind != "generate.answer" || generator.request.Text != "What does this source say?" || generator.request.OutputSchema != "summary/v1" {
+		t.Fatalf("answer request = %#v", generator.request)
 	}
 }
 func TestVersionedEvaluationMetrics(t *testing.T) {

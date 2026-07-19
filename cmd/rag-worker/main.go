@@ -10,9 +10,16 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/go-go-golems/glazed/pkg/cli"
+	"github.com/go-go-golems/glazed/pkg/cmds"
+	"github.com/go-go-golems/glazed/pkg/cmds/fields"
+	"github.com/go-go-golems/glazed/pkg/cmds/schema"
+	"github.com/go-go-golems/glazed/pkg/cmds/values"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragengine"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragproviders"
+	"github.com/spf13/cobra"
 )
 
 const protocolVersion = "researchctl-runner-stdio/v1"
@@ -66,7 +73,45 @@ func (o observer) Artifact(_ context.Context, v ragoperators.Artifact) error {
 	}
 	return o.encoder.Encode(frame{Type: "artifact", Artifact: map[string]any{"role": v.Role, "kind": v.Kind, "name": v.Name, "schemaVersion": v.SchemaVersion, "mediaType": v.MediaType, "metadata": metadata, "data": v.Data}})
 }
+
+type workerCommand struct{ *cmds.CommandDescription }
+
+type workerSettings struct {
+	ProviderProfile string `glazed:"provider-profile"`
+	ProviderConfig  string `glazed:"provider-config"`
+}
+
+var _ cmds.BareCommand = (*workerCommand)(nil)
+
+func newWorkerCommand() (*cobra.Command, error) {
+	description := cmds.NewCommandDescription(
+		"rag-worker",
+		cmds.WithShort("Execute a canonical RAG request over the stdio runner protocol"),
+		cmds.WithFlags(
+			fields.New("provider-profile", fields.TypeString, fields.WithHelp("Explicit provider profile: fixtures or real"), fields.WithRequired(true)),
+			fields.New("provider-config", fields.TypeString, fields.WithHelp("Host-only real-provider configuration YAML; required for provider-profile=real")),
+		),
+	)
+	command := &workerCommand{CommandDescription: description}
+	return cli.BuildCobraCommandFromCommand(command, cli.WithParserConfig(cli.CobraParserConfig{AppName: "rag-worker", ShortHelpSections: []string{schema.DefaultSlug}}))
+}
+
+func (c *workerCommand) Run(ctx context.Context, parsed *values.Values) error {
+	settings := &workerSettings{}
+	if err := parsed.DecodeSectionInto(schema.DefaultSlug, settings); err != nil {
+		return err
+	}
+	executeWorker(ctx, settings)
+	return nil
+}
+
 func main() {
+	command, err := newWorkerCommand()
+	cobra.CheckErr(err)
+	cobra.CheckErr(command.Execute())
+}
+
+func executeWorker(parent context.Context, settings *workerSettings) {
 	encoder := json.NewEncoder(os.Stdout)
 	var input request
 	if err := json.NewDecoder(os.Stdin).Decode(&input); err != nil {
@@ -121,11 +166,35 @@ func main() {
 		fail(encoder, "RAG_WORKER_INPUT", fmt.Errorf("corpus and evaluation dataset are required"))
 		return
 	}
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, cancel := signal.NotifyContext(parent, os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	engine := ragengine.New(nil)
-	fixtures := ragoperators.NewFixtureProviders()
-	_, err = engine.Execute(ctx, execution, corpusArtifact.Corpus, evaluationArtifact.Dataset, observer{encoder: encoder}, ragengine.Options{Manifests: fixtures.Resolver, Schemas: fixtures, Generator: fixtures, Embedder: fixtures, Cache: ragoperators.NewMemoryCache()})
+	var options ragengine.Options
+	switch settings.ProviderProfile {
+	case "fixtures":
+		if settings.ProviderConfig != "" {
+			fail(encoder, "RAG_WORKER_PROVIDER_PROFILE", fmt.Errorf("fixture profile does not accept provider config"))
+			return
+		}
+		fixtures := ragoperators.NewFixtureProviders()
+		options = ragengine.Options{Manifests: fixtures.Resolver, Schemas: fixtures, Generator: fixtures, Embedder: fixtures, Cache: ragoperators.NewMemoryCache()}
+	case "real":
+		if settings.ProviderConfig == "" {
+			fail(encoder, "RAG_WORKER_PROVIDER_PROFILE", fmt.Errorf("real profile requires provider config"))
+			return
+		}
+		providerSet, loadErr := ragproviders.Load(ctx, settings.ProviderConfig)
+		if loadErr != nil {
+			fail(encoder, "RAG_WORKER_PROVIDERS", loadErr)
+			return
+		}
+		defer func() { _ = providerSet.Close() }()
+		options = providerSet.EngineOptions()
+	default:
+		fail(encoder, "RAG_WORKER_PROVIDER_PROFILE", fmt.Errorf("unsupported provider profile"))
+		return
+	}
+	_, err = engine.Execute(ctx, execution, corpusArtifact.Corpus, evaluationArtifact.Dataset, observer{encoder: encoder}, options)
 	if err != nil {
 		fail(encoder, "RAG_WORKER_EXECUTE", err)
 		return

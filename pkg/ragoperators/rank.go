@@ -310,6 +310,18 @@ func (rerankOperator) Execute(ctx context.Context, node ragcontract.Node, inputs
 	return map[string]any{"evidence": evidence}, nil
 }
 
+func addGenerationUsage(env *Environment, model string, result GenerationResult) {
+	env.Usage.InputTokens += result.InputTokens
+	env.Usage.OutputTokens += result.OutputTokens
+	if result.Cost == nil {
+		return
+	}
+	if env.Usage.Cost == nil {
+		env.Usage.Cost = map[string]float64{}
+	}
+	env.Usage.Cost[model] += *result.Cost
+}
+
 type answerOperator struct{}
 
 func (answerOperator) Ref() ragcontract.OperatorRef {
@@ -338,7 +350,7 @@ func (answerOperator) Execute(ctx context.Context, node ragcontract.Node, inputs
 	if err != nil {
 		return nil, err
 	}
-	result, err := env.Generator.Generate(ctx, GenerationRequest{Kind: "answer", Model: modelManifest.ModelID, Prompt: promptManifest.PromptID, Evidence: evidence})
+	result, err := env.Generator.Generate(ctx, GenerationRequest{Kind: "generate.answer", Model: modelManifest.ModelID, Prompt: promptManifest.PromptID, OutputSchema: promptManifest.OutputSchema, Text: env.QueryText, Evidence: evidence})
 	if err != nil {
 		return nil, fmt.Errorf("RAG_ANSWER_FAILED: %w", err)
 	}
@@ -358,8 +370,7 @@ func (answerOperator) Execute(ctx context.Context, node ragcontract.Node, inputs
 		return nil, fmt.Errorf("RAG_ANSWER_CITATIONS_REQUIRED")
 	}
 	answer := Answer{Text: result.Text, CitationChunkIDs: result.CitationChunkIDs, FinishReason: result.FinishReason, Abstained: result.Abstained, InputTokens: result.InputTokens, OutputTokens: result.OutputTokens}
-	env.Usage.InputTokens += result.InputTokens
-	env.Usage.OutputTokens += result.OutputTokens
+	addGenerationUsage(env, config.Model, result)
 	if env.Trace != nil {
 		identities := make([]ragcontract.EvidenceIdentity, len(evidence))
 		for index, item := range evidence {

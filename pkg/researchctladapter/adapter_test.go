@@ -80,10 +80,10 @@ func TestWrapExecuteAndReconstructCanonicalSpecification(t *testing.T) {
 		t.Fatal(err)
 	}
 	binary := buildWorker(t)
-	if err := CheckWorker(context.Background(), WorkerCommand{Executable: binary}); err != nil {
+	if err := CheckWorker(context.Background(), WorkerCommand{Executable: binary, Args: []string{"--provider-profile", "fixtures"}}); err != nil {
 		t.Fatal(err)
 	}
-	runner, err := processrunner.New(processrunner.Config{Command: []string{binary}, Runner: lab.RunnerRecord{Name: RunnerName, ResolvedVersion: RunnerVersion}, Domains: []lab.DomainVersion{{Domain: ragcontract.Domain, SchemaVersion: ragcontract.DomainSchemaVersion}}})
+	runner, err := processrunner.New(processrunner.Config{Command: []string{binary, "--provider-profile", "fixtures"}, Runner: lab.RunnerRecord{Name: RunnerName, ResolvedVersion: RunnerVersion}, Domains: []lab.DomainVersion{{Domain: ragcontract.Domain, SchemaVersion: ragcontract.DomainSchemaVersion}}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +146,7 @@ func TestExternalWorkerCancellationPreservesEarlierArtifact(t *testing.T) {
 	resolved := ResolvedInputs{ByRole: map[string]ResolvedInput{"corpus": corpusInput, "evaluation-dataset": datasetInput}}
 	specification, _ := WrapExecution(fixtureExecution(t, corpus.Manifest.Digest, dataset.Manifest.Digest), resolved, "cancel")
 	binary := buildWorker(t)
-	runner, _ := processrunner.New(processrunner.Config{Command: []string{binary}, Runner: lab.RunnerRecord{Name: RunnerName, ResolvedVersion: RunnerVersion}, Domains: []lab.DomainVersion{{Domain: ragcontract.Domain, SchemaVersion: ragcontract.DomainSchemaVersion}}})
+	runner, _ := processrunner.New(processrunner.Config{Command: []string{binary, "--provider-profile", "fixtures"}, Runner: lab.RunnerRecord{Name: RunnerName, ResolvedVersion: RunnerVersion}, Domains: []lab.DomainVersion{{Domain: ragcontract.Domain, SchemaVersion: ragcontract.DomainSchemaVersion}}})
 	ctx, cancel := context.WithCancel(context.Background())
 	collector := &sink{cancel: cancel}
 	err := runner.Start(ctx, lab.AttemptRequest{Specification: specification, Run: lab.RunRecord{ID: "r", CreatedAt: "2026-07-17T00:00:00Z"}, AttemptID: "a", AttemptIndex: 1, ArtifactRoot: root}, collector)
@@ -169,7 +169,7 @@ func TestWorkerRejectsManifestLineageBeforeExecution(t *testing.T) {
 		t.Fatal(err)
 	}
 	binary := buildWorker(t)
-	runner, _ := processrunner.New(processrunner.Config{Command: []string{binary}, Runner: lab.RunnerRecord{Name: RunnerName, ResolvedVersion: RunnerVersion}, Domains: []lab.DomainVersion{{Domain: ragcontract.Domain, SchemaVersion: ragcontract.DomainSchemaVersion}}})
+	runner, _ := processrunner.New(processrunner.Config{Command: []string{binary, "--provider-profile", "fixtures"}, Runner: lab.RunnerRecord{Name: RunnerName, ResolvedVersion: RunnerVersion}, Domains: []lab.DomainVersion{{Domain: ragcontract.Domain, SchemaVersion: ragcontract.DomainSchemaVersion}}})
 	err = runner.Start(context.Background(), lab.AttemptRequest{Specification: specification, Run: lab.RunRecord{ID: "r", CreatedAt: "2026-07-17T00:00:00Z"}, AttemptID: "a", AttemptIndex: 1, ArtifactRoot: root}, &sink{})
 	if err == nil || !strings.Contains(err.Error(), "RAG_WORKER_INPUT_LINEAGE") {
 		t.Fatalf("err=%v", err)

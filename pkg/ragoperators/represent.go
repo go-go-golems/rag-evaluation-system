@@ -131,12 +131,7 @@ func (o representationOperator) Execute(ctx context.Context, node ragcontract.No
 				env.Cache.Put(key, raw)
 			}
 		}
-		env.Usage.InputTokens += result.InputTokens
-		env.Usage.OutputTokens += result.OutputTokens
-		if env.Usage.Cost == nil {
-			env.Usage.Cost = map[string]float64{}
-		}
-		env.Usage.Cost[config.Model] += result.Cost
+		addGenerationUsage(env, config.Model, result)
 		if o.kind == "representations.structured-summary" {
 			if result.Text == "" || !json.Valid([]byte(result.Text)) {
 				return nil, fmt.Errorf("RAG_STRUCTURED_OUTPUT_INVALID: %s", chunk.Record.ID)
