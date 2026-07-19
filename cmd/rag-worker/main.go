@@ -189,6 +189,10 @@ func executeWorker(parent context.Context, settings *workerSettings) {
 			return
 		}
 		defer func() { _ = providerSet.Close() }()
+		if err := providerSet.CheckExecution(execution); err != nil {
+			fail(encoder, "RAG_WORKER_PROVIDER_REQUIREMENTS", err)
+			return
+		}
 		options = providerSet.EngineOptions()
 	default:
 		fail(encoder, "RAG_WORKER_PROVIDER_PROFILE", fmt.Errorf("unsupported provider profile"))

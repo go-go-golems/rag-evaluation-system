@@ -99,6 +99,22 @@ func TestLoadProviderSetRejectsPromptSchemaMissing(t *testing.T) {
 	}
 }
 
+func TestProviderSetChecksExecutionRequirements(t *testing.T) {
+	set, err := Load(context.Background(), writeProviderFixture(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = set.Close() }()
+	execution := ragcontract.PipelineExecution{Pipeline: ragcontract.PipelineIR{Nodes: []ragcontract.Node{{Operator: ragcontract.OperatorRef{Kind: "embed.model", Version: "v1"}, Config: json.RawMessage(`{"model":"embedding","dimensions":768}`)}}}}
+	if err := set.CheckExecution(execution); err != nil {
+		t.Fatalf("CheckExecution() error = %v", err)
+	}
+	execution.Pipeline.Nodes[0].Config = json.RawMessage(`{"model":"embedding","dimensions":42}`)
+	if err := set.CheckExecution(execution); err == nil || !strings.Contains(err.Error(), "RAG_PROVIDER_EXECUTION_MODEL") {
+		t.Fatalf("CheckExecution() error = %v", err)
+	}
+}
+
 func TestProviderSetCloseIsIdempotentAndClosesAllResources(t *testing.T) {
 	firstErr := errors.New("first close failure")
 	first, second := &recordingCloser{err: firstErr}, &recordingCloser{}

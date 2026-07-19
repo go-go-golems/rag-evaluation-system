@@ -2,6 +2,7 @@ package ragproviders
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -130,6 +131,70 @@ func Load(ctx context.Context, path string) (*ProviderSet, error) {
 }
 func (p *ProviderSet) EngineOptions() ragengine.Options {
 	return ragengine.Options{Manifests: p.Manifests, Schemas: p.Schemas, Generator: p.Generator, Embedder: p.Embedder, Reranker: p.Reranker, Cache: p.Cache}
+}
+
+// CheckExecution verifies that this host can satisfy every provider-backed
+// operator in a canonical execution before the engine performs provider work.
+func (p *ProviderSet) CheckExecution(execution ragcontract.PipelineExecution) error {
+	if p == nil || p.Manifests == nil || p.Schemas == nil {
+		return fmt.Errorf("RAG_PROVIDER_SET_UNAVAILABLE")
+	}
+	for _, node := range execution.Pipeline.Nodes {
+		var config struct {
+			Model, Prompt, OutputSchema, Truncation, Tokenization string
+			Dimensions                                            int
+		}
+		if err := json.Unmarshal(node.Config, &config); err != nil {
+			return fmt.Errorf("RAG_PROVIDER_EXECUTION_CONFIG")
+		}
+		switch node.Operator.Kind {
+		case "representations.structured-summary", "representations.synthetic-questions":
+			if p.Generator == nil || p.Cache == nil {
+				return fmt.Errorf("RAG_PROVIDER_GENERATOR_REQUIRED")
+			}
+			if _, err := p.Manifests.Model(config.Model); err != nil {
+				return fmt.Errorf("RAG_PROVIDER_EXECUTION_MODEL")
+			}
+			prompt, err := p.Manifests.Prompt(config.Prompt)
+			if err != nil || (config.OutputSchema != "" && prompt.OutputSchema != config.OutputSchema) {
+				return fmt.Errorf("RAG_PROVIDER_EXECUTION_PROMPT")
+			}
+			if _, err := p.Schemas.Raw(prompt.OutputSchema); err != nil {
+				return fmt.Errorf("RAG_PROVIDER_EXECUTION_SCHEMA")
+			}
+		case "embed.model":
+			if p.Embedder == nil {
+				return fmt.Errorf("RAG_PROVIDER_EMBEDDING_REQUIRED")
+			}
+			model, err := p.Manifests.Model(config.Model)
+			if err != nil || (config.Dimensions > 0 && model.Dimensions != config.Dimensions) {
+				return fmt.Errorf("RAG_PROVIDER_EXECUTION_MODEL")
+			}
+		case "rerank.cross-encoder":
+			if p.Reranker == nil {
+				return fmt.Errorf("RAG_PROVIDER_RERANKER_REQUIRED")
+			}
+			model, err := p.Manifests.Model(config.Model)
+			if err != nil || model.Truncation != config.Truncation || model.Tokenization != config.Tokenization {
+				return fmt.Errorf("RAG_PROVIDER_EXECUTION_MODEL")
+			}
+		case "generate.answer":
+			if p.Generator == nil {
+				return fmt.Errorf("RAG_PROVIDER_GENERATOR_REQUIRED")
+			}
+			if _, err := p.Manifests.Model(config.Model); err != nil {
+				return fmt.Errorf("RAG_PROVIDER_EXECUTION_MODEL")
+			}
+			prompt, err := p.Manifests.Prompt(config.Prompt)
+			if err != nil {
+				return fmt.Errorf("RAG_PROVIDER_EXECUTION_PROMPT")
+			}
+			if _, err := p.Schemas.Raw(prompt.OutputSchema); err != nil {
+				return fmt.Errorf("RAG_PROVIDER_EXECUTION_SCHEMA")
+			}
+		}
+	}
+	return nil
 }
 func (p *ProviderSet) Close() error {
 	if p == nil {
