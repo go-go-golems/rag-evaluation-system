@@ -2,7 +2,10 @@ package ragproviders
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
+	"net/url"
 	"sync"
 
 	"github.com/go-go-golems/geppetto/pkg/embeddings"
@@ -26,6 +29,8 @@ type ProviderSet struct {
 	Embedder  ragoperators.Embedder
 	Reranker  ragoperators.Reranker
 	Cache     ragoperators.Cache
+
+	closers   []io.Closer
 	closeOnce sync.Once
 	closeErr  error
 }
@@ -43,11 +48,14 @@ func Load(ctx context.Context, path string) (*ProviderSet, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := validateProviderConfiguration(cfg.Providers, manifests, schemas); err != nil {
+		return nil, err
+	}
 	cache, err := NewDiskCache(cfg.Cache)
 	if err != nil {
 		return nil, fmt.Errorf("RAG_PROVIDER_CACHE: %w", err)
 	}
-	set := &ProviderSet{ProfileID: cfg.ProfileID, Manifests: manifests, Schemas: schemas, Cache: cache}
+	set := &ProviderSet{ProfileID: cfg.ProfileID, Manifests: manifests, Schemas: schemas, Cache: cache, closers: []io.Closer{cache}}
 	if spec, ok := cfg.Providers["embedding-primary"]; ok {
 		model, err := manifests.Model(spec.ModelManifest)
 		if err != nil {
@@ -128,11 +136,52 @@ func (p *ProviderSet) Close() error {
 		return nil
 	}
 	p.closeOnce.Do(func() {
-		if cache, ok := p.Cache.(*DiskCache); ok {
-			p.closeErr = cache.Close()
+		var closeErrors []error
+		for i := len(p.closers) - 1; i >= 0; i-- {
+			if err := p.closers[i].Close(); err != nil {
+				closeErrors = append(closeErrors, err)
+			}
 		}
+		p.closeErr = errors.Join(closeErrors...)
 	})
 	return p.closeErr
+}
+
+func validateProviderConfiguration(providers map[string]ProviderSpec, manifests *FileManifestRegistry, schemas *FileSchemaRegistry) error {
+	expected := map[string]string{
+		"embedding-primary": "geppetto-embedding/v1",
+		"generator-primary": "geppetto-generation/v1",
+		"reranker-primary":  "geppetto-reranker/v1",
+	}
+	for name, spec := range providers {
+		kind, known := expected[name]
+		if !known || spec.Kind != kind {
+			return fmt.Errorf("RAG_PROVIDER_KIND_UNSUPPORTED")
+		}
+		model, err := manifests.Model(spec.ModelManifest)
+		if err != nil {
+			return err
+		}
+		if model.ProviderAdapterVersion != kind {
+			return fmt.Errorf("RAG_PROVIDER_MODEL_INCOMPATIBLE")
+		}
+	}
+	for name := range expected {
+		if _, ok := providers[name]; !ok {
+			return fmt.Errorf("RAG_PROVIDER_REQUIRED")
+		}
+	}
+	seen := map[string]bool{}
+	for _, prompt := range manifests.prompts {
+		if seen[prompt.PromptID] {
+			continue
+		}
+		seen[prompt.PromptID] = true
+		if _, err := schemas.Raw(prompt.OutputSchema); err != nil {
+			return fmt.Errorf("RAG_PROVIDER_PROMPT_SCHEMA_MISSING")
+		}
+	}
+	return nil
 }
 func newEmbeddingProvider(endpoint string, model ragcontract.ModelManifest, spec ProviderSpec) (embeddings.Provider, error) {
 	in, err := settings.NewInferenceSettings()
@@ -187,5 +236,12 @@ func newGeneratorSettings(endpoint string, model ragcontract.ModelManifest, spec
 }
 func stringPtr(value string) *string { return &value }
 func validateEndpoint(raw string, spec ProviderSpec) error {
-	return security.ValidateOutboundURL(raw, security.OutboundURLOptions{AllowHTTP: spec.AllowHTTP, AllowLocalNetworks: spec.AllowLocalNetworks})
+	parsed, err := url.Parse(raw)
+	if err != nil || parsed.User != nil {
+		return fmt.Errorf("RAG_PROVIDER_ENDPOINT_POLICY")
+	}
+	if err := security.ValidateOutboundURL(raw, security.OutboundURLOptions{AllowHTTP: spec.AllowHTTP, AllowLocalNetworks: spec.AllowLocalNetworks}); err != nil {
+		return fmt.Errorf("RAG_PROVIDER_ENDPOINT_POLICY")
+	}
+	return nil
 }

@@ -93,6 +93,15 @@ func loadConfig(path string) (HostConfig, string, error) {
 		}
 		*target = resolved
 	}
+	if cfg.Manifests.ModelsDir == "" || cfg.Manifests.PromptsDir == "" {
+		return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_MANIFESTS_REQUIRED")
+	}
+	if cfg.Schemas.Directory == "" {
+		return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_SCHEMAS_REQUIRED")
+	}
+	if cfg.Cache.Kind != "filesystem-content-addressed/v1" || cfg.Cache.Directory == "" {
+		return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_CACHE")
+	}
 	for name, spec := range cfg.Providers {
 		if strings.TrimSpace(name) == "" || strings.TrimSpace(spec.Kind) == "" || strings.TrimSpace(spec.ModelManifest) == "" {
 			return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_PROVIDER_INVALID")

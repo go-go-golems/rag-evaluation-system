@@ -39,8 +39,8 @@ func LoadSchemaRegistry(dir string) (*FileSchemaRegistry, error) {
 		if err := json.Unmarshal(data, &document); err != nil {
 			return nil, fmt.Errorf("RAG_SCHEMA_DECODE: %w", err)
 		}
-		id := strings.TrimSuffix(entry.Name(), filepath.Ext(entry.Name()))
-		location := "mem://rag-schema/" + id
+		fileID := strings.TrimSuffix(entry.Name(), filepath.Ext(entry.Name()))
+		location := "mem://rag-schema/" + fileID
 		compiler := jsonschema.NewCompiler()
 		if err := compiler.AddResource(location, document); err != nil {
 			return nil, fmt.Errorf("RAG_SCHEMA_REGISTER: %w", err)
@@ -49,8 +49,17 @@ func LoadSchemaRegistry(dir string) (*FileSchemaRegistry, error) {
 		if err != nil {
 			return nil, fmt.Errorf("RAG_SCHEMA_COMPILE: %w", err)
 		}
-		registry.raw[id] = append([]byte(nil), data...)
-		registry.schema[id] = compiled
+		ids := []string{fileID}
+		if schemaID, ok := document.(map[string]any)["$id"].(string); ok && schemaID != "" {
+			ids = append(ids, schemaID)
+		}
+		for _, id := range ids {
+			if _, exists := registry.schema[id]; exists {
+				return nil, fmt.Errorf("RAG_SCHEMA_DUPLICATE")
+			}
+			registry.raw[id] = append([]byte(nil), data...)
+			registry.schema[id] = compiled
+		}
 	}
 	if len(registry.schema) == 0 {
 		return nil, fmt.Errorf("RAG_SCHEMA_EMPTY")
