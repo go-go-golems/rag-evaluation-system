@@ -58,6 +58,9 @@ func loadModels(dir string) (map[string]ragcontract.ModelManifest, error) {
 		if _, exists := result[key]; exists || value.ModelID == "" {
 			return nil, fmt.Errorf("RAG_MODEL_MANIFEST_DUPLICATE")
 		}
+		if _, exists := result[value.ModelID]; exists {
+			return nil, fmt.Errorf("RAG_MODEL_MANIFEST_DUPLICATE")
+		}
 		result[key] = value
 		result[value.ModelID] = value
 	}
@@ -102,11 +105,25 @@ func loadPrompts(dir string) (map[string]ragcontract.PromptManifest, map[string]
 			if err != nil {
 				return nil, nil, fmt.Errorf("RAG_PROMPT_TEXT_READ: %w", err)
 			}
-			text[strings.TrimSuffix(entry.Name(), ext)] = string(data)
+			key := strings.TrimSuffix(entry.Name(), ext)
+			if _, exists := text[key]; exists {
+				return nil, nil, fmt.Errorf("RAG_PROMPT_TEXT_DUPLICATE")
+			}
+			text[key] = string(data)
 		}
 	}
 	if len(result) == 0 {
 		return nil, nil, fmt.Errorf("RAG_PROMPT_MANIFEST_EMPTY")
+	}
+	seen := map[string]bool{}
+	for _, manifest := range result {
+		if seen[manifest.PromptID] {
+			continue
+		}
+		seen[manifest.PromptID] = true
+		if _, ok := text[manifest.PromptID]; !ok {
+			return nil, nil, fmt.Errorf("RAG_PROMPT_TEXT_MISSING")
+		}
 	}
 	return result, text, nil
 }
