@@ -3,6 +3,7 @@ package ragproviders
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -70,6 +71,13 @@ func (r *FileSchemaRegistry) Validate(name string, document json.RawMessage) err
 	dec := json.NewDecoder(strings.NewReader(string(document)))
 	dec.UseNumber()
 	if err := dec.Decode(&value); err != nil {
+		return fmt.Errorf("RAG_OUTPUT_SCHEMA_JSON: %w", err)
+	}
+	var extra any
+	if err := dec.Decode(&extra); err != io.EOF {
+		if err == nil {
+			return fmt.Errorf("RAG_OUTPUT_SCHEMA_JSON_MULTIPLE_VALUES")
+		}
 		return fmt.Errorf("RAG_OUTPUT_SCHEMA_JSON: %w", err)
 	}
 	if err := schema.Validate(value); err != nil {
