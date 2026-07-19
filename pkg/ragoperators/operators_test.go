@@ -13,10 +13,12 @@ import (
 )
 
 type fakeGenerator struct {
-	calls   int
-	fail    bool
-	invalid bool
-	request GenerationRequest
+	calls     int
+	fail      bool
+	invalid   bool
+	questions []string
+	abstained bool
+	request   GenerationRequest
 }
 
 func (g *fakeGenerator) Generate(_ context.Context, r GenerationRequest) (GenerationResult, error) {
@@ -32,15 +34,21 @@ func (g *fakeGenerator) Generate(_ context.Context, r GenerationRequest) (Genera
 		return GenerationResult{Text: `{"summary":"ok"}`, InputTokens: 2, OutputTokens: 1, FinishReason: "stop"}, nil
 	}
 	if r.Kind == "representations.synthetic-questions" {
-		q := make([]string, r.Count)
-		for i := range q {
-			q[i] = "question " + itoa(i+1)
+		q := append([]string(nil), g.questions...)
+		if q == nil {
+			q = make([]string, r.Count)
+			for i := range q {
+				q[i] = "question " + itoa(i+1)
+			}
 		}
-		return GenerationResult{Questions: q, InputTokens: 2, OutputTokens: int64(r.Count)}, nil
+		return GenerationResult{Questions: q, InputTokens: 2, OutputTokens: int64(len(q))}, nil
 	}
 	ids := []string{}
 	for _, e := range r.Evidence {
 		ids = append(ids, e.Chunk.Record.ID)
+	}
+	if g.abstained {
+		return GenerationResult{Text: "", Abstained: true, FinishReason: "stop"}, nil
 	}
 	return GenerationResult{Text: "answer", CitationChunkIDs: ids, FinishReason: "stop"}, nil
 }
@@ -355,6 +363,25 @@ func TestFusionTieMissingChannelAndHydrationLineageFailures(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 }
+func TestGenerationContractRejectsQuestionCountMismatchAndPermitsAbstention(t *testing.T) {
+	chunk := fixtureChunk("c1", "u1", "source")
+	env := &Environment{Manifests: fixtureResolver(), Schemas: fakeSchemaValidator{}, Generator: &fakeGenerator{questions: []string{"only one"}}, Usage: Usage{Cost: map[string]float64{}}}
+	questionNode := ragcontract.Node{Config: json.RawMessage(`{"name":"questions","count":2,"model":"m","prompt":"p"}`)}
+	if _, err := (representationOperator{"representations.synthetic-questions"}).Execute(context.Background(), questionNode, map[string]any{"chunks": []Chunk{chunk}}, env); err == nil || !strings.Contains(err.Error(), "RAG_QUESTION_COUNT_MISMATCH") {
+		t.Fatalf("question count error = %v", err)
+	}
+	evidence := []Evidence{{Rank: 1, Chunk: chunk, Score: 1}}
+	answerNode := ragcontract.Node{Config: json.RawMessage(`{"model":"m","prompt":"p","citations":"source"}`)}
+	answerEnv := &Environment{Manifests: fixtureResolver(), Generator: &fakeGenerator{abstained: true}, QueryText: "Unknown question", Usage: Usage{Cost: map[string]float64{}}}
+	out, err := (answerOperator{}).Execute(context.Background(), answerNode, map[string]any{"evidence": evidence}, answerEnv)
+	if err != nil {
+		t.Fatalf("abstained answer error = %v", err)
+	}
+	if !out["answer"].(Answer).Abstained {
+		t.Fatalf("answer = %#v, want abstention", out)
+	}
+}
+
 func TestRerankAndAnswerNeverFallback(t *testing.T) {
 	chunk := fixtureChunk("c1", "u1", "source")
 	evidence := []Evidence{{Rank: 1, Collapse: ragcontract.CollapseIdentity{Scope: "unit", ID: "u1"}, Chunk: chunk, Score: 1}}
