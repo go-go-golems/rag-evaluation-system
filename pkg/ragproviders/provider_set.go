@@ -220,7 +220,16 @@ func (p *ProviderSet) CheckExecution(execution ragcontract.PipelineExecution) er
 				return fmt.Errorf("RAG_PROVIDER_RERANKER_REQUIRED")
 			}
 			model, err := p.Manifests.Model(config.Model)
-			if err != nil || model.Truncation != config.Truncation || model.Tokenization != config.Tokenization {
+			if err != nil {
+				return fmt.Errorf("RAG_PROVIDER_EXECUTION_MODEL")
+			}
+			if config.Truncation == "" {
+				config.Truncation = model.Truncation
+			}
+			if config.Tokenization == "" {
+				config.Tokenization = model.Tokenization
+			}
+			if model.Truncation != config.Truncation || model.Tokenization != config.Tokenization {
 				return fmt.Errorf("RAG_PROVIDER_EXECUTION_MODEL")
 			}
 		case "generate.answer":

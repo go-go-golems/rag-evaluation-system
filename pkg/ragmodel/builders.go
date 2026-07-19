@@ -221,6 +221,8 @@ type Variant struct {
 	ID              string
 	Representations []string
 	Query           *QueryPlan
+	Reranker        *Descriptor
+	Generator       *Descriptor
 }
 type VariantBuilder struct{ value Variant }
 
@@ -229,6 +231,8 @@ func (b *VariantBuilder) SelectRepresentations(v ...string) *VariantBuilder {
 	return b
 }
 func (b *VariantBuilder) QueryPlan(v *QueryPlan) *VariantBuilder { b.value.Query = v; return b }
+func (b *VariantBuilder) Rerank(v *Descriptor) *VariantBuilder   { b.value.Reranker = v; return b }
+func (b *VariantBuilder) Generate(v *Descriptor) *VariantBuilder { b.value.Generator = v; return b }
 func (b *VariantBuilder) Build() *Variant                        { v := b.value; return &v }
 func NewVariant(id string, configure func(*VariantBuilder)) *Variant {
 	b := &VariantBuilder{value: Variant{ID: id}}

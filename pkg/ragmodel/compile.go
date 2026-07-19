@@ -170,7 +170,7 @@ func CompileStudy(value *Study, options CompileOptions) (ragcontract.Study, []ra
 		if v.Query == nil {
 			return ragcontract.Study{}, nil, fmt.Errorf("RAG_V2_VARIANT_QUERY: %s", v.ID)
 		}
-		ir, err := BuildIR(value.Pipeline, v.Query, nil, nil)
+		ir, err := BuildIR(value.Pipeline, v.Query, normalizedReranker(v.Reranker), v.Generator)
 		if err != nil {
 			return ragcontract.Study{}, nil, err
 		}

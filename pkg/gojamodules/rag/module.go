@@ -369,6 +369,8 @@ func (r *runtime) variantBuilderObject(b *ragmodel.VariantBuilder) *goja.Object 
 		}
 		b.QueryPlan(q)
 	})
+	chain("rerank", func(c goja.FunctionCall) { b.Rerank(r.descriptorValue(c.Argument(0))) })
+	chain("generate", func(c goja.FunctionCall) { b.Generate(r.descriptorValue(c.Argument(0))) })
 	return o
 }
 
