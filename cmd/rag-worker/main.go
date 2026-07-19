@@ -185,6 +185,44 @@ func executeWorker(parent context.Context, settings *workerSettings) {
 		return
 	}
 	engine := ragengine.New(nil)
+	options.PreparedCorpusDigest = corpusArtifact.Manifest.Digest
+	if options.PreparedStore != nil {
+		pipelineDigest, err := ragcontract.Digest(execution.Pipeline)
+		if err != nil {
+			fail(encoder, "RAG_WORKER_PREPARED", err)
+			return
+		}
+		identity := ragengine.PreparedCorpusIdentity{
+			SchemaVersion: "rag-prepared-corpus-manifest/v1", CorpusDigest: corpusArtifact.Manifest.Digest,
+			PipelineDigest: pipelineDigest, GenerationSettingsFingerprint: options.GenerationSettingsFingerprint,
+			EmbeddingFingerprint: options.EmbeddingFingerprint,
+		}
+		preparedDigest, err := ragcontract.Digest(identity)
+		if err != nil {
+			fail(encoder, "RAG_WORKER_PREPARED", err)
+			return
+		}
+		prepared, found, err := options.PreparedStore.Open(ctx, engine, execution.Pipeline, corpusArtifact.Corpus, options, identity)
+		if err != nil {
+			fail(encoder, "RAG_WORKER_PREPARED", err)
+			return
+		}
+		if !found {
+			prepared, err = engine.Prepare(ctx, execution.Pipeline, corpusArtifact.Corpus, options)
+			if err != nil {
+				fail(encoder, "RAG_WORKER_PREPARED", err)
+				return
+			}
+			if _, err := options.PreparedStore.Put(ctx, prepared, identity); err != nil {
+				_ = prepared.Close()
+				fail(encoder, "RAG_WORKER_PREPARED", err)
+				return
+			}
+		}
+		defer func() { _ = prepared.Close() }()
+		options.Prepared = prepared
+		options.PreparedCorpusDigest = preparedDigest
+	}
 	_, err = engine.Execute(ctx, execution, corpusArtifact.Corpus, evaluationArtifact.Dataset, observer{encoder: encoder}, options)
 	if err != nil {
 		fail(encoder, "RAG_WORKER_EXECUTE", err)

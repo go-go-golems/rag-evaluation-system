@@ -31,6 +31,104 @@ func TestLoadProviderSetFromStrictHostConfig(t *testing.T) {
 	}
 }
 
+func TestLoadProviderSetUsesOneDefaultProfileRegistryAndValidatesModels(t *testing.T) {
+	config := writeProviderFixture(t)
+	configDir := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", configDir)
+	profilesDir := filepath.Join(configDir, "pinocchio")
+	if err := os.MkdirAll(profilesDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	profiles := `slug: default
+profiles:
+  test-embed:
+    inference_settings:
+      embeddings:
+        type: ollama
+        engine: nomic-embed-text
+        dimensions: 768
+        base_urls:
+          ollama-base-url: http://127.0.0.1:11434
+      api:
+        base_urls:
+          ollama-base-url: http://127.0.0.1:11434
+        allow_http:
+          ollama: true
+        allow_local_networks:
+          ollama: true
+  test-generator:
+    inference_settings:
+      chat:
+        api_type: openai
+        engine: qwen3:8b
+      api:
+        api_keys:
+          openai-api-key: test-key
+        base_urls:
+          openai-base-url: http://127.0.0.1:11434/v1
+        allow_http:
+          openai: true
+        allow_local_networks:
+          openai: true
+  test-reranker:
+    inference_settings:
+      rerank:
+        type: llamacpp
+        engine: bge
+      api:
+        base_urls:
+          rerank-base-url: http://127.0.0.1:18012
+        allow_http:
+          rerank: true
+        allow_local_networks:
+          rerank: true
+`
+	profilePath := filepath.Join(profilesDir, "profiles.yaml")
+	if err := os.WriteFile(profilePath, []byte(profiles), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	replaceConfig(t, config, "endpointRef: env:TEST_RAG_EMBED_URL\n    allowHttp: true\n    allowLocalNetworks: true", "profile: test-embed")
+	replaceConfig(t, config, "endpointRef: env:TEST_RAG_GENERATE_URL\n    allowHttp: true\n    allowLocalNetworks: true", "profile: test-generator\n    concurrency:\n      maxInFlight: 3")
+	replaceConfig(t, config, "endpointRef: env:TEST_RAG_RERANK_URL\n    allowHttp: true\n    allowLocalNetworks: true", "profile: test-reranker")
+	set, err := Load(context.Background(), config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = set.Close() }()
+	if got := len(set.profileChains); got != 1 {
+		t.Fatalf("profile chains = %d, want 1", got)
+	}
+	if set.GenerationConcurrency != 3 {
+		t.Fatalf("generation concurrency = %d, want 3", set.GenerationConcurrency)
+	}
+	if set.EngineOptions().GenerationConcurrency != 3 {
+		t.Fatalf("engine generation concurrency = %d, want 3", set.EngineOptions().GenerationConcurrency)
+	}
+	descriptor, err := json.Marshal(set.CapabilityDescriptor())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(descriptor), "test-key") {
+		t.Fatalf("capability descriptor leaked profile credential: %s", descriptor)
+	}
+	if len(set.CapabilityDescriptor().EffectiveProviderIdentities) != 3 {
+		t.Fatalf("effective identities = %#v", set.CapabilityDescriptor().EffectiveProviderIdentities)
+	}
+	for _, identity := range set.CapabilityDescriptor().EffectiveProviderIdentities {
+		if identity.SettingsFingerprint == "" || identity.ModelID == "" {
+			t.Fatalf("incomplete identity: %#v", identity)
+		}
+	}
+
+	if err := os.WriteFile(profilePath, []byte(strings.Replace(profiles, "engine: qwen3:8b", "engine: wrong-model", 1)), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, err = Load(context.Background(), config)
+	if err == nil || !strings.Contains(err.Error(), "RAG_PROVIDER_PROFILE_MODEL_MISMATCH") {
+		t.Fatalf("Load() mismatch error = %v", err)
+	}
+}
+
 func TestLoadProviderSetRejectsInvalidProviderSpecifications(t *testing.T) {
 	tests := []struct {
 		name, old, new, want string
@@ -90,10 +188,43 @@ func TestLoadProviderSetRedactsEndpointAndMissingCredential(t *testing.T) {
 	})
 }
 
+func TestLoadProviderSetRejectsModelManifestDigestMismatch(t *testing.T) {
+	config := writeProviderFixture(t)
+	modelPath := filepath.Join(filepath.Dir(config), "models", "generator.json")
+	data, err := os.ReadFile(modelPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest ragcontract.ModelManifest
+	if err := json.Unmarshal(data, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	manifest.ModelID = "drifted-model"
+	writeJSONFileWithoutNormalizing(t, modelPath, manifest)
+	_, err = Load(context.Background(), config)
+	if err == nil || !strings.Contains(err.Error(), "RAG_MODEL_MANIFEST_DIGEST") {
+		t.Fatalf("Load() error = %v", err)
+	}
+}
+
 func TestLoadProviderSetRejectsPromptSchemaMissing(t *testing.T) {
 	config := writeProviderFixture(t)
-	replaceConfig(t, filepath.Join(filepath.Dir(config), "prompts", "summary.json"), `"outputSchema":"summary/v1"`, `"outputSchema":"missing/v1"`)
-	_, err := Load(context.Background(), config)
+	manifestPath := filepath.Join(filepath.Dir(config), "prompts", "summary.json")
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest ragcontract.PromptManifest
+	if err := json.Unmarshal(data, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	manifest.OutputSchema = "missing/v1"
+	manifest.Digest, err = promptManifestContentDigest(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeJSONFileWithoutNormalizing(t, manifestPath, manifest)
+	_, err = Load(context.Background(), config)
 	if err == nil || !strings.Contains(err.Error(), "RAG_PROVIDER_PROMPT_SCHEMA_MISSING") {
 		t.Fatalf("Load() error = %v, want prompt schema failure", err)
 	}
@@ -158,10 +289,20 @@ func writeProviderFixture(t *testing.T) string {
 	writeJSONFile(t, filepath.Join(models, "generator.json"), ragcontract.ModelManifest{ManifestBase: ragcontract.ManifestBase{SchemaVersion: ragcontract.ModelManifestSchema, Digest: "sha256:" + repeat("c", 64)}, ProviderAdapterVersion: "geppetto-generation/v1", ModelID: "qwen3:8b", ModelDigest: "sha256:" + repeat("d", 64), Tokenization: "exact", Truncation: "none", Normalization: "none", ImplementationVersion: "test", RequestParameters: json.RawMessage(`{"temperature":0}`)})
 	writeJSONFile(t, filepath.Join(models, "reranker.json"), ragcontract.ModelManifest{ManifestBase: ragcontract.ManifestBase{SchemaVersion: ragcontract.ModelManifestSchema, Digest: "sha256:" + repeat("e", 64)}, ProviderAdapterVersion: "geppetto-reranker/v1", ModelID: "bge", ModelDigest: "sha256:" + repeat("f", 64), Tokenization: "exact", Truncation: "none", Normalization: "none", ImplementationVersion: "test", RequestParameters: json.RawMessage(`{}`)})
 	for _, prompt := range []struct{ id, schema string }{{"summary", "summary/v1"}, {"questions", "questions/v1"}, {"answer", "answer/v1"}} {
-		writeJSONFile(t, filepath.Join(prompts, prompt.id+".json"), ragcontract.PromptManifest{ManifestBase: ragcontract.ManifestBase{SchemaVersion: ragcontract.PromptManifestSchema, Digest: "sha256:" + repeat("1", 64)}, PromptID: prompt.id, TemplateDigest: "sha256:" + repeat("2", 64), InputSchema: "text", OutputSchema: prompt.schema})
-		if err := os.WriteFile(filepath.Join(prompts, prompt.id+".txt"), []byte("Return the requested JSON."), 0o644); err != nil {
+		text := "Return the requested JSON."
+		if err := os.WriteFile(filepath.Join(prompts, prompt.id+".txt"), []byte(text), 0o644); err != nil {
 			t.Fatal(err)
 		}
+		templateDigest, err := ragcontract.Digest(text)
+		if err != nil {
+			t.Fatal(err)
+		}
+		manifest := ragcontract.PromptManifest{ManifestBase: ragcontract.ManifestBase{SchemaVersion: ragcontract.PromptManifestSchema}, PromptID: prompt.id, TemplateDigest: templateDigest, InputSchema: "text", OutputSchema: prompt.schema}
+		manifest.Digest, err = promptManifestContentDigest(manifest)
+		if err != nil {
+			t.Fatal(err)
+		}
+		writeJSONFile(t, filepath.Join(prompts, prompt.id+".json"), manifest)
 		writeJSONFile(t, filepath.Join(schemas, prompt.id+".json"), map[string]any{"$id": prompt.schema, "type": "object"})
 	}
 	config := filepath.Join(root, "providers.yaml")
@@ -218,8 +359,27 @@ func replaceConfig(t *testing.T, path, old, replacement string) {
 	}
 }
 
+func writeJSONFileWithoutNormalizing(t *testing.T, path string, value any) {
+	t.Helper()
+	data, err := json.Marshal(value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func writeJSONFile(t *testing.T, path string, value any) {
 	t.Helper()
+	if model, ok := value.(ragcontract.ModelManifest); ok {
+		digest, err := modelManifestContentDigest(model)
+		if err != nil {
+			t.Fatal(err)
+		}
+		model.Digest = digest
+		value = model
+	}
 	data, err := json.Marshal(value)
 	if err != nil {
 		t.Fatal(err)

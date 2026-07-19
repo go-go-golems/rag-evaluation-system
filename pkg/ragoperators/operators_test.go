@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
+	"sort"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcompiler"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
@@ -232,6 +235,215 @@ func TestRepresentationsDerivationMultiplicityCacheAndFailure(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 }
+
+type corruptCache struct{}
+
+func (corruptCache) Get(string) ([]byte, bool) { return []byte(`{"Text":"legacy-result"}`), true }
+func (corruptCache) Put(string, []byte)        {}
+
+func TestGenerationCacheIdentityIncludesEffectiveSettingsAndRejectsLegacyValues(t *testing.T) {
+	chunk := fixtureChunk("identity", "u", "source")
+	generator := &fakeGenerator{}
+	cache := NewMemoryCache()
+	node := ragcontract.Node{Config: json.RawMessage(`{"name":"summary","model":"m","prompt":"p","outputSchema":"summary/v1"}`)}
+	env := &Environment{Manifests: fixtureResolver(), Schemas: fakeSchemaValidator{}, Generator: generator, Cache: cache, Usage: Usage{Cost: map[string]float64{}}, GenerationSettingsFingerprint: "sha256:settings-a"}
+	operator := representationOperator{"representations.structured-summary"}
+	if _, err := operator.Execute(context.Background(), node, map[string]any{"chunks": []Chunk{chunk}}, env); err != nil {
+		t.Fatal(err)
+	}
+	if generator.calls != 1 {
+		t.Fatalf("calls=%d, want 1", generator.calls)
+	}
+	// Same settings reuse the v2 envelope.
+	if _, err := operator.Execute(context.Background(), node, map[string]any{"chunks": []Chunk{chunk}}, env); err != nil {
+		t.Fatal(err)
+	}
+	if generator.calls != 1 {
+		t.Fatalf("calls after hit=%d, want 1", generator.calls)
+	}
+	// A reasoning/profile change uses a different effective-settings fingerprint.
+	env.GenerationSettingsFingerprint = "sha256:settings-b"
+	if _, err := operator.Execute(context.Background(), node, map[string]any{"chunks": []Chunk{chunk}}, env); err != nil {
+		t.Fatal(err)
+	}
+	if generator.calls != 2 {
+		t.Fatalf("calls after profile change=%d, want 2", generator.calls)
+	}
+	// A legacy raw GenerationResult is not a v2 envelope and must be a miss.
+	legacyGenerator := &fakeGenerator{}
+	legacyEnv := &Environment{Manifests: fixtureResolver(), Schemas: fakeSchemaValidator{}, Generator: legacyGenerator, Cache: corruptCache{}, Usage: Usage{Cost: map[string]float64{}}, GenerationSettingsFingerprint: "sha256:settings-a"}
+	if _, err := operator.Execute(context.Background(), node, map[string]any{"chunks": []Chunk{fixtureChunk("legacy", "u", "legacy")}}, legacyEnv); err != nil {
+		t.Fatal(err)
+	}
+	if legacyGenerator.calls != 1 {
+		t.Fatalf("legacy cache calls=%d, want 1", legacyGenerator.calls)
+	}
+}
+
+func TestRepresentationProgressEventsAreStructuredAndRedacted(t *testing.T) {
+	chunk := fixtureChunk("progress", "u", "source text that must not appear in progress")
+	generator := &fakeGenerator{}
+	var mu sync.Mutex
+	events := []Event{}
+	env := &Environment{
+		Manifests: fixtureResolver(), Schemas: fakeSchemaValidator{}, Generator: generator,
+		Cache: NewMemoryCache(), Usage: Usage{Cost: map[string]float64{}},
+		EmitEvent: func(_ context.Context, event Event) error {
+			mu.Lock()
+			defer mu.Unlock()
+			events = append(events, event)
+			return nil
+		},
+	}
+	node := ragcontract.Node{Config: json.RawMessage(`{"name":"summary","model":"m","prompt":"p","outputSchema":"summary/v1"}`)}
+	if _, err := (representationOperator{"representations.structured-summary"}).Execute(context.Background(), node, map[string]any{"chunks": []Chunk{chunk}}, env); err != nil {
+		t.Fatal(err)
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if len(events) < 2 {
+		t.Fatalf("progress event count=%d, want start and final", len(events))
+	}
+	for _, event := range events {
+		if event.Type != "rag.phase.progress/v1" || strings.Contains(string(event.Payload), chunk.Text) {
+			t.Fatalf("unexpected progress event=%#v", event)
+		}
+		var payload representationProgress
+		if err := json.Unmarshal(event.Payload, &payload); err != nil || payload.Total != 1 {
+			t.Fatalf("payload=%s err=%v", event.Payload, err)
+		}
+	}
+}
+
+type blockingSummaryGenerator struct {
+	mu      sync.Mutex
+	active  int
+	max     int
+	calls   int
+	reached chan struct{}
+	gate    <-chan struct{}
+}
+
+func (g *blockingSummaryGenerator) Generate(ctx context.Context, request GenerationRequest) (GenerationResult, error) {
+	if request.Kind != "representations.structured-summary" {
+		return GenerationResult{}, errors.New("unexpected generation kind")
+	}
+	g.mu.Lock()
+	g.active++
+	g.calls++
+	if g.active > g.max {
+		g.max = g.active
+	}
+	if g.active == 3 {
+		select {
+		case <-g.reached:
+		default:
+			close(g.reached)
+		}
+	}
+	g.mu.Unlock()
+	select {
+	case <-g.gate:
+	case <-ctx.Done():
+		return GenerationResult{}, ctx.Err()
+	}
+	g.mu.Lock()
+	g.active--
+	g.mu.Unlock()
+	return GenerationResult{Text: `{"summary":"bounded"}`, InputTokens: 2, OutputTokens: 1}, nil
+}
+
+func (g *blockingSummaryGenerator) snapshot() (int, int) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.calls, g.max
+}
+
+func TestRepresentationGenerationIsBoundedOrderedAndUsageSafe(t *testing.T) {
+	gate := make(chan struct{})
+	generator := &blockingSummaryGenerator{reached: make(chan struct{}), gate: gate}
+	chunks := make([]Chunk, 8)
+	for i := range chunks {
+		chunks[i] = fixtureChunk("bounded-"+itoa(i), "u", "source-"+itoa(i))
+	}
+	env := &Environment{Manifests: fixtureResolver(), Schemas: fakeSchemaValidator{}, Generator: generator, Cache: NewMemoryCache(), Usage: Usage{Cost: map[string]float64{}}, GenerationConcurrency: 3}
+	node := ragcontract.Node{Config: json.RawMessage(`{"name":"summary","model":"m","prompt":"p","outputSchema":"summary/v1"}`)}
+	resultCh := make(chan struct {
+		out map[string]any
+		err error
+	}, 1)
+	go func() {
+		out, err := (representationOperator{"representations.structured-summary"}).Execute(context.Background(), node, map[string]any{"chunks": chunks}, env)
+		resultCh <- struct {
+			out map[string]any
+			err error
+		}{out, err}
+	}()
+	select {
+	case <-generator.reached:
+	case <-time.After(time.Second):
+		t.Fatal("generation did not reach configured concurrency")
+	}
+	if calls, maximum := generator.snapshot(); calls != 3 || maximum != 3 {
+		t.Fatalf("calls=%d maximum=%d want=3", calls, maximum)
+	}
+	close(gate)
+	result := <-resultCh
+	if result.err != nil {
+		t.Fatal(result.err)
+	}
+	calls, maximum := generator.snapshot()
+	if calls != len(chunks) || maximum != 3 {
+		t.Fatalf("calls=%d maximum=%d", calls, maximum)
+	}
+	reps := result.out["representations"].([]Representation)
+	if len(reps) != len(chunks) || !sort.SliceIsSorted(reps, func(i, j int) bool { return reps[i].Record.ID < reps[j].Record.ID }) {
+		t.Fatalf("representations are not deterministically ordered: %#v", reps)
+	}
+	if env.Usage.InputTokens != int64(2*len(chunks)) || env.Usage.OutputTokens != int64(len(chunks)) {
+		t.Fatalf("usage=%#v", env.Usage)
+	}
+}
+
+type cancelOnFirstSummaryGenerator struct {
+	mu    sync.Mutex
+	calls int
+}
+
+func (g *cancelOnFirstSummaryGenerator) Generate(ctx context.Context, request GenerationRequest) (GenerationResult, error) {
+	g.mu.Lock()
+	g.calls++
+	g.mu.Unlock()
+	if request.ParentID == "cancel-0" {
+		return GenerationResult{}, errors.New("planned failure")
+	}
+	<-ctx.Done()
+	return GenerationResult{}, ctx.Err()
+}
+
+func (g *cancelOnFirstSummaryGenerator) callCount() int {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.calls
+}
+
+func TestRepresentationGenerationCancelsBoundedWorkersAfterFailure(t *testing.T) {
+	generator := &cancelOnFirstSummaryGenerator{}
+	chunks := make([]Chunk, 12)
+	for i := range chunks {
+		chunks[i] = fixtureChunk("cancel-"+itoa(i), "u", "source-"+itoa(i))
+	}
+	env := &Environment{Manifests: fixtureResolver(), Schemas: fakeSchemaValidator{}, Generator: generator, Cache: NewMemoryCache(), Usage: Usage{Cost: map[string]float64{}}, GenerationConcurrency: 3}
+	node := ragcontract.Node{Config: json.RawMessage(`{"name":"summary","model":"m","prompt":"p","outputSchema":"summary/v1"}`)}
+	_, err := (representationOperator{"representations.structured-summary"}).Execute(context.Background(), node, map[string]any{"chunks": chunks}, env)
+	if err == nil || !strings.Contains(err.Error(), "RAG_GENERATION_FAILED: cancel-0") {
+		t.Fatalf("error=%v", err)
+	}
+	if calls := generator.callCount(); calls > 3 {
+		t.Fatalf("calls after cancellation=%d, max workers=3", calls)
+	}
+}
+
 func TestEmbeddingValidation(t *testing.T) {
 	reps := []Representation{fixtureRepresentation("r1", "raw", "c1", "u1", "a"), fixtureRepresentation("r2", "raw", "c2", "u2", "bb")}
 	node := ragcontract.Node{Config: json.RawMessage(`{"model":"m","dimensions":2,"normalize":"l2"}`)}

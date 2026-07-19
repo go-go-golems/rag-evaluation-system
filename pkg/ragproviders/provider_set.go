@@ -27,27 +27,43 @@ import (
 	"github.com/go-go-golems/geppetto/pkg/engineprofiles"
 )
 
+type EffectiveProviderIdentity struct {
+	Role                string `json:"role"`
+	ProfileSlug         string `json:"profileSlug,omitempty"`
+	ProfileSource       string `json:"profileSource,omitempty"`
+	ModelManifestDigest string `json:"modelManifestDigest"`
+	ModelID             string `json:"modelId"`
+	SettingsFingerprint string `json:"settingsFingerprint"`
+	ConcurrencyLimit    int    `json:"concurrencyLimit"`
+}
+
 type CapabilityDescriptor struct {
-	SchemaVersion         string   `json:"schemaVersion"`
-	ProfileID             string   `json:"profileId"`
-	FixtureProviders      bool     `json:"fixtureProviders"`
-	Capabilities          []string `json:"capabilities"`
-	ModelManifestDigests  []string `json:"modelManifestDigests"`
-	PromptManifestDigests []string `json:"promptManifestDigests"`
+	SchemaVersion               string                      `json:"schemaVersion"`
+	ProfileID                   string                      `json:"profileId"`
+	FixtureProviders            bool                        `json:"fixtureProviders"`
+	Capabilities                []string                    `json:"capabilities"`
+	ModelManifestDigests        []string                    `json:"modelManifestDigests"`
+	PromptManifestDigests       []string                    `json:"promptManifestDigests"`
+	EffectiveProviderIdentities []EffectiveProviderIdentity `json:"effectiveProviderIdentities,omitempty"`
 }
 
 type ProviderSet struct {
-	ProfileID string
-	Manifests *FileManifestRegistry
-	Schemas   *FileSchemaRegistry
-	Generator ragoperators.TextGenerator
-	Embedder  ragoperators.Embedder
-	Reranker  ragoperators.Reranker
-	Cache     ragoperators.Cache
+	ProfileID                   string
+	Manifests                   *FileManifestRegistry
+	Schemas                     *FileSchemaRegistry
+	Generator                   ragoperators.TextGenerator
+	Embedder                    ragoperators.Embedder
+	Reranker                    ragoperators.Reranker
+	Cache                       ragoperators.Cache
+	GenerationConcurrency       int
+	QueryCheckpoints            ragengine.QueryCheckpointStore
+	PreparedStore               ragengine.PreparedCorpusStore
+	EffectiveProviderIdentities map[string]EffectiveProviderIdentity
 
-	closers   []io.Closer
-	closeOnce sync.Once
-	closeErr  error
+	profileChains map[string]*engineprofiles.ChainedRegistry
+	closers       []io.Closer
+	closeOnce     sync.Once
+	closeErr      error
 }
 
 func Load(ctx context.Context, path string) (*ProviderSet, error) {
@@ -70,7 +86,17 @@ func Load(ctx context.Context, path string) (*ProviderSet, error) {
 	if err != nil {
 		return nil, fmt.Errorf("RAG_PROVIDER_CACHE: %w", err)
 	}
-	set := &ProviderSet{ProfileID: cfg.ProfileID, Manifests: manifests, Schemas: schemas, Cache: cache, closers: []io.Closer{cache}}
+	set := &ProviderSet{ProfileID: cfg.ProfileID, Manifests: manifests, Schemas: schemas, Cache: cache, EffectiveProviderIdentities: map[string]EffectiveProviderIdentity{}, profileChains: map[string]*engineprofiles.ChainedRegistry{}, closers: []io.Closer{cache}}
+	if cfg.Checkpoints.Kind != "" {
+		set.QueryCheckpoints, err = ragengine.NewFileQueryCheckpointStore(filepath.Join(cfg.Checkpoints.Directory, "queries"))
+		if err != nil {
+			return nil, fmt.Errorf("RAG_PROVIDER_CHECKPOINTS: %w", err)
+		}
+		set.PreparedStore, err = ragengine.NewFilePreparedCorpusStore(filepath.Join(cfg.Checkpoints.Directory, "prepared"))
+		if err != nil {
+			return nil, fmt.Errorf("RAG_PROVIDER_CHECKPOINTS: %w", err)
+		}
+	}
 	if spec, ok := cfg.Providers["embedding-primary"]; ok {
 		model, err := manifests.Model(spec.ModelManifest)
 		if err != nil {
@@ -95,7 +121,11 @@ func Load(ctx context.Context, path string) (*ProviderSet, error) {
 				return nil, err
 			}
 		}
-		set.Embedder, err = geppettoadapter.NewEmbedder(provider, model.ModelID, model.Dimensions)
+		embedder, err := geppettoadapter.NewEmbedder(provider, model.ModelID, model.Dimensions)
+		if err != nil {
+			return nil, err
+		}
+		set.Embedder, err = newLimitedEmbedder(embedder, providerConcurrencyLimit(spec))
 		if err != nil {
 			return nil, err
 		}
@@ -126,7 +156,11 @@ func Load(ctx context.Context, path string) (*ProviderSet, error) {
 				return nil, err
 			}
 		}
-		set.Reranker, err = geppettoadapter.NewReranker(provider)
+		reranker, err := geppettoadapter.NewReranker(provider)
+		if err != nil {
+			return nil, err
+		}
+		set.Reranker, err = newLimitedReranker(reranker, providerConcurrencyLimit(spec))
 		if err != nil {
 			return nil, err
 		}
@@ -140,7 +174,7 @@ func Load(ctx context.Context, path string) (*ProviderSet, error) {
 		}
 		var generatorSettings *settings.InferenceSettings
 		if spec.Profile != "" {
-			generatorSettings, err = newGeneratorSettingsFromProfile(ctx, spec, set)
+			generatorSettings, err = newGeneratorSettingsFromProfile(ctx, spec, model, set)
 			if err != nil {
 				return nil, err
 			}
@@ -157,7 +191,12 @@ func Load(ctx context.Context, path string) (*ProviderSet, error) {
 				return nil, err
 			}
 		}
-		set.Generator, err = geppettoadapter.NewGenerator(generatorSettings, manifests, schemas)
+		generator, err := geppettoadapter.NewGenerator(generatorSettings, manifests, schemas)
+		if err != nil {
+			return nil, err
+		}
+		set.GenerationConcurrency = providerConcurrencyLimit(spec)
+		set.Generator, err = newLimitedGenerator(generator, set.GenerationConcurrency)
 		if err != nil {
 			return nil, err
 		}
@@ -196,6 +235,12 @@ func (p *ProviderSet) CapabilityDescriptor() CapabilityDescriptor {
 			}
 		}
 	}
+	for _, identity := range p.EffectiveProviderIdentities {
+		descriptor.EffectiveProviderIdentities = append(descriptor.EffectiveProviderIdentities, identity)
+	}
+	sort.Slice(descriptor.EffectiveProviderIdentities, func(i, j int) bool {
+		return descriptor.EffectiveProviderIdentities[i].Role < descriptor.EffectiveProviderIdentities[j].Role
+	})
 	sort.Strings(descriptor.Capabilities)
 	sort.Strings(descriptor.ModelManifestDigests)
 	sort.Strings(descriptor.PromptManifestDigests)
@@ -203,7 +248,11 @@ func (p *ProviderSet) CapabilityDescriptor() CapabilityDescriptor {
 }
 
 func (p *ProviderSet) EngineOptions() ragengine.Options {
-	return ragengine.Options{Manifests: p.Manifests, Schemas: p.Schemas, Generator: p.Generator, Embedder: p.Embedder, Reranker: p.Reranker, Cache: p.Cache}
+	generatorFingerprint := ""
+	if p != nil {
+		generatorFingerprint = p.EffectiveProviderIdentities["generator-primary"].SettingsFingerprint
+	}
+	return ragengine.Options{Manifests: p.Manifests, Schemas: p.Schemas, Generator: p.Generator, Embedder: p.Embedder, Reranker: p.Reranker, Cache: p.Cache, GenerationConcurrency: p.GenerationConcurrency, GenerationSettingsFingerprint: generatorFingerprint, GeneratorFingerprint: generatorFingerprint, RerankerFingerprint: p.EffectiveProviderIdentities["reranker-primary"].SettingsFingerprint, QueryCheckpoints: p.QueryCheckpoints, PreparedStore: p.PreparedStore, EmbeddingFingerprint: p.EffectiveProviderIdentities["embedding-primary"].SettingsFingerprint}
 }
 
 // CheckExecution verifies that this host can satisfy every provider-backed
@@ -355,6 +404,12 @@ func newEmbeddingProviderFromProfile(ctx context.Context, spec ProviderSpec, mod
 	if ss.Embeddings == nil || ss.Embeddings.Type == "" {
 		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_NO_EMBEDDINGS")
 	}
+	if err := validateProfileModelIdentity("embedding", model, ss); err != nil {
+		return nil, err
+	}
+	if err := set.recordProfileIdentity("embedding-primary", spec, model, ss); err != nil {
+		return nil, err
+	}
 	return embeddings.NewSettingsFactoryFromInferenceSettings(ss).NewProvider()
 }
 func newRerankProvider(endpoint string, model ragcontract.ModelManifest, spec ProviderSpec) (rankprovider.Provider, error) {
@@ -383,6 +438,12 @@ func newRerankProviderFromProfile(ctx context.Context, spec ProviderSpec, model 
 	if ss.Rerank == nil || ss.Rerank.Type == "" {
 		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_NO_RERANK")
 	}
+	if err := validateProfileModelIdentity("reranker", model, ss); err != nil {
+		return nil, err
+	}
+	if err := set.recordProfileIdentity("reranker-primary", spec, model, ss); err != nil {
+		return nil, err
+	}
 	factory, err := geppettorerank.NewSettingsFactoryFromInferenceSettings(ss)
 	if err != nil {
 		return nil, err
@@ -396,31 +457,10 @@ func newRerankProviderFromProfile(ctx context.Context, spec ProviderSpec, model 
 // resolves the named profile, and merges it onto a base InferenceSettings so
 // that default Client, API, and other infrastructure fields are initialized.
 func resolveProfileSettings(ctx context.Context, spec ProviderSpec, set *ProviderSet) (*settings.InferenceSettings, error) {
-	sources := spec.ProfileRegistries
-	if sources == "" {
-		configDir, err := os.UserConfigDir()
-		if err != nil {
-			return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_CONFIG_DIR: %w", err)
-		}
-		defaultPath := filepath.Join(configDir, "pinocchio", "profiles.yaml")
-		if _, err := os.Stat(defaultPath); err != nil {
-			return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_REGISTRY_NOT_FOUND: %s", defaultPath)
-		}
-		sources = defaultPath
-	}
-	entries, err := engineprofiles.ParseEngineProfileRegistrySourceEntries(sources)
+	chain, err := set.profileRegistry(ctx, spec.ProfileRegistries)
 	if err != nil {
-		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_SOURCE: %w", err)
+		return nil, err
 	}
-	specs, err := engineprofiles.ParseRegistrySourceSpecs(entries)
-	if err != nil {
-		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_SPEC: %w", err)
-	}
-	chain, err := engineprofiles.NewChainedRegistryFromSourceSpecs(ctx, specs)
-	if err != nil {
-		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_CHAIN: %w", err)
-	}
-	set.closers = append(set.closers, chain)
 	resolved, err := chain.ResolveEngineProfile(ctx, engineprofiles.ResolveInput{
 		EngineProfileSlug: engineprofiles.MustEngineProfileSlug(spec.Profile),
 	})
@@ -439,6 +479,41 @@ func resolveProfileSettings(ctx context.Context, spec ProviderSpec, set *Provide
 		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_MERGE: %w", err)
 	}
 	return merged, nil
+}
+
+// profileRegistry returns one shared registry chain per configured source list.
+// Empty source lists deliberately fall back to Pinocchio's standard per-user
+// profile registry so all provider roles resolve the same host configuration.
+func (p *ProviderSet) profileRegistry(ctx context.Context, sources string) (*engineprofiles.ChainedRegistry, error) {
+	if sources == "" {
+		configDir, err := os.UserConfigDir()
+		if err != nil {
+			return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_CONFIG_DIR: %w", err)
+		}
+		defaultPath := filepath.Join(configDir, "pinocchio", "profiles.yaml")
+		if _, err := os.Stat(defaultPath); err != nil {
+			return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_REGISTRY_NOT_FOUND: %s", defaultPath)
+		}
+		sources = defaultPath
+	}
+	if chain := p.profileChains[sources]; chain != nil {
+		return chain, nil
+	}
+	entries, err := engineprofiles.ParseEngineProfileRegistrySourceEntries(sources)
+	if err != nil {
+		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_SOURCE: %w", err)
+	}
+	specs, err := engineprofiles.ParseRegistrySourceSpecs(entries)
+	if err != nil {
+		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_SPEC: %w", err)
+	}
+	chain, err := engineprofiles.NewChainedRegistryFromSourceSpecs(ctx, specs)
+	if err != nil {
+		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_CHAIN: %w", err)
+	}
+	p.profileChains[sources] = chain
+	p.closers = append(p.closers, chain)
+	return chain, nil
 }
 
 func newGeneratorSettings(endpoint string, model ragcontract.ModelManifest, spec ProviderSpec) (*settings.InferenceSettings, error) {
@@ -469,13 +544,19 @@ func newGeneratorSettings(endpoint string, model ragcontract.ModelManifest, spec
 // the same profile stack resolution that Pinocchio and other Geppetto hosts
 // use, so credentials, base URLs, model_info, and cost rates all come from the
 // profile YAML rather than being manually constructed.
-func newGeneratorSettingsFromProfile(ctx context.Context, spec ProviderSpec, set *ProviderSet) (*settings.InferenceSettings, error) {
+func newGeneratorSettingsFromProfile(ctx context.Context, spec ProviderSpec, model ragcontract.ModelManifest, set *ProviderSet) (*settings.InferenceSettings, error) {
 	merged, err := resolveProfileSettings(ctx, spec, set)
 	if err != nil {
 		return nil, err
 	}
 	if merged.Chat == nil {
 		return nil, fmt.Errorf("RAG_PROVIDER_PROFILE_NO_CHAT")
+	}
+	if err := validateProfileModelIdentity("generator", model, merged); err != nil {
+		return nil, err
+	}
+	if err := set.recordProfileIdentity("generator-primary", spec, model, merged); err != nil {
+		return nil, err
 	}
 	merged.Chat.Stream = true
 	// Reasoning models (GLM-5.2, GPT-5, etc.) burn tokens on reasoning before
@@ -487,6 +568,106 @@ func newGeneratorSettingsFromProfile(ctx context.Context, spec ProviderSpec, set
 	}
 	return merged, nil
 }
+func validateProfileModelIdentity(role string, model ragcontract.ModelManifest, settings *settings.InferenceSettings) error {
+	if settings == nil {
+		return fmt.Errorf("RAG_PROVIDER_PROFILE_NO_SETTINGS")
+	}
+	actual := ""
+	switch role {
+	case "generator":
+		if settings.Chat != nil && settings.Chat.Engine != nil {
+			actual = *settings.Chat.Engine
+		}
+	case "embedding":
+		if settings.Embeddings != nil {
+			actual = settings.Embeddings.Engine
+		}
+	case "reranker":
+		if settings.Rerank != nil {
+			actual = settings.Rerank.Engine
+		}
+	default:
+		return fmt.Errorf("RAG_PROVIDER_PROFILE_ROLE")
+	}
+	if actual == "" || actual != model.ModelID {
+		return fmt.Errorf("RAG_PROVIDER_PROFILE_MODEL_MISMATCH")
+	}
+	return nil
+}
+
+// recordProfileIdentity captures only non-secret, inference-affecting profile
+// values. It deliberately excludes API keys, endpoint URLs, OAuth state, and
+// any other credential material from custody artifacts and cache identity.
+func (p *ProviderSet) recordProfileIdentity(role string, spec ProviderSpec, model ragcontract.ModelManifest, ss *settings.InferenceSettings) error {
+	apiType, chatEngine := "", ""
+	var temperature *float64
+	var maxResponseTokens *int
+	if ss.Chat != nil {
+		if ss.Chat.ApiType != nil {
+			apiType = string(*ss.Chat.ApiType)
+		}
+		if ss.Chat.Engine != nil {
+			chatEngine = *ss.Chat.Engine
+		}
+		temperature = ss.Chat.Temperature
+		maxResponseTokens = ss.Chat.MaxResponseTokens
+	}
+	fingerprint, err := ragcontract.Digest(struct {
+		SchemaVersion     string
+		Role              string
+		APIType           string
+		ChatEngine        string
+		EmbeddingType     string
+		EmbeddingEngine   string
+		EmbeddingDims     int
+		RerankType        string
+		RerankEngine      string
+		Inference         any
+		ModelInfo         any
+		Temperature       *float64
+		MaxResponseTokens *int
+	}{
+		SchemaVersion: "rag-effective-provider-settings/v1",
+		Role:          role, APIType: apiType, ChatEngine: chatEngine,
+		Inference: ss.Inference, ModelInfo: ss.ModelInfo,
+		Temperature: temperature, MaxResponseTokens: maxResponseTokens,
+	})
+	if err != nil {
+		return fmt.Errorf("RAG_PROVIDER_PROFILE_FINGERPRINT: %w", err)
+	}
+	if ss.Embeddings != nil {
+		fingerprint, err = ragcontract.Digest(struct {
+			Fingerprint string
+			Type        string
+			Engine      string
+			Dimensions  int
+		}{fingerprint, ss.Embeddings.Type, ss.Embeddings.Engine, ss.Embeddings.Dimensions})
+		if err != nil {
+			return fmt.Errorf("RAG_PROVIDER_PROFILE_FINGERPRINT: %w", err)
+		}
+	}
+	if ss.Rerank != nil {
+		fingerprint, err = ragcontract.Digest(struct {
+			Fingerprint string
+			Type        string
+			Engine      string
+		}{fingerprint, ss.Rerank.Type, ss.Rerank.Engine})
+		if err != nil {
+			return fmt.Errorf("RAG_PROVIDER_PROFILE_FINGERPRINT: %w", err)
+		}
+	}
+	source := "default"
+	if spec.ProfileRegistries != "" {
+		source = "configured"
+	}
+	p.EffectiveProviderIdentities[role] = EffectiveProviderIdentity{
+		Role: role, ProfileSlug: spec.Profile, ProfileSource: source,
+		ModelManifestDigest: model.Digest, ModelID: model.ModelID,
+		SettingsFingerprint: fingerprint, ConcurrencyLimit: providerConcurrencyLimit(spec),
+	}
+	return nil
+}
+
 func stringPtr(value string) *string { return &value }
 func validateEndpoint(raw string, spec ProviderSpec) error {
 	parsed, err := url.Parse(raw)

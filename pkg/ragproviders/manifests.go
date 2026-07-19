@@ -1,6 +1,7 @@
 package ragproviders
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -91,9 +92,6 @@ func loadPrompts(dir string) (map[string]ragcontract.PromptManifest, map[string]
 			if err := ragcontract.DecodeStrict(data, &value); err != nil {
 				return nil, nil, fmt.Errorf("RAG_PROMPT_MANIFEST_DECODE: %w", err)
 			}
-			if err := validatePromptManifest(value); err != nil {
-				return nil, nil, fmt.Errorf("RAG_PROMPT_MANIFEST_INVALID: %w", err)
-			}
 			key := strings.TrimSuffix(entry.Name(), ext)
 			if _, exists := result[key]; exists || value.PromptID == "" {
 				return nil, nil, fmt.Errorf("RAG_PROMPT_MANIFEST_DUPLICATE")
@@ -121,8 +119,12 @@ func loadPrompts(dir string) (map[string]ragcontract.PromptManifest, map[string]
 			continue
 		}
 		seen[manifest.PromptID] = true
-		if _, ok := text[manifest.PromptID]; !ok {
+		promptText, ok := text[manifest.PromptID]
+		if !ok {
 			return nil, nil, fmt.Errorf("RAG_PROMPT_TEXT_MISSING")
+		}
+		if err := validatePromptManifest(manifest, promptText); err != nil {
+			return nil, nil, fmt.Errorf("RAG_PROMPT_MANIFEST_INVALID: %w", err)
 		}
 	}
 	return result, text, nil
@@ -134,16 +136,58 @@ func validateModelManifest(v ragcontract.ModelManifest) error {
 	if v.ModelID == "" || v.ModelDigest == "" || v.ProviderAdapterVersion == "" || v.ImplementationVersion == "" || v.Tokenization == "" || v.Truncation == "" {
 		return fmt.Errorf("required model identity missing")
 	}
+	if !isSHA256Digest(v.ModelDigest) {
+		return fmt.Errorf("RAG_MODEL_MANIFEST_MODEL_DIGEST")
+	}
+	want, err := modelManifestContentDigest(v)
+	if err != nil {
+		return fmt.Errorf("RAG_MODEL_MANIFEST_DIGEST: %w", err)
+	}
+	if v.Digest != want {
+		return fmt.Errorf("RAG_MODEL_MANIFEST_DIGEST")
+	}
 	return nil
 }
-func validatePromptManifest(v ragcontract.PromptManifest) error {
+
+// modelManifestContentDigest binds a declared manifest digest to canonical
+// manifest content without creating a self-referential hash.
+func modelManifestContentDigest(v ragcontract.ModelManifest) (string, error) {
+	v.Digest = ""
+	return ragcontract.Digest(v)
+}
+
+func isSHA256Digest(value string) bool {
+	const prefix = "sha256:"
+	if !strings.HasPrefix(value, prefix) || len(value) != len(prefix)+64 {
+		return false
+	}
+	_, err := hex.DecodeString(strings.TrimPrefix(value, prefix))
+	return err == nil
+}
+func validatePromptManifest(v ragcontract.PromptManifest, promptText string) error {
 	if err := ragcontract.ValidateManifestBase(v.ManifestBase, ragcontract.PromptManifestSchema, false); err != nil {
 		return err
 	}
 	if v.PromptID == "" || v.TemplateDigest == "" || v.OutputSchema == "" {
 		return fmt.Errorf("required prompt identity missing")
 	}
+	if !isSHA256Digest(v.TemplateDigest) {
+		return fmt.Errorf("RAG_PROMPT_MANIFEST_TEMPLATE_DIGEST")
+	}
+	wantTemplate, err := ragcontract.Digest(promptText)
+	if err != nil || v.TemplateDigest != wantTemplate {
+		return fmt.Errorf("RAG_PROMPT_MANIFEST_TEMPLATE_DIGEST")
+	}
+	wantManifest, err := promptManifestContentDigest(v)
+	if err != nil || v.Digest != wantManifest {
+		return fmt.Errorf("RAG_PROMPT_MANIFEST_DIGEST")
+	}
 	return nil
+}
+
+func promptManifestContentDigest(v ragcontract.PromptManifest) (string, error) {
+	v.Digest = ""
+	return ragcontract.Digest(v)
 }
 func (r *FileManifestRegistry) Model(reference string) (ragcontract.ModelManifest, error) {
 	if r == nil {

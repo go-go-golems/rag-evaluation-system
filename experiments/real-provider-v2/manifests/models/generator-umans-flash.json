@@ -1,14 +1,14 @@
 {
 	"schemaVersion": "rag-model-manifest/v1",
-	"digest": "sha256:054e9c4423506a6396b9b1089ec8a72b171e31be74fe6c4f369a5670345b6a94",
+	"digest": "sha256:8dae21e1fdcd225b6a904b16e0c9bd406ceb50956e1401f0302567e63d330808",
 	"parents": [],
 	"providerAdapterVersion": "geppetto-generation/v1",
-	"modelId": "qwen3:8b",
-	"modelDigest": "sha256:e4b5fd7f8af048d3c02e0357274238a9e93da51936665599ccb957aa42bfe173",
+	"modelId": "umans-flash",
+	"modelDigest": "sha256:de4fd2ae4ab9b359e5ce7fee7b7773258f6eb9643cd61a682f54d76b7584a684",
 	"tokenization": "manifest-exact/v1",
 	"truncation": "none",
 	"normalization": "none",
-	"implementationVersion": "ollama/v0.6.6",
+	"implementationVersion": "umans/openai-chat-completions/v1",
 	"requestParameters": {
 		"temperature": 0,
 		"stream": true

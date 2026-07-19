@@ -139,6 +139,38 @@ func TestEnginePreparesStaticPipelineOnceForMultipleQueries(t *testing.T) {
 	}
 }
 
+func TestEngineResumesValidatedQueryCheckpoints(t *testing.T) {
+	execution := rawExecution(t)
+	corpus, dataset := fixtureData()
+	dataset.Queries = append(dataset.Queries, ragoperators.Query{ID: "q2", Text: "fusion"})
+	store, err := NewFileQueryCheckpointStore(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	firstObserver := &collector{}
+	first, err := New(nil).Execute(context.Background(), execution, corpus, dataset, firstObserver, Options{QueryCheckpoints: store, PreparedCorpusDigest: "sha256:prepared", GeneratorFingerprint: "sha256:generator", RerankerFingerprint: "sha256:reranker"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondObserver := &collector{}
+	second, err := New(nil).Execute(context.Background(), execution, corpus, dataset, secondObserver, Options{QueryCheckpoints: store, PreparedCorpusDigest: "sha256:prepared", GeneratorFingerprint: "sha256:generator", RerankerFingerprint: "sha256:reranker"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(first.Traces) != len(second.Traces) || len(first.Metrics) != len(second.Metrics) {
+		t.Fatalf("first=%#v second=%#v", first, second)
+	}
+	resumed := 0
+	for _, event := range secondObserver.events {
+		if event.Type == "rag.query.progress/v1" && strings.Contains(string(event.Payload), `"state":"resumed"`) {
+			resumed++
+		}
+	}
+	if resumed != len(dataset.Queries) {
+		t.Fatalf("resumed=%d want=%d events=%#v", resumed, len(dataset.Queries), secondObserver.events)
+	}
+}
+
 func TestEngineRecordsGeneratedFailureAsPartialEvidence(t *testing.T) {
 	execution := executionWithRepresentation(t, ragmodel.StructuredSummary("summary", ragmodel.StructuredSummaryConfig{Generator: ragmodel.StructuredGenerationConfig{Model: "m", Prompt: "p", OutputSchema: "summary/v1"}}), "summary")
 	modelDigest := "sha256:" + strings.Repeat("a", 64)

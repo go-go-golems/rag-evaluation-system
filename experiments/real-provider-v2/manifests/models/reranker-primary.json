@@ -1,6 +1,6 @@
 {
 	"schemaVersion": "rag-model-manifest/v1",
-	"digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+	"digest": "sha256:e0288fd8795d2bcfcc737cf643d3464e3ab7897508b6e4b6fabaed22dcaf3cce",
 	"parents": [],
 	"providerAdapterVersion": "geppetto-reranker/v1",
 	"modelId": "bge-reranker-v2-m3:q4_k_m",
@@ -9,5 +9,7 @@
 	"truncation": "none",
 	"normalization": "none",
 	"implementationVersion": "llama.cpp/cb295bf59",
-	"requestParameters": { "topN": "all-candidates" }
+	"requestParameters": {
+		"topN": "all-candidates"
+	}
 }

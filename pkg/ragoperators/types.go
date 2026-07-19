@@ -153,16 +153,19 @@ type OutputSchemaValidator interface {
 	Validate(schema string, document json.RawMessage) error
 }
 type Environment struct {
-	Manifests    ManifestResolver
-	Schemas      OutputSchemaValidator
-	Generator    TextGenerator
-	Embedder     Embedder
-	Reranker     Reranker
-	Cache        Cache
-	Trace        *ragcontract.QueryTrace
-	CurrentQuery Query
-	QueryText    string
-	Usage        Usage
+	Manifests                     ManifestResolver
+	Schemas                       OutputSchemaValidator
+	Generator                     TextGenerator
+	Embedder                      Embedder
+	Reranker                      Reranker
+	Cache                         Cache
+	Trace                         *ragcontract.QueryTrace
+	CurrentQuery                  Query
+	QueryText                     string
+	Usage                         Usage
+	GenerationConcurrency         int
+	GenerationSettingsFingerprint string
+	EmitEvent                     func(context.Context, Event) error
 }
 type Cache interface {
 	Get(string) ([]byte, bool)

@@ -7,6 +7,8 @@ import (
 	"math"
 	"sort"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 )
@@ -31,6 +33,93 @@ func (c *MemoryCache) Put(k string, v []byte) {
 
 type representationOperator struct{ kind string }
 
+type representationConfig struct {
+	Name, From, Model, Prompt, OutputSchema string
+	Count                                   int
+	Parameters                              json.RawMessage
+	SeedPolicy                              *ragcontract.SeedPolicy
+}
+
+type GenerationCacheIdentityV2 struct {
+	SchemaVersion                string
+	Operator                     ragcontract.OperatorRef
+	CanonicalOperatorConfig      json.RawMessage
+	ParentDigest                 string
+	ModelManifestDigest          string
+	PromptManifestDigest         string
+	OutputSchemaFingerprint      string
+	EffectiveSettingsFingerprint string
+}
+
+type generationCacheEnvelopeV2 struct {
+	SchemaVersion string                    `json:"schemaVersion"`
+	Identity      GenerationCacheIdentityV2 `json:"identity"`
+	Value         GenerationResult          `json:"value"`
+}
+
+type representationWork struct {
+	chunk         Chunk
+	parentDigest  string
+	parentReprIDs []string
+	request       GenerationRequest
+	cacheIdentity GenerationCacheIdentityV2
+	cacheKey      string
+}
+
+type representationResult struct {
+	reps  []Representation
+	usage GenerationResult
+	err   error
+}
+
+const defaultRepresentationGenerationWorkers = 1
+
+type schemaRawResolver interface {
+	Raw(string) (json.RawMessage, error)
+}
+
+func outputSchemaFingerprint(env *Environment, name string) string {
+	if raw, ok := env.Schemas.(schemaRawResolver); ok {
+		if schema, err := raw.Raw(name); err == nil {
+			if digest, err := ragcontract.Digest(json.RawMessage(schema)); err == nil {
+				return digest
+			}
+		}
+	}
+	// Fixture validators and custom hosts may not expose schema bytes. Their
+	// schema name is still part of the identity, but production file registries
+	// provide the stronger content digest above.
+	digest, _ := ragcontract.Digest(struct{ Name string }{name})
+	return digest
+}
+
+func cacheIdentityEqual(left, right GenerationCacheIdentityV2) bool {
+	leftJSON, leftErr := ragcontract.CanonicalJSON(left)
+	rightJSON, rightErr := ragcontract.CanonicalJSON(right)
+	return leftErr == nil && rightErr == nil && string(leftJSON) == string(rightJSON)
+}
+
+type representationProgress struct {
+	Phase       string `json:"phase"`
+	Completed   int64  `json:"completed"`
+	Total       int64  `json:"total"`
+	CacheHits   int64  `json:"cacheHits"`
+	CacheMisses int64  `json:"cacheMisses"`
+	Active      int64  `json:"active"`
+	Failed      int64  `json:"failed"`
+}
+
+func emitRepresentationProgress(ctx context.Context, env *Environment, progress representationProgress) error {
+	if env == nil || env.EmitEvent == nil {
+		return nil
+	}
+	payload, err := json.Marshal(progress)
+	if err != nil {
+		return err
+	}
+	return env.EmitEvent(ctx, Event{Type: "rag.phase.progress/v1", Payload: payload})
+}
+
 func (o representationOperator) Ref() ragcontract.OperatorRef {
 	return ragcontract.OperatorRef{Kind: o.kind, Version: "v1"}
 }
@@ -39,12 +128,7 @@ func (o representationOperator) Execute(ctx context.Context, node ragcontract.No
 	if !ok {
 		return nil, fmt.Errorf("RAG_REPRESENTATION_INPUT: chunks")
 	}
-	var config struct {
-		Name, From, Model, Prompt, OutputSchema string
-		Count                                   int
-		Parameters                              json.RawMessage
-		SeedPolicy                              *ragcontract.SeedPolicy
-	}
+	var config representationConfig
 	if err := decodeConfig(node.Config, &config); err != nil {
 		return nil, err
 	}
@@ -100,16 +184,9 @@ func (o representationOperator) Execute(ctx context.Context, node ragcontract.No
 	if outputSchema == "" {
 		outputSchema = promptManifest.OutputSchema
 	}
-	// Build per-chunk work items.
-	type workItem struct {
-		chunk          Chunk
-		generationText string
-		parentDigest   string
-		parentReprIDs  []string
-		request        GenerationRequest
-		key            string
-	}
-	items := make([]workItem, 0, len(chunks))
+	// Build per-chunk work items. Provider calls are scheduled through a
+	// bounded worker pool below; work construction itself is deterministic.
+	items := make([]representationWork, 0, len(chunks))
 	for _, chunk := range chunks {
 		generationText := chunk.Text
 		parentDigest := chunk.Record.TextDigest
@@ -128,97 +205,164 @@ func (o representationOperator) Execute(ctx context.Context, node ragcontract.No
 			parentID = parentRepresentationIDs[0]
 		}
 		request := GenerationRequest{Kind: o.kind, Model: modelManifest.ModelID, Prompt: promptManifest.PromptID, OutputSchema: outputSchema, ParentID: parentID, Text: generationText, Count: count}
-		// Cache key includes the model and prompt manifest digests so that
-		// switching the underlying model (e.g. qwen3:8b -> umans-glm-5.2)
-		// does not return stale results from a different model.
-		key, _ := ragcontract.Digest(struct {
-			Ref            ragcontract.OperatorRef
-			Config         json.RawMessage
-			Parent         string
-			ModelManifest  string
-			PromptManifest string
-		}{o.Ref(), node.Config, parentDigest, modelManifest.Digest, promptManifest.Digest})
-		items = append(items, workItem{
-			chunk:          chunk,
-			generationText: generationText,
-			parentDigest:   parentDigest,
-			parentReprIDs:  parentRepresentationIDs,
-			request:        request,
-			key:            key,
+		identity := GenerationCacheIdentityV2{
+			SchemaVersion: "rag-generation-cache-identity/v2",
+			Operator:      o.Ref(), CanonicalOperatorConfig: node.Config,
+			ParentDigest: parentDigest, ModelManifestDigest: modelManifest.Digest,
+			PromptManifestDigest:         promptManifest.Digest,
+			OutputSchemaFingerprint:      outputSchemaFingerprint(env, outputSchema),
+			EffectiveSettingsFingerprint: env.GenerationSettingsFingerprint,
+		}
+		key, _ := ragcontract.Digest(identity)
+		items = append(items, representationWork{
+			chunk:         chunk,
+			parentDigest:  parentDigest,
+			parentReprIDs: parentRepresentationIDs,
+			request:       request,
+			cacheIdentity: identity,
+			cacheKey:      key,
 		})
 	}
-	// Process work items concurrently (max 3 in-flight) to amortize provider
-	// latency. Results are collected in order.
-	type resultItem struct {
-		reps []Representation
-		err  error
+	// Resolve cache hits before starting provider work. This keeps hits cheap and
+	// leaves only genuine misses for the bounded provider worker pool.
+	results := make([]representationResult, len(items))
+	missIndexes := make([]int, 0, len(items))
+	var completed, cacheHits, failures atomic.Int64
+	for i, item := range items {
+		var cached GenerationResult
+		if env.Cache != nil {
+			var envelope generationCacheEnvelopeV2
+			if raw, found := env.Cache.Get(item.cacheKey); found && json.Unmarshal(raw, &envelope) == nil && envelope.SchemaVersion == "rag-generation-cache-envelope/v2" && cacheIdentityEqual(envelope.Identity, item.cacheIdentity) {
+				cached = envelope.Value
+				reps, err := buildRepresentations(o, config, modelManifest, promptManifest, item, cached, "hit", env)
+				if err != nil {
+					return nil, err
+				}
+				results[i] = representationResult{reps: reps, usage: cached}
+				completed.Add(1)
+				cacheHits.Add(1)
+				continue
+			}
+		}
+		missIndexes = append(missIndexes, i)
 	}
-	results := make([]resultItem, len(items))
-	maxConcurrency := 3
-	sem := make(chan struct{}, maxConcurrency)
+
+	workCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	var active atomic.Int64
+	var progressMu sync.Mutex
+	var progressErr error
+	emitProgress := func() {
+		if err := emitRepresentationProgress(ctx, env, representationProgress{
+			Phase: o.kind, Completed: completed.Load(), Total: int64(len(items)),
+			CacheHits: cacheHits.Load(), CacheMisses: int64(len(missIndexes)),
+			Active: active.Load(), Failed: failures.Load(),
+		}); err != nil {
+			progressMu.Lock()
+			if progressErr == nil {
+				progressErr = err
+			}
+			progressMu.Unlock()
+		}
+	}
+	progressDone := make(chan struct{})
+	var progressWG sync.WaitGroup
+	if env.EmitEvent != nil {
+		emitProgress()
+		progressWG.Add(1)
+		go func() {
+			defer progressWG.Done()
+			ticker := time.NewTicker(5 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					emitProgress()
+				case <-progressDone:
+					return
+				}
+			}
+		}()
+	}
+	jobs := make(chan int)
 	var wg sync.WaitGroup
 	var firstErr error
 	var errOnce sync.Once
-	for i, item := range items {
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
-		// Check cache first (no concurrency needed for cache reads).
-		var cached GenerationResult
-		cacheOutcome := "miss"
-		if env.Cache != nil {
-			if raw, found := env.Cache.Get(item.key); found {
-				if json.Unmarshal(raw, &cached) == nil {
-					cacheOutcome = "hit"
-				}
-			}
-		}
-		if cacheOutcome == "hit" {
-			reps, err := buildRepresentations(o, config, modelManifest, promptManifest, item, cached, cacheOutcome, env)
-			if err != nil {
-				return nil, err
-			}
-			results[i] = resultItem{reps: reps}
-			addGenerationUsage(env, config.Model, cached)
-			continue
-		}
-		// Cache miss: generate concurrently.
-		wg.Add(1)
-		go func(idx int, w workItem) {
-			defer wg.Done()
-			sem <- struct{}{}
-			defer func() { <-sem }()
-			if err := ctx.Err(); err != nil {
-				errOnce.Do(func() { firstErr = err })
-				return
-			}
-			value, err := env.Generator.Generate(ctx, w.request)
-			if err != nil {
-				errOnce.Do(func() { firstErr = fmt.Errorf("RAG_GENERATION_FAILED: %s: %w", w.chunk.Record.ID, err) })
-				return
-			}
-			if env.Cache != nil {
-				raw, _ := json.Marshal(value)
-				env.Cache.Put(w.key, raw)
-			}
-			reps, err := buildRepresentations(o, config, modelManifest, promptManifest, w, value, "miss", env)
-			if err != nil {
-				errOnce.Do(func() { firstErr = err })
-				return
-			}
-			results[idx] = resultItem{reps: reps}
-			addGenerationUsage(env, config.Model, value)
-		}(i, item)
+	workerCount := env.GenerationConcurrency
+	if workerCount <= 0 {
+		workerCount = defaultRepresentationGenerationWorkers
 	}
+	if workerCount > len(missIndexes) {
+		workerCount = len(missIndexes)
+	}
+	for worker := 0; worker < workerCount; worker++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for index := range jobs {
+				if workCtx.Err() != nil {
+					return
+				}
+				item := items[index]
+				active.Add(1)
+				value, err := env.Generator.Generate(workCtx, item.request)
+				active.Add(-1)
+				if err != nil {
+					failures.Add(1)
+					errOnce.Do(func() {
+						firstErr = fmt.Errorf("RAG_GENERATION_FAILED: %s: %w", item.chunk.Record.ID, err)
+						cancel()
+					})
+					return
+				}
+				if env.Cache != nil {
+					raw, _ := json.Marshal(generationCacheEnvelopeV2{SchemaVersion: "rag-generation-cache-envelope/v2", Identity: item.cacheIdentity, Value: value})
+					env.Cache.Put(item.cacheKey, raw)
+				}
+				reps, err := buildRepresentations(o, config, modelManifest, promptManifest, item, value, "miss", env)
+				if err != nil {
+					failures.Add(1)
+					errOnce.Do(func() {
+						firstErr = err
+						cancel()
+					})
+					return
+				}
+				results[index] = representationResult{reps: reps, usage: value}
+				completed.Add(1)
+			}
+		}()
+	}
+schedule:
+	for _, index := range missIndexes {
+		select {
+		case jobs <- index:
+		case <-workCtx.Done():
+			break schedule
+		}
+	}
+	close(jobs)
 	wg.Wait()
+	if env.EmitEvent != nil {
+		close(progressDone)
+		progressWG.Wait()
+		emitProgress()
+	}
+	progressMu.Lock()
+	err := progressErr
+	progressMu.Unlock()
+	if err != nil {
+		return nil, err
+	}
 	if firstErr != nil {
 		return nil, firstErr
 	}
-	for _, r := range results {
-		if r.err != nil {
-			return nil, r.err
+	for _, result := range results {
+		if result.err != nil {
+			return nil, result.err
 		}
-		out = append(out, r.reps...)
+		addGenerationUsage(env, config.Model, result.usage)
+		out = append(out, result.reps...)
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Record.ID < out[j].Record.ID })
 	parents := []ragcontract.ParentDigest{}
@@ -244,19 +388,7 @@ func (o representationOperator) Execute(ctx context.Context, node ragcontract.No
 // count validation for synthetic questions. This is the per-chunk logic that
 // was previously inline in the sequential loop; it is now called from both the
 // cache-hit path and the concurrent generation goroutines.
-func buildRepresentations(o representationOperator, config struct {
-	Name, From, Model, Prompt, OutputSchema string
-	Count                                   int
-	Parameters                              json.RawMessage
-	SeedPolicy                              *ragcontract.SeedPolicy
-}, modelManifest ragcontract.ModelManifest, promptManifest ragcontract.PromptManifest, w struct {
-	chunk          Chunk
-	generationText string
-	parentDigest   string
-	parentReprIDs  []string
-	request        GenerationRequest
-	key            string
-}, result GenerationResult, cacheOutcome string, env *Environment) ([]Representation, error) {
+func buildRepresentations(o representationOperator, config representationConfig, modelManifest ragcontract.ModelManifest, promptManifest ragcontract.PromptManifest, w representationWork, result GenerationResult, cacheOutcome string, env *Environment) ([]Representation, error) {
 	if o.kind == "representations.structured-summary" {
 		if result.Text == "" || !json.Valid([]byte(result.Text)) {
 			return nil, fmt.Errorf("RAG_STRUCTURED_OUTPUT_INVALID: %s", w.chunk.Record.ID)

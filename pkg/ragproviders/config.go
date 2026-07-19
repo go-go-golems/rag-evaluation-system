@@ -18,6 +18,7 @@ type HostConfig struct {
 	Manifests     ManifestPaths           `yaml:"manifests"`
 	Schemas       SchemaPaths             `yaml:"schemas"`
 	Cache         CacheConfig             `yaml:"cache"`
+	Checkpoints   CheckpointConfig        `yaml:"checkpoints,omitempty"`
 	Providers     map[string]ProviderSpec `yaml:"providers"`
 }
 type ManifestPaths struct {
@@ -32,13 +33,22 @@ type CacheConfig struct {
 	Directory     string `yaml:"directory"`
 	MaxEntryBytes int64  `yaml:"maxEntryBytes"`
 }
+type CheckpointConfig struct {
+	Kind      string `yaml:"kind,omitempty"`
+	Directory string `yaml:"directory,omitempty"`
+}
+type ConcurrencyConfig struct {
+	MaxInFlight int `yaml:"maxInFlight,omitempty"`
+}
+
 type ProviderSpec struct {
-	Kind               string `yaml:"kind"`
-	ModelManifest      string `yaml:"modelManifest"`
-	EndpointRef        string `yaml:"endpointRef,omitempty"`
-	CredentialRef      string `yaml:"credentialRef,omitempty"`
-	AllowHTTP          bool   `yaml:"allowHttp,omitempty"`
-	AllowLocalNetworks bool   `yaml:"allowLocalNetworks,omitempty"`
+	Kind               string            `yaml:"kind"`
+	ModelManifest      string            `yaml:"modelManifest"`
+	EndpointRef        string            `yaml:"endpointRef,omitempty"`
+	CredentialRef      string            `yaml:"credentialRef,omitempty"`
+	AllowHTTP          bool              `yaml:"allowHttp,omitempty"`
+	AllowLocalNetworks bool              `yaml:"allowLocalNetworks,omitempty"`
+	Concurrency        ConcurrencyConfig `yaml:"concurrency,omitempty"`
 	// Profile, when set, resolves InferenceSettings from a Geppetto engine
 	// profile registry (e.g. ~/.config/pinocchio/profiles.yaml) instead of
 	// manually constructing endpoint/credential settings. The value is a
@@ -94,7 +104,7 @@ func loadConfig(path string) (HostConfig, string, error) {
 		}
 		return resolved, nil
 	}
-	for _, target := range []*string{&cfg.Manifests.ModelsDir, &cfg.Manifests.PromptsDir, &cfg.Schemas.Directory, &cfg.Cache.Directory} {
+	for _, target := range []*string{&cfg.Manifests.ModelsDir, &cfg.Manifests.PromptsDir, &cfg.Schemas.Directory, &cfg.Cache.Directory, &cfg.Checkpoints.Directory} {
 		resolved, err := resolve(*target)
 		if err != nil {
 			return HostConfig{}, "", err
@@ -110,8 +120,11 @@ func loadConfig(path string) (HostConfig, string, error) {
 	if cfg.Cache.Kind != "filesystem-content-addressed/v1" || cfg.Cache.Directory == "" {
 		return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_CACHE")
 	}
+	if cfg.Checkpoints.Kind != "" && (cfg.Checkpoints.Kind != "filesystem-query-checkpoints/v1" || cfg.Checkpoints.Directory == "") {
+		return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_CHECKPOINTS")
+	}
 	for name, spec := range cfg.Providers {
-		if strings.TrimSpace(name) == "" || strings.TrimSpace(spec.Kind) == "" || strings.TrimSpace(spec.ModelManifest) == "" {
+		if strings.TrimSpace(name) == "" || strings.TrimSpace(spec.Kind) == "" || strings.TrimSpace(spec.ModelManifest) == "" || spec.Concurrency.MaxInFlight < 0 {
 			return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_PROVIDER_INVALID")
 		}
 		cfg.Providers[name] = spec

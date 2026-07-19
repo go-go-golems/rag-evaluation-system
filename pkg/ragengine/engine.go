@@ -27,13 +27,21 @@ func (NopObserver) Metric(context.Context, ragoperators.Metric) error     { retu
 func (NopObserver) Artifact(context.Context, ragoperators.Artifact) error { return nil }
 
 type Options struct {
-	Manifests ragoperators.ManifestResolver
-	Schemas   ragoperators.OutputSchemaValidator
-	Generator ragoperators.TextGenerator
-	Embedder  ragoperators.Embedder
-	Reranker  ragoperators.Reranker
-	Cache     ragoperators.Cache
-	Prepared  *Prepared
+	Manifests                     ragoperators.ManifestResolver
+	Schemas                       ragoperators.OutputSchemaValidator
+	Generator                     ragoperators.TextGenerator
+	Embedder                      ragoperators.Embedder
+	Reranker                      ragoperators.Reranker
+	Cache                         ragoperators.Cache
+	GenerationConcurrency         int
+	GenerationSettingsFingerprint string
+	GeneratorFingerprint          string
+	RerankerFingerprint           string
+	PreparedCorpusDigest          string
+	QueryCheckpoints              QueryCheckpointStore
+	PreparedStore                 PreparedCorpusStore
+	EmbeddingFingerprint          string
+	Prepared                      *Prepared
 }
 type Result struct {
 	Traces    []ragcontract.QueryTrace   `json:"traces"`
@@ -106,14 +114,67 @@ func (e *Engine) Execute(ctx context.Context, execution ragcontract.PipelineExec
 	if ownsPrepared {
 		defer func() { closeIndexes(prepared) }()
 	}
+	executionDigest := mustDigest(execution)
+	evaluationPolicyDigest := mustDigest(struct {
+		Measures        []ragcontract.Measure
+		RelevanceTarget string
+		DatasetSplit    string
+	}{execution.Measures, execution.Dataset.RelevanceTarget, execution.Dataset.Split})
 	for queryIndex, query := range dataset.Queries {
 		if err := ctx.Err(); err != nil {
 			return result, err
+		}
+		queryDigest, err := ragcontract.Digest(query.Text)
+		if err != nil {
+			return result, err
+		}
+		checkpointIdentity := QueryCheckpointIdentity{
+			SchemaVersion: queryCheckpointSchemaVersion, ExecutionDigest: executionDigest,
+			QueryID: query.ID, QueryTextDigest: queryDigest,
+			PreparedCorpusDigest:   options.PreparedCorpusDigest,
+			GeneratorFingerprint:   options.GeneratorFingerprint,
+			RerankerFingerprint:    options.RerankerFingerprint,
+			EvaluationPolicyDigest: evaluationPolicyDigest,
+		}
+		if options.QueryCheckpoints != nil {
+			checkpoint, found, err := options.QueryCheckpoints.Get(ctx, checkpointIdentity)
+			if err != nil {
+				return result, fmt.Errorf("RAG_QUERY_CHECKPOINT_GET: %w", err)
+			}
+			if found {
+				result.Traces = append(result.Traces, checkpoint.Trace)
+				result.Metrics = append(result.Metrics, checkpoint.Metrics...)
+				result.Artifacts = append(result.Artifacts, checkpoint.Artifacts...)
+				if checkpoint.Answer != nil {
+					result.Answers = append(result.Answers, *checkpoint.Answer)
+				}
+				if err := observer.Event(ctx, event("rag.query.progress/v1", map[string]any{"queryId": query.ID, "queryIndex": queryIndex + 1, "queryCount": len(dataset.Queries), "state": "resumed", "resumed": true})); err != nil {
+					return result, err
+				}
+				if err := observer.Trace(ctx, checkpoint.Trace); err != nil {
+					return result, err
+				}
+				for _, metric := range checkpoint.Metrics {
+					if err := observer.Metric(ctx, metric); err != nil {
+						return result, err
+					}
+				}
+				for _, artifact := range checkpoint.Artifacts {
+					if err := observer.Artifact(ctx, artifact); err != nil {
+						return result, err
+					}
+				}
+				continue
+			}
 		}
 		skip := map[string]bool{}
 		if queryIndex > 0 || options.Prepared != nil {
 			skip = staticNodes
 		}
+		if err := observer.Event(ctx, event("rag.query.progress/v1", map[string]any{"queryId": query.ID, "queryIndex": queryIndex + 1, "queryCount": len(dataset.Queries), "state": "started"})); err != nil {
+			return result, err
+		}
+		queryStarted := time.Now()
 		trace, metrics, artifacts, values, err := e.executeQuery(ctx, execution, corpus, query, options, observer, prepared, skip)
 		if queryIndex == 0 && options.Prepared == nil {
 			prepared = selectPrepared(values, staticNodes)
@@ -132,7 +193,21 @@ func (e *Engine) Execute(ctx context.Context, execution ragcontract.PipelineExec
 			_ = observer.Event(context.WithoutCancel(ctx), event("rag.query.failed", map[string]any{"queryId": query.ID, "error": err.Error()}))
 			return result, err
 		}
+		var answerCheckpoint *ragoperators.Answer
+		if answer, ok := answerFromValues(values); ok {
+			answerCopy := answer
+			answerCheckpoint = &answerCopy
+		}
+		if options.QueryCheckpoints != nil {
+			checkpoint := QueryCheckpoint{SchemaVersion: queryCheckpointSchemaVersion, Identity: checkpointIdentity, Trace: trace, Metrics: metrics, Artifacts: artifacts, Answer: answerCheckpoint}
+			if err := options.QueryCheckpoints.Put(ctx, checkpoint); err != nil {
+				return result, fmt.Errorf("RAG_QUERY_CHECKPOINT_PUT: %w", err)
+			}
+		}
 		result.Traces = append(result.Traces, trace)
+		if err := observer.Event(ctx, event("rag.query.progress/v1", map[string]any{"queryId": query.ID, "queryIndex": queryIndex + 1, "queryCount": len(dataset.Queries), "state": "completed", "elapsedMilliseconds": time.Since(queryStarted).Milliseconds()})); err != nil {
+			return result, err
+		}
 		if err := observer.Trace(ctx, trace); err != nil {
 			return result, err
 		}
@@ -153,7 +228,7 @@ func (e *Engine) Execute(ctx context.Context, execution ragcontract.PipelineExec
 func (e *Engine) executeQuery(ctx context.Context, execution ragcontract.PipelineExecution, corpus ragoperators.Corpus, query ragoperators.Query, options Options, observer Observer, prepared map[string]any, skip map[string]bool) (ragcontract.QueryTrace, []ragoperators.Metric, []ragoperators.Artifact, map[string]any, error) {
 	digest, _ := ragcontract.Digest(query.Text)
 	trace := ragcontract.QueryTrace{SchemaVersion: ragcontract.TraceSchemaVersion, Query: ragcontract.QueryInputTrace{ID: query.ID, TextDigest: digest, DatasetSplit: execution.Dataset.Split}, Operators: []ragcontract.OperatorTrace{}, Channels: []ragcontract.ChannelTrace{}, Collapses: []ragcontract.CollapseTrace{}, Results: []ragcontract.ResultTrace{}, Timing: ragcontract.TimingTrace{ByOperator: map[string]int64{}}, Usage: ragcontract.UsageTrace{}, Failures: []ragcontract.FailureTrace{}}
-	env := &ragoperators.Environment{Manifests: options.Manifests, Schemas: options.Schemas, Generator: options.Generator, Embedder: options.Embedder, Reranker: options.Reranker, Cache: options.Cache, Trace: &trace, CurrentQuery: query, QueryText: query.Text, Usage: ragoperators.Usage{Cost: map[string]float64{}}}
+	env := &ragoperators.Environment{Manifests: options.Manifests, Schemas: options.Schemas, Generator: options.Generator, Embedder: options.Embedder, Reranker: options.Reranker, Cache: options.Cache, Trace: &trace, CurrentQuery: query, QueryText: query.Text, Usage: ragoperators.Usage{Cost: map[string]float64{}}, GenerationConcurrency: options.GenerationConcurrency, GenerationSettingsFingerprint: options.GenerationSettingsFingerprint, EmitEvent: observer.Event}
 	values := map[string]any{"corpus/out": corpus, "query/out": query}
 	for key, value := range prepared {
 		values[key] = value

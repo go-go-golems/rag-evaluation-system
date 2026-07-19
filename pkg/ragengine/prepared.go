@@ -50,7 +50,7 @@ func (e *Engine) Prepare(ctx context.Context, pipeline ragcontract.PipelineIR, c
 	static := staticNodeIDs(pipeline)
 	values := map[string]any{"corpus/out": corpus}
 	trace := &ragcontract.QueryTrace{SchemaVersion: ragcontract.TraceSchemaVersion}
-	env := &ragoperators.Environment{Manifests: options.Manifests, Schemas: options.Schemas, Generator: options.Generator, Embedder: options.Embedder, Reranker: options.Reranker, Cache: options.Cache, Trace: trace, Usage: ragoperators.Usage{Cost: map[string]float64{}}}
+	env := &ragoperators.Environment{Manifests: options.Manifests, Schemas: options.Schemas, Generator: options.Generator, Embedder: options.Embedder, Reranker: options.Reranker, Cache: options.Cache, Trace: trace, Usage: ragoperators.Usage{Cost: map[string]float64{}}, GenerationConcurrency: options.GenerationConcurrency, GenerationSettingsFingerprint: options.GenerationSettingsFingerprint}
 	failed := true
 	defer func() {
 		if failed {
