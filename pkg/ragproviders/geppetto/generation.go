@@ -87,6 +87,10 @@ func (g *Generator) Generate(ctx context.Context, request ragoperators.Generatio
 		if inference.StopReason != "" {
 			result.FinishReason = inference.StopReason
 		}
+		if inference.Cost != nil {
+			cost := *inference.Cost
+			result.Cost = &cost
+		}
 	}
 	switch request.Kind {
 	case "representations.synthetic-questions":
