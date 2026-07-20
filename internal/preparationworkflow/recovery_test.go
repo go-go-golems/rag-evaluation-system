@@ -14,6 +14,16 @@ import (
 	scraperworkflow "github.com/go-go-golems/scraper/pkg/workflow"
 )
 
+type fixtureEmbedder struct{}
+
+func (fixtureEmbedder) Embed(_ context.Context, _ string, texts []string) ([][]float64, ragoperators.Usage, error) {
+	vectors := make([][]float64, len(texts))
+	for i := range texts {
+		vectors[i] = []float64{3, 4}
+	}
+	return vectors, ragoperators.Usage{EmbeddingTokens: int64(len(texts))}, nil
+}
+
 type batchGenerator struct {
 	mu       sync.Mutex
 	failOnce map[string]bool
@@ -111,6 +121,39 @@ func TestFailedBatchDoesNotStopSiblingAndRetryFinalizesAfterRestart(t *testing.T
 	}
 	if generator.calls["chunk:c"] != 1 {
 		t.Fatalf("successful sibling was recomputed: calls=%#v", generator.calls)
+	}
+}
+
+func TestEmbeddingStepsFollowCombinedSteps(t *testing.T) {
+	ctx := context.Background()
+	runtime, err := scraperworkflow.NewRuntime(ctx, scraperworkflow.Config{Store: scraperworkflow.SQLiteStore(filepath.Join(t.TempDir(), "workflow.sqlite")), MaxWorkers: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer runtime.Close()
+	generator := &batchGenerator{calls: map[string]int{}}
+	if err := Register(runtime, func(context.Context, Identity) (*ragoperators.Environment, error) {
+		return &ragoperators.Environment{Manifests: testResolver(), Generator: generator, Embedder: fixtureEmbedder{}}, nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	input := testInput(t)
+	input.Embedding = &EmbeddingSpec{RawRepresentationName: "raw", Node: ragcontract.Node{Config: json.RawMessage(`{"model":"model","dimensions":2,"normalize":"l2","batchSize":16}`)}}
+	handle, err := runtime.EnsureRun(ctx, PackageName, input, scraperworkflow.WithRunID("embedding-test"), scraperworkflow.WithRunIdentity(input.Identity))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for range 6 {
+		if _, err := runtime.RunOnce(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	snapshot, err := runtime.Snapshot(ctx, handle.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if snapshot.Stats.Succeeded != 5 || snapshot.Stats.Total != 5 {
+		t.Fatalf("snapshot=%#v", snapshot.Stats)
 	}
 }
 

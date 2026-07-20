@@ -420,6 +420,24 @@ func buildRepresentations(o representationOperator, config representationConfig,
 	return reps, nil
 }
 
+// RawRepresentations deterministically materializes source representations for
+// chunks. It is shared by the in-memory pipeline and durable preparation.
+func RawRepresentations(name string, chunks []Chunk) ([]Representation, error) {
+	if name == "" {
+		return nil, fmt.Errorf("RAG_RAW_REPRESENTATION_NAME")
+	}
+	ordered := append([]Chunk(nil), chunks...)
+	sort.Slice(ordered, func(i, j int) bool { return ordered[i].Record.ID < ordered[j].Record.ID })
+	out := make([]Representation, 0, len(ordered))
+	for _, chunk := range ordered {
+		if chunk.Record.ID == "" || chunk.Text == "" {
+			return nil, fmt.Errorf("RAG_RAW_REPRESENTATION_CHUNK")
+		}
+		out = append(out, newRepresentation(name, "raw", chunk, chunk.Text, "source", 0, nil))
+	}
+	return out, nil
+}
+
 func representationKind(operator string) string {
 	switch operator {
 	case "representations.structured-summary":
