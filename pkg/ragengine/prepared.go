@@ -29,14 +29,8 @@ func (p *Prepared) snapshot() (map[string]any, bool) {
 // already-validated static pipeline values. It intentionally rebuilds live indexes
 // when the value is later opened from a PreparedCorpusStore.
 func NewPreparedFromStaticValues(pipeline ragcontract.PipelineIR, values map[string]any) (*Prepared, error) {
-	normalized, err := ragcompiler.Normalize(pipeline, nil)
-	if err != nil {
-		return nil, fmt.Errorf("RAG_ENGINE_PIPELINE: %w", err)
-	}
-	got, _ := ragcontract.CanonicalJSON(pipeline)
-	want, _ := ragcontract.CanonicalJSON(normalized)
-	if string(got) != string(want) {
-		return nil, fmt.Errorf("RAG_ENGINE_PIPELINE_NONCANONICAL")
+	if err := validateCanonicalPipeline(pipeline); err != nil {
+		return nil, err
 	}
 	if values == nil {
 		return nil, fmt.Errorf("RAG_PREPARED_VALUES_NIL")
@@ -62,72 +56,115 @@ func (p *Prepared) Close() error {
 
 // Prepare executes only nodes that do not transitively depend on the query input.
 func (e *Engine) Prepare(ctx context.Context, pipeline ragcontract.PipelineIR, corpus ragoperators.Corpus, options Options) (*Prepared, error) {
-	normalized, err := ragcompiler.Normalize(pipeline, nil)
+	values, _, err := e.executeStatic(ctx, pipeline, corpus, options, "")
 	if err != nil {
-		return nil, fmt.Errorf("RAG_ENGINE_PIPELINE: %w", err)
+		closeIndexes(values)
+		return nil, err
 	}
-	got, _ := ragcontract.CanonicalJSON(pipeline)
-	want, _ := ragcontract.CanonicalJSON(normalized)
-	if string(got) != string(want) {
-		return nil, fmt.Errorf("RAG_ENGINE_PIPELINE_NONCANONICAL")
+	prepared, err := NewPreparedFromStaticValues(pipeline, values)
+	if err != nil {
+		closeIndexes(values)
+		return nil, err
+	}
+	return prepared, nil
+}
+
+// StaticInputs materializes the static predecessors of targetNodeID but never
+// executes that target. It is used by durable preparation planners to obtain
+// canonical chunks before scheduling provider-backed work.
+func (e *Engine) StaticInputs(ctx context.Context, pipeline ragcontract.PipelineIR, corpus ragoperators.Corpus, options Options, targetNodeID string) (map[string]any, error) {
+	if targetNodeID == "" {
+		return nil, fmt.Errorf("RAG_STATIC_INPUT_TARGET")
+	}
+	values, inputs, err := e.executeStatic(ctx, pipeline, corpus, options, targetNodeID)
+	closeIndexes(values)
+	return inputs, err
+}
+
+func (e *Engine) executeStatic(ctx context.Context, pipeline ragcontract.PipelineIR, corpus ragoperators.Corpus, options Options, stopBefore string) (map[string]any, map[string]any, error) {
+	if err := validateCanonicalPipeline(pipeline); err != nil {
+		return nil, nil, err
 	}
 	static := staticNodeIDs(pipeline)
 	values := map[string]any{"corpus/out": corpus}
 	trace := &ragcontract.QueryTrace{SchemaVersion: ragcontract.TraceSchemaVersion}
 	env := &ragoperators.Environment{Manifests: options.Manifests, Schemas: options.Schemas, Generator: options.Generator, Embedder: options.Embedder, Reranker: options.Reranker, Cache: options.Cache, Trace: trace, Usage: ragoperators.Usage{Cost: map[string]float64{}}, GenerationConcurrency: options.GenerationConcurrency, GenerationSettingsFingerprint: options.GenerationSettingsFingerprint, EmitEvent: options.PreparationEvent}
-	failed := true
-	defer func() {
-		if failed {
-			closeIndexes(values)
-		}
-	}()
 	for _, node := range pipeline.Nodes {
 		if !static[node.ID] {
 			continue
 		}
+		inputs, err := staticNodeInputs(values, node)
+		if err != nil {
+			return values, nil, err
+		}
+		if node.ID == stopBefore {
+			return values, inputs, nil
+		}
 		if err := ctx.Err(); err != nil {
-			return nil, err
+			return values, nil, err
 		}
 		op, ok := e.Registry.Lookup(node.Operator)
 		if !ok {
-			return nil, fmt.Errorf("RAG_OPERATOR_UNAVAILABLE: %s", node.Operator.ID())
-		}
-		inputs := map[string]any{}
-		for _, binding := range node.Inputs {
-			value, exists := values[binding.From.NodeID+"/"+binding.From.Port]
-			if !exists {
-				return nil, fmt.Errorf("RAG_RUNTIME_INPUT: %s.%s", binding.From.NodeID, binding.From.Port)
-			}
-			inputs[binding.Port] = value
+			return values, nil, fmt.Errorf("RAG_OPERATOR_UNAVAILABLE: %s", node.Operator.ID())
 		}
 		outputs, err := op.Execute(ctx, node, inputs, env)
 		if err != nil {
-			return nil, fmt.Errorf("operator %s: %w", node.Operator.ID(), err)
+			return values, nil, fmt.Errorf("operator %s: %w", node.Operator.ID(), err)
 		}
-		definition, ok := e.Definitions.Definition(node.Operator)
-		if !ok {
-			return nil, fmt.Errorf("RAG_RUNTIME_DEFINITION: %s", node.Operator.ID())
-		}
-		allowed := map[string]bool{}
-		for _, output := range definition.Outputs {
-			allowed[output.Name] = true
-		}
-		for port, value := range outputs {
-			if port == "manifest" {
-				continue
-			}
-			if port == "artifact" {
-				continue
-			}
-			if !allowed[port] {
-				return nil, fmt.Errorf("RAG_RUNTIME_OUTPUT_PORT: %s.%s", node.ID, port)
-			}
-			values[node.ID+"/"+port] = value
+		if err := storeStaticOutputs(values, e, node, outputs); err != nil {
+			return values, nil, err
 		}
 	}
-	prepared := &Prepared{pipelineDigest: mustDigest(pipeline), values: selectPrepared(values, static)}
-	failed = false
-	return prepared, nil
+	if stopBefore != "" {
+		return values, nil, fmt.Errorf("RAG_STATIC_INPUT_TARGET: %s", stopBefore)
+	}
+	return values, nil, nil
+}
+
+func staticNodeInputs(values map[string]any, node ragcontract.Node) (map[string]any, error) {
+	inputs := map[string]any{}
+	for _, binding := range node.Inputs {
+		value, exists := values[binding.From.NodeID+"/"+binding.From.Port]
+		if !exists {
+			return nil, fmt.Errorf("RAG_RUNTIME_INPUT: %s.%s", binding.From.NodeID, binding.From.Port)
+		}
+		inputs[binding.Port] = value
+	}
+	return inputs, nil
+}
+
+func storeStaticOutputs(values map[string]any, engine *Engine, node ragcontract.Node, outputs map[string]any) error {
+	definition, ok := engine.Definitions.Definition(node.Operator)
+	if !ok {
+		return fmt.Errorf("RAG_RUNTIME_DEFINITION: %s", node.Operator.ID())
+	}
+	allowed := map[string]bool{}
+	for _, output := range definition.Outputs {
+		allowed[output.Name] = true
+	}
+	for port, value := range outputs {
+		if port == "manifest" || port == "artifact" {
+			continue
+		}
+		if !allowed[port] {
+			return fmt.Errorf("RAG_RUNTIME_OUTPUT_PORT: %s.%s", node.ID, port)
+		}
+		values[node.ID+"/"+port] = value
+	}
+	return nil
+}
+
+func validateCanonicalPipeline(pipeline ragcontract.PipelineIR) error {
+	normalized, err := ragcompiler.Normalize(pipeline, nil)
+	if err != nil {
+		return fmt.Errorf("RAG_ENGINE_PIPELINE: %w", err)
+	}
+	got, _ := ragcontract.CanonicalJSON(pipeline)
+	want, _ := ragcontract.CanonicalJSON(normalized)
+	if string(got) != string(want) {
+		return fmt.Errorf("RAG_ENGINE_PIPELINE_NONCANONICAL")
+	}
+	return nil
 }
 
 func mustDigest(value any) string {

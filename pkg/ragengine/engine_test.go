@@ -225,6 +225,32 @@ func fixtureData() (ragoperators.Corpus, ragoperators.EvaluationDataset) {
 	dataset := ragoperators.EvaluationDataset{SchemaVersion: "rag-evaluation-data/v1", Queries: []ragoperators.Query{{ID: "q1", Text: "reciprocal rank fusion", RelevantIDs: []string{unitID}}}}
 	return corpus, dataset
 }
+func TestStaticInputsMaterializesCanonicalChunkPredecessors(t *testing.T) {
+	execution := rawExecution(t)
+	corpus, _ := fixtureData()
+	var target string
+	for _, node := range execution.Pipeline.Nodes {
+		if node.Operator.Kind == "representations.raw" {
+			target = node.ID
+			break
+		}
+	}
+	if target == "" {
+		t.Fatal("raw representation node missing")
+	}
+	inputs, err := New(nil).StaticInputs(context.Background(), execution.Pipeline, corpus, Options{}, target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	chunks, ok := inputs["chunks"].([]ragoperators.Chunk)
+	if !ok || len(chunks) == 0 {
+		t.Fatalf("inputs=%#v", inputs)
+	}
+	if _, err := New(nil).StaticInputs(context.Background(), execution.Pipeline, corpus, Options{}, "missing"); err == nil {
+		t.Fatal("missing target accepted")
+	}
+}
+
 func BenchmarkEngineRawBM25(b *testing.B) {
 	execution := rawExecution(b)
 	corpus, dataset := fixtureData()
