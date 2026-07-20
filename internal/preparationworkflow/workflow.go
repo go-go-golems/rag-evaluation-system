@@ -38,9 +38,11 @@ type EmbeddingSpec struct {
 }
 
 type PublicationSpec struct {
-	Identity                ragengine.PreparedCorpusIdentity `json:"identity"`
-	RepresentationOutputKey string                           `json:"representationOutputKey"`
-	EmbeddingOutputKey      string                           `json:"embeddingOutputKey,omitempty"`
+	Identity           ragengine.PreparedCorpusIdentity `json:"identity"`
+	RawOutputKey       string                           `json:"rawOutputKey"`
+	DerivedOutputKey   string                           `json:"derivedOutputKey"`
+	MergedOutputKey    string                           `json:"mergedOutputKey"`
+	EmbeddingOutputKey string                           `json:"embeddingOutputKey"`
 }
 
 type Input struct {
@@ -71,9 +73,11 @@ type embeddingInput struct {
 }
 
 type embeddingOutput struct {
-	Representations []ragoperators.Representation `json:"representations"`
-	Embeddings      []ragoperators.Embedding      `json:"embeddings"`
-	ProviderCall    bool                          `json:"providerCall"`
+	RawRepresentations     []ragoperators.Representation `json:"rawRepresentations"`
+	DerivedRepresentations []ragoperators.Representation `json:"derivedRepresentations"`
+	Representations        []ragoperators.Representation `json:"representations"`
+	Embeddings             []ragoperators.Embedding      `json:"embeddings"`
+	ProviderCall           bool                          `json:"providerCall"`
 }
 
 type finalizerInput struct {
@@ -173,7 +177,7 @@ func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, pub
 		if err != nil {
 			return err
 		}
-		output := embeddingOutput{Representations: representations, Embeddings: result.Embeddings, ProviderCall: result.ProviderCall}
+		output := embeddingOutput{RawRepresentations: raw, DerivedRepresentations: combined.Representations, Representations: representations, Embeddings: result.Embeddings, ProviderCall: result.ProviderCall}
 		body, err := json.Marshal(output)
 		if err != nil {
 			return fmt.Errorf("marshal embedding batch artifact: %w", err)
@@ -189,6 +193,8 @@ func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, pub
 		if len(step.Step().DependsOn) != in.ExpectedBatches {
 			return fmt.Errorf("RAG_PREPARATION_FINALIZE_DEPENDENCIES: got %d want %d", len(step.Step().DependsOn), in.ExpectedBatches)
 		}
+		rawRepresentations := []ragoperators.Representation{}
+		derivedRepresentations := []ragoperators.Representation{}
 		representations := []ragoperators.Representation{}
 		embeddings := []ragoperators.Embedding{}
 		for _, dep := range step.Step().DependsOn {
@@ -197,6 +203,8 @@ func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, pub
 				if err := step.DependencyData(dep.OpID, &output); err != nil {
 					return err
 				}
+				rawRepresentations = append(rawRepresentations, output.RawRepresentations...)
+				derivedRepresentations = append(derivedRepresentations, output.DerivedRepresentations...)
 				representations = append(representations, output.Representations...)
 				embeddings = append(embeddings, output.Embeddings...)
 				continue
@@ -215,16 +223,18 @@ func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, pub
 		}
 		result := map[string]any{"schemaVersion": "rag-preparation-finalize/v1", "representationCount": len(representations), "embeddingCount": len(embeddings)}
 		if in.Publication != nil {
-			if publication == nil || in.Publication.RepresentationOutputKey == "" || (in.Embeddings && in.Publication.EmbeddingOutputKey == "") {
+			if publication == nil || !in.Embeddings || in.Publication.RawOutputKey == "" || in.Publication.DerivedOutputKey == "" || in.Publication.MergedOutputKey == "" || in.Publication.EmbeddingOutputKey == "" {
 				return fmt.Errorf("RAG_PREPARATION_PUBLICATION_CONFIG")
 			}
 			target, err := publication(ctx, in.Identity, *in.Publication)
 			if err != nil {
 				return err
 			}
-			values := map[string]any{in.Publication.RepresentationOutputKey: representations}
-			if in.Embeddings {
-				values[in.Publication.EmbeddingOutputKey] = embeddings
+			values := map[string]any{
+				in.Publication.RawOutputKey:       rawRepresentations,
+				in.Publication.DerivedOutputKey:   derivedRepresentations,
+				in.Publication.MergedOutputKey:    representations,
+				in.Publication.EmbeddingOutputKey: embeddings,
 			}
 			digest, err := ragengine.PublishPreparedCorpus(ctx, ragengine.PreparedCorpusPublication{Store: target.Store, Engine: target.Engine, Pipeline: target.Pipeline, Corpus: target.Corpus, Options: target.Options, Identity: in.Publication.Identity, Values: values})
 			if err != nil {
