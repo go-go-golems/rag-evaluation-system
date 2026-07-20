@@ -285,7 +285,17 @@ func (p *ProviderSet) CapabilityDescriptor() CapabilityDescriptor {
 func (p *ProviderSet) EngineOptions() ragengine.Options {
 	generatorFingerprint := ""
 	if p != nil {
-		generatorFingerprint = p.EffectiveProviderIdentities["generator-primary"].SettingsFingerprint
+		// A prepared bundle can contain representations from more than one named
+		// generator (for example Flash preparation plus primary answer generation).
+		// Bind every resolved generator settings fingerprint, not only primary.
+		values := []string{}
+		for role, identity := range p.EffectiveProviderIdentities {
+			if strings.HasPrefix(role, "generator-") {
+				values = append(values, role+":"+identity.SettingsFingerprint)
+			}
+		}
+		sort.Strings(values)
+		generatorFingerprint, _ = ragcontract.Digest(values)
 	}
 	return ragengine.Options{Manifests: p.Manifests, Schemas: p.Schemas, Generator: p.Generator, Embedder: p.Embedder, Reranker: p.Reranker, Cache: p.Cache, GenerationConcurrency: p.GenerationConcurrency, GenerationSettingsFingerprint: generatorFingerprint, GeneratorFingerprint: generatorFingerprint, RerankerFingerprint: p.EffectiveProviderIdentities["reranker-primary"].SettingsFingerprint, QueryCheckpoints: p.QueryCheckpoints, PreparedStore: p.PreparedStore, EmbeddingFingerprint: p.EffectiveProviderIdentities["embedding-primary"].SettingsFingerprint}
 }

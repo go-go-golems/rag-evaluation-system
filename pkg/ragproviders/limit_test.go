@@ -77,6 +77,23 @@ func TestLimitedGeneratorHonorsConfiguredMaximumInFlight(t *testing.T) {
 	wg.Wait()
 }
 
+type namedGenerator struct{ name string }
+
+func (g namedGenerator) Generate(_ context.Context, _ ragoperators.GenerationRequest) (ragoperators.GenerationResult, error) {
+	return ragoperators.GenerationResult{Text: g.name}, nil
+}
+
+func TestGeneratorRouterDispatchesOnlyKnownModelIDs(t *testing.T) {
+	router := generatorRouter{byModel: map[string]ragoperators.TextGenerator{"flash": namedGenerator{name: "flash"}, "primary": namedGenerator{name: "primary"}}}
+	value, err := router.Generate(context.Background(), ragoperators.GenerationRequest{Model: "flash"})
+	if err != nil || value.Text != "flash" {
+		t.Fatalf("flash route: %#v %v", value, err)
+	}
+	if _, err := router.Generate(context.Background(), ragoperators.GenerationRequest{Model: "unknown"}); err == nil {
+		t.Fatal("unknown model route unexpectedly accepted")
+	}
+}
+
 func TestProviderConcurrencyLimitDefaultsToOne(t *testing.T) {
 	if got := providerConcurrencyLimit(ProviderSpec{}); got != 1 {
 		t.Fatalf("default limit = %d, want 1", got)

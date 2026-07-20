@@ -100,13 +100,14 @@ func cacheIdentityEqual(left, right GenerationCacheIdentityV2) bool {
 }
 
 type representationProgress struct {
-	Phase       string `json:"phase"`
-	Completed   int64  `json:"completed"`
-	Total       int64  `json:"total"`
-	CacheHits   int64  `json:"cacheHits"`
-	CacheMisses int64  `json:"cacheMisses"`
-	Active      int64  `json:"active"`
-	Failed      int64  `json:"failed"`
+	Phase         string `json:"phase"`
+	Completed     int64  `json:"completed"`
+	Total         int64  `json:"total"`
+	CacheHits     int64  `json:"cacheHits"`
+	CacheMisses   int64  `json:"cacheMisses"`
+	Active        int64  `json:"active"`
+	Failed        int64  `json:"failed"`
+	ProviderCalls int64  `json:"providerCalls,omitempty"`
 }
 
 func emitRepresentationProgress(ctx context.Context, env *Environment, progress representationProgress) error {

@@ -16,13 +16,14 @@ import (
 )
 
 type fakeGenerator struct {
-	calls       int
-	fail        bool
-	invalid     bool
-	questions   []string
-	abstained   bool
-	noCitations bool
-	request     GenerationRequest
+	calls         int
+	fail          bool
+	invalid       bool
+	questions     []string
+	abstained     bool
+	noCitations   bool
+	combinedItems []CombinedGenerationItem
+	request       GenerationRequest
 }
 
 func (g *fakeGenerator) Generate(_ context.Context, r GenerationRequest) (GenerationResult, error) {
@@ -38,6 +39,9 @@ func (g *fakeGenerator) Generate(_ context.Context, r GenerationRequest) (Genera
 		return GenerationResult{Text: `{"summary":"ok"}`, InputTokens: 2, OutputTokens: 1, FinishReason: "stop"}, nil
 	}
 	if r.Kind == "representations.combined-summary-questions" {
+		if g.combinedItems != nil {
+			return GenerationResult{CombinedItems: g.combinedItems}, nil
+		}
 		var input struct {
 			Items []struct {
 				ChunkID string `json:"chunkId"`
@@ -677,6 +681,20 @@ func TestCombinedPreparationBatchesAndMaterializesRepresentations(t *testing.T) 
 		if representation.Record.Kind != "summary" && representation.Record.Kind != "question" {
 			t.Fatalf("unexpected kind %q", representation.Record.Kind)
 		}
+	}
+}
+
+func TestCombinedPreparationRejectsMalformedAndCancelledBatches(t *testing.T) {
+	chunks := []Chunk{fixtureChunk("c1", "u1", "one")}
+	node := ragcontract.Node{Config: json.RawMessage(`{"model":"m","prompt":"p","outputSchema":"summary/v1","batchSize":1,"questionsPerChunk":2,"maxBatchRunes":100}`)}
+	malformed := &fakeGenerator{combinedItems: []CombinedGenerationItem{{ChunkID: "wrong", Summary: "summary", Questions: []string{"one", "two"}}}}
+	if _, err := (combinedPreparationOperator{}).Execute(context.Background(), node, map[string]any{"chunks": chunks}, &Environment{Manifests: fixtureResolver(), Generator: malformed}); err == nil || !strings.Contains(err.Error(), "MISSING_CHUNK") {
+		t.Fatalf("malformed error=%v", err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := (combinedPreparationOperator{}).Execute(ctx, node, map[string]any{"chunks": chunks}, &Environment{Manifests: fixtureResolver(), Generator: &fakeGenerator{}}); !errors.Is(err, context.Canceled) {
+		t.Fatalf("cancelled error=%v", err)
 	}
 }
 

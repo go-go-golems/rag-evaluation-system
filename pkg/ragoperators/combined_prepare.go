@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"sync/atomic"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 )
@@ -67,6 +68,10 @@ func (combinedPreparationOperator) Execute(ctx context.Context, node ragcontract
 		return nil, err
 	}
 	results := make([][]Representation, len(batches))
+	var cacheHits, cacheMisses, providerCalls atomic.Int64
+	if err := emitRepresentationProgress(ctx, env, representationProgress{Phase: "combined-preparation", Total: int64(len(batches))}); err != nil {
+		return nil, err
+	}
 	workers := env.GenerationConcurrency
 	if workers < 1 {
 		workers = defaultRepresentationGenerationWorkers
@@ -102,9 +107,12 @@ func (combinedPreparationOperator) Execute(ctx context.Context, node ragcontract
 					var envelope generationCacheEnvelopeV2
 					if raw, found := env.Cache.Get(key); found && json.Unmarshal(raw, &envelope) == nil && envelope.SchemaVersion == "rag-generation-cache-envelope/v2" && cacheIdentityEqual(envelope.Identity, identity) {
 						result, cached = envelope.Value, true
+						cacheHits.Add(1)
 					}
 				}
 				if !cached {
+					cacheMisses.Add(1)
+					providerCalls.Add(1)
 					var generateErr error
 					result, generateErr = env.Generator.Generate(workCtx, GenerationRequest{Kind: "representations.combined-summary-questions", Model: model.ModelID, Prompt: prompt.PromptID, OutputSchema: cfg.OutputSchema, ParentID: parentDigest, Text: batch.text, Count: cfg.QuestionsPerChunk})
 					if generateErr != nil {
@@ -139,8 +147,14 @@ schedule:
 	}
 	close(jobs)
 	wg.Wait()
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if firstErr != nil {
 		return nil, fmt.Errorf("RAG_COMBINED_PREPARATION: %w", firstErr)
+	}
+	if err := emitRepresentationProgress(ctx, env, representationProgress{Phase: "combined-preparation", Completed: int64(len(batches)), Total: int64(len(batches)), CacheHits: cacheHits.Load(), CacheMisses: cacheMisses.Load(), ProviderCalls: providerCalls.Load()}); err != nil {
+		return nil, err
 	}
 	out := []Representation{}
 	for _, values := range results {
