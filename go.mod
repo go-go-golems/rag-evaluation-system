@@ -208,4 +208,4 @@ require (
 
 tool github.com/go-go-golems/logcopter/cmd/logcopter-gen
 
-replace github.com/go-go-golems/researchctl => ../../../2026-06-30/benchmark-cpu-inference/researchctl
+replace github.com/go-go-golems/researchctl => github.com/wesen/researchctl v0.0.0-20260720214534-4b0adf838d02
