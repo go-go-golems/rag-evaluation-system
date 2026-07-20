@@ -55,7 +55,7 @@ func main() {
 	}
 	defer runtime.Close()
 	if err := preparationworkflow.Register(runtime, func(context.Context, preparationworkflow.Identity) (*ragoperators.Environment, error) {
-		return &ragoperators.Environment{Manifests: providers.Manifests, Schemas: providers.Schemas, Generator: providers.Generator, Cache: providers.Cache, GenerationConcurrency: 1, GenerationSettingsFingerprint: providers.EngineOptions().GenerationSettingsFingerprint}, nil
+		return &ragoperators.Environment{Manifests: providers.Manifests, Schemas: providers.Schemas, Generator: providers.Generator, Embedder: providers.Embedder, Cache: providers.Cache, GenerationConcurrency: 1, GenerationSettingsFingerprint: providers.EngineOptions().GenerationSettingsFingerprint}, nil
 	}); err != nil {
 		fail(err)
 	}
