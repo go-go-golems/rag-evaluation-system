@@ -285,8 +285,14 @@ func build(_ context.Context, run *scraperworkflow.RunBuilder, input Input) erro
 		}
 		finalDependencies = embeddingSteps
 	}
-	if input.Publication != nil && input.Publication.Identity.SchemaVersion != "rag-prepared-corpus-manifest/v1" {
-		return fmt.Errorf("RAG_PREPARATION_PUBLICATION_IDENTITY")
+	if input.Publication != nil {
+		if input.Publication.Identity.SchemaVersion != "rag-prepared-corpus-manifest/v1" {
+			return fmt.Errorf("RAG_PREPARATION_PUBLICATION_IDENTITY")
+		}
+		publicationDigest, err := ragcontract.Digest(input.Publication.Identity)
+		if err != nil || publicationDigest != input.Identity.PreparedDigest {
+			return fmt.Errorf("RAG_PREPARATION_PUBLICATION_IDENTITY")
+		}
 	}
 	_, err := run.Step("finalize", finalizerInput{Identity: input.Identity, ExpectedBatches: len(finalDependencies), Embeddings: input.Embedding != nil, Publication: input.Publication}, scraperworkflow.StepOpts{Kind: FinalizeStepKind, Queue: LocalQueue, DependsOn: scraperworkflow.Require(finalDependencies...)})
 	return err

@@ -7,9 +7,32 @@ import (
 	"testing"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragengine"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
 	scraperworkflow "github.com/go-go-golems/scraper/pkg/workflow"
 )
+
+func TestEnsureRunRejectsPublicationIdentityMismatch(t *testing.T) {
+	ctx := context.Background()
+	plan, err := ragoperators.PlanCombinedPreparation([]ragoperators.Chunk{{Record: ragcontract.ChunkRecord{ID: "chunk:a", TextDigest: "sha256:a"}, Text: "one"}}, ragcontract.Node{Config: json.RawMessage(`{"model":"model","prompt":"prompt","outputSchema":"schema","batchSize":1,"questionsPerChunk":1,"maxBatchRunes":100}`)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	runtime, err := scraperworkflow.NewRuntime(ctx, scraperworkflow.Config{Store: scraperworkflow.SQLiteStore(filepath.Join(t.TempDir(), "workflow.sqlite"))})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer runtime.Close()
+	if err := RegisterWithPublication(runtime, func(context.Context, Identity) (*ragoperators.Environment, error) { return nil, nil }, func(context.Context, Identity, PublicationSpec) (PublicationTarget, error) {
+		return PublicationTarget{}, nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	input := Input{Identity: Identity{SchemaVersion: "rag-preparation-workflow/v1", PreparedDigest: "sha256:wrong"}, Plan: plan, Publication: &PublicationSpec{Identity: ragengine.PreparedCorpusIdentity{SchemaVersion: "rag-prepared-corpus-manifest/v1", CorpusDigest: "sha256:corpus", PipelineDigest: "sha256:pipeline"}, RepresentationOutputKey: "represent/out"}}
+	if _, err := runtime.EnsureRun(ctx, PackageName, input, scraperworkflow.WithRunID("publication-mismatch"), scraperworkflow.WithRunIdentity(input.Identity)); err == nil {
+		t.Fatal("publication identity mismatch accepted")
+	}
+}
 
 func TestEnsureRunBuildsOneOperationPerCombinedBatch(t *testing.T) {
 	ctx := context.Background()
