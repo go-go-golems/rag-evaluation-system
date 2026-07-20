@@ -20,6 +20,7 @@ func main() {
 	providerConfig := flag.String("provider-config", "", "real-provider host configuration YAML")
 	stateDB := flag.String("state-db", "", "durable scraper SQLite workflow database")
 	text := flag.String("text", "A young tree benefits from consistent watering after planting.", "one small source chunk")
+	withEmbedding := flag.Bool("with-embedding", false, "also execute one durable embedding batch")
 	flag.Parse()
 	if *providerConfig == "" || *stateDB == "" {
 		fmt.Fprintln(os.Stderr, "--provider-config and --state-db are required")
@@ -59,6 +60,9 @@ func main() {
 		fail(err)
 	}
 	input := preparationworkflow.Input{Identity: identity, Plan: plan}
+	if *withEmbedding {
+		input.Embedding = &preparationworkflow.EmbeddingSpec{RawRepresentationName: "raw", Node: ragcontract.Node{Config: []byte(`{"model":"embedding-primary","dimensions":768,"normalize":"l2","batchSize":16}`)}}
+	}
 	handle, err := runtime.EnsureRun(ctx, preparationworkflow.PackageName, input, scraperworkflow.WithRunID("rag-preparation-smoke-"+identityDigest[len("sha256:"):len("sha256:")+16]), scraperworkflow.WithRunIdentity(identity))
 	if err != nil {
 		fail(err)
