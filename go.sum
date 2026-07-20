@@ -181,8 +181,8 @@ github.com/go-go-golems/go-go-goja v0.10.3 h1:8yAxr2tqrjsO0YBKKsoGL4+bi83UiYCPCh
 github.com/go-go-golems/go-go-goja v0.10.3/go.mod h1:SfkEfsu4kMckh9OjK9hX09GAWJ8SI+5KHKF4dO/S0hU=
 github.com/go-go-golems/logcopter v0.1.1 h1:/zrfmA7057hZyBoes+X9EpASP+aZQJx3kip89eRQqXM=
 github.com/go-go-golems/logcopter v0.1.1/go.mod h1:GUB5A7JwPVdYAu/8CKURcIaJb0h16nz8mKbkf5opzqo=
-github.com/go-go-golems/scraper v0.0.4 h1:Hgf/L+9Dn72AyBYfkJcsIQ53Aq1k6u1x64JQ0qHg010=
-github.com/go-go-golems/scraper v0.0.4/go.mod h1:cshz/mDoD1oaVxXtm0To9+q8ugvjYYj5/2kxaSsDck8=
+github.com/go-go-golems/scraper v0.0.5-0.20260720191356-032f19b02960 h1:xy8du2o7jB1K1MmFrx4tPxARLV3EgYFRkD8bWgIT8iQ=
+github.com/go-go-golems/scraper v0.0.5-0.20260720191356-032f19b02960/go.mod h1:cshz/mDoD1oaVxXtm0To9+q8ugvjYYj5/2kxaSsDck8=
 github.com/go-jose/go-jose/v4 v4.1.4 h1:moDMcTHmvE6Groj34emNPLs/qtYXRVcd6S7NHbHz3kA=
 github.com/go-jose/go-jose/v4 v4.1.4/go.mod h1:x4oUasVrzR7071A4TnHLGSPpNOm2a21K9Kf04k1rs08=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=

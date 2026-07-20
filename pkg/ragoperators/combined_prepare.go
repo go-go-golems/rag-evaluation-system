@@ -20,11 +20,7 @@ func (combinedPreparationOperator) Ref() ragcontract.OperatorRef {
 	return ragcontract.OperatorRef{Kind: "representations.combined-summary-questions", Version: "v1"}
 }
 
-type combinedPreparationConfig struct {
-	Model, Prompt, OutputSchema  string
-	BatchSize, QuestionsPerChunk int
-	MaxBatchRunes                int
-}
+type combinedPreparationConfig = CombinedPreparationConfig
 type combinedBatchInput struct {
 	ChunkID string `json:"chunkId"`
 	Text    string `json:"text"`
@@ -119,19 +115,19 @@ func (combinedPreparationOperator) Execute(ctx context.Context, node ragcontract
 						once.Do(func() { firstErr = generateErr; cancel() })
 						return
 					}
-					if env.Cache != nil {
-						data, marshalErr := json.Marshal(generationCacheEnvelopeV2{SchemaVersion: "rag-generation-cache-envelope/v2", Identity: identity, Value: result})
-						if marshalErr != nil {
-							once.Do(func() { firstErr = marshalErr; cancel() })
-							return
-						}
-						env.Cache.Put(key, data)
-					}
 				}
 				representations, validateErr := validateCombinedBatch(batch.chunks, result.CombinedItems, cfg.QuestionsPerChunk, model, prompt)
 				if validateErr != nil {
 					once.Do(func() { firstErr = validateErr; cancel() })
 					return
+				}
+				if !cached && env.Cache != nil {
+					data, marshalErr := json.Marshal(generationCacheEnvelopeV2{SchemaVersion: "rag-generation-cache-envelope/v2", Identity: identity, Value: result})
+					if marshalErr != nil {
+						once.Do(func() { firstErr = marshalErr; cancel() })
+						return
+					}
+					env.Cache.Put(key, data)
 				}
 				results[index] = representations
 			}
