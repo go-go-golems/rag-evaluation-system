@@ -64,9 +64,7 @@ func TestEchoRunnerCompletesWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("run once: %v", err)
 	}
-	if cycle.Processed != 1 || cycle.Succeeded != 0 {
-		// Scheduler CycleResult currently tracks Processed but not Succeeded increments in this code path.
-		// Keep the assertion focused on the lease/execution count.
+	if cycle.Processed != 1 || cycle.Succeeded != 1 {
 		t.Fatalf("unexpected cycle counts: %+v", cycle)
 	}
 
