@@ -94,10 +94,31 @@ func (combinedPreparationOperator) Execute(ctx context.Context, node ragcontract
 					once.Do(func() { firstErr = digestErr; cancel() })
 					return
 				}
-				result, generateErr := env.Generator.Generate(workCtx, GenerationRequest{Kind: "representations.combined-summary-questions", Model: model.ModelID, Prompt: prompt.PromptID, OutputSchema: cfg.OutputSchema, ParentID: parentDigest, Text: batch.text, Count: cfg.QuestionsPerChunk})
-				if generateErr != nil {
-					once.Do(func() { firstErr = generateErr; cancel() })
-					return
+				identity := GenerationCacheIdentityV2{SchemaVersion: "rag-generation-cache-identity/v2", Operator: combinedPreparationOperator{}.Ref(), CanonicalOperatorConfig: node.Config, ParentDigest: parentDigest, ModelManifestDigest: model.Digest, PromptManifestDigest: prompt.Digest, OutputSchemaFingerprint: outputSchemaFingerprint(env, cfg.OutputSchema), EffectiveSettingsFingerprint: env.GenerationSettingsFingerprint}
+				key, _ := ragcontract.Digest(identity)
+				var result GenerationResult
+				cached := false
+				if env.Cache != nil {
+					var envelope generationCacheEnvelopeV2
+					if raw, found := env.Cache.Get(key); found && json.Unmarshal(raw, &envelope) == nil && envelope.SchemaVersion == "rag-generation-cache-envelope/v2" && cacheIdentityEqual(envelope.Identity, identity) {
+						result, cached = envelope.Value, true
+					}
+				}
+				if !cached {
+					var generateErr error
+					result, generateErr = env.Generator.Generate(workCtx, GenerationRequest{Kind: "representations.combined-summary-questions", Model: model.ModelID, Prompt: prompt.PromptID, OutputSchema: cfg.OutputSchema, ParentID: parentDigest, Text: batch.text, Count: cfg.QuestionsPerChunk})
+					if generateErr != nil {
+						once.Do(func() { firstErr = generateErr; cancel() })
+						return
+					}
+					if env.Cache != nil {
+						data, marshalErr := json.Marshal(generationCacheEnvelopeV2{SchemaVersion: "rag-generation-cache-envelope/v2", Identity: identity, Value: result})
+						if marshalErr != nil {
+							once.Do(func() { firstErr = marshalErr; cancel() })
+							return
+						}
+						env.Cache.Put(key, data)
+					}
 				}
 				representations, validateErr := validateCombinedBatch(batch.chunks, result.CombinedItems, cfg.QuestionsPerChunk, model, prompt)
 				if validateErr != nil {

@@ -680,6 +680,30 @@ func TestCombinedPreparationBatchesAndMaterializesRepresentations(t *testing.T) 
 	}
 }
 
+func TestCombinedPreparationCacheIdentityIncludesBatchConfig(t *testing.T) {
+	chunks := []Chunk{fixtureChunk("c1", "u1", "one"), fixtureChunk("c2", "u2", "two")}
+	cache := NewMemoryCache()
+	generator := &fakeGenerator{}
+	env := &Environment{Manifests: fixtureResolver(), Generator: generator, Cache: cache, GenerationSettingsFingerprint: "sha256:settings"}
+	oneBatch := ragcontract.Node{Config: json.RawMessage(`{"model":"m","prompt":"p","outputSchema":"summary/v1","batchSize":2,"questionsPerChunk":2,"maxBatchRunes":100}`)}
+	if _, err := (combinedPreparationOperator{}).Execute(context.Background(), oneBatch, map[string]any{"chunks": chunks}, env); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := (combinedPreparationOperator{}).Execute(context.Background(), oneBatch, map[string]any{"chunks": chunks}, env); err != nil {
+		t.Fatal(err)
+	}
+	if generator.calls != 1 {
+		t.Fatalf("calls=%d want 1", generator.calls)
+	}
+	differentBatch := ragcontract.Node{Config: json.RawMessage(`{"model":"m","prompt":"p","outputSchema":"summary/v1","batchSize":1,"questionsPerChunk":2,"maxBatchRunes":100}`)}
+	if _, err := (combinedPreparationOperator{}).Execute(context.Background(), differentBatch, map[string]any{"chunks": chunks}, env); err != nil {
+		t.Fatal(err)
+	}
+	if generator.calls != 3 {
+		t.Fatalf("calls after batch identity change=%d want 3", generator.calls)
+	}
+}
+
 func TestVersionedEvaluationMetrics(t *testing.T) {
 	q := Query{RelevantIDs: []string{"u1"}}
 	e := []Evidence{{Rank: 1, Collapse: ragcontract.CollapseIdentity{ID: "u1"}}}
