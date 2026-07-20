@@ -182,8 +182,14 @@ func validateCombinedBatch(chunks []Chunk, values []CombinedGenerationItem, ques
 	out := []Representation{}
 	for _, chunk := range chunks {
 		value, ok := byID[chunk.Record.ID]
-		if !ok || value.Summary == "" || len(value.Questions) != questions {
-			return nil, fmt.Errorf("RAG_COMBINED_RESPONSE_ITEM: %s", chunk.Record.ID)
+		if !ok {
+			return nil, fmt.Errorf("RAG_COMBINED_RESPONSE_MISSING_CHUNK: %s", chunk.Record.ID)
+		}
+		if value.Summary == "" {
+			return nil, fmt.Errorf("RAG_COMBINED_RESPONSE_EMPTY_SUMMARY: %s", chunk.Record.ID)
+		}
+		if len(value.Questions) != questions {
+			return nil, fmt.Errorf("RAG_COMBINED_RESPONSE_QUESTION_COUNT: %s got %d want %d", chunk.Record.ID, len(value.Questions), questions)
 		}
 		out = append(out, newRepresentation("summary", "summary", chunk, value.Summary, "derived", 0, nil))
 		for ordinal, question := range value.Questions {

@@ -11,8 +11,8 @@ const pipeline = rag.pipeline("ttc-flash-combined-speed", (p) =>
 				rag.representations.raw("raw"),
 				rag.representations.combinedSummaryQuestions({
 					model: "generator-umans-flash",
-					prompt: "ttc-combined-preparation-v1",
-					outputSchema: "rag-combined-preparation/v1",
+					prompt: "ttc-combined-preparation-v2",
+					outputSchema: "rag-combined-preparation/v2",
 					batchSize,
 					questionsPerChunk: 4,
 					maxBatchRunes: 6000,
