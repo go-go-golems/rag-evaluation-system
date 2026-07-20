@@ -25,6 +25,30 @@ func (p *Prepared) snapshot() (map[string]any, bool) {
 	return p.values, p.closed
 }
 
+// NewPreparedFromStaticValues constructs a prepared corpus from durable,
+// already-validated static pipeline values. It intentionally rebuilds live indexes
+// when the value is later opened from a PreparedCorpusStore.
+func NewPreparedFromStaticValues(pipeline ragcontract.PipelineIR, values map[string]any) (*Prepared, error) {
+	normalized, err := ragcompiler.Normalize(pipeline, nil)
+	if err != nil {
+		return nil, fmt.Errorf("RAG_ENGINE_PIPELINE: %w", err)
+	}
+	got, _ := ragcontract.CanonicalJSON(pipeline)
+	want, _ := ragcontract.CanonicalJSON(normalized)
+	if string(got) != string(want) {
+		return nil, fmt.Errorf("RAG_ENGINE_PIPELINE_NONCANONICAL")
+	}
+	if values == nil {
+		return nil, fmt.Errorf("RAG_PREPARED_VALUES_NIL")
+	}
+	static := staticNodeIDs(pipeline)
+	prepared := selectPrepared(values, static)
+	if len(prepared) == 0 {
+		return nil, fmt.Errorf("RAG_PREPARED_VALUES_EMPTY")
+	}
+	return &Prepared{pipelineDigest: mustDigest(pipeline), values: prepared}, nil
+}
+
 func (p *Prepared) Close() error {
 	p.mu.Lock()
 	defer p.mu.Unlock()

@@ -52,6 +52,41 @@ func TestFilePreparedCorpusStoreReopensStaticValuesAndRebuildsIndex(t *testing.T
 	}
 }
 
+func TestNewPreparedFromStaticValuesPublishesAndReopens(t *testing.T) {
+	execution := rawExecution(t)
+	corpus, _ := fixtureData()
+	engine := New(nil)
+	original, err := engine.Prepare(context.Background(), execution.Pipeline, corpus, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = original.Close() }()
+	values, closed := original.snapshot()
+	if closed {
+		t.Fatal("prepared unexpectedly closed")
+	}
+	published, err := NewPreparedFromStaticValues(execution.Pipeline, values)
+	if err != nil {
+		t.Fatal(err)
+	}
+	store, err := NewFilePreparedCorpusStore(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	identity := PreparedCorpusIdentity{SchemaVersion: preparedCorpusSchemaVersion, CorpusDigest: "sha256:corpus", PipelineDigest: mustDigest(execution.Pipeline)}
+	if _, err := store.Put(context.Background(), published, identity); err != nil {
+		t.Fatal(err)
+	}
+	if err := published.Close(); err != nil {
+		t.Fatal(err)
+	}
+	reopened, found, err := store.Open(context.Background(), engine, execution.Pipeline, corpus, Options{}, identity)
+	if err != nil || !found {
+		t.Fatalf("Open() found=%t err=%v", found, err)
+	}
+	defer func() { _ = reopened.Close() }()
+}
+
 func TestFileQueryCheckpointStoreRoundTripAndRejectsCorruption(t *testing.T) {
 	store, err := NewFileQueryCheckpointStore(t.TempDir())
 	if err != nil {
