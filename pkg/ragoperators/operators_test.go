@@ -37,6 +37,25 @@ func (g *fakeGenerator) Generate(_ context.Context, r GenerationRequest) (Genera
 		}
 		return GenerationResult{Text: `{"summary":"ok"}`, InputTokens: 2, OutputTokens: 1, FinishReason: "stop"}, nil
 	}
+	if r.Kind == "representations.combined-summary-questions" {
+		var input struct {
+			Items []struct {
+				ChunkID string `json:"chunkId"`
+			} `json:"items"`
+		}
+		if err := json.Unmarshal([]byte(r.Text), &input); err != nil {
+			return GenerationResult{}, err
+		}
+		items := make([]CombinedGenerationItem, len(input.Items))
+		for i, item := range input.Items {
+			questions := make([]string, r.Count)
+			for j := range questions {
+				questions[j] = "question " + itoa(j+1)
+			}
+			items[i] = CombinedGenerationItem{ChunkID: item.ChunkID, Summary: "summary", Questions: questions}
+		}
+		return GenerationResult{CombinedItems: items, InputTokens: 2, OutputTokens: int64(len(items))}, nil
+	}
 	if r.Kind == "representations.synthetic-questions" {
 		q := append([]string(nil), g.questions...)
 		if q == nil {
@@ -643,6 +662,24 @@ func TestRerankAndAnswerNeverFallback(t *testing.T) {
 		t.Fatalf("citation failure policy exposed ungrounded answer: %#v", abstained)
 	}
 }
+func TestCombinedPreparationBatchesAndMaterializesRepresentations(t *testing.T) {
+	chunks := []Chunk{fixtureChunk("c2", "u2", "two"), fixtureChunk("c1", "u1", "one")}
+	node := ragcontract.Node{Config: json.RawMessage(`{"model":"m","prompt":"p","outputSchema":"summary/v1","batchSize":2,"questionsPerChunk":2,"maxBatchRunes":100}`)}
+	out, err := (combinedPreparationOperator{}).Execute(context.Background(), node, map[string]any{"chunks": chunks}, &Environment{Manifests: fixtureResolver(), Generator: &fakeGenerator{}, GenerationConcurrency: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	representations := out["representations"].([]Representation)
+	if len(representations) != 6 {
+		t.Fatalf("representations=%d, want 6", len(representations))
+	}
+	for _, representation := range representations {
+		if representation.Record.Kind != "summary" && representation.Record.Kind != "question" {
+			t.Fatalf("unexpected kind %q", representation.Record.Kind)
+		}
+	}
+}
+
 func TestVersionedEvaluationMetrics(t *testing.T) {
 	q := Query{RelevantIDs: []string{"u1"}}
 	e := []Evidence{{Rank: 1, Collapse: ragcontract.CollapseIdentity{ID: "u1"}}}

@@ -111,6 +111,14 @@ func (g *Generator) Generate(ctx context.Context, request ragoperators.Generatio
 			return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GENERATOR_ANSWER_JSON")
 		}
 		result.Text, result.CitationChunkIDs, result.Abstained = value.Answer, value.CitationChunkIDs, value.Abstained
+	case "representations.combined-summary-questions":
+		var value struct {
+			Items []ragoperators.CombinedGenerationItem `json:"items"`
+		}
+		if err := json.Unmarshal([]byte(text), &value); err != nil {
+			return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GENERATOR_COMBINED_JSON")
+		}
+		result.CombinedItems = value.Items
 	}
 	return result, nil
 }
@@ -122,6 +130,8 @@ func buildUserPrompt(template string, request ragoperators.GenerationRequest) st
 		return renderQuestionsPrompt(template, request.Text)
 	case "generate.answer":
 		return renderAnswerPrompt(template, request.Text, request.Evidence)
+	case "representations.combined-summary-questions":
+		return renderLabeledTextPrompt(template, "CHUNKS JSON", request.Text)
 	default:
 		return renderTextPrompt(template, request.Text)
 	}

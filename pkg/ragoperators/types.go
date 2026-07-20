@@ -117,9 +117,15 @@ type GenerationRequest struct {
 	Count                                             int
 	Evidence                                          []Evidence
 }
+type CombinedGenerationItem struct {
+	ChunkID   string   `json:"chunkId"`
+	Summary   string   `json:"summary"`
+	Questions []string `json:"questions"`
+}
 type GenerationResult struct {
 	Text                      string
 	Questions                 []string
+	CombinedItems             []CombinedGenerationItem
 	CitationChunkIDs          []string
 	InputTokens, OutputTokens int64
 	// Cost is nil when the provider does not report a price. A zero value means

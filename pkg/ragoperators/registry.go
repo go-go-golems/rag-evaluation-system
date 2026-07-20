@@ -40,7 +40,7 @@ func (r *Registry) IDs() []string {
 }
 func NativeRegistry() *Registry {
 	r := NewRegistry()
-	for _, op := range []Operator{unitOperator{"units.identity"}, unitOperator{"units.individual-turns"}, unitOperator{"transcript.units.agents-view-runs"}, chunkOperator{}, chunkOperator{"chunks.identity"}, representationOperator{"representations.raw"}, representationOperator{"representations.structured-summary"}, representationOperator{"representations.synthetic-questions"}, mergeOperator{}, embeddingOperator{}, indexOperator{}, indexOperator{"index.memory-smoke"}, retrieveOperator{"retrieve.bm25"}, retrieveOperator{"retrieve.vector"}, collapseOperator{"collapse.parent"}, fusionOperator{}, collapseOperator{"collapse.final"}, hydrateOperator{}, rerankOperator{}, answerOperator{}, evaluateOperator{}} {
+	for _, op := range []Operator{unitOperator{"units.identity"}, unitOperator{"units.individual-turns"}, unitOperator{"transcript.units.agents-view-runs"}, chunkOperator{}, chunkOperator{"chunks.identity"}, representationOperator{"representations.raw"}, representationOperator{"representations.structured-summary"}, representationOperator{"representations.synthetic-questions"}, combinedPreparationOperator{}, mergeOperator{}, embeddingOperator{}, indexOperator{}, indexOperator{"index.memory-smoke"}, retrieveOperator{"retrieve.bm25"}, retrieveOperator{"retrieve.vector"}, collapseOperator{"collapse.parent"}, fusionOperator{}, collapseOperator{"collapse.final"}, hydrateOperator{}, rerankOperator{}, answerOperator{}, evaluateOperator{}} {
 		if err := r.Register(op); err != nil {
 			panic(err)
 		}

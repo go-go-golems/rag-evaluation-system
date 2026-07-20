@@ -172,6 +172,10 @@ func (r *runtime) representationsObject() *goja.Object {
 		var c ragmodel.SyntheticQuestionsConfig
 		r.decode(call.Argument(1), &c)
 		return r.descriptorObject(ragmodel.SyntheticQuestions(call.Argument(0).String(), c))
+	}, "combinedSummaryQuestions": func(call goja.FunctionCall) goja.Value {
+		var c ragmodel.CombinedPreparationConfig
+		r.decode(call.Argument(0), &c)
+		return r.descriptorObject(ragmodel.CombinedPreparation(c))
 	}, "compose": func(call goja.FunctionCall) goja.Value {
 		values := make([]*ragmodel.Descriptor, len(call.Arguments))
 		for i, v := range call.Arguments {

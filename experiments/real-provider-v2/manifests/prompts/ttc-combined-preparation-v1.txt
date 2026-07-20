@@ -1,0 +1,1 @@
+Return JSON only. For every item in CHUNKS JSON, return exactly one item with the same chunkId, a concise factual summary, and exactly four useful retrieval questions answerable from that chunk. Do not omit, duplicate, rename, or reorder identities.

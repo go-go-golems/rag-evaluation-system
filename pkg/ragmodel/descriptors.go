@@ -62,6 +62,14 @@ type SyntheticQuestionsConfig struct {
 	Model  string `json:"model,omitempty"`
 	Prompt string `json:"prompt,omitempty"`
 }
+type CombinedPreparationConfig struct {
+	Model             string `json:"model"`
+	Prompt            string `json:"prompt"`
+	OutputSchema      string `json:"outputSchema"`
+	BatchSize         int    `json:"batchSize"`
+	QuestionsPerChunk int    `json:"questionsPerChunk"`
+	MaxBatchRunes     int    `json:"maxBatchRunes"`
+}
 type EmbeddingConfig struct {
 	Dimensions int    `json:"dimensions,omitempty"`
 	Distance   string `json:"distance,omitempty"`
@@ -159,6 +167,9 @@ func StructuredSummary(name string, config StructuredSummaryConfig) *Descriptor 
 }
 func SyntheticQuestions(name string, config SyntheticQuestionsConfig) *Descriptor {
 	return desc(KindRepresentations, name, "representations.synthetic-questions/v1", map[string]any{"name": name, "from": config.From, "count": config.Count, "model": config.Model, "prompt": config.Prompt})
+}
+func CombinedPreparation(config CombinedPreparationConfig) *Descriptor {
+	return desc(KindRepresentations, "", "representations.combined-summary-questions/v1", config)
 }
 func ComposeRepresentations(values ...*Descriptor) *Descriptor {
 	return &Descriptor{Kind: KindRepresentations, Operator: ragcontract.OperatorRef{Kind: "representations.compose", Version: "v1"}, Children: append([]*Descriptor(nil), values...)}
