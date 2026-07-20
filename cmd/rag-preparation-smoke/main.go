@@ -42,9 +42,10 @@ func main() {
 		fail(err)
 	}
 	identityDigest, err := ragcontract.Digest(struct {
-		Plan     ragoperators.CombinedPreparationPlan
-		Provider string
-	}{plan, providers.ProfileID})
+		Plan          ragoperators.CombinedPreparationPlan
+		Provider      string
+		WithEmbedding bool
+	}{plan, providers.ProfileID, *withEmbedding})
 	if err != nil {
 		fail(err)
 	}
