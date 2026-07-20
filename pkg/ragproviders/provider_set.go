@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/go-go-golems/geppetto/pkg/embeddings"
@@ -203,6 +204,40 @@ func Load(ctx context.Context, path string) (*ProviderSet, error) {
 	} else {
 		return nil, fmt.Errorf("RAG_PROVIDER_GENERATOR_REQUIRED")
 	}
+	// Additional named generators are routed by immutable model ID. This permits
+	// preparation to use Flash while answers retain generator-primary.
+	router := generatorRouter{byModel: map[string]ragoperators.TextGenerator{}}
+	primarySpec := cfg.Providers["generator-primary"]
+	primaryModel, _ := manifests.Model(primarySpec.ModelManifest)
+	router.byModel[primaryModel.ModelID] = set.Generator
+	for role, spec := range cfg.Providers {
+		if role == "generator-primary" || !strings.HasPrefix(role, "generator-") {
+			continue
+		}
+		model, err := manifests.Model(spec.ModelManifest)
+		if err != nil {
+			return nil, err
+		}
+		var generatorSettings *settings.InferenceSettings
+		if spec.Profile != "" {
+			generatorSettings, err = newGeneratorSettingsFromProfileForRole(ctx, role, spec, model, set)
+		} else {
+			return nil, fmt.Errorf("RAG_PROVIDER_GENERATOR_PROFILE_REQUIRED")
+		}
+		if err != nil {
+			return nil, err
+		}
+		generator, err := geppettoadapter.NewGenerator(generatorSettings, manifests, schemas)
+		if err != nil {
+			return nil, err
+		}
+		limited, err := newLimitedGenerator(generator, providerConcurrencyLimit(spec))
+		if err != nil {
+			return nil, err
+		}
+		router.byModel[model.ModelID] = limited
+	}
+	set.Generator = router
 	_ = ctx
 	return set, nil
 }
@@ -270,7 +305,7 @@ func (p *ProviderSet) CheckExecution(execution ragcontract.PipelineExecution) er
 			return fmt.Errorf("RAG_PROVIDER_EXECUTION_CONFIG")
 		}
 		switch node.Operator.Kind {
-		case "representations.structured-summary", "representations.synthetic-questions":
+		case "representations.structured-summary", "representations.synthetic-questions", "representations.combined-summary-questions":
 			if p.Generator == nil || p.Cache == nil {
 				return fmt.Errorf("RAG_PROVIDER_GENERATOR_REQUIRED")
 			}
@@ -351,6 +386,9 @@ func validateProviderConfiguration(providers map[string]ProviderSpec, manifests 
 	}
 	for name, spec := range providers {
 		kind, known := expected[name]
+		if strings.HasPrefix(name, "generator-") {
+			kind, known = "geppetto-generation/v1", true
+		}
 		if !known || spec.Kind != kind {
 			return fmt.Errorf("RAG_PROVIDER_KIND_UNSUPPORTED")
 		}
@@ -545,6 +583,9 @@ func newGeneratorSettings(endpoint string, model ragcontract.ModelManifest, spec
 // use, so credentials, base URLs, model_info, and cost rates all come from the
 // profile YAML rather than being manually constructed.
 func newGeneratorSettingsFromProfile(ctx context.Context, spec ProviderSpec, model ragcontract.ModelManifest, set *ProviderSet) (*settings.InferenceSettings, error) {
+	return newGeneratorSettingsFromProfileForRole(ctx, "generator-primary", spec, model, set)
+}
+func newGeneratorSettingsFromProfileForRole(ctx context.Context, role string, spec ProviderSpec, model ragcontract.ModelManifest, set *ProviderSet) (*settings.InferenceSettings, error) {
 	merged, err := resolveProfileSettings(ctx, spec, set)
 	if err != nil {
 		return nil, err
@@ -555,7 +596,7 @@ func newGeneratorSettingsFromProfile(ctx context.Context, spec ProviderSpec, mod
 	if err := validateProfileModelIdentity("generator", model, merged); err != nil {
 		return nil, err
 	}
-	if err := set.recordProfileIdentity("generator-primary", spec, model, merged); err != nil {
+	if err := set.recordProfileIdentity(role, spec, model, merged); err != nil {
 		return nil, err
 	}
 	merged.Chat.Stream = true

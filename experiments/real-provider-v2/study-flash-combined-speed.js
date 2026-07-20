@@ -10,7 +10,7 @@ const pipeline = rag.pipeline("ttc-flash-combined-speed", (p) =>
 			rag.representations.compose(
 				rag.representations.raw("raw"),
 				rag.representations.combinedSummaryQuestions({
-					model: "generator-primary",
+					model: "generator-umans-flash",
 					prompt: "ttc-combined-preparation-v1",
 					outputSchema: "rag-combined-preparation/v1",
 					batchSize,
@@ -56,7 +56,7 @@ const study = rag.study("ttc-flash-combined-preparation-speed", (s) =>
 					)
 					.generate(
 						rag.generation.answer({
-							model: "generator-primary",
+							model: "generator-umans",
 							prompt: "ttc-grounded-answer-v1",
 							citations: "required",
 							citationFailurePolicy: "abstain",

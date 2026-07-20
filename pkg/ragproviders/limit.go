@@ -40,6 +40,21 @@ func (g *limitedGenerator) Generate(ctx context.Context, request ragoperators.Ge
 	return g.inner.Generate(ctx, request)
 }
 
+// generatorRouter dispatches by immutable request model ID. The routing table is
+// built only from validated provider profiles; JavaScript/pipeline config cannot
+// invent an endpoint or bypass an individual provider's concurrency gate.
+type generatorRouter struct {
+	byModel map[string]ragoperators.TextGenerator
+}
+
+func (r generatorRouter) Generate(ctx context.Context, request ragoperators.GenerationRequest) (ragoperators.GenerationResult, error) {
+	generator := r.byModel[request.Model]
+	if generator == nil {
+		return ragoperators.GenerationResult{}, fmt.Errorf("RAG_PROVIDER_GENERATOR_MODEL_UNAVAILABLE: %s", request.Model)
+	}
+	return generator.Generate(ctx, request)
+}
+
 type limitedEmbedder struct {
 	inner ragoperators.Embedder
 	slots chan struct{}
