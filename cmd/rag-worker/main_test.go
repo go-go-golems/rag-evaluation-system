@@ -69,6 +69,33 @@ func TestExternalWorkerDurablyPreparesCombinedPipeline(t *testing.T) {
 	if progress < 2 || frames[len(frames)-1]["type"] != "complete" {
 		t.Fatalf("progress=%d frames=%#v", progress, frames)
 	}
+	firstWorkflowID := preparationWorkflowID(t, frames)
+	attachedFrames, attachedStderr, attachedErr := runWorkerArgs(binary, request, "--preparation-state-db", stateDB)
+	if attachedErr != nil {
+		t.Fatalf("attached worker: %v stderr=%s frames=%#v", attachedErr, attachedStderr, attachedFrames)
+	}
+	if attachedFrames[len(attachedFrames)-1]["type"] != "complete" || preparationWorkflowID(t, attachedFrames) != firstWorkflowID {
+		t.Fatalf("attachment did not reuse workflow %q: %#v", firstWorkflowID, attachedFrames)
+	}
+}
+
+func preparationWorkflowID(t *testing.T, frames []map[string]any) string {
+	t.Helper()
+	for _, frame := range frames {
+		if frame["type"] != "event" {
+			continue
+		}
+		event, _ := frame["event"].(map[string]any)
+		if event["type"] != "rag.preparation.progress/v1" {
+			continue
+		}
+		payload, _ := event["payload"].(map[string]any)
+		if id, ok := payload["workflowId"].(string); ok && id != "" {
+			return id
+		}
+	}
+	t.Fatalf("missing preparation workflow ID: %#v", frames)
+	return ""
 }
 
 func TestExternalWorkerAdvertisesBeforeDomainError(t *testing.T) {
