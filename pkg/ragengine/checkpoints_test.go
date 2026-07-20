@@ -65,19 +65,12 @@ func TestNewPreparedFromStaticValuesPublishesAndReopens(t *testing.T) {
 	if closed {
 		t.Fatal("prepared unexpectedly closed")
 	}
-	published, err := NewPreparedFromStaticValues(execution.Pipeline, values)
-	if err != nil {
-		t.Fatal(err)
-	}
 	store, err := NewFilePreparedCorpusStore(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
 	identity := PreparedCorpusIdentity{SchemaVersion: preparedCorpusSchemaVersion, CorpusDigest: "sha256:corpus", PipelineDigest: mustDigest(execution.Pipeline)}
-	if _, err := store.Put(context.Background(), published, identity); err != nil {
-		t.Fatal(err)
-	}
-	if err := published.Close(); err != nil {
+	if _, err := PublishPreparedCorpus(context.Background(), PreparedCorpusPublication{Store: store, Engine: engine, Pipeline: execution.Pipeline, Corpus: corpus, Identity: identity, Values: values}); err != nil {
 		t.Fatal(err)
 	}
 	reopened, found, err := store.Open(context.Background(), engine, execution.Pipeline, corpus, Options{}, identity)

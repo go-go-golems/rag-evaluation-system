@@ -40,6 +40,50 @@ type PreparedCorpusStore interface {
 	Put(context.Context, *Prepared, PreparedCorpusIdentity) (string, error)
 }
 
+// PreparedCorpusPublication supplies only validated static values to the existing
+// atomic prepared-corpus store. Provider clients remain process-local in Options.
+type PreparedCorpusPublication struct {
+	Store    PreparedCorpusStore
+	Engine   *Engine
+	Pipeline ragcontract.PipelineIR
+	Corpus   ragoperators.Corpus
+	Options  Options
+	Identity PreparedCorpusIdentity
+	Values   map[string]any
+}
+
+// PublishPreparedCorpus atomically persists validated static values, then reopens
+// the bundle to verify that required live indexes rebuild without provider calls.
+func PublishPreparedCorpus(ctx context.Context, publication PreparedCorpusPublication) (string, error) {
+	if publication.Store == nil || publication.Engine == nil {
+		return "", fmt.Errorf("RAG_PREPARED_PUBLICATION_STORE")
+	}
+	pipelineDigest, err := ragcontract.Digest(publication.Pipeline)
+	if err != nil {
+		return "", err
+	}
+	if publication.Identity.SchemaVersion != preparedCorpusSchemaVersion || publication.Identity.PipelineDigest != pipelineDigest || publication.Identity.CorpusDigest == "" {
+		return "", fmt.Errorf("RAG_PREPARED_PUBLICATION_IDENTITY")
+	}
+	prepared, err := NewPreparedFromStaticValues(publication.Pipeline, publication.Values)
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = prepared.Close() }()
+	digest, err := publication.Store.Put(ctx, prepared, publication.Identity)
+	if err != nil {
+		return "", err
+	}
+	reopened, found, err := publication.Store.Open(ctx, publication.Engine, publication.Pipeline, publication.Corpus, publication.Options, publication.Identity)
+	if err != nil {
+		return "", err
+	}
+	if !found {
+		return "", fmt.Errorf("RAG_PREPARED_PUBLICATION_REOPEN")
+	}
+	return digest, reopened.Close()
+}
+
 type FilePreparedCorpusStore struct{ directory string }
 
 func NewFilePreparedCorpusStore(directory string) (*FilePreparedCorpusStore, error) {
