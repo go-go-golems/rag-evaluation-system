@@ -27,6 +27,7 @@ const study = rag.study("ttc-real-provider-v2-full-candidate", (s) =>
 							model: "generator-primary",
 							prompt: "ttc-grounded-answer-v1",
 							citations: "required",
+							citationFailurePolicy: "abstain",
 							contextBudgetTokens: 6000,
 						}),
 					),

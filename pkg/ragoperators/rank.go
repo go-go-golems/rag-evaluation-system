@@ -343,8 +343,8 @@ func (answerOperator) Execute(ctx context.Context, node ragcontract.Node, inputs
 		return nil, fmt.Errorf("RAG_GENERATOR_UNAVAILABLE: answer")
 	}
 	var config struct {
-		Model, Prompt, Citations string
-		ContextBudgetTokens      int
+		Model, Prompt, Citations, CitationFailurePolicy string
+		ContextBudgetTokens                             int
 	}
 	if err := decodeConfig(node.Config, &config); err != nil {
 		return nil, err
@@ -388,7 +388,15 @@ func (answerOperator) Execute(ctx context.Context, node ragcontract.Node, inputs
 	}
 	result.CitationChunkIDs = normalized
 	if config.Citations == "required" && len(result.CitationChunkIDs) == 0 {
-		return nil, fmt.Errorf("RAG_ANSWER_CITATIONS_REQUIRED")
+		if config.CitationFailurePolicy != "abstain" {
+			return nil, fmt.Errorf("RAG_ANSWER_CITATIONS_REQUIRED")
+		}
+		// Do not expose an ungrounded model answer as a successful answer. The
+		// policy is explicit in the immutable pipeline config; it performs no
+		// retry or provider fallback and preserves the truth that no citation was
+		// available.
+		result.Text = "Unable to provide a grounded answer from the retrieved evidence."
+		result.Abstained = true
 	}
 	answer := Answer{Text: result.Text, CitationChunkIDs: result.CitationChunkIDs, FinishReason: result.FinishReason, Abstained: result.Abstained, InputTokens: result.InputTokens, OutputTokens: result.OutputTokens}
 	addGenerationUsage(env, config.Model, result)

@@ -172,7 +172,7 @@ func configFields(kind string) map[string]bool {
 		"collapse.final":                      {"scope", "representative"},
 		"hydrate.source-evidence":             {"policy", "allSupportingChunks", "results"},
 		"rerank.cross-encoder":                {"model", "candidateCount", "results", "truncation", "tokenization", "inputTemplate", "timeoutMilliseconds"},
-		"generate.answer":                     {"model", "prompt", "citations", "contextBudgetTokens", "decoding", "seedPolicy"},
+		"generate.answer":                     {"model", "prompt", "citations", "citationFailurePolicy", "contextBudgetTokens", "decoding", "seedPolicy"},
 		"evaluate.relevance":                  {"target", "gradeThreshold", "measures"},
 	}
 	result := map[string]bool{}

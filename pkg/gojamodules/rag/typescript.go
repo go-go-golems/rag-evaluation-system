@@ -44,7 +44,7 @@ export interface CollapseConfig { scope: CollapseScope | FactorRef; representati
 export interface WeightedRRFConfig { rankConstant?: number; weights?: Record<string,number>; missingChannelPolicy?: "zero" | "reject"; tieBreak?: string; }
 export interface HydrationConfig { selection: "bestContributionThenId"; allSupportingChunks?: boolean; }
 export interface CrossEncoderConfig { model: string; candidates: number; results: number; truncation?: string; tokenization?: string; inputTemplate?: string; timeoutMilliseconds?: number; }
-export interface AnswerConfig { model: string; prompt: string; citations: "required" | "optional"; contextBudgetTokens: number; decoding?: JSONObject; seedPolicy?: { mode: string; seed?: number }; }
+export interface AnswerConfig { model: string; prompt: string; citations: "required" | "optional"; citationFailurePolicy?: "error" | "abstain"; contextBudgetTokens: number; decoding?: JSONObject; seedPolicy?: { mode: string; seed?: number }; }
 export interface DatasetConfig { split: string; status: DatasetStatus; relevanceTarget: "document" | "unit" | "chunk" | "answer"; }
 export interface PipelineBuilder { corpus(input: CorpusInput): this; units(op: UnitOperator): this; chunks(op: ChunkOperator): this; representations(op: RepresentationOperator): this; embedding(op: EmbeddingOperator): this; index(name: string, op: IndexOperator): this; use(fragment: Fragment<PipelineBuilder>): this; note(text: string): this; tag(name: string, value: string): this; }
 export interface Pipeline { validate(): ValidationReport; explain(): Explanation; readonly __ragPipeline?: true; }

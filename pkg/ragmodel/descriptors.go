@@ -112,12 +112,15 @@ type CrossEncoderConfig struct {
 	TimeoutMilliseconds int64  `json:"timeoutMilliseconds,omitempty"`
 }
 type AnswerConfig struct {
-	Model               string                  `json:"model"`
-	Prompt              string                  `json:"prompt"`
-	Citations           string                  `json:"citations"`
-	ContextBudgetTokens int                     `json:"contextBudgetTokens"`
-	Decoding            json.RawMessage         `json:"decoding,omitempty"`
-	SeedPolicy          *ragcontract.SeedPolicy `json:"seedPolicy,omitempty"`
+	Model     string `json:"model"`
+	Prompt    string `json:"prompt"`
+	Citations string `json:"citations"`
+	// CitationFailurePolicy is explicit: "error" (default) rejects an
+	// ungrounded answer, while "abstain" discards it and returns a safe abstention.
+	CitationFailurePolicy string                  `json:"citationFailurePolicy,omitempty"`
+	ContextBudgetTokens   int                     `json:"contextBudgetTokens"`
+	Decoding              json.RawMessage         `json:"decoding,omitempty"`
+	SeedPolicy            *ragcontract.SeedPolicy `json:"seedPolicy,omitempty"`
 }
 
 func desc(kind DescriptorKind, name, operator string, config any) *Descriptor {

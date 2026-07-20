@@ -16,12 +16,13 @@ import (
 )
 
 type fakeGenerator struct {
-	calls     int
-	fail      bool
-	invalid   bool
-	questions []string
-	abstained bool
-	request   GenerationRequest
+	calls       int
+	fail        bool
+	invalid     bool
+	questions   []string
+	abstained   bool
+	noCitations bool
+	request     GenerationRequest
 }
 
 func (g *fakeGenerator) Generate(_ context.Context, r GenerationRequest) (GenerationResult, error) {
@@ -52,6 +53,9 @@ func (g *fakeGenerator) Generate(_ context.Context, r GenerationRequest) (Genera
 	}
 	if g.abstained {
 		return GenerationResult{Text: "", Abstained: true, FinishReason: "stop"}, nil
+	}
+	if g.noCitations {
+		return GenerationResult{Text: "ungrounded answer", FinishReason: "stop"}, nil
 	}
 	return GenerationResult{Text: "answer", CitationChunkIDs: ids, FinishReason: "stop"}, nil
 }
@@ -628,6 +632,15 @@ func TestRerankAndAnswerNeverFallback(t *testing.T) {
 	}
 	if generator.request.Kind != "generate.answer" || generator.request.Text != "What does this source say?" || generator.request.OutputSchema != "summary/v1" {
 		t.Fatalf("answer request = %#v", generator.request)
+	}
+	abstainNode := ragcontract.Node{Config: json.RawMessage(`{"model":"m","prompt":"p","citations":"required","citationFailurePolicy":"abstain"}`)}
+	abstainOut, err := (answerOperator{}).Execute(context.Background(), abstainNode, map[string]any{"evidence": evidence}, &Environment{Manifests: fixtureResolver(), Generator: &fakeGenerator{noCitations: true}, QueryText: "What does this source say?"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	abstained := abstainOut["answer"].(Answer)
+	if !abstained.Abstained || len(abstained.CitationChunkIDs) != 0 || abstained.Text == "ungrounded answer" {
+		t.Fatalf("citation failure policy exposed ungrounded answer: %#v", abstained)
 	}
 }
 func TestVersionedEvaluationMetrics(t *testing.T) {
