@@ -18,7 +18,7 @@ func TestDeriveCanonicalMapping(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if mapping.RawOutputKey != "raw/representations" || mapping.DerivedOutputKey != "combined/representations" || mapping.MergedOutputKey != "merge/representations" || mapping.EmbeddingOutputKey != "embed/embeddings" || mapping.MaxRepresentationsPerChunk != 4 {
+	if mapping.ChunksOutputKey != "chunks/chunks" || mapping.RawOutputKey != "raw/representations" || mapping.DerivedOutputKey != "combined/representations" || mapping.MergedOutputKey != "merge/representations" || mapping.EmbeddingOutputKey != "embed/embeddings" || mapping.MaxRepresentationsPerChunk != 4 {
 		t.Fatalf("mapping=%#v", mapping)
 	}
 }

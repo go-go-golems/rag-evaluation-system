@@ -43,6 +43,34 @@ func TestExternalWorkerSpeaksGenericProtocol(t *testing.T) {
 		}
 	}
 }
+func TestExternalWorkerDurablyPreparesCombinedPipeline(t *testing.T) {
+	binary := buildWorker(t)
+	corpusArtifact := ragoperators.NewCorpusArtifact(ragoperators.Corpus{Records: []ragoperators.SourceRecord{{ID: "s1", SessionID: "s", Ordinal: 1, Role: "user", Text: "reciprocal rank fusion"}}}, "fixture")
+	evaluationArtifact := ragoperators.NewEvaluationArtifact(ragoperators.EvaluationDataset{Queries: []ragoperators.Query{{ID: "q1", Text: "rank fusion"}}}, "fixture", "smoke", "candidate", "unit", corpusArtifact.Manifest.Digest)
+	execution := workerCombinedExecution(t, corpusArtifact.Manifest.Digest, evaluationArtifact.Manifest.Digest)
+	root := t.TempDir()
+	corpusPath := writeJSON(t, root, "corpus.json", corpusArtifact)
+	datasetPath := writeJSON(t, root, "dataset.json", evaluationArtifact)
+	request := map[string]any{"protocolVersion": protocolVersion, "attempt": map[string]any{"specification": map[string]any{"canonicalIdentity": map[string]any{"domain": ragcontract.Domain, "domainSchemaVersion": ragcontract.DomainSchemaVersion, "domainConfig": execution}}}, "inputs": []map[string]any{{"reference": map[string]any{"role": "corpus", "schemaVersion": ragcontract.CorpusManifestSchema}, "path": corpusPath}, {"reference": map[string]any{"role": "evaluation-dataset", "schemaVersion": ragcontract.EvaluationManifestSchema}, "path": datasetPath}}}
+	stateDB := filepath.Join(root, "preparation.sqlite")
+	frames, stderr, err := runWorkerArgs(binary, request, "--preparation-state-db", stateDB)
+	if err != nil {
+		t.Fatalf("worker: %v stderr=%s frames=%#v", err, stderr, frames)
+	}
+	progress := 0
+	for _, frame := range frames {
+		if frame["type"] == "event" {
+			event, _ := frame["event"].(map[string]any)
+			if event["type"] == "rag.preparation.progress/v1" {
+				progress++
+			}
+		}
+	}
+	if progress < 2 || frames[len(frames)-1]["type"] != "complete" {
+		t.Fatalf("progress=%d frames=%#v", progress, frames)
+	}
+}
+
 func TestExternalWorkerAdvertisesBeforeDomainError(t *testing.T) {
 	binary := buildWorker(t)
 	request := map[string]any{"protocolVersion": protocolVersion, "attempt": map[string]any{"specification": map[string]any{"canonicalIdentity": map[string]any{"domain": "other", "domainSchemaVersion": "other/v1", "domainConfig": map[string]any{}}}}}
@@ -64,8 +92,12 @@ func buildWorker(t *testing.T) string {
 	return path
 }
 func runWorker(binary string, request any) ([]map[string]any, string, error) {
+	return runWorkerArgs(binary, request)
+}
+
+func runWorkerArgs(binary string, request any, args ...string) ([]map[string]any, string, error) {
 	payload, _ := json.Marshal(request)
-	command := exec.Command(binary, "--provider-profile", "fixtures")
+	command := exec.Command(binary, append([]string{"--provider-profile", "fixtures"}, args...)...)
 	command.Stdin = bytes.NewReader(append(payload, '\n'))
 	var stdout, stderr bytes.Buffer
 	command.Stdout = &stdout
@@ -94,6 +126,30 @@ func writeJSON(t *testing.T, root, name string, value any) string {
 	}
 	return path
 }
+func workerCombinedExecution(t *testing.T, corpusDigest, evaluationDigest string) ragcontract.PipelineExecution {
+	t.Helper()
+	pipeline := ragmodel.NewPipeline("combined", func(p *ragmodel.PipelineBuilder) {
+		representations := ragmodel.ComposeRepresentations(
+			ragmodel.RawRepresentation("raw"),
+			ragmodel.CombinedPreparation(ragmodel.CombinedPreparationConfig{Model: ragoperators.FixtureSummaryModel, Prompt: ragoperators.FixtureSummaryPrompt, OutputSchema: ragoperators.FixtureSummarySchema, BatchSize: 8, QuestionsPerChunk: 1, MaxBatchRunes: 100}),
+		)
+		p.CorpusInput(ragmodel.Corpus("corpus")).Units(ragmodel.UnitsIdentity()).Chunks(ragmodel.RecursiveChunks(ragmodel.RecursiveChunkConfig{MaxRunes: 100})).Represent(representations).EmbeddingModel(ragmodel.EmbeddingModel(ragoperators.FixtureEmbeddingModel, ragmodel.EmbeddingConfig{Dimensions: 32, Normalize: "l2", BatchSize: 8})).IndexNamed("representations", ragmodel.BleveMulti(ragmodel.BleveMultiConfig{Lexical: true, Vector: &ragmodel.VectorIndexConfig{Distance: "cosine"}}))
+	})
+	query := ragmodel.NewQueryPlan("query", func(q *ragmodel.QueryBuilder) {
+		q.Channels(ragmodel.BM25("raw.lexical", ragmodel.RetrieveConfig{Index: "representations", Representation: "raw", TopK: 5})).CollapseChannels(ragmodel.ParentCollapse(ragmodel.CollapseConfig{Scope: "unit", Representative: "scoreThenRepresentationId"})).Fuse(ragmodel.WeightedRRF(ragmodel.WeightedRRFConfig{RankConstant: 60})).CollapseFinal(ragmodel.ParentCollapse(ragmodel.CollapseConfig{Scope: "unit", Representative: "scoreThenRepresentationId"})).Hydrate(ragmodel.SourceEvidence(ragmodel.HydrationConfig{Selection: "bestContributionThenId"}))
+	})
+	product := ragmodel.NewProduct("combined", func(p *ragmodel.ProductBuilder) {
+		p.PipelineValue(pipeline).QueryPlan(query).ResponseContract(func(r *ragmodel.ResponseBuilder) { r.Citations("source") })
+	})
+	plan, err := ragmodel.CompileProduct(product, ragmodel.CompileOptions{Inputs: map[string]ragcontract.ArtifactBinding{"corpus": {Role: "corpus", Kind: "json", Digest: corpusDigest, SchemaVersion: ragcontract.CorpusManifestSchema}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	execution := ragcontract.PipelineExecution{SchemaVersion: ragcontract.ExecutionSchemaVersion, Pipeline: plan.Pipeline, Bindings: plan.Bindings, Dataset: ragcontract.DatasetBinding{ManifestDigest: evaluationDigest, Split: "smoke", Status: "candidate", RelevanceTarget: "unit"}, Measures: []ragcontract.Measure{{Name: "rag.mrr", Version: "v1", ValueKind: "number", Unit: "ratio", Required: true, Config: json.RawMessage(`{}`)}}, VariantID: "combined", Factors: []ragcontract.FactorSelection{}}
+	execution.CellID, _ = ragcontract.Digest(execution)
+	return execution
+}
+
 func workerExecution(t *testing.T, corpusDigest, evaluationDigest string) ragcontract.PipelineExecution {
 	t.Helper()
 	pipeline := ragmodel.NewPipeline("raw", func(p *ragmodel.PipelineBuilder) {

@@ -28,7 +28,7 @@ func TestEnsureRunRejectsPublicationIdentityMismatch(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	input := Input{Identity: Identity{SchemaVersion: "rag-preparation-workflow/v1", PreparedDigest: "sha256:wrong"}, Plan: plan, Publication: &PublicationSpec{Identity: ragengine.PreparedCorpusIdentity{SchemaVersion: "rag-prepared-corpus-manifest/v1", CorpusDigest: "sha256:corpus", PipelineDigest: "sha256:pipeline"}, RawOutputKey: "raw/out", DerivedOutputKey: "derived/out", MergedOutputKey: "merged/out", EmbeddingOutputKey: "embedding/out"}}
+	input := Input{Identity: Identity{SchemaVersion: "rag-preparation-workflow/v1", PreparedDigest: "sha256:wrong"}, Plan: plan, Publication: &PublicationSpec{Identity: ragengine.PreparedCorpusIdentity{SchemaVersion: "rag-prepared-corpus-manifest/v1", CorpusDigest: "sha256:corpus", PipelineDigest: "sha256:pipeline"}, ChunksOutputKey: "chunks/out", RawOutputKey: "raw/out", DerivedOutputKey: "derived/out", MergedOutputKey: "merged/out", EmbeddingOutputKey: "embedding/out"}}
 	if _, err := runtime.EnsureRun(ctx, PackageName, input, scraperworkflow.WithRunID("publication-mismatch"), scraperworkflow.WithRunIdentity(input.Identity)); err == nil {
 		t.Fatal("publication identity mismatch accepted")
 	}

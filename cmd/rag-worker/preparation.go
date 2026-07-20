@@ -58,7 +58,7 @@ func executeDurablePreparation(ctx context.Context, encoder *json.Encoder, state
 	if err := preparationworkflow.RegisterWithPublication(runtime, resolve, publish); err != nil {
 		return err
 	}
-	input := preparationworkflow.Input{Identity: workflowIdentity, Plan: plan, Embedding: &preparationworkflow.EmbeddingSpec{Node: mapping.EmbeddingNode, RawRepresentationName: mapping.RawRepresentationName, MaxRepresentationsPerChunk: mapping.MaxRepresentationsPerChunk}, Publication: &preparationworkflow.PublicationSpec{Identity: identity, RawOutputKey: mapping.RawOutputKey, DerivedOutputKey: mapping.DerivedOutputKey, MergedOutputKey: mapping.MergedOutputKey, EmbeddingOutputKey: mapping.EmbeddingOutputKey}}
+	input := preparationworkflow.Input{Identity: workflowIdentity, Plan: plan, Embedding: &preparationworkflow.EmbeddingSpec{Node: mapping.EmbeddingNode, RawRepresentationName: mapping.RawRepresentationName, MaxRepresentationsPerChunk: mapping.MaxRepresentationsPerChunk}, Publication: &preparationworkflow.PublicationSpec{Identity: identity, ChunksOutputKey: mapping.ChunksOutputKey, RawOutputKey: mapping.RawOutputKey, DerivedOutputKey: mapping.DerivedOutputKey, MergedOutputKey: mapping.MergedOutputKey, EmbeddingOutputKey: mapping.EmbeddingOutputKey}}
 	handle, err := runtime.EnsureRun(ctx, preparationworkflow.PackageName, input, scraperworkflow.WithRunID("rag-preparation-"+identityDigest[len("sha256:"):len("sha256:")+16]), scraperworkflow.WithRunIdentity(workflowIdentity))
 	if err != nil {
 		return err

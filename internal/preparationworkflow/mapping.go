@@ -15,6 +15,7 @@ type CanonicalMapping struct {
 	EmbeddingNode              ragcontract.Node
 	RawRepresentationName      string
 	MaxRepresentationsPerChunk int
+	ChunksOutputKey            string
 	RawOutputKey               string
 	DerivedOutputKey           string
 	MergedOutputKey            string
@@ -57,6 +58,7 @@ func DeriveCanonicalMapping(pipeline ragcontract.PipelineIR) (CanonicalMapping, 
 	return CanonicalMapping{
 		CombinedNode: combined, EmbeddingNode: embedding, RawRepresentationName: rawConfig.Name,
 		MaxRepresentationsPerChunk: 2 + combinedConfig.QuestionsPerChunk,
+		ChunksOutputKey:            chunks.NodeID + "/" + chunks.Port,
 		RawOutputKey:               raw.ID + "/representations", DerivedOutputKey: combined.ID + "/representations",
 		MergedOutputKey: merge.ID + "/representations", EmbeddingOutputKey: embedding.ID + "/embeddings",
 	}, nil

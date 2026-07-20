@@ -39,6 +39,7 @@ type EmbeddingSpec struct {
 
 type PublicationSpec struct {
 	Identity           ragengine.PreparedCorpusIdentity `json:"identity"`
+	ChunksOutputKey    string                           `json:"chunksOutputKey"`
 	RawOutputKey       string                           `json:"rawOutputKey"`
 	DerivedOutputKey   string                           `json:"derivedOutputKey"`
 	MergedOutputKey    string                           `json:"mergedOutputKey"`
@@ -73,6 +74,7 @@ type embeddingInput struct {
 }
 
 type embeddingOutput struct {
+	Chunks                 []ragoperators.Chunk          `json:"chunks"`
 	RawRepresentations     []ragoperators.Representation `json:"rawRepresentations"`
 	DerivedRepresentations []ragoperators.Representation `json:"derivedRepresentations"`
 	Representations        []ragoperators.Representation `json:"representations"`
@@ -177,7 +179,7 @@ func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, pub
 		if err != nil {
 			return err
 		}
-		output := embeddingOutput{RawRepresentations: raw, DerivedRepresentations: combined.Representations, Representations: representations, Embeddings: result.Embeddings, ProviderCall: result.ProviderCall}
+		output := embeddingOutput{Chunks: in.Batch.Chunks, RawRepresentations: raw, DerivedRepresentations: combined.Representations, Representations: representations, Embeddings: result.Embeddings, ProviderCall: result.ProviderCall}
 		body, err := json.Marshal(output)
 		if err != nil {
 			return fmt.Errorf("marshal embedding batch artifact: %w", err)
@@ -193,6 +195,7 @@ func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, pub
 		if len(step.Step().DependsOn) != in.ExpectedBatches {
 			return fmt.Errorf("RAG_PREPARATION_FINALIZE_DEPENDENCIES: got %d want %d", len(step.Step().DependsOn), in.ExpectedBatches)
 		}
+		chunks := []ragoperators.Chunk{}
 		rawRepresentations := []ragoperators.Representation{}
 		derivedRepresentations := []ragoperators.Representation{}
 		representations := []ragoperators.Representation{}
@@ -203,6 +206,7 @@ func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, pub
 				if err := step.DependencyData(dep.OpID, &output); err != nil {
 					return err
 				}
+				chunks = append(chunks, output.Chunks...)
 				rawRepresentations = append(rawRepresentations, output.RawRepresentations...)
 				derivedRepresentations = append(derivedRepresentations, output.DerivedRepresentations...)
 				representations = append(representations, output.Representations...)
@@ -223,7 +227,7 @@ func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, pub
 		}
 		result := map[string]any{"schemaVersion": "rag-preparation-finalize/v1", "representationCount": len(representations), "embeddingCount": len(embeddings)}
 		if in.Publication != nil {
-			if publication == nil || !in.Embeddings || in.Publication.RawOutputKey == "" || in.Publication.DerivedOutputKey == "" || in.Publication.MergedOutputKey == "" || in.Publication.EmbeddingOutputKey == "" {
+			if publication == nil || !in.Embeddings || in.Publication.ChunksOutputKey == "" || in.Publication.RawOutputKey == "" || in.Publication.DerivedOutputKey == "" || in.Publication.MergedOutputKey == "" || in.Publication.EmbeddingOutputKey == "" {
 				return fmt.Errorf("RAG_PREPARATION_PUBLICATION_CONFIG")
 			}
 			target, err := publication(ctx, in.Identity, *in.Publication)
@@ -231,6 +235,7 @@ func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, pub
 				return err
 			}
 			values := map[string]any{
+				in.Publication.ChunksOutputKey:    chunks,
 				in.Publication.RawOutputKey:       rawRepresentations,
 				in.Publication.DerivedOutputKey:   derivedRepresentations,
 				in.Publication.MergedOutputKey:    representations,

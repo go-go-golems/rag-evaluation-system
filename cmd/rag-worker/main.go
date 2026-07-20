@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -187,6 +188,13 @@ func executeWorker(parent context.Context, settings *workerSettings) {
 		return
 	}
 	engine := ragengine.New(nil)
+	if settings.PreparationStateDB != "" && options.PreparedStore == nil {
+		options.PreparedStore, err = ragengine.NewFilePreparedCorpusStore(filepath.Join(filepath.Dir(settings.PreparationStateDB), "prepared"))
+		if err != nil {
+			fail(encoder, "RAG_WORKER_PREPARATION", err)
+			return
+		}
+	}
 	options.PreparationEvent = observer{encoder: encoder}.Event
 	options.PreparedCorpusDigest = corpusArtifact.Manifest.Digest
 	if options.PreparedStore != nil {

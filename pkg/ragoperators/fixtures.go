@@ -36,6 +36,28 @@ func NewFixtureProviders() FixtureProviders {
 }
 func (p FixtureProviders) Generate(_ context.Context, request GenerationRequest) (GenerationResult, error) {
 	switch request.Kind {
+	case "representations.combined-summary-questions":
+		var payload struct {
+			Items []struct {
+				ChunkID string `json:"chunkId"`
+				Text    string `json:"text"`
+			} `json:"items"`
+		}
+		if err := json.Unmarshal([]byte(request.Text), &payload); err != nil {
+			return GenerationResult{}, fmt.Errorf("RAG_FIXTURE_COMBINED_REQUEST: %w", err)
+		}
+		if len(payload.Items) == 0 || request.Count < 1 {
+			return GenerationResult{}, fmt.Errorf("RAG_FIXTURE_COMBINED_REQUEST")
+		}
+		items := make([]CombinedGenerationItem, len(payload.Items))
+		for i, item := range payload.Items {
+			questions := make([]string, request.Count)
+			for j := range questions {
+				questions[j] = fmt.Sprintf("What happened in fixture chunk %s?", item.ChunkID)
+			}
+			items[i] = CombinedGenerationItem{ChunkID: item.ChunkID, Summary: fixtureAbstract(item.Text), Questions: questions}
+		}
+		return GenerationResult{CombinedItems: items, FinishReason: "fixture"}, nil
 	case "representations.structured-summary":
 		words := uniqueFixtureWords(request.Text, 8)
 		summary := map[string]any{"schema": FixtureSummarySchema, "abstract": fixtureAbstract(request.Text), "decisions": fixtureSentences(request.Text, []string{"decid", "choose", "selected", "will use"}), "problems": fixtureSentences(request.Text, []string{"error", "fail", "problem", "issue", "broken"}), "actions": fixtureSentences(request.Text, []string{"add", "fix", "run", "update", "implement", "create"}), "artifacts": []string{}, "questions": []string{}, "keywords": words}
