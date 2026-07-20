@@ -9,17 +9,13 @@ function buildPipeline(name, maxRunes) {
 			.representations(
 				rag.representations.compose(
 					rag.representations.raw("raw"),
-					rag.representations.structuredSummary("summary", {
-						generator: rag.generation.structured("generator-primary", {
-							prompt: "ttc-summary-v1",
-							outputSchema: "transcript-rag-summary/v1",
-						}),
-					}),
-					rag.representations.syntheticQuestions("question", {
-						from: "summary",
-						count: 4,
-						model: "generator-primary",
-						prompt: "ttc-questions-v1",
+					rag.representations.combinedSummaryQuestions({
+						model: "generator-umans-flash",
+						prompt: "ttc-combined-preparation-v2",
+						outputSchema: "rag-combined-preparation/v2",
+						batchSize: 2,
+						questionsPerChunk: 4,
+						maxBatchRunes: 6000,
 					}),
 				),
 			)
