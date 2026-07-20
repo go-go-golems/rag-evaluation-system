@@ -185,6 +185,7 @@ func executeWorker(parent context.Context, settings *workerSettings) {
 		return
 	}
 	engine := ragengine.New(nil)
+	options.PreparationEvent = observer{encoder: encoder}.Event
 	options.PreparedCorpusDigest = corpusArtifact.Manifest.Digest
 	if options.PreparedStore != nil {
 		pipelineDigest, err := ragcontract.Digest(execution.Pipeline)

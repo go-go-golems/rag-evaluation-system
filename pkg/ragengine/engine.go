@@ -42,6 +42,8 @@ type Options struct {
 	PreparedStore                 PreparedCorpusStore
 	EmbeddingFingerprint          string
 	Prepared                      *Prepared
+	// PreparationEvent emits runtime-only progress for static preparation.
+	PreparationEvent func(context.Context, ragoperators.Event) error
 }
 type Result struct {
 	Traces    []ragcontract.QueryTrace   `json:"traces"`
