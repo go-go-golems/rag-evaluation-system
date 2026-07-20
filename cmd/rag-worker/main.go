@@ -77,9 +77,10 @@ func (o observer) Artifact(_ context.Context, v ragoperators.Artifact) error {
 type workerCommand struct{ *cmds.CommandDescription }
 
 type workerSettings struct {
-	ProviderProfile string `glazed:"provider-profile"`
-	ProviderConfig  string `glazed:"provider-config"`
-	Capabilities    bool   `glazed:"capabilities"`
+	ProviderProfile    string `glazed:"provider-profile"`
+	ProviderConfig     string `glazed:"provider-config"`
+	Capabilities       bool   `glazed:"capabilities"`
+	PreparationStateDB string `glazed:"preparation-state-db"`
 }
 
 var _ cmds.BareCommand = (*workerCommand)(nil)
@@ -92,6 +93,7 @@ func newWorkerCommand() (*cobra.Command, error) {
 			fields.New("provider-profile", fields.TypeString, fields.WithHelp("Explicit provider profile: fixtures or real"), fields.WithRequired(true)),
 			fields.New("provider-config", fields.TypeString, fields.WithHelp("Host-only real-provider configuration YAML; required for provider-profile=real")),
 			fields.New("capabilities", fields.TypeBool, fields.WithDefault(false), fields.WithHelp("Print the non-secret provider capability descriptor and exit")),
+			fields.New("preparation-state-db", fields.TypeString, fields.WithHelp("Opt-in scraper SQLite state database for durable canonical combined preparation")),
 		),
 	)
 	command := &workerCommand{CommandDescription: description}
@@ -203,12 +205,22 @@ func executeWorker(parent context.Context, settings *workerSettings) {
 			fail(encoder, "RAG_WORKER_PREPARED", err)
 			return
 		}
+		if settings.PreparationStateDB != "" {
+			if err := executeDurablePreparation(ctx, settings.PreparationStateDB, execution, corpusArtifact.Corpus, options, identity); err != nil {
+				fail(encoder, "RAG_WORKER_PREPARATION", err)
+				return
+			}
+		}
 		prepared, found, err := options.PreparedStore.Open(ctx, engine, execution.Pipeline, corpusArtifact.Corpus, options, identity)
 		if err != nil {
 			fail(encoder, "RAG_WORKER_PREPARED", err)
 			return
 		}
 		if !found {
+			if settings.PreparationStateDB != "" {
+				fail(encoder, "RAG_WORKER_PREPARED", fmt.Errorf("durable preparation completed without a published corpus"))
+				return
+			}
 			prepared, err = engine.Prepare(ctx, execution.Pipeline, corpusArtifact.Corpus, options)
 			if err != nil {
 				fail(encoder, "RAG_WORKER_PREPARED", err)
