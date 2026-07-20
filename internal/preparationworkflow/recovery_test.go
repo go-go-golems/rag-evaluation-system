@@ -138,7 +138,7 @@ func TestEmbeddingStepsFollowCombinedSteps(t *testing.T) {
 		t.Fatal(err)
 	}
 	input := testInput(t)
-	input.Embedding = &EmbeddingSpec{RawRepresentationName: "raw", Node: ragcontract.Node{Config: json.RawMessage(`{"model":"model","dimensions":2,"normalize":"l2","batchSize":16}`)}}
+	input.Embedding = &EmbeddingSpec{RawRepresentationName: "raw", MaxRepresentationsPerChunk: 3, Node: ragcontract.Node{Config: json.RawMessage(`{"model":"model","dimensions":2,"normalize":"l2","batchSize":16}`)}}
 	handle, err := runtime.EnsureRun(ctx, PackageName, input, scraperworkflow.WithRunID("embedding-test"), scraperworkflow.WithRunIdentity(input.Identity))
 	if err != nil {
 		t.Fatal(err)

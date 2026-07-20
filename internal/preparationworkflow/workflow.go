@@ -31,8 +31,9 @@ type Identity struct {
 }
 
 type EmbeddingSpec struct {
-	Node                  ragcontract.Node `json:"node"`
-	RawRepresentationName string           `json:"rawRepresentationName"`
+	Node                       ragcontract.Node `json:"node"`
+	RawRepresentationName      string           `json:"rawRepresentationName"`
+	MaxRepresentationsPerChunk int              `json:"maxRepresentationsPerChunk"`
 }
 
 type Input struct {
@@ -119,6 +120,9 @@ func Register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver) err
 				return fmt.Errorf("RAG_PREPARATION_REPRESENTATION_DUPLICATE: %s", representations[i].Record.ID)
 			}
 		}
+		if len(representations) > len(in.Batch.Chunks)*in.Spec.MaxRepresentationsPerChunk {
+			return fmt.Errorf("RAG_PREPARATION_REPRESENTATION_CARDINALITY: got %d exceeds declared maximum %d", len(representations), len(in.Batch.Chunks)*in.Spec.MaxRepresentationsPerChunk)
+		}
 		plan, err := ragoperators.PlanEmbeddingBatches(representations, in.Spec.Node)
 		if err != nil {
 			return err
@@ -191,8 +195,17 @@ func build(_ context.Context, run *scraperworkflow.RunBuilder, input Input) erro
 	}
 	finalDependencies := combinedSteps
 	if input.Embedding != nil {
-		if input.Embedding.RawRepresentationName == "" {
-			return fmt.Errorf("RAG_PREPARATION_RAW_REPRESENTATION_NAME")
+		if input.Embedding.RawRepresentationName == "" || input.Embedding.MaxRepresentationsPerChunk < 1 {
+			return fmt.Errorf("RAG_PREPARATION_EMBEDDING_CARDINALITY")
+		}
+		batchSize, err := embeddingBatchSize(input.Embedding.Node)
+		if err != nil {
+			return err
+		}
+		for _, batch := range input.Plan.Batches {
+			if len(batch.Chunks)*input.Embedding.MaxRepresentationsPerChunk > batchSize {
+				return fmt.Errorf("RAG_PREPARATION_EMBED_BATCH_CONFIG: combined batch %d can require %d embedding items, over configured limit %d", batch.Index, len(batch.Chunks)*input.Embedding.MaxRepresentationsPerChunk, batchSize)
+			}
 		}
 		embeddingSteps := make([]scraperworkflow.StepHandle, 0, len(input.Plan.Batches))
 		for index, batch := range input.Plan.Batches {
@@ -206,6 +219,16 @@ func build(_ context.Context, run *scraperworkflow.RunBuilder, input Input) erro
 	}
 	_, err := run.Step("finalize", finalizerInput{ExpectedBatches: len(finalDependencies), Embeddings: input.Embedding != nil}, scraperworkflow.StepOpts{Kind: FinalizeStepKind, Queue: LocalQueue, DependsOn: scraperworkflow.Require(finalDependencies...)})
 	return err
+}
+
+func embeddingBatchSize(node ragcontract.Node) (int, error) {
+	var config struct {
+		BatchSize int `json:"batchSize"`
+	}
+	if err := json.Unmarshal(node.Config, &config); err != nil || config.BatchSize < 1 {
+		return 0, fmt.Errorf("RAG_PREPARATION_EMBEDDING_BATCH_SIZE")
+	}
+	return config.BatchSize, nil
 }
 
 func batchID(identity Identity, batch ragoperators.CombinedPreparationBatch) string {

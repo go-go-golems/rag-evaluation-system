@@ -62,7 +62,7 @@ func main() {
 	}
 	input := preparationworkflow.Input{Identity: identity, Plan: plan}
 	if *withEmbedding {
-		input.Embedding = &preparationworkflow.EmbeddingSpec{RawRepresentationName: "raw", Node: ragcontract.Node{Config: []byte(`{"model":"embedding-primary","dimensions":768,"normalize":"l2","batchSize":16}`)}}
+		input.Embedding = &preparationworkflow.EmbeddingSpec{RawRepresentationName: "raw", MaxRepresentationsPerChunk: 3, Node: ragcontract.Node{Config: []byte(`{"model":"embedding-primary","dimensions":768,"normalize":"l2","batchSize":16}`)}}
 	}
 	handle, err := runtime.EnsureRun(ctx, preparationworkflow.PackageName, input, scraperworkflow.WithRunID("rag-preparation-smoke-"+identityDigest[len("sha256:"):len("sha256:")+16]), scraperworkflow.WithRunIdentity(identity))
 	if err != nil {
