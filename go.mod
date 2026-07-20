@@ -113,7 +113,7 @@ require (
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/go-go-golems/bobatea v0.1.6 // indirect
 	github.com/go-go-golems/go-emrichen v0.0.11 // indirect
-	github.com/go-go-golems/researchctl v0.0.0
+	github.com/go-go-golems/researchctl v0.0.1
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-openapi/errors v0.22.0 // indirect
 	github.com/go-openapi/strfmt v0.23.0 // indirect
@@ -207,5 +207,3 @@ require (
 )
 
 tool github.com/go-go-golems/logcopter/cmd/logcopter-gen
-
-replace github.com/go-go-golems/researchctl => github.com/wesen/researchctl v0.0.0-20260720214534-4b0adf838d02
