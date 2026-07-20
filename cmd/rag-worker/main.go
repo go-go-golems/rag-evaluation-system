@@ -206,7 +206,7 @@ func executeWorker(parent context.Context, settings *workerSettings) {
 			return
 		}
 		if settings.PreparationStateDB != "" {
-			if err := executeDurablePreparation(ctx, settings.PreparationStateDB, execution, corpusArtifact.Corpus, options, identity); err != nil {
+			if err := executeDurablePreparation(ctx, encoder, settings.PreparationStateDB, execution, corpusArtifact.Corpus, options, identity); err != nil {
 				fail(encoder, "RAG_WORKER_PREPARATION", err)
 				return
 			}

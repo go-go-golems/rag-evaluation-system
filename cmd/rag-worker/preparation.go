@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -9,12 +10,16 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragengine"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/researchctladapter"
+	"github.com/go-go-golems/researchctl/pkg/lab"
+	"github.com/go-go-golems/researchctl/pkg/labprogress"
 	"github.com/go-go-golems/scraper/pkg/engine/model"
+	storecontract "github.com/go-go-golems/scraper/pkg/engine/store"
 	scraperworkflow "github.com/go-go-golems/scraper/pkg/workflow"
 )
 
-func executeDurablePreparation(ctx context.Context, stateDB string, execution ragcontract.PipelineExecution, corpus ragoperators.Corpus, options ragengine.Options, identity ragengine.PreparedCorpusIdentity) error {
-	if stateDB == "" || options.PreparedStore == nil {
+func executeDurablePreparation(ctx context.Context, encoder *json.Encoder, stateDB string, execution ragcontract.PipelineExecution, corpus ragoperators.Corpus, options ragengine.Options, identity ragengine.PreparedCorpusIdentity) error {
+	if stateDB == "" || options.PreparedStore == nil || encoder == nil {
 		return fmt.Errorf("RAG_WORKER_PREPARATION_CONFIG")
 	}
 	mapping, err := preparationworkflow.DeriveCanonicalMapping(execution.Pipeline)
@@ -58,9 +63,18 @@ func executeDurablePreparation(ctx context.Context, stateDB string, execution ra
 	if err != nil {
 		return err
 	}
+	emitter, err := researchctladapter.NewPreparationProgressEmitter(func(event lab.EventInput) error {
+		return encoder.Encode(frame{Type: "event", Event: event})
+	})
+	if err != nil {
+		return err
+	}
 	for {
 		snapshot, err := runtime.Snapshot(ctx, handle.ID)
 		if err != nil {
+			return err
+		}
+		if err := emitter.Emit(preparationProgress(snapshot, handle.IdentityDigest)); err != nil {
 			return err
 		}
 		switch snapshot.Workflow.Status {
@@ -73,4 +87,9 @@ func executeDurablePreparation(ctx context.Context, stateDB string, execution ra
 			return err
 		}
 	}
+}
+
+func preparationProgress(snapshot *storecontract.WorkflowSnapshot, identityDigest string) labprogress.Envelope {
+	stats := snapshot.Stats
+	return labprogress.Envelope{SchemaVersion: labprogress.SchemaVersionV1, Type: "rag.preparation.workflow.progress/v1", OccurredAt: time.Now().UTC(), WorkflowID: string(snapshot.Workflow.ID), WorkflowIdentityDigest: identityDigest, Phase: string(snapshot.Workflow.Status), Counts: labprogress.Counts{Pending: int64(stats.Pending), Ready: int64(stats.Ready), Running: int64(stats.Running), Succeeded: int64(stats.Succeeded), Failed: int64(stats.Failed), Blocked: int64(stats.Blocked), Canceled: int64(stats.Canceled), Total: int64(stats.Total)}}
 }
