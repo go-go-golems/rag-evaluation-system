@@ -10,6 +10,7 @@ import (
 	"sort"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragengine"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
 	"github.com/go-go-golems/scraper/pkg/engine/model"
 	scraperworkflow "github.com/go-go-golems/scraper/pkg/workflow"
@@ -36,10 +37,17 @@ type EmbeddingSpec struct {
 	MaxRepresentationsPerChunk int              `json:"maxRepresentationsPerChunk"`
 }
 
+type PublicationSpec struct {
+	Identity                ragengine.PreparedCorpusIdentity `json:"identity"`
+	RepresentationOutputKey string                           `json:"representationOutputKey"`
+	EmbeddingOutputKey      string                           `json:"embeddingOutputKey,omitempty"`
+}
+
 type Input struct {
-	Identity  Identity                             `json:"identity"`
-	Plan      ragoperators.CombinedPreparationPlan `json:"plan"`
-	Embedding *EmbeddingSpec                       `json:"embedding,omitempty"`
+	Identity    Identity                             `json:"identity"`
+	Plan        ragoperators.CombinedPreparationPlan `json:"plan"`
+	Embedding   *EmbeddingSpec                       `json:"embedding,omitempty"`
+	Publication *PublicationSpec                     `json:"publication,omitempty"`
 }
 
 type batchInput struct {
@@ -69,17 +77,44 @@ type embeddingOutput struct {
 }
 
 type finalizerInput struct {
-	ExpectedBatches int  `json:"expectedBatches"`
-	Embeddings      bool `json:"embeddings"`
+	Identity        Identity         `json:"identity"`
+	ExpectedBatches int              `json:"expectedBatches"`
+	Embeddings      bool             `json:"embeddings"`
+	Publication     *PublicationSpec `json:"publication,omitempty"`
 }
 
 // EnvironmentResolver resolves process-local provider configuration without
 // placing credentials in durable scraper operation inputs.
 type EnvironmentResolver func(context.Context, Identity) (*ragoperators.Environment, error)
 
+// PublicationTarget supplies process-local publication dependencies. Its pipeline,
+// corpus, stores, and provider configuration are never durable workflow input.
+type PublicationTarget struct {
+	Store    ragengine.PreparedCorpusStore
+	Engine   *ragengine.Engine
+	Pipeline ragcontract.PipelineIR
+	Corpus   ragoperators.Corpus
+	Options  ragengine.Options
+}
+
+type PublicationResolver func(context.Context, Identity, PublicationSpec) (PublicationTarget, error)
+
 // Register installs the preparation package and its two domain executors into a
 // scraper runtime. The caller owns runtime lifetime and scheduling.
 func Register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver) error {
+	return register(runtime, resolve, nil)
+}
+
+// RegisterWithPublication installs a finalizer that atomically publishes a complete
+// prepared corpus when Input.Publication is provided.
+func RegisterWithPublication(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, publication PublicationResolver) error {
+	if publication == nil {
+		return fmt.Errorf("preparation workflow publication resolver is required")
+	}
+	return register(runtime, resolve, publication)
+}
+
+func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, publication PublicationResolver) error {
 	if runtime == nil || resolve == nil {
 		return fmt.Errorf("preparation workflow runtime and environment resolver are required")
 	}
@@ -150,28 +185,61 @@ func Register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver) err
 	})); err != nil {
 		return err
 	}
-	if err := runtime.RegisterExecutor(scraperworkflow.NewTypedExecutor(FinalizeStepKind, func(_ context.Context, step *scraperworkflow.StepContext, in finalizerInput) error {
+	if err := runtime.RegisterExecutor(scraperworkflow.NewTypedExecutor(FinalizeStepKind, func(ctx context.Context, step *scraperworkflow.StepContext, in finalizerInput) error {
 		if len(step.Step().DependsOn) != in.ExpectedBatches {
 			return fmt.Errorf("RAG_PREPARATION_FINALIZE_DEPENDENCIES: got %d want %d", len(step.Step().DependsOn), in.ExpectedBatches)
 		}
-		representationCount, embeddingCount := 0, 0
+		representations := []ragoperators.Representation{}
+		embeddings := []ragoperators.Embedding{}
 		for _, dep := range step.Step().DependsOn {
 			if in.Embeddings {
 				var output embeddingOutput
 				if err := step.DependencyData(dep.OpID, &output); err != nil {
 					return err
 				}
-				representationCount += len(output.Representations)
-				embeddingCount += len(output.Embeddings)
+				representations = append(representations, output.Representations...)
+				embeddings = append(embeddings, output.Embeddings...)
 				continue
 			}
 			var output batchOutput
 			if err := step.DependencyData(dep.OpID, &output); err != nil {
 				return err
 			}
-			representationCount += len(output.Representations)
+			representations = append(representations, output.Representations...)
 		}
-		return step.Result(map[string]any{"schemaVersion": "rag-preparation-finalize/v1", "representationCount": representationCount, "embeddingCount": embeddingCount})
+		sort.Slice(representations, func(i, j int) bool { return representations[i].Record.ID < representations[j].Record.ID })
+		for i := 1; i < len(representations); i++ {
+			if representations[i].Record.ID == representations[i-1].Record.ID {
+				return fmt.Errorf("RAG_PREPARATION_FINALIZE_REPRESENTATION_DUPLICATE: %s", representations[i].Record.ID)
+			}
+		}
+		result := map[string]any{"schemaVersion": "rag-preparation-finalize/v1", "representationCount": len(representations), "embeddingCount": len(embeddings)}
+		if in.Publication != nil {
+			if publication == nil || in.Publication.RepresentationOutputKey == "" || (in.Embeddings && in.Publication.EmbeddingOutputKey == "") {
+				return fmt.Errorf("RAG_PREPARATION_PUBLICATION_CONFIG")
+			}
+			target, err := publication(ctx, in.Identity, *in.Publication)
+			if err != nil {
+				return err
+			}
+			values := map[string]any{in.Publication.RepresentationOutputKey: representations}
+			if in.Embeddings {
+				values[in.Publication.EmbeddingOutputKey] = embeddings
+			}
+			digest, err := ragengine.PublishPreparedCorpus(ctx, ragengine.PreparedCorpusPublication{Store: target.Store, Engine: target.Engine, Pipeline: target.Pipeline, Corpus: target.Corpus, Options: target.Options, Identity: in.Publication.Identity, Values: values})
+			if err != nil {
+				return err
+			}
+			body, err := json.Marshal(map[string]any{"schemaVersion": "rag-prepared-corpus-publication/v1", "preparedDigest": digest, "identity": in.Publication.Identity})
+			if err != nil {
+				return err
+			}
+			if _, err := step.Artifact("prepared-corpus-publication.json", "application/json", body, scraperworkflow.ArtifactKind("rag-prepared-corpus-publication")); err != nil {
+				return err
+			}
+			result["preparedDigest"] = digest
+		}
+		return step.Result(result)
 	})); err != nil {
 		return err
 	}
@@ -217,7 +285,10 @@ func build(_ context.Context, run *scraperworkflow.RunBuilder, input Input) erro
 		}
 		finalDependencies = embeddingSteps
 	}
-	_, err := run.Step("finalize", finalizerInput{ExpectedBatches: len(finalDependencies), Embeddings: input.Embedding != nil}, scraperworkflow.StepOpts{Kind: FinalizeStepKind, Queue: LocalQueue, DependsOn: scraperworkflow.Require(finalDependencies...)})
+	if input.Publication != nil && input.Publication.Identity.SchemaVersion != "rag-prepared-corpus-manifest/v1" {
+		return fmt.Errorf("RAG_PREPARATION_PUBLICATION_IDENTITY")
+	}
+	_, err := run.Step("finalize", finalizerInput{Identity: input.Identity, ExpectedBatches: len(finalDependencies), Embeddings: input.Embedding != nil, Publication: input.Publication}, scraperworkflow.StepOpts{Kind: FinalizeStepKind, Queue: LocalQueue, DependsOn: scraperworkflow.Require(finalDependencies...)})
 	return err
 }
 
