@@ -5,6 +5,7 @@ package preparationworkflow
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
@@ -65,7 +66,15 @@ func Register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver) err
 		if err != nil {
 			return err
 		}
-		return step.Result(batchOutput{Representations: result.Representations, CacheHit: result.CacheHit, ProviderCall: result.ProviderCall})
+		output := batchOutput{Representations: result.Representations, CacheHit: result.CacheHit, ProviderCall: result.ProviderCall}
+		body, err := json.Marshal(output)
+		if err != nil {
+			return fmt.Errorf("marshal combined batch artifact: %w", err)
+		}
+		if _, err := step.Artifact("combined-batch-result.json", "application/json", body, scraperworkflow.ArtifactKind("rag-preparation-batch-result")); err != nil {
+			return err
+		}
+		return step.Result(output)
 	})); err != nil {
 		return err
 	}
