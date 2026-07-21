@@ -19,7 +19,7 @@ func TestPreparationRuntimeConfigAppliesProviderConcurrencyToWorkQueues(t *testi
 	if config.MaxWorkers != 3 {
 		t.Fatalf("MaxWorkers = %d, want 3", config.MaxWorkers)
 	}
-	for queue, want := range map[string]int{"rag:generator": 3, "rag:embedding": 3, "rag:local": 1} {
+	for queue, want := range map[string]int{"rag:generator": 3, "rag:embedding": 1, "rag:local": 1} {
 		if got := config.Queues[model.QueueKey(queue)].MaxWorkers; got != want {
 			t.Fatalf("queue %q MaxWorkers = %d, want %d", queue, got, want)
 		}

@@ -102,8 +102,9 @@ func preparationRuntimeConfig(stateDB string, generationConcurrency int) scraper
 		Store: scraperworkflow.SQLiteStore(stateDB), WorkerID: "rag-worker", MaxWorkers: workerCount, LeaseDuration: time.Minute,
 		Queues: map[model.QueueKey]scraperworkflow.QueueConfig{
 			preparationworkflow.GenerationQueue: {MaxWorkers: workerCount},
-			preparationworkflow.EmbeddingQueue:  {MaxWorkers: workerCount},
-			preparationworkflow.LocalQueue:      {MaxWorkers: 1},
+			// The local embedding endpoint admits one request at a time.
+			preparationworkflow.EmbeddingQueue: {MaxWorkers: 1},
+			preparationworkflow.LocalQueue:     {MaxWorkers: 1},
 		},
 	}
 }
