@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragengine"
@@ -25,6 +26,8 @@ const (
 	GenerationQueue   = model.QueueKey("rag:generator")
 	EmbeddingQueue    = model.QueueKey("rag:embedding")
 	LocalQueue        = model.QueueKey("rag:local")
+
+	providerRequestTimeout = 3 * time.Minute
 )
 
 type Identity struct {
@@ -130,7 +133,9 @@ func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, pub
 		if err != nil {
 			return err
 		}
-		result, err := ragoperators.ExecuteCombinedPreparationBatch(ctx, in.Plan, in.Batch, env)
+		requestCtx, cancel := context.WithTimeout(ctx, providerRequestTimeout)
+		defer cancel()
+		result, err := ragoperators.ExecuteCombinedPreparationBatch(requestCtx, in.Plan, in.Batch, env)
 		if err != nil {
 			if strings.Contains(err.Error(), "RAG_GEPPETTO_GENERATOR_PROVIDER") {
 				return scraperworkflow.Retryable("rag_generator_provider", err)
@@ -184,8 +189,13 @@ func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, pub
 		if err != nil {
 			return err
 		}
-		result, err := ragoperators.ExecuteEmbeddingBatch(ctx, plan, plan.Batches[0], env)
+		requestCtx, cancel := context.WithTimeout(ctx, providerRequestTimeout)
+		defer cancel()
+		result, err := ragoperators.ExecuteEmbeddingBatch(requestCtx, plan, plan.Batches[0], env)
 		if err != nil {
+			if strings.Contains(err.Error(), "RAG_GEPPETTO_EMBED") || requestCtx.Err() != nil {
+				return scraperworkflow.Retryable("rag_embedding_provider", err)
+			}
 			return err
 		}
 		output := embeddingOutput{Chunks: in.Batch.Chunks, RawRepresentations: raw, DerivedRepresentations: combined.Representations, Representations: representations, Embeddings: result.Embeddings, ProviderCall: result.ProviderCall}
