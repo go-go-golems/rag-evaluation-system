@@ -311,7 +311,7 @@ func build(_ context.Context, run *scraperworkflow.RunBuilder, input Input) erro
 		}
 		embeddingSteps := make([]scraperworkflow.StepHandle, 0, len(input.Plan.Batches))
 		for index, batch := range input.Plan.Batches {
-			handle, err := run.Step(fmt.Sprintf("embedding-%04d", batch.Index), embeddingInput{Identity: input.Identity, Plan: input.Plan, Batch: batch, CombinedStepID: combinedSteps[index].ID, Spec: *input.Embedding}, scraperworkflow.StepOpts{Kind: EmbeddingStepKind, Queue: EmbeddingQueue, DedupKey: fmt.Sprintf("%s:embedding:%04d", input.Identity.PreparedDigest, batch.Index), DependsOn: scraperworkflow.Require(combinedSteps[index]), Retry: model.RetryPolicy{MaxAttempts: 1}})
+			handle, err := run.Step(fmt.Sprintf("embedding-%04d", batch.Index), embeddingInput{Identity: input.Identity, Plan: input.Plan, Batch: batch, CombinedStepID: combinedSteps[index].ID, Spec: *input.Embedding}, scraperworkflow.StepOpts{Kind: EmbeddingStepKind, Queue: EmbeddingQueue, DedupKey: fmt.Sprintf("%s:embedding:%04d", input.Identity.PreparedDigest, batch.Index), DependsOn: scraperworkflow.Require(combinedSteps[index]), Retry: model.RetryPolicy{MaxAttempts: 3}})
 			if err != nil {
 				return err
 			}
