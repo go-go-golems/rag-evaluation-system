@@ -15,7 +15,7 @@ function buildPipeline(name, maxRunes) {
 						outputSchema: "rag-combined-preparation/v2",
 						batchSize: 1,
 						questionsPerChunk: 4,
-						maxBatchRunes: 6000,
+						maxBatchRunes: 1200,
 					}),
 				),
 			)
