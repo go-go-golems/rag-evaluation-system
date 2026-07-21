@@ -28,6 +28,7 @@ type batchGenerator struct {
 	mu               sync.Mutex
 	failOnce         map[string]bool
 	providerFailOnce map[string]bool
+	invalidOnce      map[string]bool
 	calls            map[string]int
 }
 
@@ -54,6 +55,10 @@ func (g *batchGenerator) Generate(_ context.Context, request ragoperators.Genera
 	if g.failOnce[key] {
 		delete(g.failOnce, key)
 		return ragoperators.GenerationResult{}, fmt.Errorf("fixture transient failure")
+	}
+	if g.invalidOnce[key] {
+		delete(g.invalidOnce, key)
+		return ragoperators.GenerationResult{CombinedItems: []ragoperators.CombinedGenerationItem{{ChunkID: key}, {ChunkID: key}}}, nil
 	}
 	items := make([]ragoperators.CombinedGenerationItem, len(payload.Items))
 	for i, item := range payload.Items {

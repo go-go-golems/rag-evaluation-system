@@ -135,6 +135,11 @@ func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, pub
 			if strings.Contains(err.Error(), "RAG_GEPPETTO_GENERATOR_PROVIDER") {
 				return scraperworkflow.Retryable("rag_generator_provider", err)
 			}
+			if strings.Contains(err.Error(), "RAG_COMBINED_RESPONSE_") {
+				// A response that fails strict shape/cardinality validation is never persisted.
+				// Retrying obtains a new bounded provider response; exhaustion remains terminal.
+				return scraperworkflow.Retryable("rag_generator_response_validation", err)
+			}
 			return err
 		}
 		output := batchOutput{Representations: result.Representations, CacheHit: result.CacheHit, ProviderCall: result.ProviderCall}
