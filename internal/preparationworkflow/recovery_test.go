@@ -25,9 +25,10 @@ func (fixtureEmbedder) Embed(_ context.Context, _ string, texts []string) ([][]f
 }
 
 type batchGenerator struct {
-	mu       sync.Mutex
-	failOnce map[string]bool
-	calls    map[string]int
+	mu               sync.Mutex
+	failOnce         map[string]bool
+	providerFailOnce map[string]bool
+	calls            map[string]int
 }
 
 func (g *batchGenerator) Generate(_ context.Context, request ragoperators.GenerationRequest) (ragoperators.GenerationResult, error) {
@@ -46,6 +47,10 @@ func (g *batchGenerator) Generate(_ context.Context, request ragoperators.Genera
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	g.calls[key]++
+	if g.providerFailOnce[key] {
+		delete(g.providerFailOnce, key)
+		return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GEPPETTO_GENERATOR_PROVIDER")
+	}
 	if g.failOnce[key] {
 		delete(g.failOnce, key)
 		return ragoperators.GenerationResult{}, fmt.Errorf("fixture transient failure")

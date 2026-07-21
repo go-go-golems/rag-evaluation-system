@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragengine"
@@ -131,6 +132,9 @@ func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, pub
 		}
 		result, err := ragoperators.ExecuteCombinedPreparationBatch(ctx, in.Plan, in.Batch, env)
 		if err != nil {
+			if strings.Contains(err.Error(), "RAG_GEPPETTO_GENERATOR_PROVIDER") {
+				return scraperworkflow.Retryable("rag_generator_provider", err)
+			}
 			return err
 		}
 		output := batchOutput{Representations: result.Representations, CacheHit: result.CacheHit, ProviderCall: result.ProviderCall}
@@ -270,7 +274,7 @@ func build(_ context.Context, run *scraperworkflow.RunBuilder, input Input) erro
 	}
 	combinedSteps := make([]scraperworkflow.StepHandle, 0, len(input.Plan.Batches))
 	for _, batch := range input.Plan.Batches {
-		handle, err := run.Step(fmt.Sprintf("combined-%04d", batch.Index), batchInput{Identity: input.Identity, Plan: input.Plan, Batch: batch}, scraperworkflow.StepOpts{Kind: CombinedStepKind, Queue: GenerationQueue, DedupKey: batchID(input.Identity, batch), Retry: model.RetryPolicy{MaxAttempts: 1}})
+		handle, err := run.Step(fmt.Sprintf("combined-%04d", batch.Index), batchInput{Identity: input.Identity, Plan: input.Plan, Batch: batch}, scraperworkflow.StepOpts{Kind: CombinedStepKind, Queue: GenerationQueue, DedupKey: batchID(input.Identity, batch), Retry: model.RetryPolicy{MaxAttempts: 3}})
 		if err != nil {
 			return err
 		}
