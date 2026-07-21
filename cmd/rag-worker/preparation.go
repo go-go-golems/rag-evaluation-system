@@ -44,7 +44,7 @@ func executeDurablePreparation(ctx context.Context, encoder *json.Encoder, state
 		return err
 	}
 	workflowIdentity := preparationworkflow.Identity{SchemaVersion: "rag-preparation-workflow/v1", PreparedDigest: identityDigest}
-	runtime, err := scraperworkflow.NewRuntime(ctx, scraperworkflow.Config{Store: scraperworkflow.SQLiteStore(stateDB), WorkerID: "rag-worker", MaxWorkers: 1, LeaseDuration: time.Minute})
+	runtime, err := scraperworkflow.NewRuntime(ctx, scraperworkflow.Config{Store: scraperworkflow.SQLiteStore(stateDB), WorkerID: "rag-worker", MaxWorkers: preparationWorkerCount(options.GenerationConcurrency), LeaseDuration: time.Minute})
 	if err != nil {
 		return err
 	}
@@ -87,6 +87,13 @@ func executeDurablePreparation(ctx context.Context, encoder *json.Encoder, state
 			return err
 		}
 	}
+}
+
+func preparationWorkerCount(generationConcurrency int) int {
+	if generationConcurrency < 1 {
+		return 1
+	}
+	return generationConcurrency
 }
 
 func preparationProgress(snapshot *storecontract.WorkflowSnapshot, identityDigest string) labprogress.Envelope {
