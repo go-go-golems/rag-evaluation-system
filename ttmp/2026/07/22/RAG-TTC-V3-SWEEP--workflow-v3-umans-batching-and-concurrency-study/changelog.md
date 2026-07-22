@@ -47,3 +47,12 @@ Step 5: added canonical 270-record JSONL custody, expanded usage CSV, and exact 
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/fixture-control/measurements.jsonl — Canonical attempt and provider measurement stream
 
+
+## 2026-07-22
+
+Step 6: resolved secure Umans/local-embedding authority and completed exact 16-chunk real dry-run; no inference calls; numeric spend approval remains required
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/main.go — Real dry-run now verifies frozen source materialization before authority output
+

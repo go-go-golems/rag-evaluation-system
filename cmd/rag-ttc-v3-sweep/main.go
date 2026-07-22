@@ -135,14 +135,19 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 		return err
 	}
 	defer func() { _ = authority.close() }()
+	chunks := fixtureChunks(chunkCount)
 	if config.profile == "real" {
+		chunks, err = loadRealChunks(ctx, config.specification, config.artifactRoot, chunkCount)
+		if err != nil {
+			return err
+		}
 		expectedEmbeddingRequests := len(plan.Cells) * chunkCount
 		requiredEmbeddingTokens := int64(plan.PlannedRequests) * 65536
 		if plan.PlannedRequests != maximum {
 			return fmt.Errorf("real request authority must equal the exact planned request count")
 		}
 		if !config.executeReal {
-			fmt.Printf("real dry-run profile_digest=%s model_digest=%s planned_generation_requests=%d planned_embedding_requests=%d required_maximum_cost_microunits=%d required_input_tokens=%d required_output_tokens=%d required_embedding_tokens=%d\n", authority.profileDigest, authority.modelDigest, plan.PlannedRequests, expectedEmbeddingRequests, int64(plan.PlannedRequests)*160000, int64(plan.PlannedRequests)*16384, int64(plan.PlannedRequests)*16384, requiredEmbeddingTokens)
+			fmt.Printf("real dry-run profile_digest=%s model_digest=%s frozen_chunks=%d planned_generation_requests=%d planned_embedding_requests=%d required_maximum_cost_microunits=%d required_input_tokens=%d required_output_tokens=%d required_embedding_tokens=%d\n", authority.profileDigest, authority.modelDigest, len(chunks), plan.PlannedRequests, expectedEmbeddingRequests, int64(plan.PlannedRequests)*160000, int64(plan.PlannedRequests)*16384, int64(plan.PlannedRequests)*16384, requiredEmbeddingTokens)
 			return nil
 		}
 		if config.maximumCost < int64(plan.PlannedRequests)*160000 || config.maximumInputTokens < int64(plan.PlannedRequests)*16384 || config.maximumOutputTokens < int64(plan.PlannedRequests)*16384 || config.maximumEmbeddingTokens < requiredEmbeddingTokens || config.maximumEmbeddingRequests != expectedEmbeddingRequests {
@@ -172,13 +177,6 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 		return err
 	}
 	result := evidence{SchemaVersion: "rag-ttc-v3-sweep-evidence/v1", Profile: config.profile, ProviderProfileDigest: authority.profileDigest, GenerationModelDigest: authority.modelDigest, WorkflowPlanDigest: authored.Plan.Digest, RegistryGeneration: registry.Generation(), BundleDigest: bundle.Digest(), Plan: plan}
-	chunks := fixtureChunks(chunkCount)
-	if config.profile == "real" {
-		chunks, err = loadRealChunks(ctx, config.specification, config.artifactRoot, chunkCount)
-		if err != nil {
-			return err
-		}
-	}
 	for index, cell := range plan.Cells {
 		cellRoot := filepath.Join(output, fmt.Sprintf("cell-%02d-b%d-c%d", index, cell.ChunksPerRequest, cell.Concurrency))
 		artifacts, err := workflowv3.NewFileArtifactStore(filepath.Join(cellRoot, "artifacts"), 1<<30)
