@@ -17,6 +17,8 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/internal/workflowv3ttc"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/researchctladapter"
+	"github.com/go-go-golems/researchctl/pkg/lab"
 	workflowmodule "github.com/go-go-golems/scraper/pkg/gojamodules/workflow"
 	"github.com/go-go-golems/scraper/pkg/workflowv3"
 	"github.com/go-go-golems/scraper/pkg/workflowv3runtime"
@@ -124,7 +126,7 @@ func (d delayedGenerator) Generate(ctx context.Context, req ragoperators.Generat
 }
 
 func main() {
-	var output, concurrencyText, profile, providerConfig, specification, artifactRoot string
+	var output, concurrencyText, profile, providerConfig, specification, artifactRoot, custodyRunID, custodyAttemptID, custodyExternalRunID, custodyRecordedAt string
 	var chunkCount, maximum int
 	var executeReal bool
 	var maximumCost, maximumInputTokens, maximumOutputTokens, maximumEmbeddingTokens int64
@@ -148,13 +150,17 @@ func main() {
 	flag.IntVar(&priorGenerationRequests, "prior-generation-requests", 0, "conservatively consumed generation requests before this invocation")
 	flag.IntVar(&maximumGenerationRetries, "maximum-generation-retries", 0, "authorized generation retry headroom for this matrix")
 	flag.DurationVar(&cellTimeout, "cell-timeout", 0, "per-cell terminal deadline (default 30s fixtures, 30m real)")
+	flag.StringVar(&custodyRunID, "researchctl-custody-run-id", "", "explicit researchctl run ID for the compact custody export")
+	flag.StringVar(&custodyAttemptID, "researchctl-custody-attempt-id", "", "explicit researchctl attempt ID for the compact custody export")
+	flag.StringVar(&custodyExternalRunID, "researchctl-custody-external-run-id", "", "stable external-run identity for the compact custody export")
+	flag.StringVar(&custodyRecordedAt, "researchctl-custody-recorded-at", "", "explicit RFC3339 timestamp for the compact custody export")
 	flag.Parse()
 	concurrency, err := parseLevels(concurrencyText)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
-	config := runConfig{profile: profile, providerConfig: providerConfig, specification: specification, artifactRoot: artifactRoot, executeReal: executeReal, maximumCost: maximumCost, maximumInputTokens: maximumInputTokens, maximumOutputTokens: maximumOutputTokens, maximumEmbeddingTokens: maximumEmbeddingTokens, maximumEmbeddingRequests: maximumEmbeddingRequests, maximumGenerationRequests: maximumGenerationRequests, priorGenerationRequests: priorGenerationRequests, maximumGenerationRetries: maximumGenerationRetries, cellTimeout: cellTimeout}
+	config := runConfig{profile: profile, providerConfig: providerConfig, specification: specification, artifactRoot: artifactRoot, custodyRunID: custodyRunID, custodyAttemptID: custodyAttemptID, custodyExternalRunID: custodyExternalRunID, custodyRecordedAt: custodyRecordedAt, executeReal: executeReal, maximumCost: maximumCost, maximumInputTokens: maximumInputTokens, maximumOutputTokens: maximumOutputTokens, maximumEmbeddingTokens: maximumEmbeddingTokens, maximumEmbeddingRequests: maximumEmbeddingRequests, maximumGenerationRequests: maximumGenerationRequests, priorGenerationRequests: priorGenerationRequests, maximumGenerationRetries: maximumGenerationRetries, cellTimeout: cellTimeout}
 	if err := run(context.Background(), output, chunkCount, maximum, concurrency, config); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -163,6 +169,7 @@ func main() {
 
 type runConfig struct {
 	profile, providerConfig, specification, artifactRoot                         string
+	custodyRunID, custodyAttemptID, custodyExternalRunID, custodyRecordedAt      string
 	executeReal                                                                  bool
 	maximumCost, maximumInputTokens, maximumOutputTokens, maximumEmbeddingTokens int64
 	maximumEmbeddingRequests, maximumGenerationRequests, priorGenerationRequests int
@@ -395,6 +402,9 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 	if err = writeFileAtomically(filepath.Join(output, "evidence.json"), append(body, '\n'), 0o644); err != nil {
 		return err
 	}
+	if err = writeResearchctlCustodyExport(output, result, config); err != nil {
+		return err
+	}
 	if err = writeCSV(filepath.Join(output, "cells.csv"), result.Cells); err != nil {
 		return err
 	}
@@ -403,6 +413,45 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 	}
 	fmt.Printf("profile=%s cells=%d planned_requests=%d evidence=%s\n", config.profile, len(result.Cells), plan.PlannedRequests, filepath.Join(output, "evidence.json"))
 	return nil
+}
+
+func writeResearchctlCustodyExport(output string, result evidence, config runConfig) error {
+	configured := config.custodyRunID != "" || config.custodyAttemptID != "" || config.custodyExternalRunID != "" || config.custodyRecordedAt != ""
+	if !configured {
+		return nil
+	}
+	if config.specification == "" || config.custodyRunID == "" || config.custodyAttemptID == "" || config.custodyExternalRunID == "" || config.custodyRecordedAt == "" {
+		return fmt.Errorf("researchctl custody export requires --specification and all --researchctl-custody-* identity fields")
+	}
+	recordedAt, err := time.Parse(time.RFC3339Nano, config.custodyRecordedAt)
+	if err != nil {
+		return fmt.Errorf("parse researchctl custody recorded time: %w", err)
+	}
+	specification, err := lab.ReadSpecificationRecord(config.specification)
+	if err != nil {
+		return fmt.Errorf("read researchctl custody specification: %w", err)
+	}
+	artifacts := []researchctladapter.OperationCustodyArtifact{{Role: "sweep-evidence", Kind: "rag-ttc-sweep-evidence", URI: "evidence.json", Source: filepath.Join(output, "evidence.json"), SchemaVersion: "rag-ttc-v3-sweep-evidence/v2", MediaType: "application/json"}}
+	var generationRequests, embeddingRequests, makespanMicros int64
+	for index, cell := range result.Cells {
+		artifacts = append(artifacts, researchctladapter.OperationCustodyArtifact{Role: "cell-evidence", Kind: "rag-ttc-cell-evidence", URI: filepath.ToSlash(filepath.Join("cells", fmt.Sprintf("cell-%02d-b%d-c%d.json", index, cell.Cell.ChunksPerRequest, cell.Cell.Concurrency))), Source: filepath.Join(output, "cells", fmt.Sprintf("cell-%02d-b%d-c%d.json", index, cell.Cell.ChunksPerRequest, cell.Cell.Concurrency)), SchemaVersion: "rag-ttc-v3-cell-evidence/v1", MediaType: "application/json"})
+		if cell.Operations == nil {
+			return fmt.Errorf("cell %d has no operation custody", index)
+		}
+		artifacts = append(artifacts, researchctladapter.OperationCustodyArtifact{Role: "operation-ledger", Kind: "workflow-operation-jsonl", URI: cell.Operations.JSONLPath, Source: filepath.Join(output, filepath.FromSlash(cell.Operations.JSONLPath)), SchemaVersion: workflowv3.ExternalOperationExportSchema, MediaType: "application/x-ndjson"}, researchctladapter.OperationCustodyArtifact{Role: "operation-manifest", Kind: "workflow-operation-manifest", URI: cell.Operations.ManifestPath, Source: filepath.Join(output, filepath.FromSlash(cell.Operations.ManifestPath)), SchemaVersion: workflowv3.ExternalOperationExportSchema, MediaType: "application/json"})
+		generationRequests += int64(cell.Requests)
+		embeddingRequests += int64(cell.EmbeddingRequests)
+		makespanMicros += cell.MakespanMicros
+	}
+	export, err := researchctladapter.BuildOperationCustodyRunExport(researchctladapter.OperationCustodyExportInput{Specification: *specification, Source: lab.ExportSource{Namespace: "rag-ttc-v3-sweep", ExternalRunID: config.custodyExternalRunID}, RunID: config.custodyRunID, AttemptID: config.custodyAttemptID, RecordedAt: recordedAt, Status: "succeeded", Artifacts: artifacts, Metrics: []researchctladapter.OperationCustodyMetric{{Name: "operation.cell_count", Units: int64(len(result.Cells)), Unit: "cells"}, {Name: "operation.generation_requests", Units: generationRequests, Unit: "requests"}, {Name: "operation.embedding_requests", Units: embeddingRequests, Unit: "requests"}, {Name: "operation.makespan_micros", Units: makespanMicros, Unit: "micros"}}})
+	if err != nil {
+		return err
+	}
+	body, err := lab.CanonicalJSON(export)
+	if err != nil {
+		return err
+	}
+	return writeFileAtomically(filepath.Join(output, "researchctl-run-export.json"), append(body, '\n'), 0o644)
 }
 
 func parseLevels(value string) ([]int, error) {

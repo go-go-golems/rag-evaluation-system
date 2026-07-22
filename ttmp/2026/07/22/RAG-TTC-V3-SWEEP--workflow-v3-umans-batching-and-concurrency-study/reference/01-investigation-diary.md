@@ -880,3 +880,9 @@ A forced `--cell-timeout 1ns` fixture failure verified that the failure path wri
 Added `researchctladapter.BuildOperationCustodyRunExport`. The RAG-owned adapter converts compact operation JSONL/manifest files and scalar counters into a strict `lab.RunExport`. It derives artifacts' digest and size from local files but persists only relative URIs and verified identities; timestamps and run identity remain explicit inputs. The builder rejects absolute/traversal URIs, duplicate artifacts/metrics, missing source identity, and non-terminal status. A unit test verifies the resulting bundle using researchctl's public artifact verifier.
 
 This is intentionally an adapter primitive; the sweep CLI still needs an operator-facing export/import command that supplies a canonical specification and explicit custody identity.
+
+## Step 14: Sweep-to-researchctl verified import
+
+The sweep now optionally writes `researchctl-run-export.json` at its output root when all explicit custody identity flags are provided. It includes the aggregate evidence, each cell checkpoint, every operation JSONL and manifest, and four scalar-only metrics. It requires the export's canonical researchctl specification and explicit run/attempt/external-run/timestamp values; it does not generate identities or timestamps.
+
+A 12-cell fixture sweep produced the bundle. `researchctl lab init` followed by `researchctl experiment import-run` staged and atomically imported 37 verified artifacts and four metrics into a fresh laboratory.
