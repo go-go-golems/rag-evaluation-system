@@ -785,6 +785,8 @@ I stopped without extending authority. The failed cell had twelve succeeded gene
 
 **Inferred user intent:** Complete the real study now that the first aborted request is included in the cumulative budget.
 
+**Commit (code):** `072ddd4` — "workflowv3: checkpoint partial real sweep evidence"
+
 ### What I did
 
 - Executed with cumulative maximum 61 and prior count one.

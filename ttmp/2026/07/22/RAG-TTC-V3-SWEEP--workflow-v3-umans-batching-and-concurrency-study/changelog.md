@@ -150,3 +150,8 @@ Step 13: cumulative authority stopped the second real attempt at 61 after one re
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/main_test.go — Failure checkpoint redaction regression
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-attempt-002/evidence.json — Compact custody for request-ceiling terminal failure
 
+
+## 2026-07-22
+
+Commit 072ddd4 adds durable per-cell and failure custody after cumulative request exhaustion
+
