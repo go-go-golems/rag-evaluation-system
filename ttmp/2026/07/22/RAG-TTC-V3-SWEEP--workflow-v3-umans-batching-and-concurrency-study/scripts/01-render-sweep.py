@@ -87,6 +87,8 @@ ax.set_yticks([0,1,2,3,4]); ax.grid(True,alpha=.25); ax.legend(); fig.tight_layo
 for ext in ("svg","png"): fig.savefig(out/f"request-timeline.{ext}",dpi=160)
 plt.close(fig)
 
+for svg in out.glob("*.svg"):
+    svg.write_text("\n".join(line.rstrip() for line in svg.read_text().splitlines())+"\n")
 summary={"schemaVersion":"rag-ttc-v3-sweep-graph-manifest/v1","evidencePlanDigest":data["plan"]["digest"],"graphs":sorted(x.name for x in out.iterdir())}
 (out/"manifest.json").write_text(json.dumps(summary,indent=2)+"\n")
 print(f"rendered={len(summary['graphs'])} output={out}")

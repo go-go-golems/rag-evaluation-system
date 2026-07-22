@@ -40,7 +40,7 @@ type specificationEnvelope struct {
 
 func loadProviderAuthority(ctx context.Context, profile, providerConfig, specificationPath string) (*providerAuthority, error) {
 	if profile == "fixtures" {
-		return &providerAuthority{profile: profile, close: func() error { return nil }}, nil
+		return &providerAuthority{profile: profile, profileDigest: "sha256:" + strings.Repeat("a", 64), modelDigest: "sha256:" + strings.Repeat("b", 64), close: func() error { return nil }}, nil
 	}
 	if profile != "real" || providerConfig == "" || specificationPath == "" {
 		return nil, fmt.Errorf("real profile requires --provider-config and --specification")

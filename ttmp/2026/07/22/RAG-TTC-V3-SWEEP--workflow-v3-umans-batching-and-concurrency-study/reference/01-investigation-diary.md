@@ -384,3 +384,9 @@ The first invocation is dry-run only. Actual submission additionally requires `-
 Fresh focused tests, focused race tests, lint, command build, Python compilation, artifact cardinality/accounting checks, privacy scans, graph rendering, visual QA, docmgr doctor, and `git diff --check` passed. The repository pre-commit hook also passed Biome checks, repository lint/vet, and its Go test suite. I committed the implementation, compact fixture evidence, SVG graphs, design, and diary as `d68fe9a` (`feat(workflowv3): add TTC measurement sweep`). I removed an accidentally generated Python bytecode file before finalizing the commit and added a ticket-local `.gitignore` for `__pycache__/` and `*.pyc`.
 
 The goal remains incomplete: the real provider environment is absent, no numeric real spend has been authorized, and no real Umans call has been submitted.
+
+## Step 5: Complete canonical JSONL and expanded CSV custody
+
+The active goal explicitly requires canonical JSON/JSONL and CSV. The first committed tranche had canonical aggregate JSON and CSV but no line-oriented evidence stream. I added deterministic `measurements.jsonl` export with one canonical record per generation attempt, embedding attempt, and provider batch measurement. The 12-cell fixture run emits exactly 270 lines: 90 generation attempts, 90 embedding task attempts, and 90 paired generation/embedding provider measurements.
+
+I also expanded `cells.csv` with generation and embedding request counts, overlap, token dimensions, and cost microunits. Aggregate evidence now pins the Workflow V3 plan digest, registry generation, bundle digest, provider-profile digest, and generation-model digest. I reran the fixture study and regenerated all graphs from the same fresh evidence file so tables and rendered views cannot drift.

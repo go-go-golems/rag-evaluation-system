@@ -38,3 +38,12 @@ Step 3: added exact real-profile preflight and expanded fixture evidence to usag
 
 Step 4: validated and committed fixture study implementation and evidence as d68fe9a; real execution remains blocked by missing provider environment and numeric spend authority
 
+
+## 2026-07-22
+
+Step 5: added canonical 270-record JSONL custody, expanded usage CSV, and exact workflow/registry/bundle/provider/model identities; regenerated fixture evidence and graphs
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/fixture-control/measurements.jsonl — Canonical attempt and provider measurement stream
+

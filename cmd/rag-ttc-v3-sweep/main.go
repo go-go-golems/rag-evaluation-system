@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/csv"
 	"encoding/json"
@@ -52,10 +53,15 @@ type cellEvidence struct {
 	Usage             map[string]int64        `json:"usage"`
 }
 type evidence struct {
-	SchemaVersion string                  `json:"schemaVersion"`
-	Profile       string                  `json:"profile"`
-	Plan          workflowv3ttc.SweepPlan `json:"plan"`
-	Cells         []cellEvidence          `json:"cells"`
+	SchemaVersion         string                  `json:"schemaVersion"`
+	Profile               string                  `json:"profile"`
+	ProviderProfileDigest string                  `json:"providerProfileDigest"`
+	GenerationModelDigest string                  `json:"generationModelDigest"`
+	WorkflowPlanDigest    string                  `json:"workflowPlanDigest"`
+	RegistryGeneration    string                  `json:"registryGeneration"`
+	BundleDigest          string                  `json:"bundleDigest"`
+	Plan                  workflowv3ttc.SweepPlan `json:"plan"`
+	Cells                 []cellEvidence          `json:"cells"`
 }
 
 type delayedGenerator struct{ ragoperators.FixtureProviders }
@@ -161,7 +167,11 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 	if err != nil {
 		return err
 	}
-	result := evidence{SchemaVersion: "rag-ttc-v3-sweep-evidence/v1", Profile: config.profile, Plan: plan}
+	bundle, err := workflowv3ttc.Bundle()
+	if err != nil {
+		return err
+	}
+	result := evidence{SchemaVersion: "rag-ttc-v3-sweep-evidence/v1", Profile: config.profile, ProviderProfileDigest: authority.profileDigest, GenerationModelDigest: authority.modelDigest, WorkflowPlanDigest: authored.Plan.Digest, RegistryGeneration: registry.Generation(), BundleDigest: bundle.Digest(), Plan: plan}
 	chunks := fixtureChunks(chunkCount)
 	if config.profile == "real" {
 		chunks, err = loadRealChunks(ctx, config.specification, config.artifactRoot, chunkCount)
@@ -248,6 +258,9 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 		return err
 	}
 	if err = writeCSV(filepath.Join(output, "cells.csv"), result.Cells); err != nil {
+		return err
+	}
+	if err = writeJSONL(filepath.Join(output, "measurements.jsonl"), result.Cells); err != nil {
 		return err
 	}
 	fmt.Printf("profile=%s cells=%d planned_requests=%d evidence=%s\n", config.profile, len(result.Cells), plan.PlannedRequests, filepath.Join(output, "evidence.json"))
@@ -392,15 +405,59 @@ func peakActive(a []workflowv3.Attempt) int {
 	}
 	return peak
 }
+func writeJSONL(path string, cells []cellEvidence) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	writer := bufio.NewWriter(file)
+	write := func(value any) error {
+		body, encodeErr := workflowv3.CanonicalJSON(value)
+		if encodeErr != nil {
+			return encodeErr
+		}
+		if _, writeErr := writer.Write(append(body, '\n')); writeErr != nil {
+			return writeErr
+		}
+		return nil
+	}
+	for _, cell := range cells {
+		identity := map[string]any{"chunksPerRequest": cell.Cell.ChunksPerRequest, "concurrency": cell.Cell.Concurrency, "replicate": cell.Cell.Replicate, "runId": cell.RunID}
+		for _, attempt := range cell.Attempts {
+			if err := write(map[string]any{"schemaVersion": "rag-ttc-v3-attempt-measurement/v1", "phase": "generation", "cell": identity, "attempt": attempt}); err != nil {
+				_ = file.Close()
+				return err
+			}
+		}
+		for _, attempt := range cell.EmbeddingAttempts {
+			if err := write(map[string]any{"schemaVersion": "rag-ttc-v3-attempt-measurement/v1", "phase": "embedding", "cell": identity, "attempt": attempt}); err != nil {
+				_ = file.Close()
+				return err
+			}
+		}
+		for _, batch := range cell.Batches {
+			if err := write(map[string]any{"schemaVersion": "rag-ttc-v3-provider-measurement/v1", "cell": identity, "batch": batch}); err != nil {
+				_ = file.Close()
+				return err
+			}
+		}
+	}
+	if err := writer.Flush(); err != nil {
+		_ = file.Close()
+		return err
+	}
+	return file.Close()
+}
+
 func writeCSV(path string, cells []cellEvidence) error {
 	f, e := os.Create(path)
 	if e != nil {
 		return e
 	}
 	w := csv.NewWriter(f)
-	_ = w.Write([]string{"batch_size", "concurrency", "replicate", "requests", "chunks", "makespan_us", "peak_active", "chunks_per_second", "requests_per_second"})
+	_ = w.Write([]string{"batch_size", "concurrency", "replicate", "generation_requests", "embedding_requests", "chunks", "makespan_us", "overlap_us", "peak_active", "chunks_per_second", "requests_per_second", "input_tokens", "output_tokens", "embedding_tokens", "cost_microunits"})
 	for _, c := range cells {
-		_ = w.Write([]string{strconv.Itoa(c.Cell.ChunksPerRequest), strconv.Itoa(c.Cell.Concurrency), strconv.Itoa(c.Cell.Replicate), strconv.Itoa(c.Requests), strconv.Itoa(c.Chunks), strconv.FormatInt(c.MakespanMicros, 10), strconv.Itoa(c.PeakActive), strconv.FormatFloat(c.ChunksPerSecond, 'f', 6, 64), strconv.FormatFloat(c.RequestsPerSecond, 'f', 6, 64)})
+		_ = w.Write([]string{strconv.Itoa(c.Cell.ChunksPerRequest), strconv.Itoa(c.Cell.Concurrency), strconv.Itoa(c.Cell.Replicate), strconv.Itoa(c.Requests), strconv.Itoa(c.EmbeddingRequests), strconv.Itoa(c.Chunks), strconv.FormatInt(c.MakespanMicros, 10), strconv.FormatInt(c.OverlapMicros, 10), strconv.Itoa(c.PeakActive), strconv.FormatFloat(c.ChunksPerSecond, 'f', 6, 64), strconv.FormatFloat(c.RequestsPerSecond, 'f', 6, 64), strconv.FormatInt(c.Usage["input_tokens"], 10), strconv.FormatInt(c.Usage["output_tokens"], 10), strconv.FormatInt(c.Usage["embedding.embedding_tokens"], 10), strconv.FormatInt(c.Usage["cost_microunits"], 10)})
 	}
 	w.Flush()
 	if err := w.Error(); err != nil {

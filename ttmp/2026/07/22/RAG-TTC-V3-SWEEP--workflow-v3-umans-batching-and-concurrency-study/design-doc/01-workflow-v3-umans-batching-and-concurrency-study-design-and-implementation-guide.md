@@ -25,12 +25,15 @@ RelatedFiles:
       Note: Deterministic graph renderer
     - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/fixture-control/evidence.json
       Note: Executed 12-cell fixture evidence
+    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/fixture-control/measurements.jsonl
+      Note: Canonical 270-record fixture custody stream
 ExternalSources: []
 Summary: Exact, bounded Workflow V3 experiment for measuring how chunks per Umans request and request concurrency affect latency, throughput, tokens, cost, reliability, and downstream embedding work.
 LastUpdated: 2026-07-22T10:15:00-04:00
 WhatFor: Implement, operate, review, and reproduce the Umans batching and concurrency sweep without leaking provider authority or confusing queue time with provider time.
 WhenToUse: Before changing TTC generation batch size or concurrency, running a paid sample, interpreting its graphs, or reproducing the study.
 ---
+
 
 
 # Workflow V3 Umans Batching and Concurrency Study Design and Implementation Guide
