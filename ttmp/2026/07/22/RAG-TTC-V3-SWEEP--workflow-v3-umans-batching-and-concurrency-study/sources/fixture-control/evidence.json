@@ -1,0 +1,3036 @@
+{
+  "schemaVersion": "rag-ttc-v3-sweep-evidence/v1",
+  "profile": "fixtures",
+  "plan": {
+    "cells": [
+      {
+        "chunksPerRequest": 1,
+        "concurrency": 1,
+        "replicate": 1
+      },
+      {
+        "chunksPerRequest": 2,
+        "concurrency": 1,
+        "replicate": 1
+      },
+      {
+        "chunksPerRequest": 4,
+        "concurrency": 1,
+        "replicate": 1
+      },
+      {
+        "chunksPerRequest": 8,
+        "concurrency": 1,
+        "replicate": 1
+      },
+      {
+        "chunksPerRequest": 8,
+        "concurrency": 2,
+        "replicate": 1
+      },
+      {
+        "chunksPerRequest": 4,
+        "concurrency": 2,
+        "replicate": 1
+      },
+      {
+        "chunksPerRequest": 2,
+        "concurrency": 2,
+        "replicate": 1
+      },
+      {
+        "chunksPerRequest": 1,
+        "concurrency": 2,
+        "replicate": 1
+      },
+      {
+        "chunksPerRequest": 1,
+        "concurrency": 4,
+        "replicate": 1
+      },
+      {
+        "chunksPerRequest": 2,
+        "concurrency": 4,
+        "replicate": 1
+      },
+      {
+        "chunksPerRequest": 4,
+        "concurrency": 4,
+        "replicate": 1
+      },
+      {
+        "chunksPerRequest": 8,
+        "concurrency": 4,
+        "replicate": 1
+      }
+    ],
+    "plannedRequests": 90,
+    "digest": "sha256:57d83a39233fb8c061273148ef47476c0c5cce78a4fabacae6bdcbdb8e713a65"
+  },
+  "cells": [
+    {
+      "cell": {
+        "chunksPerRequest": 1,
+        "concurrency": 1,
+        "replicate": 1
+      },
+      "runId": "fixture-b1-c1-r1",
+      "planDigest": "sha256:3aef733ac8e18323964a49084a2e1f760d08738c4d38c73c30934da4e037a1f7",
+      "requests": 16,
+      "chunks": 16,
+      "makespanMicros": 823623,
+      "providerMicros": [
+        6594,
+        6251,
+        6240,
+        6187,
+        6364,
+        6251,
+        6233,
+        6444,
+        6413,
+        6510,
+        6329,
+        6543,
+        6246,
+        6643,
+        6219,
+        6198
+      ],
+      "batches": [
+        {
+          "key": "batch-0000",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:49.658521326Z",
+            "providerElapsedMicros": 6594,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.413404244Z",
+            "providerElapsedMicros": 153,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0001",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:49.675906693Z",
+            "providerElapsedMicros": 6251,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.417949909Z",
+            "providerElapsedMicros": 129,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0002",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:49.689920116Z",
+            "providerElapsedMicros": 6240,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.420268696Z",
+            "providerElapsedMicros": 85,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0003",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:49.70327181Z",
+            "providerElapsedMicros": 6187,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.424360367Z",
+            "providerElapsedMicros": 142,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0004",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:49.716359303Z",
+            "providerElapsedMicros": 6364,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.429031219Z",
+            "providerElapsedMicros": 142,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0005",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:49.730129106Z",
+            "providerElapsedMicros": 6251,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.431653323Z",
+            "providerElapsedMicros": 228,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0006",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:49.761845571Z",
+            "providerElapsedMicros": 6233,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.435306243Z",
+            "providerElapsedMicros": 226,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0007",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:49.774870244Z",
+            "providerElapsedMicros": 6444,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.448392212Z",
+            "providerElapsedMicros": 91,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0008",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:49.788687457Z",
+            "providerElapsedMicros": 6413,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.45113685Z",
+            "providerElapsedMicros": 90,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0009",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:49.803065413Z",
+            "providerElapsedMicros": 6510,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.454897231Z",
+            "providerElapsedMicros": 112,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0010",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.15137862Z",
+            "providerElapsedMicros": 6329,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.456326603Z",
+            "providerElapsedMicros": 76,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0011",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.168139428Z",
+            "providerElapsedMicros": 6543,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.462747164Z",
+            "providerElapsedMicros": 132,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0012",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.214619864Z",
+            "providerElapsedMicros": 6246,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.465018269Z",
+            "providerElapsedMicros": 95,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0013",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.358093317Z",
+            "providerElapsedMicros": 6643,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.46878995Z",
+            "providerElapsedMicros": 263,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0014",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.373922869Z",
+            "providerElapsedMicros": 6219,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.47192761Z",
+            "providerElapsedMicros": 135,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0015",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.387624318Z",
+            "providerElapsedMicros": 6198,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.478707778Z",
+            "providerElapsedMicros": 103,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "nodeKey": "map:797e02cc2c54a1bf13a9318b58ee9fefe1f1d979a6b4f437901b66725a358f28",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:49.656163004Z",
+          "finishedAt": "2026-07-22T14:47:49.666163037Z"
+        },
+        {
+          "nodeKey": "map:ca0c7775d3d894d06596e452bc11af02569766a66d0180c66c598519f5f2f29f",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:49.673413753Z",
+          "finishedAt": "2026-07-22T14:47:49.68312877Z"
+        },
+        {
+          "nodeKey": "map:af79103301a8a32f7a6093ea108f2fa5b03458fb651eea42cfa16d81eb1570d3",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:49.687134872Z",
+          "finishedAt": "2026-07-22T14:47:49.697659663Z"
+        },
+        {
+          "nodeKey": "map:3b5e2a337f80e01cc57bab879c08650365d8a81ddcd16dfb31087471a3a76898",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:49.697793063Z",
+          "finishedAt": "2026-07-22T14:47:49.710591156Z"
+        },
+        {
+          "nodeKey": "map:7256eced6390d6629ee4a5c5d9d0a3fd53f7436905dccda8f566daf1d7be1ff3",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:49.711451352Z",
+          "finishedAt": "2026-07-22T14:47:49.723925639Z"
+        },
+        {
+          "nodeKey": "map:bc8989230363d38ed4ec74338e943f6d74290930c815bc8c16a3e84d53ec90c6",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:49.724141984Z",
+          "finishedAt": "2026-07-22T14:47:49.737873805Z"
+        },
+        {
+          "nodeKey": "map:8cb1bd83423a6b6fb99d25cfd14e17bbb5ea86a59b10228d2689720bdfe51f16",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:49.756209361Z",
+          "finishedAt": "2026-07-22T14:47:49.769974821Z"
+        },
+        {
+          "nodeKey": "map:aa2b7427175518846929d2c2b02b80b69c52477f22027e7019d4670ca3f6c04c",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:49.772038138Z",
+          "finishedAt": "2026-07-22T14:47:49.782792766Z"
+        },
+        {
+          "nodeKey": "map:614c95dbb231f1fca4ec49f763b0c8e637f8f4d083ec21e751dbafe4b38ba3f1",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:49.7842232Z",
+          "finishedAt": "2026-07-22T14:47:49.798005632Z"
+        },
+        {
+          "nodeKey": "map:47ab488737c42694d655219d6c41a58a62ed152ba1fa50169f256231a57feba3",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:49.798125128Z",
+          "finishedAt": "2026-07-22T14:47:49.81088695Z"
+        },
+        {
+          "nodeKey": "map:05134ec44020a12c97dee972b4b8c31f7cb6a0b686cf887ee4c6df56baa041e6",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.14578327Z",
+          "finishedAt": "2026-07-22T14:47:50.160766079Z"
+        },
+        {
+          "nodeKey": "map:a28028929c3cee99296b26782883a0522640c6f2c5b5e78e71a591d9f46d3b11",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.161190308Z",
+          "finishedAt": "2026-07-22T14:47:50.176386651Z"
+        },
+        {
+          "nodeKey": "map:95df2e1a2cb56262918a302d1d3a6fc058dbf70b30f603a01cee38cc14b70861",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.2103499Z",
+          "finishedAt": "2026-07-22T14:47:50.222844563Z"
+        },
+        {
+          "nodeKey": "map:6affdb24f13ded4ccd6b7a6797d7a74d136cf1df14f8df479150b7d544c5c835",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.351631164Z",
+          "finishedAt": "2026-07-22T14:47:50.367855122Z"
+        },
+        {
+          "nodeKey": "map:0cf311cfb1f3e666a899d0f96ab15198d3e1a954292c01e9650fd0e801795ff5",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.368054449Z",
+          "finishedAt": "2026-07-22T14:47:50.381603886Z"
+        },
+        {
+          "nodeKey": "map:d5a83d4a48d1d2f4057cd006c3f2204cbfea1b82b3313193d18a3174357102c7",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.382377739Z",
+          "finishedAt": "2026-07-22T14:47:50.394856562Z"
+        }
+      ],
+      "embeddingAttempts": [
+        {
+          "nodeKey": "map:0648c50ff21f56c1f59641126a2962f1613b3f4250d1fb6930833a857ae8227e",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.413872616Z",
+          "finishedAt": "2026-07-22T14:47:50.419009785Z"
+        },
+        {
+          "nodeKey": "map:29b9fe3d9de365b795f9fce27872e8eb14501a492e7a495039df31c0d1e4ccb8",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.447238526Z",
+          "finishedAt": "2026-07-22T14:47:50.452051188Z"
+        },
+        {
+          "nodeKey": "map:35e4b714d4827b4163a6fe997c3c9a6f65d66dfd990ccfa2c6d85a6bbf2b68e3",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.461391157Z",
+          "finishedAt": "2026-07-22T14:47:50.46602798Z"
+        },
+        {
+          "nodeKey": "map:6247f199a93879eb25ee377c1594363ff9c5a797f5a78a23868ed19f3d878d7d",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.423124579Z",
+          "finishedAt": "2026-07-22T14:47:50.43060052Z"
+        },
+        {
+          "nodeKey": "map:695d25c2d001c4bb52a22d916e8b1f613c2fa5c36ff9e4b066274be0c128c464",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.464760743Z",
+          "finishedAt": "2026-07-22T14:47:50.471193847Z"
+        },
+        {
+          "nodeKey": "map:87bb860064b8bef3e062b394d0a9381a9167729c095c536fe2b94e08486be1b4",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.409677804Z",
+          "finishedAt": "2026-07-22T14:47:50.414573638Z"
+        },
+        {
+          "nodeKey": "map:8e90c43188aa85316509334045e0dc4c70160258bb64e82e86a06154682b76d1",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.456211352Z",
+          "finishedAt": "2026-07-22T14:47:50.463912025Z"
+        },
+        {
+          "nodeKey": "map:95a137bf5a4301f943fd8c29db5740af4e70186470a6b9344a2550eb98ef63e6",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.475560743Z",
+          "finishedAt": "2026-07-22T14:47:50.479786556Z"
+        },
+        {
+          "nodeKey": "map:963dbeb5138edc15b64561fbc1a15ad836e9d775c30d2c9c480143e5c8bd3188",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.419295755Z",
+          "finishedAt": "2026-07-22T14:47:50.426260562Z"
+        },
+        {
+          "nodeKey": "map:96c9a2c516876fe6918f3e9fa0c9b94b8a8fd06f1da205ed2edb7e24bf937500",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.454050121Z",
+          "finishedAt": "2026-07-22T14:47:50.457142256Z"
+        },
+        {
+          "nodeKey": "map:a33024e7fee50862f19d506913fb70721ad5fac14c8e28937b4db8dee0c930a0",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.468264852Z",
+          "finishedAt": "2026-07-22T14:47:50.473088519Z"
+        },
+        {
+          "nodeKey": "map:a6fdf4e8e4894105e4c96cf24846ed686a819c32b40944d881292f2473a88865",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.429779914Z",
+          "finishedAt": "2026-07-22T14:47:50.437097637Z"
+        },
+        {
+          "nodeKey": "map:ae39a7b5cb783cda0e4d6d622f318f66234abe7fbf5f80a943c9b66a911da796",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.416009486Z",
+          "finishedAt": "2026-07-22T14:47:50.421368095Z"
+        },
+        {
+          "nodeKey": "map:b5117144dea54d4c3114bfb758d60b34f1d66ea5bc2dc8ca9481e3607a6a2715",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.43659117Z",
+          "finishedAt": "2026-07-22T14:47:50.449455309Z"
+        },
+        {
+          "nodeKey": "map:c509503eb33a1d76c85fdbdf443555364e0e8433ed90c7326553207081ea62ba",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.449952019Z",
+          "finishedAt": "2026-07-22T14:47:50.455873463Z"
+        },
+        {
+          "nodeKey": "map:fd9a91f6055d9fbd7b4e92e72631708937af2fc83028958e14cc67d23934f897",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.427275118Z",
+          "finishedAt": "2026-07-22T14:47:50.433148065Z"
+        }
+      ],
+      "embeddingRequests": 16,
+      "overlapMicros": 0,
+      "peakActive": 1,
+      "chunksPerSecond": 19.426350741363937,
+      "requestsPerSecond": 19.426350741363937,
+      "usage": {
+        "cost_microunits": 0,
+        "embedding.embedding_tokens": 0,
+        "embedding.requests": 16,
+        "generation.cost_microunits": 0,
+        "generation.input_tokens": 0,
+        "generation.output_tokens": 0,
+        "generation.requests": 16,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "requests": 16
+      }
+    },
+    {
+      "cell": {
+        "chunksPerRequest": 2,
+        "concurrency": 1,
+        "replicate": 1
+      },
+      "runId": "fixture-b2-c1-r1",
+      "planDigest": "sha256:3aef733ac8e18323964a49084a2e1f760d08738c4d38c73c30934da4e037a1f7",
+      "requests": 8,
+      "chunks": 16,
+      "makespanMicros": 217058,
+      "providerMicros": [
+        8619,
+        8397,
+        8917,
+        8469,
+        8735,
+        8828,
+        8454,
+        8271
+      ],
+      "batches": [
+        {
+          "key": "batch-0000",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.538739322Z",
+            "providerElapsedMicros": 8619,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.718977623Z",
+            "providerElapsedMicros": 154,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0001",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.556562551Z",
+            "providerElapsedMicros": 8397,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.721305161Z",
+            "providerElapsedMicros": 425,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0002",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.585774647Z",
+            "providerElapsedMicros": 8917,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.7238793Z",
+            "providerElapsedMicros": 239,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0003",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.607655901Z",
+            "providerElapsedMicros": 8469,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.728094497Z",
+            "providerElapsedMicros": 258,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0004",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.634616466Z",
+            "providerElapsedMicros": 8735,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.733688273Z",
+            "providerElapsedMicros": 153,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0005",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.659482347Z",
+            "providerElapsedMicros": 8828,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.734711444Z",
+            "providerElapsedMicros": 241,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0006",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.676995464Z",
+            "providerElapsedMicros": 8454,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.739732307Z",
+            "providerElapsedMicros": 147,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0007",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:50.692111029Z",
+            "providerElapsedMicros": 8271,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:50.751917015Z",
+            "providerElapsedMicros": 158,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "nodeKey": "map:40b432bcd2408f6de1fb91dca909bbb2c9d48015afc483e45da0ea02f4f49050",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.535990279Z",
+          "finishedAt": "2026-07-22T14:47:50.548639804Z"
+        },
+        {
+          "nodeKey": "map:566581f151f390a78e1cd5be5833566fb83f8ba2486665148c3157d9c31df056",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.55081706Z",
+          "finishedAt": "2026-07-22T14:47:50.566697281Z"
+        },
+        {
+          "nodeKey": "map:d3650cb19f7ddfc941539a4b8f678cbbcae19897f61c7d2bdba50d5f7326f0a8",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.5796311Z",
+          "finishedAt": "2026-07-22T14:47:50.597472305Z"
+        },
+        {
+          "nodeKey": "map:7bb7163cd3f583f9bbeff06e42ac7dcf8c7ced85d00aa7a5436f66b7636ce8d2",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.598899599Z",
+          "finishedAt": "2026-07-22T14:47:50.617440689Z"
+        },
+        {
+          "nodeKey": "map:d2980fddb3f497a50a170d65a7b96d50bdbef72ff5c0591f4dab86776eb0ce05",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.621536838Z",
+          "finishedAt": "2026-07-22T14:47:50.646578653Z"
+        },
+        {
+          "nodeKey": "map:8de256ba063efece0c62e7f803cae9549de7e6e02698c7509eb2b1c26ce32202",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.651468784Z",
+          "finishedAt": "2026-07-22T14:47:50.669969594Z"
+        },
+        {
+          "nodeKey": "map:3a440d1c420247369b569b33dfa9087f6b7eb815ec267d82115c22a1c825a554",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.671105395Z",
+          "finishedAt": "2026-07-22T14:47:50.686815053Z"
+        },
+        {
+          "nodeKey": "map:51361d4d2760acb0b886edc0e76dc8667bd0d3d788f99ab127670363ed8c9b40",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.688605818Z",
+          "finishedAt": "2026-07-22T14:47:50.701524407Z"
+        }
+      ],
+      "embeddingAttempts": [
+        {
+          "nodeKey": "map:16d141899315ac6a405b8ff3ae23dfc99ce46f841d68f44a47f8583e1d665e9d",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.71805966Z",
+          "finishedAt": "2026-07-22T14:47:50.722849695Z"
+        },
+        {
+          "nodeKey": "map:46954d2fa581d935f030716a73c9a0a13c5431721b53dc67e604a61ca02043bc",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.736105612Z",
+          "finishedAt": "2026-07-22T14:47:50.741250355Z"
+        },
+        {
+          "nodeKey": "map:50a1e95ca6636ec3f404996e5f4743c782e65e9fd4ef2246d0707bd70f9232e9",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.720167673Z",
+          "finishedAt": "2026-07-22T14:47:50.725122939Z"
+        },
+        {
+          "nodeKey": "map:568fc3b91732945cf9b12bd9064392e27b7d2cee62753e7a28425dec9335b8a4",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.727304851Z",
+          "finishedAt": "2026-07-22T14:47:50.734800046Z"
+        },
+        {
+          "nodeKey": "map:6e3fe76109ef52425415ccf3378980f49ddd46afdc2e0d36acf64f727e617a29",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.715975768Z",
+          "finishedAt": "2026-07-22T14:47:50.720785075Z"
+        },
+        {
+          "nodeKey": "map:76717910961488e4379be4038dc1ca3ec43c4aa33e49139135815622e84583d4",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.749388855Z",
+          "finishedAt": "2026-07-22T14:47:50.753048985Z"
+        },
+        {
+          "nodeKey": "map:e950966ba352939420516b736904a05a62df3f8567389d2812b69040cfd7e898",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.722944761Z",
+          "finishedAt": "2026-07-22T14:47:50.729381995Z"
+        },
+        {
+          "nodeKey": "map:ecbc6bfe7760ae60e0b4b454555aa6b49df0544fd157e8884b752c4024a90e08",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:50.729569948Z",
+          "finishedAt": "2026-07-22T14:47:50.736031544Z"
+        }
+      ],
+      "embeddingRequests": 16,
+      "overlapMicros": 0,
+      "peakActive": 1,
+      "chunksPerSecond": 73.71277704014324,
+      "requestsPerSecond": 36.85638852007162,
+      "usage": {
+        "cost_microunits": 0,
+        "embedding.embedding_tokens": 0,
+        "embedding.requests": 16,
+        "generation.cost_microunits": 0,
+        "generation.input_tokens": 0,
+        "generation.output_tokens": 0,
+        "generation.requests": 8,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "requests": 8
+      }
+    },
+    {
+      "cell": {
+        "chunksPerRequest": 4,
+        "concurrency": 1,
+        "replicate": 1
+      },
+      "runId": "fixture-b4-c1-r1",
+      "planDigest": "sha256:3aef733ac8e18323964a49084a2e1f760d08738c4d38c73c30934da4e037a1f7",
+      "requests": 4,
+      "chunks": 16,
+      "makespanMicros": 143852,
+      "providerMicros": [
+        12288,
+        12433,
+        12413,
+        12250
+      ],
+      "batches": [
+        {
+          "key": "batch-0000",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:51.539493457Z",
+            "providerElapsedMicros": 12288,
+            "chunkCount": 4,
+            "inputRunes": 464
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:51.669247399Z",
+            "providerElapsedMicros": 317,
+            "representationCount": 16,
+            "providerRequests": 4
+          }
+        },
+        {
+          "key": "batch-0001",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:51.575018452Z",
+            "providerElapsedMicros": 12433,
+            "chunkCount": 4,
+            "inputRunes": 464
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:51.671970353Z",
+            "providerElapsedMicros": 663,
+            "representationCount": 16,
+            "providerRequests": 4
+          }
+        },
+        {
+          "key": "batch-0002",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:51.598326993Z",
+            "providerElapsedMicros": 12413,
+            "chunkCount": 4,
+            "inputRunes": 464
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:51.675462557Z",
+            "providerElapsedMicros": 428,
+            "representationCount": 16,
+            "providerRequests": 4
+          }
+        },
+        {
+          "key": "batch-0003",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:51.635410052Z",
+            "providerElapsedMicros": 12250,
+            "chunkCount": 4,
+            "inputRunes": 464
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:51.677358605Z",
+            "providerElapsedMicros": 450,
+            "representationCount": 16,
+            "providerRequests": 4
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "nodeKey": "map:a4c9f7c3f3fc7d3c00d94102afaabb79f90a969e9b543390486403d2d2312747",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.535666233Z",
+          "finishedAt": "2026-07-22T14:47:51.552865781Z"
+        },
+        {
+          "nodeKey": "map:f02782a002e51f8681dda680be518468d041eb1fd7a5c3f615d7f4f28cb210d0",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.571160278Z",
+          "finishedAt": "2026-07-22T14:47:51.59001492Z"
+        },
+        {
+          "nodeKey": "map:9ad5ed7c1f9ce686a1daaf9cc016dad92952517ff73ce0fa4568445f27bed711",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.591731117Z",
+          "finishedAt": "2026-07-22T14:47:51.612306053Z"
+        },
+        {
+          "nodeKey": "map:7b7b41007dfe4cdeb10b3e0e3aa984513693ddf7e29741b9c3dc3bcbc38fc441",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.63217357Z",
+          "finishedAt": "2026-07-22T14:47:51.649663674Z"
+        }
+      ],
+      "embeddingAttempts": [
+        {
+          "nodeKey": "map:4a37edacb138ad063e299faae17482e76d32c083f922e5b17c2a393ac3e2399e",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.666598653Z",
+          "finishedAt": "2026-07-22T14:47:51.671528912Z"
+        },
+        {
+          "nodeKey": "map:98190390fc2eb747e6dd334cbcaed2dca2f8cd7801a6a6d8a8c3ff9260186a5b",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.670044455Z",
+          "finishedAt": "2026-07-22T14:47:51.676876458Z"
+        },
+        {
+          "nodeKey": "map:d13f6ac46f4fb8b3d65cbec82acbb23c75a8d82c7e27da363932e1532b41742f",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.668330223Z",
+          "finishedAt": "2026-07-22T14:47:51.674540749Z"
+        },
+        {
+          "nodeKey": "map:ea1e292a6910b1fa6330ec30b7fc71103f6b3f5a84d473e2f985f2c381823d86",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.673383395Z",
+          "finishedAt": "2026-07-22T14:47:51.679518625Z"
+        }
+      ],
+      "embeddingRequests": 16,
+      "overlapMicros": 0,
+      "peakActive": 1,
+      "chunksPerSecond": 111.22512304140206,
+      "requestsPerSecond": 27.806280760350514,
+      "usage": {
+        "cost_microunits": 0,
+        "embedding.embedding_tokens": 0,
+        "embedding.requests": 16,
+        "generation.cost_microunits": 0,
+        "generation.input_tokens": 0,
+        "generation.output_tokens": 0,
+        "generation.requests": 4,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "requests": 4
+      }
+    },
+    {
+      "cell": {
+        "chunksPerRequest": 8,
+        "concurrency": 1,
+        "replicate": 1
+      },
+      "runId": "fixture-b8-c1-r1",
+      "planDigest": "sha256:3aef733ac8e18323964a49084a2e1f760d08738c4d38c73c30934da4e037a1f7",
+      "requests": 2,
+      "chunks": 16,
+      "makespanMicros": 102924,
+      "providerMicros": [
+        20448,
+        21351
+      ],
+      "batches": [
+        {
+          "key": "batch-0000",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:51.705391685Z",
+            "providerElapsedMicros": 20448,
+            "chunkCount": 8,
+            "inputRunes": 928
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:51.799172465Z",
+            "providerElapsedMicros": 818,
+            "representationCount": 32,
+            "providerRequests": 8
+          }
+        },
+        {
+          "key": "batch-0001",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:51.738153128Z",
+            "providerElapsedMicros": 21351,
+            "chunkCount": 8,
+            "inputRunes": 928
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:51.801107058Z",
+            "providerElapsedMicros": 1053,
+            "representationCount": 32,
+            "providerRequests": 8
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "nodeKey": "map:3771b7f1c48f6cb0827319f7f8732120a4895d0ff84a086935d5ec1276c9f1c9",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.701183068Z",
+          "finishedAt": "2026-07-22T14:47:51.728017169Z"
+        },
+        {
+          "nodeKey": "map:b3ba1bb6752d6b1e0e84c46dc8e6126b9732eb978614964754e52aaa30f61768",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.729173096Z",
+          "finishedAt": "2026-07-22T14:47:51.768354264Z"
+        }
+      ],
+      "embeddingAttempts": [
+        {
+          "nodeKey": "map:904ac060f2f0184b60c1834a9a4a09c8cf5a8b92412d949b387e8777d114392c",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.797703905Z",
+          "finishedAt": "2026-07-22T14:47:51.80410737Z"
+        },
+        {
+          "nodeKey": "map:cb5c315b45f22719748253d63e8a693d6075773331fee5eb1c30786232258810",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.795793525Z",
+          "finishedAt": "2026-07-22T14:47:51.803976758Z"
+        }
+      ],
+      "embeddingRequests": 16,
+      "overlapMicros": 0,
+      "peakActive": 1,
+      "chunksPerSecond": 155.4540539900868,
+      "requestsPerSecond": 19.43175674876085,
+      "usage": {
+        "cost_microunits": 0,
+        "embedding.embedding_tokens": 0,
+        "embedding.requests": 16,
+        "generation.cost_microunits": 0,
+        "generation.input_tokens": 0,
+        "generation.output_tokens": 0,
+        "generation.requests": 2,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "requests": 2
+      }
+    },
+    {
+      "cell": {
+        "chunksPerRequest": 8,
+        "concurrency": 2,
+        "replicate": 1
+      },
+      "runId": "fixture-b8-c2-r1",
+      "planDigest": "sha256:3aef733ac8e18323964a49084a2e1f760d08738c4d38c73c30934da4e037a1f7",
+      "requests": 2,
+      "chunks": 16,
+      "makespanMicros": 61526,
+      "providerMicros": [
+        20585,
+        20536
+      ],
+      "batches": [
+        {
+          "key": "batch-0000",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:51.912284744Z",
+            "providerElapsedMicros": 20585,
+            "chunkCount": 8,
+            "inputRunes": 928
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:51.967588587Z",
+            "providerElapsedMicros": 874,
+            "representationCount": 32,
+            "providerRequests": 8
+          }
+        },
+        {
+          "key": "batch-0001",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:51.916014879Z",
+            "providerElapsedMicros": 20536,
+            "chunkCount": 8,
+            "inputRunes": 928
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:51.968931312Z",
+            "providerElapsedMicros": 540,
+            "representationCount": 32,
+            "providerRequests": 8
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "nodeKey": "map:3771b7f1c48f6cb0827319f7f8732120a4895d0ff84a086935d5ec1276c9f1c9",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.908742361Z",
+          "finishedAt": "2026-07-22T14:47:51.935676344Z"
+        },
+        {
+          "nodeKey": "map:b3ba1bb6752d6b1e0e84c46dc8e6126b9732eb978614964754e52aaa30f61768",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.913049157Z",
+          "finishedAt": "2026-07-22T14:47:51.939334643Z"
+        }
+      ],
+      "embeddingAttempts": [
+        {
+          "nodeKey": "map:62544ccf9031c9f6b7d25494f88fc881d705987936ca39b2a8cf5badf50248a4",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.963016592Z",
+          "finishedAt": "2026-07-22T14:47:51.969546328Z"
+        },
+        {
+          "nodeKey": "map:88881b862a262c7e2c9c9ed2e17a177f56159694612664b3102d8e2cef35473d",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:51.965482766Z",
+          "finishedAt": "2026-07-22T14:47:51.970268768Z"
+        }
+      ],
+      "embeddingRequests": 16,
+      "overlapMicros": 0,
+      "peakActive": 2,
+      "chunksPerSecond": 260.05094040352463,
+      "requestsPerSecond": 32.50636755044058,
+      "usage": {
+        "cost_microunits": 0,
+        "embedding.embedding_tokens": 0,
+        "embedding.requests": 16,
+        "generation.cost_microunits": 0,
+        "generation.input_tokens": 0,
+        "generation.output_tokens": 0,
+        "generation.requests": 2,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "requests": 2
+      }
+    },
+    {
+      "cell": {
+        "chunksPerRequest": 4,
+        "concurrency": 2,
+        "replicate": 1
+      },
+      "runId": "fixture-b4-c2-r1",
+      "planDigest": "sha256:3aef733ac8e18323964a49084a2e1f760d08738c4d38c73c30934da4e037a1f7",
+      "requests": 4,
+      "chunks": 16,
+      "makespanMicros": 63547,
+      "providerMicros": [
+        12296,
+        12316,
+        12357,
+        12646
+      ],
+      "batches": [
+        {
+          "key": "batch-0000",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:52.104225896Z",
+            "providerElapsedMicros": 12296,
+            "chunkCount": 4,
+            "inputRunes": 464
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:52.155735099Z",
+            "providerElapsedMicros": 496,
+            "representationCount": 16,
+            "providerRequests": 4
+          }
+        },
+        {
+          "key": "batch-0001",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:52.108352962Z",
+            "providerElapsedMicros": 12316,
+            "chunkCount": 4,
+            "inputRunes": 464
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:52.156723481Z",
+            "providerElapsedMicros": 252,
+            "representationCount": 16,
+            "providerRequests": 4
+          }
+        },
+        {
+          "key": "batch-0002",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:52.123943969Z",
+            "providerElapsedMicros": 12357,
+            "chunkCount": 4,
+            "inputRunes": 464
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:52.160399904Z",
+            "providerElapsedMicros": 270,
+            "representationCount": 16,
+            "providerRequests": 4
+          }
+        },
+        {
+          "key": "batch-0003",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:52.127818687Z",
+            "providerElapsedMicros": 12646,
+            "chunkCount": 4,
+            "inputRunes": 464
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:52.163536601Z",
+            "providerElapsedMicros": 246,
+            "representationCount": 16,
+            "providerRequests": 4
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "nodeKey": "map:a4c9f7c3f3fc7d3c00d94102afaabb79f90a969e9b543390486403d2d2312747",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.101076062Z",
+          "finishedAt": "2026-07-22T14:47:52.117925965Z"
+        },
+        {
+          "nodeKey": "map:f02782a002e51f8681dda680be518468d041eb1fd7a5c3f615d7f4f28cb210d0",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.104601103Z",
+          "finishedAt": "2026-07-22T14:47:52.121809259Z"
+        },
+        {
+          "nodeKey": "map:9ad5ed7c1f9ce686a1daaf9cc016dad92952517ff73ce0fa4568445f27bed711",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.117984308Z",
+          "finishedAt": "2026-07-22T14:47:52.138468396Z"
+        },
+        {
+          "nodeKey": "map:7b7b41007dfe4cdeb10b3e0e3aa984513693ddf7e29741b9c3dc3bcbc38fc441",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.123615052Z",
+          "finishedAt": "2026-07-22T14:47:52.141689825Z"
+        }
+      ],
+      "embeddingAttempts": [
+        {
+          "nodeKey": "map:21c4f15a3219c3e6eebcdd661dc9ef4876f123de1981fc51800028e4c311c32e",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.154198023Z",
+          "finishedAt": "2026-07-22T14:47:52.157774081Z"
+        },
+        {
+          "nodeKey": "map:409e1fdacec29da730e62826940e6ee17d3456e85a77319d799a773f3ab2ed1f",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.158427844Z",
+          "finishedAt": "2026-07-22T14:47:52.164623218Z"
+        },
+        {
+          "nodeKey": "map:54226508f90f07d9c4a5abd4f1b09560c0126ea3c32892282feb83f36b0ace1c",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.156065125Z",
+          "finishedAt": "2026-07-22T14:47:52.161541373Z"
+        },
+        {
+          "nodeKey": "map:7c4e0f7d243789e2e341de2e128f9c764deb92cdca1ba3d4f3991c84b1feb8f9",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.152184662Z",
+          "finishedAt": "2026-07-22T14:47:52.157104229Z"
+        }
+      ],
+      "embeddingRequests": 16,
+      "overlapMicros": 0,
+      "peakActive": 2,
+      "chunksPerSecond": 251.78152740619896,
+      "requestsPerSecond": 62.94538185154974,
+      "usage": {
+        "cost_microunits": 0,
+        "embedding.embedding_tokens": 0,
+        "embedding.requests": 16,
+        "generation.cost_microunits": 0,
+        "generation.input_tokens": 0,
+        "generation.output_tokens": 0,
+        "generation.requests": 4,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "requests": 4
+      }
+    },
+    {
+      "cell": {
+        "chunksPerRequest": 2,
+        "concurrency": 2,
+        "replicate": 1
+      },
+      "runId": "fixture-b2-c2-r1",
+      "planDigest": "sha256:3aef733ac8e18323964a49084a2e1f760d08738c4d38c73c30934da4e037a1f7",
+      "requests": 8,
+      "chunks": 16,
+      "makespanMicros": 205221,
+      "providerMicros": [
+        8512,
+        8436,
+        8313,
+        8914,
+        8654,
+        8753,
+        9260,
+        8728
+      ],
+      "batches": [
+        {
+          "key": "batch-0000",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:52.634001375Z",
+            "providerElapsedMicros": 8512,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:52.803520734Z",
+            "providerElapsedMicros": 269,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0001",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:52.638273054Z",
+            "providerElapsedMicros": 8436,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:52.807136922Z",
+            "providerElapsedMicros": 1787,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0002",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:52.663304406Z",
+            "providerElapsedMicros": 8313,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:52.810909191Z",
+            "providerElapsedMicros": 262,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0003",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:52.668867519Z",
+            "providerElapsedMicros": 8914,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:52.816666812Z",
+            "providerElapsedMicros": 291,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0004",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:52.685735086Z",
+            "providerElapsedMicros": 8654,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:52.826027892Z",
+            "providerElapsedMicros": 153,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0005",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:52.706077086Z",
+            "providerElapsedMicros": 8753,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:52.830608818Z",
+            "providerElapsedMicros": 282,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0006",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:52.723676283Z",
+            "providerElapsedMicros": 9260,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:52.833596439Z",
+            "providerElapsedMicros": 253,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0007",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:52.733904519Z",
+            "providerElapsedMicros": 8728,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:52.835733554Z",
+            "providerElapsedMicros": 146,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "nodeKey": "map:40b432bcd2408f6de1fb91dca909bbb2c9d48015afc483e45da0ea02f4f49050",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.631507809Z",
+          "finishedAt": "2026-07-22T14:47:52.646441806Z"
+        },
+        {
+          "nodeKey": "map:566581f151f390a78e1cd5be5833566fb83f8ba2486665148c3157d9c31df056",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.634170193Z",
+          "finishedAt": "2026-07-22T14:47:52.649547315Z"
+        },
+        {
+          "nodeKey": "map:d3650cb19f7ddfc941539a4b8f678cbbcae19897f61c7d2bdba50d5f7326f0a8",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.656622443Z",
+          "finishedAt": "2026-07-22T14:47:52.673127784Z"
+        },
+        {
+          "nodeKey": "map:7bb7163cd3f583f9bbeff06e42ac7dcf8c7ced85d00aa7a5436f66b7636ce8d2",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.662621369Z",
+          "finishedAt": "2026-07-22T14:47:52.679448436Z"
+        },
+        {
+          "nodeKey": "map:d2980fddb3f497a50a170d65a7b96d50bdbef72ff5c0591f4dab86776eb0ce05",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.673633004Z",
+          "finishedAt": "2026-07-22T14:47:52.696747338Z"
+        },
+        {
+          "nodeKey": "map:8de256ba063efece0c62e7f803cae9549de7e6e02698c7509eb2b1c26ce32202",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.698466726Z",
+          "finishedAt": "2026-07-22T14:47:52.72415463Z"
+        },
+        {
+          "nodeKey": "map:3a440d1c420247369b569b33dfa9087f6b7eb815ec267d82115c22a1c825a554",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.715561816Z",
+          "finishedAt": "2026-07-22T14:47:52.736001803Z"
+        },
+        {
+          "nodeKey": "map:51361d4d2760acb0b886edc0e76dc8667bd0d3d788f99ab127670363ed8c9b40",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.72623193Z",
+          "finishedAt": "2026-07-22T14:47:52.744192407Z"
+        }
+      ],
+      "embeddingAttempts": [
+        {
+          "nodeKey": "map:27c2a30736499aad375053e43e95b5dd6bcf05b70800ecdf5e4073015e75d344",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.832233236Z",
+          "finishedAt": "2026-07-22T14:47:52.836729071Z"
+        },
+        {
+          "nodeKey": "map:4895d22d1ffe0287b964c70f195b5a0cdc25524731ebe5ee927c327e19f8d278",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.801992476Z",
+          "finishedAt": "2026-07-22T14:47:52.811693942Z"
+        },
+        {
+          "nodeKey": "map:6ba2e970c712a993b51701177411eedc7dce8c374ff8a1c0a13328c7a53e49a5",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.804394932Z",
+          "finishedAt": "2026-07-22T14:47:52.812627616Z"
+        },
+        {
+          "nodeKey": "map:70e2e9831f4a5082a4bee1900b3bd8b42e997c8bb33db18ddc32531d553b26ce",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.799691096Z",
+          "finishedAt": "2026-07-22T14:47:52.80627652Z"
+        },
+        {
+          "nodeKey": "map:87dabd89f4f38f8b4c024cb074d7cb56af7c8255c75c92ea52ce4a674b152f64",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.810968508Z",
+          "finishedAt": "2026-07-22T14:47:52.821675072Z"
+        },
+        {
+          "nodeKey": "map:8c239c7154344392ca8de50848b5e5a6379213a66147ca062bf7af67cd7f1e0c",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.825012996Z",
+          "finishedAt": "2026-07-22T14:47:52.832508065Z"
+        },
+        {
+          "nodeKey": "map:a3e3650acafa6d1d288ce8c44596c5169de5d4f4051649605ba7ccd011614b3e",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.829626653Z",
+          "finishedAt": "2026-07-22T14:47:52.835166638Z"
+        },
+        {
+          "nodeKey": "map:e8bd73d379ca18e4d8cbeb636caeccbc672552a16aa7f4bf430c20a52518dc5b",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:52.820629835Z",
+          "finishedAt": "2026-07-22T14:47:52.828133765Z"
+        }
+      ],
+      "embeddingRequests": 16,
+      "overlapMicros": 0,
+      "peakActive": 2,
+      "chunksPerSecond": 77.96463116964948,
+      "requestsPerSecond": 38.98231558482474,
+      "usage": {
+        "cost_microunits": 0,
+        "embedding.embedding_tokens": 0,
+        "embedding.requests": 16,
+        "generation.cost_microunits": 0,
+        "generation.input_tokens": 0,
+        "generation.output_tokens": 0,
+        "generation.requests": 8,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "requests": 8
+      }
+    },
+    {
+      "cell": {
+        "chunksPerRequest": 1,
+        "concurrency": 2,
+        "replicate": 1
+      },
+      "runId": "fixture-b1-c2-r1",
+      "planDigest": "sha256:3aef733ac8e18323964a49084a2e1f760d08738c4d38c73c30934da4e037a1f7",
+      "requests": 16,
+      "chunks": 16,
+      "makespanMicros": 427239,
+      "providerMicros": [
+        6540,
+        6346,
+        6227,
+        7802,
+        6429,
+        6534,
+        6480,
+        6324,
+        6394,
+        6220,
+        7651,
+        6769,
+        6411,
+        6397,
+        6897,
+        6815
+      ],
+      "batches": [
+        {
+          "key": "batch-0000",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.055241094Z",
+            "providerElapsedMicros": 6540,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.34672852Z",
+            "providerElapsedMicros": 218,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0001",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.059130674Z",
+            "providerElapsedMicros": 6346,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.346095087Z",
+            "providerElapsedMicros": 235,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0002",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.07484773Z",
+            "providerElapsedMicros": 6227,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.350798852Z",
+            "providerElapsedMicros": 151,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0003",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.093842157Z",
+            "providerElapsedMicros": 7802,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.357771028Z",
+            "providerElapsedMicros": 124,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0004",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.099392456Z",
+            "providerElapsedMicros": 6429,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.371426766Z",
+            "providerElapsedMicros": 291,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0005",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.115821164Z",
+            "providerElapsedMicros": 6534,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.378383721Z",
+            "providerElapsedMicros": 134,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0006",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.119210238Z",
+            "providerElapsedMicros": 6480,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.388891224Z",
+            "providerElapsedMicros": 217,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0007",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.140856504Z",
+            "providerElapsedMicros": 6324,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.403312693Z",
+            "providerElapsedMicros": 141,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0008",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.159139816Z",
+            "providerElapsedMicros": 6394,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.406276848Z",
+            "providerElapsedMicros": 155,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0009",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.174309149Z",
+            "providerElapsedMicros": 6220,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.425234354Z",
+            "providerElapsedMicros": 153,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0010",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.210922563Z",
+            "providerElapsedMicros": 7651,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.428972951Z",
+            "providerElapsedMicros": 145,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0011",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.216336539Z",
+            "providerElapsedMicros": 6769,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.433633518Z",
+            "providerElapsedMicros": 179,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0012",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.234727895Z",
+            "providerElapsedMicros": 6411,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.45156738Z",
+            "providerElapsedMicros": 132,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0013",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.251961645Z",
+            "providerElapsedMicros": 6397,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.459651082Z",
+            "providerElapsedMicros": 152,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0014",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.279854112Z",
+            "providerElapsedMicros": 6897,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.462651236Z",
+            "providerElapsedMicros": 104,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0015",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.282953113Z",
+            "providerElapsedMicros": 6815,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.476164904Z",
+            "providerElapsedMicros": 462,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "nodeKey": "map:797e02cc2c54a1bf13a9318b58ee9fefe1f1d979a6b4f437901b66725a358f28",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.050717195Z",
+          "finishedAt": "2026-07-22T14:47:53.068232716Z"
+        },
+        {
+          "nodeKey": "map:ca0c7775d3d894d06596e452bc11af02569766a66d0180c66c598519f5f2f29f",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.055212672Z",
+          "finishedAt": "2026-07-22T14:47:53.06851294Z"
+        },
+        {
+          "nodeKey": "map:af79103301a8a32f7a6093ea108f2fa5b03458fb651eea42cfa16d81eb1570d3",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.071395413Z",
+          "finishedAt": "2026-07-22T14:47:53.083110101Z"
+        },
+        {
+          "nodeKey": "map:3b5e2a337f80e01cc57bab879c08650365d8a81ddcd16dfb31087471a3a76898",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.086796442Z",
+          "finishedAt": "2026-07-22T14:47:53.107150484Z"
+        },
+        {
+          "nodeKey": "map:7256eced6390d6629ee4a5c5d9d0a3fd53f7436905dccda8f566daf1d7be1ff3",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.09495791Z",
+          "finishedAt": "2026-07-22T14:47:53.107758733Z"
+        },
+        {
+          "nodeKey": "map:bc8989230363d38ed4ec74338e943f6d74290930c815bc8c16a3e84d53ec90c6",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.108560674Z",
+          "finishedAt": "2026-07-22T14:47:53.126664423Z"
+        },
+        {
+          "nodeKey": "map:8cb1bd83423a6b6fb99d25cfd14e17bbb5ea86a59b10228d2689720bdfe51f16",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.116284772Z",
+          "finishedAt": "2026-07-22T14:47:53.127817582Z"
+        },
+        {
+          "nodeKey": "map:aa2b7427175518846929d2c2b02b80b69c52477f22027e7019d4670ca3f6c04c",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.135430151Z",
+          "finishedAt": "2026-07-22T14:47:53.148818214Z"
+        },
+        {
+          "nodeKey": "map:614c95dbb231f1fca4ec49f763b0c8e637f8f4d083ec21e751dbafe4b38ba3f1",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.150902487Z",
+          "finishedAt": "2026-07-22T14:47:53.167128687Z"
+        },
+        {
+          "nodeKey": "map:47ab488737c42694d655219d6c41a58a62ed152ba1fa50169f256231a57feba3",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.170651119Z",
+          "finishedAt": "2026-07-22T14:47:53.184596597Z"
+        },
+        {
+          "nodeKey": "map:05134ec44020a12c97dee972b4b8c31f7cb6a0b686cf887ee4c6df56baa041e6",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.203471404Z",
+          "finishedAt": "2026-07-22T14:47:53.22168207Z"
+        },
+        {
+          "nodeKey": "map:a28028929c3cee99296b26782883a0522640c6f2c5b5e78e71a591d9f46d3b11",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.210633154Z",
+          "finishedAt": "2026-07-22T14:47:53.225162489Z"
+        },
+        {
+          "nodeKey": "map:95df2e1a2cb56262918a302d1d3a6fc058dbf70b30f603a01cee38cc14b70861",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.228032587Z",
+          "finishedAt": "2026-07-22T14:47:53.243536522Z"
+        },
+        {
+          "nodeKey": "map:6affdb24f13ded4ccd6b7a6797d7a74d136cf1df14f8df479150b7d544c5c835",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.243590822Z",
+          "finishedAt": "2026-07-22T14:47:53.264609546Z"
+        },
+        {
+          "nodeKey": "map:0cf311cfb1f3e666a899d0f96ab15198d3e1a954292c01e9650fd0e801795ff5",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.272777622Z",
+          "finishedAt": "2026-07-22T14:47:53.28821146Z"
+        },
+        {
+          "nodeKey": "map:d5a83d4a48d1d2f4057cd006c3f2204cbfea1b82b3313193d18a3174357102c7",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.276575133Z",
+          "finishedAt": "2026-07-22T14:47:53.291712486Z"
+        }
+      ],
+      "embeddingAttempts": [
+        {
+          "nodeKey": "map:26a9434883abeb539f25f532322b463b01e38e0d967efb1d646f7324dddfc494",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.336785879Z",
+          "finishedAt": "2026-07-22T14:47:53.350157407Z"
+        },
+        {
+          "nodeKey": "map:2a1f7961de88cacc3b196d9a79bd9b338fdb5223f93839c6d9a7a545cf65e63f",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.375602414Z",
+          "finishedAt": "2026-07-22T14:47:53.39407287Z"
+        },
+        {
+          "nodeKey": "map:30fb7f8882a389552a61e5c3dc7166103b631d11e63cd89145865b5aab25d681",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.370720382Z",
+          "finishedAt": "2026-07-22T14:47:53.385643648Z"
+        },
+        {
+          "nodeKey": "map:3899bde2db978dcb85d52f707a73adb2d9ead365b7249d871567a35a2085f9b5",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.427714314Z",
+          "finishedAt": "2026-07-22T14:47:53.436314514Z"
+        },
+        {
+          "nodeKey": "map:38cd2615f639d5158c96237fc7e981e1497223623c23072a074a0c8f09e94a38",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.451439912Z",
+          "finishedAt": "2026-07-22T14:47:53.463399558Z"
+        },
+        {
+          "nodeKey": "map:38db6d0bc64c9fc6f762e4e62cb4afaa675a366a495e6606829776564c878e51",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.379457912Z",
+          "finishedAt": "2026-07-22T14:47:53.408031482Z"
+        },
+        {
+          "nodeKey": "map:5583f8d212f28bcc2ae179e1d5c1f5e53bccfdb0ce7af102feda494944236228",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.455894135Z",
+          "finishedAt": "2026-07-22T14:47:53.46537726Z"
+        },
+        {
+          "nodeKey": "map:6f9662ca991c3388b49fc80c3910534310b59f1803ca1bba308dd948e8d73999",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.431000418Z",
+          "finishedAt": "2026-07-22T14:47:53.460358215Z"
+        },
+        {
+          "nodeKey": "map:752fb0453d01553d63c297b8e7cf4528bcfbb881161306262a4ccdad75917edf",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.326161523Z",
+          "finishedAt": "2026-07-22T14:47:53.350421135Z"
+        },
+        {
+          "nodeKey": "map:81c1211f2c284134d3bdafab04e1352d9ee897f1a9c78f9f0f4abc26ff4c4a8c",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.40102838Z",
+          "finishedAt": "2026-07-22T14:47:53.410142622Z"
+        },
+        {
+          "nodeKey": "map:9db93016fedb0dc0a5cd5704f47e107b7e5da4e1f1ee6ea246526642feb406d7",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.423740279Z",
+          "finishedAt": "2026-07-22T14:47:53.430768315Z"
+        },
+        {
+          "nodeKey": "map:9de73270a223b0a397038449d64f6752ff0b5cc6fc8a4fad5a93798f6fd17efd",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.358778185Z",
+          "finishedAt": "2026-07-22T14:47:53.377680382Z"
+        },
+        {
+          "nodeKey": "map:9e94cac02461714771c7ed02945f6fdffa9dac5e9ce555c3139317eebfdf3623",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.350160424Z",
+          "finishedAt": "2026-07-22T14:47:53.3591518Z"
+        },
+        {
+          "nodeKey": "map:d8c703036ee531d7ab6beea40fa49440f1f33dd9026dc28b3fbc3fc985b234c4",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.470557372Z",
+          "finishedAt": "2026-07-22T14:47:53.477956998Z"
+        },
+        {
+          "nodeKey": "map:e5f4eec0c920ae3dcc12cd1f7997f653ceae4111f7d23669097650b4d43525ce",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.408559736Z",
+          "finishedAt": "2026-07-22T14:47:53.426849769Z"
+        },
+        {
+          "nodeKey": "map:e7e8e7de5d003c61b99b7219e88382284dfb62b42606aa17049dca2c6d7b4817",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.345311986Z",
+          "finishedAt": "2026-07-22T14:47:53.35322694Z"
+        }
+      ],
+      "embeddingRequests": 16,
+      "overlapMicros": 0,
+      "peakActive": 2,
+      "chunksPerSecond": 37.449694264558026,
+      "requestsPerSecond": 37.449694264558026,
+      "usage": {
+        "cost_microunits": 0,
+        "embedding.embedding_tokens": 0,
+        "embedding.requests": 16,
+        "generation.cost_microunits": 0,
+        "generation.input_tokens": 0,
+        "generation.output_tokens": 0,
+        "generation.requests": 16,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "requests": 16
+      }
+    },
+    {
+      "cell": {
+        "chunksPerRequest": 1,
+        "concurrency": 4,
+        "replicate": 1
+      },
+      "runId": "fixture-b1-c4-r1",
+      "planDigest": "sha256:3aef733ac8e18323964a49084a2e1f760d08738c4d38c73c30934da4e037a1f7",
+      "requests": 16,
+      "chunks": 16,
+      "makespanMicros": 311932,
+      "providerMicros": [
+        6722,
+        8671,
+        6330,
+        6284,
+        6933,
+        6645,
+        6284,
+        6989,
+        6202,
+        6305,
+        6368,
+        6367,
+        6496,
+        6329,
+        6201,
+        6216
+      ],
+      "batches": [
+        {
+          "key": "batch-0000",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.579461773Z",
+            "providerElapsedMicros": 6722,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.789924693Z",
+            "providerElapsedMicros": 141,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0001",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.58493571Z",
+            "providerElapsedMicros": 8671,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.795736778Z",
+            "providerElapsedMicros": 212,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0002",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.59732786Z",
+            "providerElapsedMicros": 6330,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.800064076Z",
+            "providerElapsedMicros": 238,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0003",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.608845423Z",
+            "providerElapsedMicros": 6284,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.802547029Z",
+            "providerElapsedMicros": 133,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0004",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.624133519Z",
+            "providerElapsedMicros": 6933,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.817258703Z",
+            "providerElapsedMicros": 133,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0005",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.640418061Z",
+            "providerElapsedMicros": 6645,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.822413741Z",
+            "providerElapsedMicros": 220,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0006",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.651060201Z",
+            "providerElapsedMicros": 6284,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.826316961Z",
+            "providerElapsedMicros": 164,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0007",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.666706576Z",
+            "providerElapsedMicros": 6989,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.827078605Z",
+            "providerElapsedMicros": 138,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0008",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.670998126Z",
+            "providerElapsedMicros": 6202,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.833408252Z",
+            "providerElapsedMicros": 405,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0009",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.67591568Z",
+            "providerElapsedMicros": 6305,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.837122354Z",
+            "providerElapsedMicros": 138,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0010",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.682747938Z",
+            "providerElapsedMicros": 6368,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.841157443Z",
+            "providerElapsedMicros": 137,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0011",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.687767943Z",
+            "providerElapsedMicros": 6367,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.85144287Z",
+            "providerElapsedMicros": 2139,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0012",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.707031869Z",
+            "providerElapsedMicros": 6496,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.852715522Z",
+            "providerElapsedMicros": 180,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0013",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.71565845Z",
+            "providerElapsedMicros": 6329,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.858015501Z",
+            "providerElapsedMicros": 86,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0014",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.718496215Z",
+            "providerElapsedMicros": 6201,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.869440147Z",
+            "providerElapsedMicros": 169,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        },
+        {
+          "key": "batch-0015",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:53.725065454Z",
+            "providerElapsedMicros": 6216,
+            "chunkCount": 1,
+            "inputRunes": 116
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:53.876409309Z",
+            "providerElapsedMicros": 221,
+            "representationCount": 4,
+            "providerRequests": 1
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "nodeKey": "map:797e02cc2c54a1bf13a9318b58ee9fefe1f1d979a6b4f437901b66725a358f28",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.568386102Z",
+          "finishedAt": "2026-07-22T14:47:53.58807259Z"
+        },
+        {
+          "nodeKey": "map:ca0c7775d3d894d06596e452bc11af02569766a66d0180c66c598519f5f2f29f",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.574876511Z",
+          "finishedAt": "2026-07-22T14:47:53.596320985Z"
+        },
+        {
+          "nodeKey": "map:af79103301a8a32f7a6093ea108f2fa5b03458fb651eea42cfa16d81eb1570d3",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.5867763Z",
+          "finishedAt": "2026-07-22T14:47:53.608052353Z"
+        },
+        {
+          "nodeKey": "map:3b5e2a337f80e01cc57bab879c08650365d8a81ddcd16dfb31087471a3a76898",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.60153798Z",
+          "finishedAt": "2026-07-22T14:47:53.616951493Z"
+        },
+        {
+          "nodeKey": "map:7256eced6390d6629ee4a5c5d9d0a3fd53f7436905dccda8f566daf1d7be1ff3",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.614603Z",
+          "finishedAt": "2026-07-22T14:47:53.633251981Z"
+        },
+        {
+          "nodeKey": "map:bc8989230363d38ed4ec74338e943f6d74290930c815bc8c16a3e84d53ec90c6",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.632177371Z",
+          "finishedAt": "2026-07-22T14:47:53.648560383Z"
+        },
+        {
+          "nodeKey": "map:8cb1bd83423a6b6fb99d25cfd14e17bbb5ea86a59b10228d2689720bdfe51f16",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.642604325Z",
+          "finishedAt": "2026-07-22T14:47:53.658732318Z"
+        },
+        {
+          "nodeKey": "map:aa2b7427175518846929d2c2b02b80b69c52477f22027e7019d4670ca3f6c04c",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.659012551Z",
+          "finishedAt": "2026-07-22T14:47:53.676281783Z"
+        },
+        {
+          "nodeKey": "map:614c95dbb231f1fca4ec49f763b0c8e637f8f4d083ec21e751dbafe4b38ba3f1",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.665046762Z",
+          "finishedAt": "2026-07-22T14:47:53.678272048Z"
+        },
+        {
+          "nodeKey": "map:47ab488737c42694d655219d6c41a58a62ed152ba1fa50169f256231a57feba3",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.671076069Z",
+          "finishedAt": "2026-07-22T14:47:53.683317796Z"
+        },
+        {
+          "nodeKey": "map:05134ec44020a12c97dee972b4b8c31f7cb6a0b686cf887ee4c6df56baa041e6",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.676296266Z",
+          "finishedAt": "2026-07-22T14:47:53.691732193Z"
+        },
+        {
+          "nodeKey": "map:a28028929c3cee99296b26782883a0522640c6f2c5b5e78e71a591d9f46d3b11",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.684351005Z",
+          "finishedAt": "2026-07-22T14:47:53.695527755Z"
+        },
+        {
+          "nodeKey": "map:95df2e1a2cb56262918a302d1d3a6fc058dbf70b30f603a01cee38cc14b70861",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.702206229Z",
+          "finishedAt": "2026-07-22T14:47:53.718207192Z"
+        },
+        {
+          "nodeKey": "map:6affdb24f13ded4ccd6b7a6797d7a74d136cf1df14f8df479150b7d544c5c835",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.707611101Z",
+          "finishedAt": "2026-07-22T14:47:53.72333172Z"
+        },
+        {
+          "nodeKey": "map:0cf311cfb1f3e666a899d0f96ab15198d3e1a954292c01e9650fd0e801795ff5",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.715149114Z",
+          "finishedAt": "2026-07-22T14:47:53.726520487Z"
+        },
+        {
+          "nodeKey": "map:d5a83d4a48d1d2f4057cd006c3f2204cbfea1b82b3313193d18a3174357102c7",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.718342656Z",
+          "finishedAt": "2026-07-22T14:47:53.733288088Z"
+        }
+      ],
+      "embeddingAttempts": [
+        {
+          "nodeKey": "map:11d551de55b18c20748bf413df9d8b8ff46377965667c85c3fe70d3296949bc5",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.79569512Z",
+          "finishedAt": "2026-07-22T14:47:53.803834981Z"
+        },
+        {
+          "nodeKey": "map:2678eca02d84775e25ad22422c83ab8383a10baf08f8e6d8edc5f03c8b913700",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.84435556Z",
+          "finishedAt": "2026-07-22T14:47:53.855008862Z"
+        },
+        {
+          "nodeKey": "map:2c9114a68036675bd957cbbbf8c5c1c40ed0e70a5d38cd4277908ab07d532e93",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.85244398Z",
+          "finishedAt": "2026-07-22T14:47:53.859285925Z"
+        },
+        {
+          "nodeKey": "map:436cbc12144ad36a44db84befb751ed3f0db630dcfe5e885007b76e37ec4648d",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.837169467Z",
+          "finishedAt": "2026-07-22T14:47:53.842514793Z"
+        },
+        {
+          "nodeKey": "map:5fd98bee9973a76d94cfc2abc84de91a86b9d1e771249149095906fd32ae3fe3",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.792300869Z",
+          "finishedAt": "2026-07-22T14:47:53.805696393Z"
+        },
+        {
+          "nodeKey": "map:730647e45901e4e955a537b3ea05495f175ad057d3075f26db8c450695c66973",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.81622176Z",
+          "finishedAt": "2026-07-22T14:47:53.824778818Z"
+        },
+        {
+          "nodeKey": "map:7350386f44be7fae5f11f3c34eeef4a56509e7badb914d4f09fc25538f34fa91",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.789904501Z",
+          "finishedAt": "2026-07-22T14:47:53.799218286Z"
+        },
+        {
+          "nodeKey": "map:7f6fe94bbe4437839a30eafd79ca6ce0bce834ad590182b5af0f583feeecab74",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.866135189Z",
+          "finishedAt": "2026-07-22T14:47:53.870933644Z"
+        },
+        {
+          "nodeKey": "map:7fd31a45e250c2eee8130e0ec2668c44e060c8cfc1f3587776671bb657c35f93",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.823620012Z",
+          "finishedAt": "2026-07-22T14:47:53.828310323Z"
+        },
+        {
+          "nodeKey": "map:9caa86d1889de8bbcc6bde968379d9551d7173d9e32dc4b2894d427604fc145f",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.826101236Z",
+          "finishedAt": "2026-07-22T14:47:53.834867472Z"
+        },
+        {
+          "nodeKey": "map:a6d3a4fbe85933b62947b7bdfaa1821956fdb3acfed2d47128b74240f908f394",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.847208715Z",
+          "finishedAt": "2026-07-22T14:47:53.854933597Z"
+        },
+        {
+          "nodeKey": "map:b0dfd9e10d8bc1aed303775cd321df835ad0dbc0b16e175179780ad6a1c626c2",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.820351668Z",
+          "finishedAt": "2026-07-22T14:47:53.827999321Z"
+        },
+        {
+          "nodeKey": "map:c1970cbef8d56bb0df7457a644d3d7fe5a68432d92360e08f2d986ec587bddf5",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.810385464Z",
+          "finishedAt": "2026-07-22T14:47:53.819949527Z"
+        },
+        {
+          "nodeKey": "map:da122798b68a33cd748415894fbf2fc909c296ac1e7d5cd5eb5264eb59b2d4bc",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.786921397Z",
+          "finishedAt": "2026-07-22T14:47:53.791303655Z"
+        },
+        {
+          "nodeKey": "map:e1f043d7430d937642bf1726c89304d7f35891d20649d38404fe822de0e40847",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.833050994Z",
+          "finishedAt": "2026-07-22T14:47:53.838467748Z"
+        },
+        {
+          "nodeKey": "map:f81dd724fda7f0c2f9e7054ebff02bdf35eb2d4351f1fc2e9c74feed880e5d7e",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:53.868382408Z",
+          "finishedAt": "2026-07-22T14:47:53.880318478Z"
+        }
+      ],
+      "embeddingRequests": 16,
+      "overlapMicros": 0,
+      "peakActive": 3,
+      "chunksPerSecond": 51.29316874757495,
+      "requestsPerSecond": 51.29316874757495,
+      "usage": {
+        "cost_microunits": 0,
+        "embedding.embedding_tokens": 0,
+        "embedding.requests": 16,
+        "generation.cost_microunits": 0,
+        "generation.input_tokens": 0,
+        "generation.output_tokens": 0,
+        "generation.requests": 16,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "requests": 16
+      }
+    },
+    {
+      "cell": {
+        "chunksPerRequest": 2,
+        "concurrency": 4,
+        "replicate": 1
+      },
+      "runId": "fixture-b2-c4-r1",
+      "planDigest": "sha256:3aef733ac8e18323964a49084a2e1f760d08738c4d38c73c30934da4e037a1f7",
+      "requests": 8,
+      "chunks": 16,
+      "makespanMicros": 128847,
+      "providerMicros": [
+        8269,
+        8374,
+        8534,
+        8396,
+        8263,
+        8287,
+        8391,
+        8584
+      ],
+      "batches": [
+        {
+          "key": "batch-0000",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.039852681Z",
+            "providerElapsedMicros": 8269,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.129214421Z",
+            "providerElapsedMicros": 247,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0001",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.04254955Z",
+            "providerElapsedMicros": 8374,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.136957576Z",
+            "providerElapsedMicros": 251,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0002",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.047107866Z",
+            "providerElapsedMicros": 8534,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.136967792Z",
+            "providerElapsedMicros": 240,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0003",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.053998859Z",
+            "providerElapsedMicros": 8396,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.139554176Z",
+            "providerElapsedMicros": 447,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0004",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.05935195Z",
+            "providerElapsedMicros": 8263,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.149823197Z",
+            "providerElapsedMicros": 248,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0005",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.06540782Z",
+            "providerElapsedMicros": 8287,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.151241239Z",
+            "providerElapsedMicros": 257,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0006",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.077918099Z",
+            "providerElapsedMicros": 8391,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.156736023Z",
+            "providerElapsedMicros": 266,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        },
+        {
+          "key": "batch-0007",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.082419384Z",
+            "providerElapsedMicros": 8584,
+            "chunkCount": 2,
+            "inputRunes": 232
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.163637652Z",
+            "providerElapsedMicros": 154,
+            "representationCount": 8,
+            "providerRequests": 2
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "nodeKey": "map:40b432bcd2408f6de1fb91dca909bbb2c9d48015afc483e45da0ea02f4f49050",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.03588029Z",
+          "finishedAt": "2026-07-22T14:47:55.049178409Z"
+        },
+        {
+          "nodeKey": "map:566581f151f390a78e1cd5be5833566fb83f8ba2486665148c3157d9c31df056",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.039963118Z",
+          "finishedAt": "2026-07-22T14:47:55.054760793Z"
+        },
+        {
+          "nodeKey": "map:d3650cb19f7ddfc941539a4b8f678cbbcae19897f61c7d2bdba50d5f7326f0a8",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.043332834Z",
+          "finishedAt": "2026-07-22T14:47:55.057020488Z"
+        },
+        {
+          "nodeKey": "map:7bb7163cd3f583f9bbeff06e42ac7dcf8c7ced85d00aa7a5436f66b7636ce8d2",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.047523223Z",
+          "finishedAt": "2026-07-22T14:47:55.06541669Z"
+        },
+        {
+          "nodeKey": "map:d2980fddb3f497a50a170d65a7b96d50bdbef72ff5c0591f4dab86776eb0ce05",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.055166537Z",
+          "finishedAt": "2026-07-22T14:47:55.070053045Z"
+        },
+        {
+          "nodeKey": "map:8de256ba063efece0c62e7f803cae9549de7e6e02698c7509eb2b1c26ce32202",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.061013649Z",
+          "finishedAt": "2026-07-22T14:47:55.0750004Z"
+        },
+        {
+          "nodeKey": "map:3a440d1c420247369b569b33dfa9087f6b7eb815ec267d82115c22a1c825a554",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.074381737Z",
+          "finishedAt": "2026-07-22T14:47:55.089159897Z"
+        },
+        {
+          "nodeKey": "map:51361d4d2760acb0b886edc0e76dc8667bd0d3d788f99ab127670363ed8c9b40",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.078021824Z",
+          "finishedAt": "2026-07-22T14:47:55.094311758Z"
+        }
+      ],
+      "embeddingAttempts": [
+        {
+          "nodeKey": "map:0b53b9687f1821a24e19eb43d7ff43d444dcac408096618002d54e8cdf043a03",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.141745021Z",
+          "finishedAt": "2026-07-22T14:47:55.153747715Z"
+        },
+        {
+          "nodeKey": "map:166f881de4a63730b0aa40327eb4f8b393406b34cf936bb30b178501459f944c",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.125658624Z",
+          "finishedAt": "2026-07-22T14:47:55.133625447Z"
+        },
+        {
+          "nodeKey": "map:4c79168bbd0806d9910017d49b4b03f5823344cdc45511f9012ff4ddb15ab3ae",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.160484997Z",
+          "finishedAt": "2026-07-22T14:47:55.164727475Z"
+        },
+        {
+          "nodeKey": "map:4f8e7dcd5540762791e575e5e64ac288cd4b68b4e7cabc6d5f57af8eda12db1f",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.136008104Z",
+          "finishedAt": "2026-07-22T14:47:55.141923798Z"
+        },
+        {
+          "nodeKey": "map:77d6d86bbef8358348a6753fd0be4609174584ab84cd66e728c799186b79f066",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.129313357Z",
+          "finishedAt": "2026-07-22T14:47:55.141617779Z"
+        },
+        {
+          "nodeKey": "map:d69c071c551bf232b053a50c87c74728e1b6f36cf940d45e8da4d1f28269ce42",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.147747935Z",
+          "finishedAt": "2026-07-22T14:47:55.153590717Z"
+        },
+        {
+          "nodeKey": "map:e5abd1ba857d7057a1f559454826b54d49cea0527ab7eefabf9f7fa17fdbbb18",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.152097962Z",
+          "finishedAt": "2026-07-22T14:47:55.158309958Z"
+        },
+        {
+          "nodeKey": "map:f2368b206b3d1e42447951523828d006155a6ce7b1e5ee2ebd1d0532f82ddcc3",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.133320933Z",
+          "finishedAt": "2026-07-22T14:47:55.141327835Z"
+        }
+      ],
+      "embeddingRequests": 16,
+      "overlapMicros": 0,
+      "peakActive": 4,
+      "chunksPerSecond": 124.17811068204556,
+      "requestsPerSecond": 62.08905534102278,
+      "usage": {
+        "cost_microunits": 0,
+        "embedding.embedding_tokens": 0,
+        "embedding.requests": 16,
+        "generation.cost_microunits": 0,
+        "generation.input_tokens": 0,
+        "generation.output_tokens": 0,
+        "generation.requests": 8,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "requests": 8
+      }
+    },
+    {
+      "cell": {
+        "chunksPerRequest": 4,
+        "concurrency": 4,
+        "replicate": 1
+      },
+      "runId": "fixture-b4-c4-r1",
+      "planDigest": "sha256:3aef733ac8e18323964a49084a2e1f760d08738c4d38c73c30934da4e037a1f7",
+      "requests": 4,
+      "chunks": 16,
+      "makespanMicros": 57032,
+      "providerMicros": [
+        12719,
+        12286,
+        12412,
+        12590
+      ],
+      "batches": [
+        {
+          "key": "batch-0000",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.27000069Z",
+            "providerElapsedMicros": 12719,
+            "chunkCount": 4,
+            "inputRunes": 464
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.31092461Z",
+            "providerElapsedMicros": 489,
+            "representationCount": 16,
+            "providerRequests": 4
+          }
+        },
+        {
+          "key": "batch-0001",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.274034698Z",
+            "providerElapsedMicros": 12286,
+            "chunkCount": 4,
+            "inputRunes": 464
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.311805928Z",
+            "providerElapsedMicros": 395,
+            "representationCount": 16,
+            "providerRequests": 4
+          }
+        },
+        {
+          "key": "batch-0002",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.277606934Z",
+            "providerElapsedMicros": 12412,
+            "chunkCount": 4,
+            "inputRunes": 464
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.316115098Z",
+            "providerElapsedMicros": 319,
+            "representationCount": 16,
+            "providerRequests": 4
+          }
+        },
+        {
+          "key": "batch-0003",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.283577373Z",
+            "providerElapsedMicros": 12590,
+            "chunkCount": 4,
+            "inputRunes": 464
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.320580804Z",
+            "providerElapsedMicros": 446,
+            "representationCount": 16,
+            "providerRequests": 4
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "nodeKey": "map:a4c9f7c3f3fc7d3c00d94102afaabb79f90a969e9b543390486403d2d2312747",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.265019983Z",
+          "finishedAt": "2026-07-22T14:47:55.284688586Z"
+        },
+        {
+          "nodeKey": "map:f02782a002e51f8681dda680be518468d041eb1fd7a5c3f615d7f4f28cb210d0",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.269998311Z",
+          "finishedAt": "2026-07-22T14:47:55.287647287Z"
+        },
+        {
+          "nodeKey": "map:9ad5ed7c1f9ce686a1daaf9cc016dad92952517ff73ce0fa4568445f27bed711",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.274936577Z",
+          "finishedAt": "2026-07-22T14:47:55.291452357Z"
+        },
+        {
+          "nodeKey": "map:7b7b41007dfe4cdeb10b3e0e3aa984513693ddf7e29741b9c3dc3bcbc38fc441",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.278993675Z",
+          "finishedAt": "2026-07-22T14:47:55.29744932Z"
+        }
+      ],
+      "embeddingAttempts": [
+        {
+          "nodeKey": "map:23cfc4e38bf9570ab3f490f42c3a76759346160cbc413b9cb01d6ece7afb6255",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.307759606Z",
+          "finishedAt": "2026-07-22T14:47:55.313825798Z"
+        },
+        {
+          "nodeKey": "map:5a53e931cf0497e774ba6776ad0296a6da63e5179bfb542da3d71266ee96b4da",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.313807952Z",
+          "finishedAt": "2026-07-22T14:47:55.322051989Z"
+        },
+        {
+          "nodeKey": "map:de333daedefae9daee2971a1d1dd6bc89ede8f43a6b30e43e3ee24eba5fb4ff3",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.304626861Z",
+          "finishedAt": "2026-07-22T14:47:55.313614722Z"
+        },
+        {
+          "nodeKey": "map:df5dd0564f339c9170cdc36269ceb31c5eb3b1a6489c7e218ab2ae3e7504fef7",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.310179524Z",
+          "finishedAt": "2026-07-22T14:47:55.318094555Z"
+        }
+      ],
+      "embeddingRequests": 16,
+      "overlapMicros": 0,
+      "peakActive": 4,
+      "chunksPerSecond": 280.54422634195964,
+      "requestsPerSecond": 70.13605658548991,
+      "usage": {
+        "cost_microunits": 0,
+        "embedding.embedding_tokens": 0,
+        "embedding.requests": 16,
+        "generation.cost_microunits": 0,
+        "generation.input_tokens": 0,
+        "generation.output_tokens": 0,
+        "generation.requests": 4,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "requests": 4
+      }
+    },
+    {
+      "cell": {
+        "chunksPerRequest": 8,
+        "concurrency": 4,
+        "replicate": 1
+      },
+      "runId": "fixture-b8-c4-r1",
+      "planDigest": "sha256:3aef733ac8e18323964a49084a2e1f760d08738c4d38c73c30934da4e037a1f7",
+      "requests": 2,
+      "chunks": 16,
+      "makespanMicros": 176621,
+      "providerMicros": [
+        20586,
+        20505
+      ],
+      "batches": [
+        {
+          "key": "batch-0000",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.424287224Z",
+            "providerElapsedMicros": 20586,
+            "chunkCount": 8,
+            "inputRunes": 928
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.593351446Z",
+            "providerElapsedMicros": 827,
+            "representationCount": 32,
+            "providerRequests": 8
+          }
+        },
+        {
+          "key": "batch-0001",
+          "generation": {
+            "providerStartedAt": "2026-07-22T14:47:55.427118461Z",
+            "providerElapsedMicros": 20505,
+            "chunkCount": 8,
+            "inputRunes": 928
+          },
+          "embedding": {
+            "providerStartedAt": "2026-07-22T14:47:55.595014098Z",
+            "providerElapsedMicros": 1785,
+            "representationCount": 32,
+            "providerRequests": 8
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "nodeKey": "map:3771b7f1c48f6cb0827319f7f8732120a4895d0ff84a086935d5ec1276c9f1c9",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.421200956Z",
+          "finishedAt": "2026-07-22T14:47:55.447313916Z"
+        },
+        {
+          "nodeKey": "map:b3ba1bb6752d6b1e0e84c46dc8e6126b9732eb978614964754e52aaa30f61768",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.424227216Z",
+          "finishedAt": "2026-07-22T14:47:55.449519001Z"
+        }
+      ],
+      "embeddingAttempts": [
+        {
+          "nodeKey": "map:30928b2bddd7a02af89dd4d58194e06da5179d8d053927048ca173550823e03c",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.591252497Z",
+          "finishedAt": "2026-07-22T14:47:55.597822432Z"
+        },
+        {
+          "nodeKey": "map:3f863f93243d519929bfb768749e87535e43bff37ec3be65cf4fbd3adf307262",
+          "number": 1,
+          "startedAt": "2026-07-22T14:47:55.589101512Z",
+          "finishedAt": "2026-07-22T14:47:55.595299398Z"
+        }
+      ],
+      "embeddingRequests": 16,
+      "overlapMicros": 0,
+      "peakActive": 2,
+      "chunksPerSecond": 90.58921011395013,
+      "requestsPerSecond": 11.323651264243766,
+      "usage": {
+        "cost_microunits": 0,
+        "embedding.embedding_tokens": 0,
+        "embedding.requests": 16,
+        "generation.cost_microunits": 0,
+        "generation.input_tokens": 0,
+        "generation.output_tokens": 0,
+        "generation.requests": 2,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "requests": 2
+      }
+    }
+  ]
+}

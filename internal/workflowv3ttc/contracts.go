@@ -20,9 +20,12 @@ const (
 	ResourceLocal      = "rag.local"
 	ResourceEvaluation = "rag.evaluation.remote"
 
-	ChunkSchema     = "rag-ttc-chunk/v1"
-	GeneratedSchema = "rag-ttc-generated/v1"
-	ShardSchema     = "rag-ttc-prepared-shard/v1"
+	ChunkSchema          = "rag-ttc-chunk/v1"
+	ChunkBatchSchema     = "rag-ttc-chunk-batch/v1"
+	GeneratedSchema      = "rag-ttc-generated/v1"
+	GeneratedBatchSchema = "rag-ttc-generated-batch/v1"
+	MeasuredBatchSchema  = "rag-ttc-measured-batch/v1"
+	ShardSchema          = "rag-ttc-prepared-shard/v1"
 )
 
 type Chunk struct {
@@ -30,6 +33,37 @@ type Chunk struct {
 	Chunk        ragoperators.Chunk `json:"chunk"`
 	CitationIDs  []string           `json:"citationIds"`
 	SourceDigest string             `json:"sourceDigest"`
+}
+
+type ChunkBatch struct {
+	Key    string  `json:"key"`
+	Chunks []Chunk `json:"chunks"`
+}
+
+type ProviderMeasurement struct {
+	ProviderStartedAt     string `json:"providerStartedAt"`
+	ProviderElapsedMicros int64  `json:"providerElapsedMicros"`
+	ChunkCount            int    `json:"chunkCount"`
+	InputRunes            int    `json:"inputRunes"`
+}
+
+type GeneratedBatch struct {
+	Key         string              `json:"key"`
+	Items       []Generated         `json:"items"`
+	Measurement ProviderMeasurement `json:"measurement"`
+}
+
+type EmbeddingMeasurement struct {
+	ProviderStartedAt     string `json:"providerStartedAt"`
+	ProviderElapsedMicros int64  `json:"providerElapsedMicros"`
+	RepresentationCount   int    `json:"representationCount"`
+	ProviderRequests      int    `json:"providerRequests"`
+}
+
+type MeasuredBatch struct {
+	Key        string               `json:"key"`
+	Generation ProviderMeasurement  `json:"generation"`
+	Embedding  EmbeddingMeasurement `json:"embedding"`
 }
 
 type Generated struct {
@@ -70,6 +104,11 @@ type Result[T any] struct {
 type Provider interface {
 	Generate(context.Context, Chunk) (Result[Generated], error)
 	Embed(context.Context, Generated) (Result[Embedded], error)
+}
+
+type BatchProvider interface {
+	GenerateBatch(context.Context, ChunkBatch) (Result[GeneratedBatch], error)
+	EmbedBatch(context.Context, GeneratedBatch) (Result[MeasuredBatch], error)
 }
 
 type Failure struct {

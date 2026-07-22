@@ -6,6 +6,7 @@ import (
 	"math"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
@@ -63,17 +64,99 @@ func (p *OperatorProvider) Generate(ctx context.Context, chunk Chunk) (Result[Ge
 	if err != nil {
 		return Result[Generated]{}, err
 	}
-	usage = append(usage, Usage{Dimension: "requests", Units: 1})
-	costFound := false
-	for _, amount := range usage {
-		if amount.Dimension == "cost_microunits" {
-			costFound = true
-		}
-	}
-	if !costFound {
-		usage = append(usage, Usage{Dimension: "cost_microunits", Units: 0})
+	usage, err = completeGenerationUsage(usage)
+	if err != nil {
+		return Result[Generated]{}, err
 	}
 	return Result[Generated]{Value: generated, Usage: usage}, nil
+}
+
+func (p *OperatorProvider) GenerateBatch(ctx context.Context, batch ChunkBatch) (Result[GeneratedBatch], error) {
+	if batch.Key == "" || len(batch.Chunks) == 0 {
+		return Result[GeneratedBatch]{}, &Failure{Class: "validation", Code: "RAG_TTC_BATCH_INVALID", Retryable: false}
+	}
+	chunks := make([]ragoperators.Chunk, len(batch.Chunks))
+	inputRunes := 0
+	for i, chunk := range batch.Chunks {
+		if err := validateChunk(chunk); err != nil {
+			return Result[GeneratedBatch]{}, &Failure{Class: "validation", Code: "RAG_TTC_BATCH_INVALID", Retryable: false}
+		}
+		chunks[i] = chunk.Chunk
+		inputRunes += len([]rune(chunk.Chunk.Text))
+	}
+	plan, err := ragoperators.PlanCombinedPreparation(chunks, p.config.GenerationNode)
+	if err != nil || len(plan.Batches) != 1 {
+		return Result[GeneratedBatch]{}, &Failure{Class: "configuration", Code: "RAG_TTC_GENERATION_PLAN", Retryable: false}
+	}
+	env, err := p.config.ResolveEnvironment(ctx)
+	if err != nil {
+		return Result[GeneratedBatch]{}, &Failure{Class: "configuration", Code: "RAG_TTC_PROVIDER_RESOLUTION", Retryable: false}
+	}
+	before := env.Usage
+	started := time.Now()
+	result, err := ragoperators.ExecuteCombinedPreparationBatch(ctx, plan, plan.Batches[0], env)
+	elapsed := time.Since(started).Microseconds()
+	if err != nil {
+		return Result[GeneratedBatch]{}, classifyOperatorError(err, true)
+	}
+	byChunk := map[string][]ragoperators.Representation{}
+	for _, representation := range result.Representations {
+		byChunk[representation.Record.ParentChunkID] = append(byChunk[representation.Record.ParentChunkID], representation)
+	}
+	items := make([]Generated, len(batch.Chunks))
+	for i, chunk := range batch.Chunks {
+		representations := byChunk[chunk.Key]
+		sort.Slice(representations, func(i, j int) bool { return representations[i].Record.ID < representations[j].Record.ID })
+		items[i] = Generated{Key: chunk.Key, Chunk: chunk.Chunk, Representations: representations, CitationIDs: append([]string(nil), chunk.CitationIDs...), ProviderProfileDigest: p.config.ProviderProfileDigest, ModelDigest: p.config.GenerationModelDigest}
+		if err := validateGenerated(chunk, items[i]); err != nil {
+			return Result[GeneratedBatch]{}, &Failure{Class: "malformed-output", Code: "RAG_TTC_GENERATED_INVALID", Retryable: true}
+		}
+	}
+	usage, err := usageDelta(before, env.Usage)
+	if err != nil {
+		return Result[GeneratedBatch]{}, err
+	}
+	usage, err = completeGenerationUsage(usage)
+	if err != nil {
+		return Result[GeneratedBatch]{}, err
+	}
+	return Result[GeneratedBatch]{Value: GeneratedBatch{Key: batch.Key, Items: items, Measurement: ProviderMeasurement{ProviderStartedAt: started.UTC().Format(time.RFC3339Nano), ProviderElapsedMicros: elapsed, ChunkCount: len(batch.Chunks), InputRunes: inputRunes}}, Usage: usage}, nil
+}
+
+func completeGenerationUsage(usage []Usage) ([]Usage, error) {
+	values := map[string]int64{"cost_microunits": 0, "input_tokens": 0, "output_tokens": 0, "requests": 1}
+	for _, amount := range usage {
+		if amount.Dimension == "requests" {
+			return nil, &Failure{Class: "internal", Code: "RAG_TTC_USAGE_INVALID", Retryable: false}
+		}
+		if _, ok := values[amount.Dimension]; !ok || amount.Units < 0 {
+			return nil, &Failure{Class: "internal", Code: "RAG_TTC_USAGE_INVALID", Retryable: false}
+		}
+		values[amount.Dimension] = amount.Units
+	}
+	return []Usage{{Dimension: "cost_microunits", Units: values["cost_microunits"]}, {Dimension: "input_tokens", Units: values["input_tokens"]}, {Dimension: "output_tokens", Units: values["output_tokens"]}, {Dimension: "requests", Units: 1}}, nil
+}
+
+func (p *OperatorProvider) EmbedBatch(ctx context.Context, generated GeneratedBatch) (Result[MeasuredBatch], error) {
+	if generated.Key == "" || len(generated.Items) == 0 {
+		return Result[MeasuredBatch]{}, &Failure{Class: "validation", Code: "RAG_TTC_GENERATED_BATCH_INVALID", Retryable: false}
+	}
+	started := time.Now()
+	totalRepresentations := 0
+	embeddingTokens := int64(0)
+	for _, item := range generated.Items {
+		result, err := p.Embed(ctx, item)
+		if err != nil {
+			return Result[MeasuredBatch]{}, err
+		}
+		totalRepresentations += len(result.Value.Embeddings)
+		for _, amount := range result.Usage {
+			if amount.Dimension == "embedding_tokens" {
+				embeddingTokens += amount.Units
+			}
+		}
+	}
+	return Result[MeasuredBatch]{Value: MeasuredBatch{Key: generated.Key, Generation: generated.Measurement, Embedding: EmbeddingMeasurement{ProviderStartedAt: started.UTC().Format(time.RFC3339Nano), ProviderElapsedMicros: time.Since(started).Microseconds(), RepresentationCount: totalRepresentations, ProviderRequests: len(generated.Items)}}, Usage: []Usage{{Dimension: "embedding_tokens", Units: embeddingTokens}, {Dimension: "requests", Units: int64(len(generated.Items))}}}, nil
 }
 
 func (p *OperatorProvider) Embed(ctx context.Context, generated Generated) (Result[Embedded], error) {

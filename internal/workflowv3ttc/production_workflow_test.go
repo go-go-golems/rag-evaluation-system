@@ -249,6 +249,17 @@ func TestProductionWorkflowWaitsWithoutLeaseThenPublishesAfterAuthorizedDecision
 			if count != 1 {
 				t.Fatalf("publishes=%d", count)
 			}
+			evidenceBody, readErr := workflowv3.ReadArtifact(ctx, artifacts, snapshot.Outputs["evidence"])
+			if readErr != nil {
+				t.Fatal(readErr)
+			}
+			var evidence StudyEvidenceShard
+			if decodeErr := workflowv3.StrictDecode(evidenceBody, &evidence); decodeErr != nil {
+				t.Fatal(decodeErr)
+			}
+			if len(evidence.Queries) != 1 || evidence.Queries[0].QueryID != "query-1" || len(evidence.Queries[0].CitationChunkIDs) != 1 {
+				t.Fatalf("evidence=%#v", evidence)
+			}
 			_ = store.Close()
 			return
 		}

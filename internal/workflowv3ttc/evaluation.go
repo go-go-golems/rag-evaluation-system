@@ -10,11 +10,13 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragengine"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
+	"github.com/go-go-golems/scraper/pkg/workflowv3"
 )
 
 const (
-	QuerySchema         = "rag-ttc-query/v1"
-	QueryEvidenceSchema = "rag-ttc-query-evidence/v1"
+	QuerySchema              = "rag-ttc-query/v1"
+	QueryEvidenceSchema      = "rag-ttc-query-evidence/v1"
+	StudyEvidenceShardSchema = "rag-ttc-study-evidence-shard/v1"
 )
 
 type QueryEnvelope struct {
@@ -41,6 +43,36 @@ type QueryEvidence struct {
 	Metrics          []MetricEvidence `json:"metrics"`
 	FailureCodes     []string         `json:"failureCodes,omitempty"`
 	Usage            []Usage          `json:"usage"`
+}
+
+type StudyEvidenceShard struct {
+	SchemaVersion string          `json:"schemaVersion"`
+	FirstQueryID  string          `json:"firstQueryId"`
+	LastQueryID   string          `json:"lastQueryId"`
+	Queries       []QueryEvidence `json:"queries"`
+	Digest        string          `json:"digest"`
+}
+
+func newStudyEvidenceShard(queries []QueryEvidence) (StudyEvidenceShard, error) {
+	if len(queries) == 0 {
+		return StudyEvidenceShard{}, fmt.Errorf("RAG_TTC_EVIDENCE_EMPTY")
+	}
+	sort.Slice(queries, func(i, j int) bool { return queries[i].QueryID < queries[j].QueryID })
+	for index, query := range queries {
+		if query.SchemaVersion != QueryEvidenceSchema || query.QueryID == "" || (index > 0 && query.QueryID == queries[index-1].QueryID) {
+			return StudyEvidenceShard{}, fmt.Errorf("RAG_TTC_EVIDENCE_IDENTITY")
+		}
+	}
+	shard := StudyEvidenceShard{SchemaVersion: StudyEvidenceShardSchema, FirstQueryID: queries[0].QueryID, LastQueryID: queries[len(queries)-1].QueryID, Queries: queries}
+	digest, err := workflowv3.Digest(struct {
+		SchemaVersion, FirstQueryID, LastQueryID string
+		Queries                                  []QueryEvidence
+	}{shard.SchemaVersion, shard.FirstQueryID, shard.LastQueryID, shard.Queries})
+	if err != nil {
+		return StudyEvidenceShard{}, err
+	}
+	shard.Digest = digest
+	return shard, nil
 }
 
 type EvaluationConfig struct {
@@ -96,11 +128,12 @@ func (a *EvaluationAuthority) Evaluate(ctx context.Context, publication Publicat
 		evidence.Abstained, evidence.InputTokens, evidence.OutputTokens = answer.Abstained, answer.InputTokens, answer.OutputTokens
 	}
 	costMicrounits, embeddingTokens := int64(0), int64(0)
+	allowedMetrics := map[string]struct{}{"rag.precision": {}, "rag.recall": {}, "rag.hit-rate": {}, "rag.mrr": {}, "rag.ndcg": {}, "rag.latency": {}, "rag.token-usage": {}, "rag.provider-cost": {}, "rag.storage-bytes": {}, "rag.failure-rates": {}, "rag.abstention": {}}
 	if len(result.Metrics) > 64 {
 		return QueryEvidence{}, fmt.Errorf("RAG_TTC_METRICS_BOUNDED")
 	}
 	for _, metric := range result.Metrics {
-		if metric.Name == "" || len(metric.Value) > 64<<10 {
+		if _, ok := allowedMetrics[metric.Name]; !ok || len(metric.Value) > 64<<10 {
 			return QueryEvidence{}, fmt.Errorf("RAG_TTC_METRICS_BOUNDED")
 		}
 		evidence.Metrics = append(evidence.Metrics, MetricEvidence{Name: metric.Name, Unit: metric.Unit, Value: append([]byte(nil), metric.Value...), Numeric: metric.Numeric})
@@ -114,7 +147,11 @@ func (a *EvaluationAuthority) Evaluate(ctx context.Context, publication Publicat
 			var costs map[string]float64
 			if err := json.Unmarshal(metric.Value, &costs); err == nil {
 				for _, cost := range costs {
-					costMicrounits += int64(math.Round(cost * 1_000_000))
+					units := math.Round(cost * 1_000_000)
+					if units < 0 || units > math.MaxInt64 || costMicrounits > math.MaxInt64-int64(units) {
+						return QueryEvidence{}, fmt.Errorf("RAG_TTC_COST_INVALID")
+					}
+					costMicrounits += int64(units)
 				}
 			}
 		}

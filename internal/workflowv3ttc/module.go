@@ -52,6 +52,36 @@ func ModuleWithAuthorities(provider Provider, publication PublicationService, ev
 					}
 					return vm.ToValue(successResponse(result.Value, result.Usage))
 				})
+				mustSet("generateBatch", func(goja.FunctionCall) goja.Value {
+					batchProvider, ok := provider.(BatchProvider)
+					if !ok {
+						return vm.ToValue(closedFailure("configuration", "RAG_TTC_BATCH_PROVIDER_UNAVAILABLE", false))
+					}
+					var batch ChunkBatch
+					if err := readInput(moduleContext, "batch", &batch); err != nil {
+						return vm.ToValue(closedFailure("validation", "RAG_TTC_BATCH_INPUT", false))
+					}
+					result, err := batchProvider.GenerateBatch(moduleContext.Context, batch)
+					if err != nil {
+						return vm.ToValue(providerFailure(err))
+					}
+					return vm.ToValue(successResponse(result.Value, result.Usage))
+				})
+				mustSet("embedBatch", func(goja.FunctionCall) goja.Value {
+					batchProvider, ok := provider.(BatchProvider)
+					if !ok {
+						return vm.ToValue(closedFailure("configuration", "RAG_TTC_BATCH_PROVIDER_UNAVAILABLE", false))
+					}
+					var generated GeneratedBatch
+					if err := readInput(moduleContext, "generated", &generated); err != nil {
+						return vm.ToValue(closedFailure("validation", "RAG_TTC_GENERATED_BATCH_INPUT", false))
+					}
+					result, err := batchProvider.EmbedBatch(moduleContext.Context, generated)
+					if err != nil {
+						return vm.ToValue(providerFailure(err))
+					}
+					return vm.ToValue(successResponse(result.Value, result.Usage))
+				})
 				mustSet("embed", func(goja.FunctionCall) goja.Value {
 					var generated Generated
 					if err := readInput(moduleContext, "generated", &generated); err != nil {
@@ -129,7 +159,22 @@ func ModuleWithAuthorities(provider Provider, publication PublicationService, ev
 					if err != nil {
 						return vm.ToValue(closedFailure("evaluation", "RAG_TTC_QUERY_EVALUATION", true))
 					}
-					return vm.ToValue(successResponse(evidence, evidence.Usage))
+					shard, err := newStudyEvidenceShard([]QueryEvidence{evidence})
+					if err != nil {
+						return vm.ToValue(closedFailure("validation", "RAG_TTC_EVIDENCE_INVALID", false))
+					}
+					return vm.ToValue(successResponse(shard, evidence.Usage))
+				})
+				mustSet("mergeEvidence", func(goja.FunctionCall) goja.Value {
+					queries, err := readEvidencePartition(moduleContext)
+					if err != nil {
+						return vm.ToValue(closedFailure("validation", "RAG_TTC_EVIDENCE_PARTITION", false))
+					}
+					shard, err := newStudyEvidenceShard(queries)
+					if err != nil {
+						return vm.ToValue(closedFailure("validation", "RAG_TTC_EVIDENCE_INVALID", false))
+					}
+					return vm.ToValue(successResponse(shard, nil))
 				})
 			}
 			return gggengine.NativeModuleRegistrar{ModuleID: "rag-evaluation-system:workflowv3-ttc", ModuleName: ModuleAlias, Loader: loader}, nil
@@ -196,6 +241,37 @@ func successResponse(value any, usage []Usage) map[string]any {
 		usageValues[index] = map[string]any{"dimension": amount.Dimension, "units": amount.Units}
 	}
 	return map[string]any{"ok": true, "value": jsonValue, "usage": usageValues}
+}
+
+func readEvidencePartition(context workflowv3runtime.TaskModuleContext) ([]QueryEvidence, error) {
+	ref, ok := context.Request.Inputs["partition"]
+	if !ok {
+		return nil, fmt.Errorf("partition input is missing")
+	}
+	body, err := workflowv3.ReadArtifact(context.Context, context.Request.Artifacts, ref)
+	if err != nil {
+		return nil, err
+	}
+	partition, err := workflowv3.DecodeReductionPartition(body, 32)
+	if err != nil {
+		return nil, err
+	}
+	queries := []QueryEvidence{}
+	for _, member := range partition.Members {
+		if member.Value.Schema != StudyEvidenceShardSchema {
+			return nil, fmt.Errorf("unexpected evidence schema")
+		}
+		memberBody, err := workflowv3.ReadArtifact(context.Context, context.Request.Artifacts, member.Value)
+		if err != nil {
+			return nil, err
+		}
+		var shard StudyEvidenceShard
+		if err := workflowv3.StrictDecode(memberBody, &shard); err != nil {
+			return nil, err
+		}
+		queries = append(queries, shard.Queries...)
+	}
+	return queries, nil
 }
 
 func closedFailure(class, code string, retryable bool) map[string]any {

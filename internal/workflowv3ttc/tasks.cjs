@@ -12,6 +12,16 @@ exports.generate = task.implementation(ctx => {
   return task.success({generated: output});
 });
 
+exports.generateBatch = task.implementation(ctx => {
+  const output = finish(ctx, rag.generateBatch(), "generated", "rag-ttc-generated-batch/v1");
+  return task.success({generated: output});
+});
+
+exports.embedBatch = task.implementation(ctx => {
+  const output = finish(ctx, rag.embedBatch(), "measured", "rag-ttc-measured-batch/v1");
+  return task.success({measured: output});
+});
+
 exports.embed = task.implementation(ctx => {
   const output = finish(ctx, rag.embed(), "embedded", "rag-ttc-prepared-shard/v1");
   return task.success({embedded: output});
@@ -33,6 +43,11 @@ exports.publish = task.implementation(ctx => {
 });
 
 exports.evaluate = task.implementation(ctx => {
-  const output = finish(ctx, rag.evaluate(), "evidence", "rag-ttc-query-evidence/v1");
+  const output = finish(ctx, rag.evaluate(), "evidence", "rag-ttc-study-evidence-shard/v1");
+  return task.success({evidence: output});
+});
+
+exports.mergeEvidence = task.implementation(ctx => {
+  const output = finish(ctx, rag.mergeEvidence(), "evidence", "rag-ttc-study-evidence-shard/v1");
   return task.success({evidence: output});
 });

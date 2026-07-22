@@ -128,7 +128,13 @@ module.exports = workflow.compile(
 						approvalGate: "approve-evaluation-spend",
 					}),
 		);
+		const studyEvidence = plan.reduce(
+			"merge-study-evidence",
+			evidence,
+			(partition) => tasks.mergeEvidence({ partition }),
+			(reduce) => reduce.fanIn(32).maxLevels(3),
+		);
 		plan.output("publication", publication.output("publication"));
-		plan.outputSet("evidence", evidence);
+		plan.output("evidence", studyEvidence);
 	}),
 );

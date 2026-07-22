@@ -1,0 +1,380 @@
+---
+Title: Investigation Diary
+Ticket: RAG-TTC-V3-SWEEP
+Status: active
+Topics:
+    - rag-eval
+    - evaluation
+    - workflow
+    - chunking
+DocType: reference
+Intent: long-term
+Owners: []
+RelatedFiles: []
+ExternalSources: []
+Summary: Chronological implementation and execution evidence for the Workflow V3 Umans batching and concurrency study.
+LastUpdated: 2026-07-22T10:15:00-04:00
+WhatFor: Preserve commands, decisions, failures, results, and review instructions for reproducing the study.
+WhenToUse: When implementing, operating, reviewing, or resuming RAG-TTC-V3-SWEEP.
+---
+
+# Diary
+
+## Goal
+
+Capture the evidence-first design, implementation, no-cost control, and authorized real execution of the Workflow V3 Umans chunks-per-request and concurrency sweep.
+
+## Step 1: Create the study ticket and freeze its experimental contract
+
+I created a dedicated docmgr ticket rather than mixing this performance experiment into the broader Workflow V3 completion ticket. The design freezes batch sizes `1, 2, 4, 8`, concurrency limits `1, 2, 4`, an initial 16-chunk/60-request real smoke matrix, precise measurement contracts, privacy boundaries, and separate authorization for any larger run.
+
+Repository inspection confirmed that `ragoperators` already owns deterministic multi-chunk planning and validated provider execution, while the existing Workflow V3 TTC adapter intentionally handles one chunk per task. The design therefore specifies a separate versioned sweep task that reuses the domain operator instead of modifying production task behavior or duplicating prompt construction.
+
+### Prompt Context
+
+**User prompt (verbatim):** "ok, create a new docmgr ticket for that study, create a design/implementation guide, and then run it."
+
+**Assistant interpretation:** Create a structured study workspace, write an implementation-ready guide for the batching/concurrency experiment, implement its Workflow V3 harness and graphs, run the no-cost control, and run the real Umans sample only when its required authority is available.
+
+**Inferred user intent:** Obtain precise, reproducible performance evidence and visualizations for choosing chunks-per-request and Umans concurrency, rather than relying on coarse diagnostic throughput.
+
+### What I did
+
+- Created ticket `RAG-TTC-V3-SWEEP` with topics `rag-eval,evaluation,workflow,chunking`.
+- Added the primary design/implementation guide and this investigation diary.
+- Added six tasks covering design, harness implementation, graph generation, fixture control, real smoke execution, and publication.
+- Inspected `pkg/ragoperators/combined_batch.go`, `internal/workflowv3ttc/provider.go`, and `internal/workflowv3ttc/production_workflow.js` with line numbers.
+- Inspected host environment availability without printing secret values.
+- Wrote the implementation guide with architecture, exact matrices, measurement schema, decisions, pseudocode, phases, tests, privacy requirements, operator workflow, and hard acceptance criteria.
+
+### Why
+
+- A paid performance study needs an immutable experimental contract and bounded authority before provider calls begin.
+- Existing v9 timestamps cannot separate queue wait from provider time, so a new precise measurement path is required.
+- Keeping this work in a separate ticket makes its scripts, evidence, graphs, and operator decisions independently reviewable.
+
+### What worked
+
+- `docmgr ticket create-ticket`, both `docmgr doc add` calls, and all task additions succeeded.
+- Existing batching code directly supports deterministic chunks-per-request factors.
+- Existing Workflow V3 resources, attempts, budgets, and checked usage are suitable foundations.
+
+### What didn't work
+
+- Real execution cannot start in the current shell. The exact availability probe reported:
+  - `RAG_GENERATOR_BASE_URL=unset`
+  - `RAG_EMBEDDING_BASE_URL=unset`
+  - `RAG_RERANKER_BASE_URL=unset`
+  - `OPENAI_API_KEY=unset`
+  - `ANTHROPIC_API_KEY=unset`
+  - `GEMINI_API_KEY=unset`
+  - `UMANS_API_KEY=unset`
+  - `provider-config=absent`
+- No credentials were printed or persisted.
+
+### What I learned
+
+- `CombinedPreparationPlan` already exposes stable batch membership and request text, so the study does not need a new domain batching algorithm.
+- The current Workflow V3 provider requires exactly one planned batch from one chunk; changing it would alter production semantics. A dedicated batch contract is safer and more legible.
+- The proposed 16-chunk smoke matrix costs exactly 60 generation requests before retries; the 32-chunk main matrix costs 180 requests per replicate.
+
+### What was tricky to build
+
+The main design edge is separating three times that old evidence conflated: durable queue wait, Workflow V3 task overhead, and provider wall time. Workflow V3 provides durable attempt boundaries, but provider start/end must be measured inside the RAG adapter with a monotonic elapsed duration. The design persists only bounded integer microseconds and usage, not request/response payloads. Another edge is avoiding hidden concurrency: every provider request must be one Workflow V3 attempt, and provider-internal generation concurrency must stay at one so the durable resource cap proves the active-call count.
+
+### What warrants a second pair of eyes
+
+- Whether 16 chunks provide enough variety for the smoke matrix without producing misleading batch-size conclusions.
+- Whether batch size 8 fits the exact Umans context/rune limits for the frozen source subset.
+- Whether connection warm-up should be measured as ordinary evidence or handled by a separately authorized warm-up request.
+- The final numeric request/token/cost cap before real execution.
+
+### What should be done in the future
+
+- Implement the dedicated Workflow V3 sweep package, exporter, privacy scanner, and graph renderer.
+- Run fixture control and inspect exact request arithmetic and peak concurrency.
+- Configure host-local provider authority and obtain explicit numeric budget approval before the real smoke matrix.
+
+### Code review instructions
+
+- Start with the design decisions and experimental contract in `design-doc/01-workflow-v3-umans-batching-and-concurrency-study-design-and-implementation-guide.md`.
+- Review existing batching authority in `pkg/ragoperators/combined_batch.go`, then compare the single-chunk adapter in `internal/workflowv3ttc/provider.go`.
+- Validate ticket health with `docmgr doctor --ticket RAG-TTC-V3-SWEEP --stale-after 30`.
+
+### Technical details
+
+Commands executed:
+
+```bash
+docmgr ticket create-ticket --ticket RAG-TTC-V3-SWEEP \
+  --title "Workflow V3 Umans Batching and Concurrency Study" \
+  --topics rag-eval,evaluation,workflow,chunking
+
+docmgr doc add --ticket RAG-TTC-V3-SWEEP --doc-type design-doc \
+  --title "Workflow V3 Umans Batching and Concurrency Study Design and Implementation Guide"
+docmgr doc add --ticket RAG-TTC-V3-SWEEP --doc-type reference \
+  --title "Investigation Diary"
+```
+
+Exact request arithmetic:
+
+```text
+16 chunks: (16/1 + 16/2 + 16/4 + 16/8) × 2 concurrency levels = 60
+32 chunks: (32/1 + 32/2 + 32/4 + 32/8) × 3 concurrency levels = 180
+```
+
+## Step 2: Implement and execute the no-cost Workflow V3 control matrix
+
+I implemented a dedicated multi-chunk generation task that reuses `ragoperators.PlanCombinedPreparation` and `ExecuteCombinedPreparationBatch`, while preserving the existing single-chunk production task. The adapter now records an RFC3339 provider-start timestamp and monotonic provider elapsed microseconds, reports complete sorted budget usage, and validates every chunk's generated representations before completion.
+
+A new command executed all 12 fixture cells over 16 chunks: batch sizes `1, 2, 4, 8` crossed with concurrency `1, 2, 4`. It performed exactly 90 Workflow V3 generation attempts, observed peak active calls equal to or below every cell's limit, wrote bounded canonical evidence and CSV, removed transient source-bearing runtimes, and rendered four graphs in SVG and PNG.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 1)
+
+**Assistant interpretation:** Implement and execute the safe portion of the requested study now, retaining the real run gate where external authority is unavailable.
+
+**Inferred user intent:** Produce actual precise measurements and graphs using the new Workflow V3 execution path before spending on Umans.
+
+### What I did
+
+- Added `ChunkBatch`, `GeneratedBatch`, and bounded provider timing contracts.
+- Added `OperatorProvider.GenerateBatch`, complete generation usage settlement, host module registration, exact bundle task identity, JavaScript task implementation, and a sweep-only Workflow V3 source.
+- Added matrix planning with exact request arithmetic, deterministic counterbalancing, a maximum request ceiling, and concurrency rejection above four.
+- Added `cmd/rag-ttc-v3-sweep` for isolated cell submission, durable execution, evidence export, and transient runtime cleanup.
+- Added `scripts/01-render-sweep.py` and rendered throughput, makespan, and provider-latency graphs as SVG and PNG.
+- Ran 12 fixture cells and asserted exactly 90 successful requests and `peakActive <= cell.concurrency <= 4`.
+
+### Why
+
+- The fixture control proves the experiment machinery without provider spend.
+- One Workflow V3 attempt per request makes concurrency observable and enforceable.
+- Provider timing inside the RAG adapter distinguishes provider wall time from Workflow V3 task makespan.
+- Removing transient runtime databases after canonical export keeps ticket evidence compact and avoids checking source-bearing fixture artifacts into documentation.
+
+### What worked
+
+- Final run: `profile=fixtures cells=12 planned_requests=90`.
+- Plan digest: `sha256:57d83a39233fb8c061273148ef47476c0c5cce78a4fabacae6bdcbdb8e713a65`.
+- Observed peak active requests never exceeded 1, 2, or 4 in the respective cells.
+- Canonical evidence is approximately 55 KB; the complete compact evidence and graph directory is approximately 516 KB.
+- Focused package and command tests passed, and `git diff --check` passed.
+
+### What didn't work
+
+The first authoring attempt failed exactly with:
+
+```text
+execute workflow script: TypeError: output requires a name and workflow value at github.com/go-go-golems/scraper/pkg/gojamodules/workflow.(*planBuilder).object.func8 (native)
+exit status 1
+```
+
+A map is a set-valued output, so I replaced `plan.output("generated", generated)` with `plan.outputSet("generated", generated)`.
+
+The second attempt failed exactly with:
+
+```text
+migrate workflow v3 SQLite: invalid uri authority: ttmp
+exit status 1
+```
+
+The SQLite opener requires a clean absolute database path. I canonicalized the output root with `filepath.Abs` before constructing per-cell paths.
+
+The next attempt reached execution but failed with:
+
+```text
+cell {ChunksPerRequest:1 Concurrency:1 Replicate:1} status failed
+```
+
+SQLite attempt evidence showed:
+
+```text
+budget / BUDGET_USAGE_INVALID / task usage evidence was invalid
+```
+
+The batch adapter reported only nonzero usage plus requests, but Workflow V3 settlement requires every reserved dimension exactly once in sorted order. I added `completeGenerationUsage`, which emits `cost_microunits`, `input_tokens`, `output_tokens`, and `requests` in canonical order, including zeros. This also hardened the existing production adapter.
+
+The first focused lint run then reported exactly:
+
+```text
+cmd/rag-ttc-v3-sweep/main.go:295:15: Error return value of `f.Close` is not checked (errcheck)
+internal/workflowv3ttc/sweep_test.go:6:1: File is not properly formatted (gofmt)
+internal/workflowv3ttc/runtime.go:111:10: ST1005: error strings should not be capitalized (staticcheck)
+3 issues:
+```
+
+I made CSV flush/close errors explicit, formatted the new test, and lowercased the existing runtime error. The fresh lint run passed with `0 issues.`
+
+Initial visual QA found confusing scientific notation on the makespan axis and overlapping provider-latency series with inconsistent legend wording/colors. I changed makespan to milliseconds, applied a stable palette, standardized `concurrency=N`, and added slight x offsets. The first follow-up vision request failed externally with `tls: bad record MAC`; a retry succeeded and found no publication-blocking defects.
+
+### What I learned
+
+- Workflow V3 correctly rejects partial usage evidence, which caught a production-adapter edge not exercised by the synthetic provider tests.
+- A 16-chunk full fixture matrix has 90 requests, while the proposed real smoke matrix omits concurrency 2 and therefore has 60.
+- At batch size 8 with only two requests, observed peak concurrency is necessarily two even when capacity is four; configured capacity and achievable parallelism must be plotted separately.
+
+### What was tricky to build
+
+The task output and attempt timeline are separate evidence streams. Provider spans are naturally associated with deterministic batch keys in generated output artifacts, while durable attempt intervals are associated with hashed node keys. The exporter retains both bounded arrays without inventing a false association. Aggregate distributions and active-count timelines remain exact. A future schema version may persist the batch key as bounded attempt metadata if per-attempt joins are required.
+
+The first compact export left per-cell SQLite and content-addressed source artifacts in the ticket, totaling 4.8 MB and 227 files. Although the source was nonsensitive fixture text, that is the wrong evidence boundary. I changed the command to export attempt intervals and provider measurements first, close each store, and delete the transient cell runtime. The final ticket keeps only canonical evidence, CSV, and graphs.
+
+### What warrants a second pair of eyes
+
+- Validate whether the real provider reports all token dimensions for combined preparation.
+- Review the conservative per-request budget maxima before real execution; actual smoke limits should be derived from the real profile and approved numerically.
+- Confirm that the real batch-size-8 source subset remains under both rune and model context limits.
+- Consider persisting a bounded batch-key correlation field in generic Workflow V3 attempt metadata rather than relying on two ordered evidence collections.
+
+### What should be done in the future
+
+- Add a host-only real profile to the command without accepting secret values as CLI arguments.
+- Add preflight-only cost estimation and hard token/cost caps.
+- Execute the 60-request smoke matrix after credentials and numeric authority are available.
+- Extend graphs with real token rate, cost efficiency, percentiles, and generation/embedding overlap.
+
+### Code review instructions
+
+- Start at `internal/workflowv3ttc/sweep.go` for matrix invariants.
+- Review `OperatorProvider.GenerateBatch` and `completeGenerationUsage` in `internal/workflowv3ttc/provider.go`.
+- Review exact task/bundle wiring in `bundle.go`, `module.go`, `tasks.cjs`, and `sweep_workflow.js`.
+- Run:
+
+```bash
+GOWORK=off go test ./internal/workflowv3ttc ./cmd/rag-ttc-v3-sweep -count=1
+GOWORK=off go run ./cmd/rag-ttc-v3-sweep --output /tmp/rag-ttc-v3-sweep-fixture --chunks 16 --maximum-requests 90 --concurrency 1,2,4
+python3 ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/scripts/01-render-sweep.py /tmp/rag-ttc-v3-sweep-fixture/evidence.json --output /tmp/rag-ttc-v3-sweep-fixture/graphs
+```
+
+### Technical details
+
+Observed fixture control summary:
+
+```text
+batch=1 concurrency=1 requests=16 peak=1
+batch=2 concurrency=1 requests=8  peak=1
+batch=4 concurrency=1 requests=4  peak=1
+batch=8 concurrency=1 requests=2  peak=1
+batch=1 concurrency=2 requests=16 peak=2
+batch=2 concurrency=2 requests=8  peak=2
+batch=4 concurrency=2 requests=4  peak=2
+batch=8 concurrency=2 requests=2  peak=2
+batch=1 concurrency=4 requests=16 peak=4
+batch=2 concurrency=4 requests=8  peak=4
+batch=4 concurrency=4 requests=4  peak=4
+batch=8 concurrency=4 requests=2  peak=2
+```
+
+## Step 3: Add real-profile preflight and expand canonical graphs
+
+I extended the runner so the same Workflow V3 sweep can load an exact real provider profile and canonical researchctl execution specification without accepting secret values on the command line. The real path resolves profile and model digests, reconstructs the frozen source chunks from the verified corpus artifact, disables response-cache reuse across cells, pins provider-internal concurrency to one, and requires explicit execution plus request/token/cost ceilings before submission.
+
+I reran the complete fixture control and expanded canonical evidence with settled usage dimensions and durable attempt intervals. The renderer now produces token-rate, cost-efficiency, and observed-concurrency timeline views in addition to the original plots. Because the fixture provider does not report tokens or cost, those panels explicitly display unavailable data rather than misleading zero-valued series.
+
+### Prompt Context
+
+**User prompt (verbatim):** "run and make graphs"
+
+**Assistant interpretation:** Continue beyond the study design: execute all currently authorized cells, render precise graphs, and prepare the exact gated real-provider path rather than stopping at a plan.
+
+**Inferred user intent:** Obtain actual Workflow V3 performance evidence and readable visualizations, ultimately from the bounded Umans smoke matrix.
+
+### What I did
+
+- Added real-provider profile/specification/corpus loading to `cmd/rag-ttc-v3-sweep`.
+- Added explicit `--execute-real`, request, input-token, output-token, and cost authority checks.
+- Added exact provider-profile and generation-model digest reporting to real dry-run output.
+- Exported settled Workflow V3 usage and attempt intervals before deleting transient cell databases.
+- Added token-rate, cost-efficiency, active-attempt timeline, and generation/embedding-overlap graphs.
+- Added a downstream measured embedding task with an independent capacity of four, precise provider spans, representation/request counts, transactional token/request accounting, and no persisted vectors in study evidence.
+- Re-ran the 12-cell fixture matrix: 90 generation requests and 192 embedding provider requests.
+- Ran focused tests and lint after the changes.
+
+### Why
+
+- A real run must not silently fall back to fixtures or accept ambient unbounded spend.
+- Reconstructing chunks from the canonical execution specification and digest-verified artifact keeps the real sample tied to the frozen TTC study.
+- Missing fixture usage is not zero usage; explicit N/A plots prevent false conclusions.
+
+### What worked
+
+- Fixture rerun completed with `profile=fixtures cells=12 planned_requests=90`.
+- The renderer produced 16 SVG/PNG image files plus its manifest.
+- Every cell settled `embedding.requests` exactly to its measured provider-request count.
+- Focused tests passed and lint reported `0 issues.`.
+- Real-profile wiring compiles and reaches host-only provider resolution without making calls.
+
+### What didn't work
+
+The first real dry-run with the intended non-example path failed exactly with:
+
+```text
+RAG_PROVIDER_CONFIG_READ: open /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/experiments/real-provider-v2/provider-config.yaml: no such file or directory
+exit status 1
+```
+
+Using the checked-in non-secret example configuration reached environment resolution and failed exactly with:
+
+```text
+RAG_PROVIDER_ENV_MISSING
+exit status 1
+```
+
+No provider request was submitted.
+
+Visual QA correctly rejected the initial zero token/cost lines as misleading and found the overlaid attempt bars insufficiently explicit about concurrency. I changed missing usage panels to centered `Data unavailable` annotations and changed the timeline to active-attempt step series with a visible hard-cap line. Follow-up QA required the zero-overlap panel to say explicitly that all fixture series coincide and that the result is not indicative of real-provider performance; the renderer now does so.
+
+The first embedding-enabled run found zero generation/embedding overlap in all cells. Inspection of durable attempt timestamps proved embedding attempts began after the last generation attempt, despite independent dispatcher capacities. Reducing the generation map page size to one did not change that evidence. I retained the honest zero-overlap graph rather than fabricating overlap; resolving the chained-map publication behavior remains required before making a work-conserving real-run claim.
+
+### What I learned
+
+- The real provider configuration loader is the correct security boundary: it resolves environment references without exposing secret values.
+- The current conservative task reservation implies an intentionally high preflight ceiling; it must be tightened from exact provider/profile constraints before asking for monetary authorization.
+- Active-count series communicate enforcement more directly than overlapping Gantt bars for this matrix.
+
+### What was tricky to build
+
+The canonical researchctl specification stores the execution in `canonicalIdentity.domainConfig` and source artifact identity separately. The loader must verify both artifact size and SHA-256 before decoding the corpus, then execute only provider-free static pipeline stages to reproduce ordered chunks. It must not reuse diagnostic v9 source databases. The implementation follows that path and selects the first 16 chunks only after deterministic ID sorting.
+
+### What warrants a second pair of eyes
+
+- Review the real profile's per-request maximum token and cost reservations before authorization.
+- Verify the chosen 16 chunks are representative enough for a smoke test while remaining deterministic.
+- Confirm the provider profile's configured concurrency is at least four; Workflow V3 may request four but must respect any lower host cap.
+
+### What should be done in the future
+
+- Supply a host-only real provider configuration and its referenced environment values.
+- Complete a credential-resolving dry-run and reduce conservative budget maxima to exact approved limits.
+- Investigate why this sweep's chained embedding map starts only after generation completion and either fix the generic activation path or document a deliberately sequential study design before real execution.
+- Run the 60-generation/128-embedding-request real matrix and render real token/cost graphs.
+
+### Code review instructions
+
+- Review `cmd/rag-ttc-v3-sweep/profile.go` for profile, specification, digest, and source boundaries.
+- Review `main.go` for numeric execution gates and usage export.
+- Review `scripts/01-render-sweep.py` for N/A semantics and active-attempt computation.
+- Validate with:
+
+```bash
+GOWORK=off go test ./cmd/rag-ttc-v3-sweep ./internal/workflowv3ttc -count=1
+GOWORK=off golangci-lint run ./cmd/rag-ttc-v3-sweep/... ./internal/workflowv3ttc/...
+```
+
+### Technical details
+
+The bounded real smoke command shape is:
+
+```bash
+rag-ttc-v3-sweep \
+  --profile real \
+  --provider-config /host-only/provider-config.yaml \
+  --specification /path/to/canonical-specification.json \
+  --artifact-root /path/to/artifacts \
+  --chunks 16 \
+  --concurrency 1,4 \
+  --maximum-requests 60
+```
+
+The first invocation is dry-run only. Actual submission additionally requires `--execute-real` and explicit numeric token/cost ceilings.
