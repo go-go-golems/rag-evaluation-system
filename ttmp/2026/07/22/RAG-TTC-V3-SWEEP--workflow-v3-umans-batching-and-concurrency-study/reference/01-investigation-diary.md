@@ -986,3 +986,73 @@ GOWORK=off go run ./cmd/rag-eval providers validate --provider-config "$REAL_PRO
 - Model manifest digest algorithm: clear `ModelManifest.Digest`, then calculate `ragcontract.Digest` over canonical content.
 - Current preflight shape: 16 chunks, batch sizes 1/2/4/8, concurrency 1/2, 60 planned generation requests, 61 prior admitted generation requests, and eight explicit retry admissions.
 - The failing prompt validation is a separate gate from the model-manifest repair and must be resolved before a current specification can be trusted.
+
+## Step 19: Repair prompt identities and stop at missing host environment
+
+The prompt-manifest preview found the same placeholder pattern as the model manifests: all three template digests and all three manifest digests were stale. I preserved a preview-first repair utility in the ticket, applied only its derived digest updates to the host-owned prompt manifests, and reran the provider validation. The identity chain is now past both model and prompt validation; the next failure is environmental rather than a manifest mismatch.
+
+No provider request was submitted. The command stopped while constructing the real provider host, before the sweep's real-profile authority, chunk materialization, or generation admission code can execute.
+
+### Prompt Context
+
+**User prompt (verbatim):** "don't forget to read the skill for the diary to make sure you are using the right format, and retroactively update all the steps you forgot for. We need a lot of info to get quality results. do this first. we can continue the code after that."
+
+**Assistant interpretation:** Continue only after normalizing the diary and persist all repair experiments/configuration as ticket-local scripts.
+
+**Inferred user intent:** Make host-profile repair reproducible, reviewable, and safe before attempting the paid qualification.
+
+**Commit (code):** pending — ticket-local prompt repair script and this diary entry will be committed together.
+
+### What I did
+- Added `scripts/07-refresh-prompt-manifest-digests.go`.
+- Ran preview:
+
+```text
+GOWORK=off go run scripts/07-refresh-prompt-manifest-digests.go --prompts-dir "$PROMPTS_DIR"
+```
+
+- Preview reported all three host prompt manifests had mismatched template and manifest digests.
+- Ran the same command with `--write`, updating only derived `TemplateDigest` and `Digest` fields.
+- Re-ran:
+
+```text
+GOWORK=off go run ./cmd/rag-eval providers validate --provider-config "$REAL_PROVIDER_CONFIG"
+```
+
+### Why
+- Prompt identity is part of the reproducible real provider profile. A stale prompt digest would make any subsequent real measurement non-reproducible and incorrectly associated with the canonical specification.
+
+### What worked
+- The repair utility advanced validation past `RAG_PROMPT_MANIFEST_INVALID: RAG_PROMPT_MANIFEST_TEMPLATE_DIGEST`.
+- It printed only filenames and old/expected digest identities; it never emitted prompt text, credentials, URLs, or headers.
+
+### What didn't work
+- Provider construction now fails with:
+
+```text
+Error: load real provider host: RAG_PROVIDER_ENV_MISSING
+```
+
+- This indicates required host environment configuration is unavailable in the current process. No paid call was made.
+
+### What I learned
+- The host profile validation sequence is functioning as intended: model identity, prompt identity, then environment availability are independently fail-closed gates.
+- Repairing derived identities does not authorize provider use; the host environment must still be explicitly supplied and verified.
+
+### What was tricky to build
+- Prompt manifests have two dependent digests: `TemplateDigest` is calculated from the exact `.txt`/`.md bytes, then manifest `Digest` is calculated from canonical manifest content after clearing only its self-referential `Digest`. Updating one without the other leaves an invalid profile. The script determines the template by `PromptID`, supports the same `.txt`/`.md resolution order as the provider loader, previews first, then atomically renames updates.
+
+### What warrants a second pair of eyes
+- Verify that the host environment variables selected by the provider configuration are supplied from the approved secret manager, not copied into ticket scripts or shell history.
+- Confirm the repaired prompt/model digests correspond to the intentional provider/model/prompt policy before compiling a replacement real specification.
+
+### What should be done in the future
+- Supply the missing host environment through the approved operator path, rerun provider validation, compile a current canonical real specification, and run the non-submitting preflight before any paid call.
+
+### Code review instructions
+- Review `scripts/07-refresh-prompt-manifest-digests.go` against `pkg/ragproviders/manifests.go:validatePromptManifest` and `promptManifestContentDigest`.
+- Run it without `--write` against an operator-provided prompt directory; then validate the provider set.
+
+### Technical details
+- Preview observed three stale prompt-manifest pairs: `ttc-grounded-answer-v1`, `ttc-questions-v1`, and `ttc-summary-v1`.
+- The final validation failure is `RAG_PROVIDER_ENV_MISSING`, which occurs before any network inference request or Workflow V3 admission.
