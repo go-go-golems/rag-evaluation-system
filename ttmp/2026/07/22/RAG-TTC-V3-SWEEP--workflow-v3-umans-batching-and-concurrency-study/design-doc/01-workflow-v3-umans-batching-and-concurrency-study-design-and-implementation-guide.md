@@ -361,3 +361,17 @@ The fixture control is complete only when all 12 cells execute with exact batch 
 - `internal/workflowv3ttc/manifest.go`: exact run identity conventions.
 - Scraper `pkg/workflowv3/types.go`: canonical attempt timestamps and resource identities.
 - Scraper `pkg/workflowv3sqlite`: durable attempts, admission, budgets, fencing, and projections.
+
+## Durable operation evidence qualification runbook (Workflow V3 extension)
+
+The real qualification must use the durable external-operation recorder, not only aggregate sweep measurements. Before any paid submission, the operator must supply an affirmative numeric authority for the cumulative ceilings recorded above and a canonical researchctl specification. The sweep must receive explicit custody IDs and an explicit RFC3339 timestamp; it refuses partial custody identity rather than inventing an import identity.
+
+After the run, reviewers must verify all of the following before treating the result as qualified evidence:
+
+1. Every successful cell has a compact canonical operation JSONL and manifest before its runtime SQLite is removed.
+2. Failed/timed-out cells retain the same artifacts plus a closed timing/concurrency reduction.
+3. `researchctl-run-export.json` stages and atomically imports all aggregate/cell/operation artifacts and scalar metrics in a fresh laboratory.
+4. The privacy canary scans evidence, JSONL, manifests, export, and any retained SQLite/WAL files for source text, prompt/body, URL/header, credential, and vector canaries.
+5. The final generation-authority ledger is at or below the explicitly approved cumulative ceiling; no retry is interpreted as free authority.
+
+The fixture implementation has passed this runbook path, including researchctl staging/import. The paid real invocation remains intentionally blocked until an operator approves the exact cumulative envelope.
