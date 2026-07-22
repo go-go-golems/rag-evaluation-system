@@ -10,13 +10,20 @@ Topics:
 DocType: reference
 Intent: long-term
 Owners: []
-RelatedFiles: []
+RelatedFiles:
+    - Path: repo://cmd/rag-ttc-v3-sweep/profile.go
+      Note: Real profile identity and verified corpus loading gates
+    - Path: repo://experiments/real-provider-v2/provider-config.umans-flash.example.yaml
+      Note: Non-secret host policy split between Umans profile and local service endpoints
+    - Path: repo://pkg/ragproviders/provider_set.go
+      Note: Profile-backed provider construction and default Pinocchio registry resolution
 ExternalSources: []
 Summary: Chronological implementation and execution evidence for the Workflow V3 Umans batching and concurrency study.
 LastUpdated: 2026-07-22T10:15:00-04:00
 WhatFor: Preserve commands, decisions, failures, results, and review instructions for reproducing the study.
 WhenToUse: When implementing, operating, reviewing, or resuming RAG-TTC-V3-SWEEP.
 ---
+
 
 # Diary
 
@@ -1056,3 +1063,95 @@ Error: load real provider host: RAG_PROVIDER_ENV_MISSING
 ### Technical details
 - Preview observed three stale prompt-manifest pairs: `ttc-grounded-answer-v1`, `ttc-questions-v1`, and `ttc-summary-v1`.
 - The final validation failure is `RAG_PROVIDER_ENV_MISSING`, which occurs before any network inference request or Workflow V3 admission.
+
+## Step 20: Recover profile-backed Mac provider infrastructure without submitting inference
+
+The apparent missing-environment block was an incomplete operational diagnosis. The shared Pinocchio registry already contains the Umans credentials and API configuration; the remaining provider roles need private loopback endpoints, not additional paid-provider credentials. I recovered the documented Mac SSH tunnels, materialized the non-secret host YAML from its checked-in Umans Flash example, and validated construction of all three provider roles.
+
+This advances the real qualification to the canonical-specification boundary only. The validation command constructed provider clients but did not invoke generation, embedding, or reranking; the sweep did not admit an operation or submit a provider request. A historical specification remains invalid because it pinned stale model identity, so a current immutable specification must still be compiled before even the non-submitting preflight can be trusted.
+
+### Prompt Context
+
+**User prompt (verbatim):** "then write your diary (see skillf or the format)"
+
+**Assistant interpretation:** Record the current host-profile and tunnel recovery work in the ticket diary using the required structured format before continuing qualification.
+
+**Inferred user intent:** Preserve the exact operational evidence, security boundaries, successes, and remaining reproducibility gate so the real run can be reviewed and resumed safely.
+
+**Commit (code):** pending — diary/changelog bookkeeping only; no source-code behavior changed.
+
+### What I did
+- Re-read the diary format and inspected prior RAG diary steps, the TTC tunnel operator playbook, the reranker diary, and relevant vault project reports.
+- Verified `~/.config/pinocchio/profiles.yaml` is readable and contains Umans profiles, including `umans-flash` and `umans-glm-5.2`, without printing configuration values.
+- Confirmed the profile-backed Umans settings contain API/chat configuration; they do not contain embedding or reranker settings.
+- Recovered the documented private topology: Mac Ollama at remote loopback `127.0.0.1:11434` forwarded to local `127.0.0.1:11435`, and Mac llama.cpp reranker at remote loopback `127.0.0.1:8012` forwarded to local `127.0.0.1:18012`.
+- Verified both local ports were free and both remote services passed non-submitting health checks through `mimimi-2.local`.
+- Started `tmux` sessions `rag-ollama-mimimi` and `rag-reranker-mimimi` with loopback-only SSH forwards and verified both local health endpoints.
+- Created the ignored, non-secret operational file `experiments/real-provider-v2/provider-config.yaml` from `provider-config.umans-flash.example.yaml`; it selects `umans-flash` for generation and obtains only embedding/reranker base URLs from command-local environment values.
+- Ran provider construction with command-local tunnel bindings:
+
+```text
+RAG_EMBEDDING_BASE_URL='http://127.0.0.1:11435' \\
+RAG_RERANKER_BASE_URL='http://127.0.0.1:18012' \\
+GOWORK=off go run ./cmd/rag-eval providers validate --provider-config experiments/real-provider-v2/provider-config.yaml
+```
+
+- Received the non-secret result:
+
+```json
+{"embedding":true,"generation":true,"profile_id":"ttc-umans-flash-local-embedding-v1","reranker":true}
+```
+
+- Started locating the replacement canonical TTC specification and artifact root. Confirmed the available real-provider study sources contain intentionally placeholder input identities, while `data/artifacts` contains custody files and the prior diary explicitly records that the previous canonical specification was stale.
+
+### Why
+- The sweep must use the existing Pinocchio profile credential boundary rather than duplicate Umans credentials in environment variables or ticket files.
+- The embedding and reranker services are separate local Mac capabilities; their SSH forwarding endpoints must be supplied only at runtime and must never become immutable experiment identity.
+- A provider host that validates does not make a source artifact, model/prompt identity, and execution pipeline combination canonical. Recompiling the specification against the repaired profile prevents a real run from being associated with stale identity.
+
+### What worked
+- The shared Pinocchio profile registry and both Mac services were available.
+- The documented SSH alias `mimimi-2.local`, remote health checks, local ports, and tmux tunnel names all matched the operator playbooks.
+- The host loader successfully constructed the embedding, generation, and reranker providers. This proves the prior `RAG_PROVIDER_ENV_MISSING` failure was resolved without exposing credentials or endpoint values in source control.
+- The validator printed only booleans and profile ID. No prompt text, corpus text, provider response, authorization header, credential, or operation ticket was emitted.
+
+### What didn't work
+- The first artifact/specification discovery command had a shell grouping error:
+
+```text
+find: you have too many ')'
+```
+
+  I corrected the discovery approach and continued with `rg --files`/targeted metadata inspection; no provider call was involved.
+- No suitable current canonical specification was found as a ready-to-use file. `experiments/real-provider-v2/study*.js` and `inputs.json` intentionally contain placeholder input digests, so they cannot be silently promoted to a real run specification.
+
+### What I learned
+- Pinocchio profiles solve the Umans credential/configuration requirement, but a chat profile is not an embedding or reranker profile. The host configuration must combine the profile-backed generator with explicit private service endpoints for those separate roles.
+- The correct endpoint values are operational capabilities supplied to the host process, not canonical study fields or secrets.
+- `rag-eval providers validate` is a useful zero-submission readiness check: it fully constructs the provider set but does not traverse the sweep, admit a Workflow V3 operation, or issue inference.
+
+### What was tricky to build
+- The previous failure code, `RAG_PROVIDER_ENV_MISSING`, did not identify whether the absent value was an Umans credential, an endpoint, or a separate service dependency. The safe resolution required following the documented profile and tunnel architecture rather than printing or searching profile values. The resulting configuration uses the pre-existing `umans-flash` profile for generation and passes the two loopback tunnel URLs only in the validation command environment.
+- The available candidate study files are deliberately non-runnable for a real measurement: their input digests are placeholders. The prior diary also establishes that an older canonical specification mismatched repaired host model identity. I therefore did not substitute digests, mutate a study source, or start preflight with an unverifiable artifact binding.
+
+### What warrants a second pair of eyes
+- Confirm the operational `provider-config.yaml` remains untracked and is not accidentally staged; it is a host-local configuration even though it contains no credential values.
+- Review the compiler inputs used for the replacement specification against the validated Umans Flash generation model, repaired prompt manifests, corpus artifact digest/size, and intended 16-chunk selection before any preflight result is accepted.
+- Confirm the tmux tunnels bind only to loopback and that the Mac services retain their documented private bindings.
+
+### What should be done in the future
+- Compile a replacement canonical TTC specification from verified, non-placeholder source bindings and the repaired host profile.
+- Run `scripts/05-real-preflight.sh` using the validated host YAML, tunnel endpoints, canonical specification, and artifact root. It must complete without provider submission.
+- Obtain fresh explicit authority before any `--execute-real` invocation, then repeat the privacy/export/import/graph audit against real evidence.
+
+### Code review instructions
+- Start with `pkg/ragproviders/provider_set.go:resolveProfileSettings` and `profileRegistry` to verify the default Pinocchio registry and profile resolution path.
+- Review `experiments/real-provider-v2/provider-config.umans-flash.example.yaml` to confirm the intended split between profile-backed generation and endpoint-backed local embedding/reranking.
+- Review `cmd/rag-ttc-v3-sweep/profile.go:loadProviderAuthority` and `loadRealChunks` to verify that provider validation, canonical identity, and verified corpus materialization remain separate gates.
+- Validate provider construction without inference using the command under **What I did**, with endpoints supplied from the local tunnels. Inspect `tmux capture-pane -pt rag-ollama-mimimi:0.0 -S -80` and the equivalent reranker session if a local health check fails.
+
+### Technical details
+- Tunnel evidence: the historical operator playbook records `rag-ollama-mimimi` forwarding local `11435` to Mac loopback Ollama `11434`; the reranker diary records `rag-reranker-mimimi` forwarding local `18012` to Mac loopback llama.cpp `8012`.
+- Host validation result: embedding, generation, and reranker were all `true` for profile `ttc-umans-flash-local-embedding-v1`.
+- The current repository contains source-bearing corpus/evaluation custody artifacts under `data/artifacts`; only their digest and byte-size metadata were inspected during this step. No source body was printed or copied.
+- The next gate is canonical compilation, not provider configuration or tunnels. The explicit no-submit wrapper requires `REAL_PROVIDER_CONFIG`, `REAL_SPECIFICATION`, and `REAL_ARTIFACT_ROOT`.

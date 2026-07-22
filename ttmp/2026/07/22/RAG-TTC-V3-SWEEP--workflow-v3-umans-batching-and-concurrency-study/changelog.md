@@ -155,3 +155,13 @@ Step 13: cumulative authority stopped the second real attempt at 61 after one re
 
 Commit 072ddd4 adds durable per-cell and failure custody after cumulative request exhaustion
 
+
+## 2026-07-22
+
+Step 20: recovered Pinocchio-backed Umans provider host and Mac loopback tunnels; all roles validate without inference, while canonical specification compilation remains required
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/profile.go — Canonical qualification gate
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/ragproviders/provider_set.go — Provider construction gate
+
