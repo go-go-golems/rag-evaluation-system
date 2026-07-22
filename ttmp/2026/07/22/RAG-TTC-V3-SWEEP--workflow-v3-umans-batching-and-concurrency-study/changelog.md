@@ -71,3 +71,8 @@ Step 7: fixed downstream chained-map page threshold, regenerated fixture custody
 
 Step 8: attempted exact plz-confirm spend gate; local approval service was unavailable, so no approval and no provider calls occurred
 
+
+## 2026-07-22
+
+Step 9: started plz-confirm and received approved=false for the exact .60 bounded real sweep; stopped without provider calls
+

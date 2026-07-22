@@ -420,3 +420,9 @@ Error: create confirm request: post /api/requests: Post "http://localhost:3000/a
 ```
 
 This is not approval. No provider inference request was made. The remaining valid path is an explicit conversational approval of the same numeric ceilings (or revised lower ceilings).
+
+## Step 9: Start the operator service and receive a negative spend decision
+
+I started the local `plz-confirm` backend on `127.0.0.1:3000` and repeated the exact approval prompt from Step 8. The structured response was `approved=false`. I treated that as a rejection, not as missing or ambiguous authority. No provider inference request was made.
+
+The real matrix must remain blocked unless the operator later supplies a new explicit affirmative approval for the stated ceilings or replacement lower ceilings. The active goal therefore remains incomplete by design.
