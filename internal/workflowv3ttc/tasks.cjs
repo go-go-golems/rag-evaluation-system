@@ -31,3 +31,8 @@ exports.publish = task.implementation(ctx => {
   const output = finish(ctx, rag.publish(), "publication", "rag-ttc-publication-receipt/v1");
   return task.success({publication: output});
 });
+
+exports.evaluate = task.implementation(ctx => {
+  const output = finish(ctx, rag.evaluate(), "evidence", "rag-ttc-query-evidence/v1");
+  return task.success({evidence: output});
+});

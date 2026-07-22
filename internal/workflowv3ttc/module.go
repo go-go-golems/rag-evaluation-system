@@ -11,10 +11,14 @@ import (
 )
 
 func Module(provider Provider) workflowv3runtime.TaskModuleFactory {
-	return ModuleWithPublication(provider, nil)
+	return ModuleWithAuthorities(provider, nil, nil)
 }
 
 func ModuleWithPublication(provider Provider, publication PublicationService) workflowv3runtime.TaskModuleFactory {
+	return ModuleWithAuthorities(provider, publication, nil)
+}
+
+func ModuleWithAuthorities(provider Provider, publication PublicationService, evaluation EvaluationService) workflowv3runtime.TaskModuleFactory {
 	return workflowv3runtime.TaskModuleFactory{
 		Alias: ModuleAlias,
 		Validate: func() error {
@@ -108,6 +112,24 @@ func ModuleWithPublication(provider Provider, publication PublicationService) wo
 						return vm.ToValue(closedFailure("publication", "RAG_TTC_PUBLICATION_FAILED", false))
 					}
 					return vm.ToValue(successResponse(receipt, nil))
+				})
+				mustSet("evaluate", func(goja.FunctionCall) goja.Value {
+					if evaluation == nil {
+						return vm.ToValue(closedFailure("configuration", "RAG_TTC_EVALUATION_UNAVAILABLE", false))
+					}
+					var publicationReceipt PublicationReceipt
+					var query QueryEnvelope
+					if err := readInput(moduleContext, "publication", &publicationReceipt); err != nil {
+						return vm.ToValue(closedFailure("validation", "RAG_TTC_PUBLICATION_RECEIPT", false))
+					}
+					if err := readInput(moduleContext, "query", &query); err != nil {
+						return vm.ToValue(closedFailure("validation", "RAG_TTC_QUERY_INPUT", false))
+					}
+					evidence, err := evaluation.Evaluate(moduleContext.Context, publicationReceipt, query)
+					if err != nil {
+						return vm.ToValue(closedFailure("evaluation", "RAG_TTC_QUERY_EVALUATION", true))
+					}
+					return vm.ToValue(successResponse(evidence, evidence.Usage))
 				})
 			}
 			return gggengine.NativeModuleRegistrar{ModuleID: "rag-evaluation-system:workflowv3-ttc", ModuleName: ModuleAlias, Loader: loader}, nil

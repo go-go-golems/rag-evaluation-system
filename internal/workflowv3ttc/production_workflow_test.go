@@ -30,7 +30,7 @@ func TestProductionWorkflowPinsPublicationGate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(authored.Plan.Gates) != 3 {
+	if len(authored.Plan.Gates) != 4 {
 		t.Fatalf("gates=%#v", authored.Plan.Gates)
 	}
 	publicationGateFound := false
@@ -45,6 +45,12 @@ func TestProductionWorkflowPinsPublicationGate(t *testing.T) {
 	if len(authored.Plan.Nodes) != 2 || authored.Plan.Nodes[1].Key != "publish-prepared" || authored.Plan.Nodes[0].Bindings["shard"].Source != "reduction-output" {
 		t.Fatalf("nodes=%#v", authored.Plan.Nodes)
 	}
+}
+
+type fixtureEvaluation struct{}
+
+func (*fixtureEvaluation) Evaluate(_ context.Context, _ PublicationReceipt, query QueryEnvelope) (QueryEvidence, error) {
+	return QueryEvidence{SchemaVersion: QueryEvidenceSchema, QueryID: query.Query.ID, DatasetDigest: query.DatasetDigest, CitationChunkIDs: append([]string(nil), query.Query.RelevantIDs...), Usage: []Usage{{Dimension: "cost_microunits", Units: 0}, {Dimension: "embedding_tokens", Units: 0}, {Dimension: "input_tokens", Units: 0}, {Dimension: "output_tokens", Units: 0}, {Dimension: "requests", Units: 2}}}, nil
 }
 
 type fixturePublication struct {
@@ -97,9 +103,15 @@ func TestProductionWorkflowWaitsWithoutLeaseThenPublishesAfterAuthorizedDecision
 	manifest, _ := workflowv3.NewItemManifest(ChunkSchema, items)
 	body, _ := workflowv3.EncodeItemManifest(manifest)
 	manifestRef, _ := artifacts.Put(ctx, workflowv3.ItemManifestSchemaV1, "application/json", body)
+	query := QueryEnvelope{SchemaVersion: QuerySchema, DatasetDigest: digestOf("9"), Query: ragoperators.Query{ID: "query-1", Text: "What is bounded?", RelevantIDs: []string{"chunk-0000"}}}
+	queryBody, _ := workflowv3.CanonicalJSON(query)
+	queryRef, _ := artifacts.Put(ctx, QuerySchema, "application/json", queryBody)
+	queryManifest, _ := workflowv3.NewItemManifest(QuerySchema, []workflowv3.ManifestItem{{Key: "query-1", Value: queryRef}})
+	queryManifestBody, _ := workflowv3.EncodeItemManifest(queryManifest)
+	queryManifestRef, _ := artifacts.Put(ctx, workflowv3.ItemManifestSchemaV1, "application/json", queryManifestBody)
 	provider := &fixtureProvider{calls: map[string]int{}}
 	publication := &fixturePublication{}
-	modules, err := workflowv3runtime.NewTaskModuleRegistry(ModuleWithPublication(provider, publication))
+	modules, err := workflowv3runtime.NewTaskModuleRegistry(ModuleWithAuthorities(provider, publication, &fixtureEvaluation{}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,13 +121,13 @@ func TestProductionWorkflowWaitsWithoutLeaseThenPublishesAfterAuthorizedDecision
 		t.Fatal(err)
 	}
 	engine := &workflowv3runtime.Engine{Store: store, Registry: registry, Artifacts: artifacts, Modules: modules}
-	if err := engine.Submit(ctx, "production-gate", authored.Plan, map[string]workflowv3.ArtifactRef{"chunks": manifestRef}); err != nil {
+	if err := engine.Submit(ctx, "production-gate", authored.Plan, map[string]workflowv3.ArtifactRef{"chunks": manifestRef, "queries": queryManifestRef}); err != nil {
 		t.Fatal(err)
 	}
 	runDispatcher := func() (context.CancelFunc, <-chan error) {
 		dispatchCtx, cancel := context.WithCancel(ctx)
 		done := make(chan error, 1)
-		dispatcher := &workflowv3runtime.Dispatcher{Engine: engine, Capacities: map[string]int{ResourceGeneration: 2, ResourceEmbedding: 2, ResourceLocal: 1}, PollInterval: time.Millisecond}
+		dispatcher := &workflowv3runtime.Dispatcher{Engine: engine, Capacities: map[string]int{ResourceGeneration: 2, ResourceEmbedding: 2, ResourceLocal: 1, ResourceEvaluation: 1}, PollInterval: time.Millisecond}
 		go func() { done <- dispatcher.Run(dispatchCtx) }()
 		return cancel, done
 	}
@@ -182,6 +194,14 @@ func TestProductionWorkflowWaitsWithoutLeaseThenPublishesAfterAuthorizedDecision
 		t.Fatal(err)
 	}
 	waitForGate("approve-embedding-spend")
+	if err := store.Close(); err != nil {
+		t.Fatal(err)
+	}
+	store, err = workflowv3sqlite.Open(ctx, databasePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	engine.Store = store
 	increase("embedding", []struct {
 		name  string
 		delta int64
@@ -190,6 +210,14 @@ func TestProductionWorkflowWaitsWithoutLeaseThenPublishesAfterAuthorizedDecision
 		t.Fatal(err)
 	}
 	waitForGate("approve-publication")
+	if err := store.Close(); err != nil {
+		t.Fatal(err)
+	}
+	store, err = workflowv3sqlite.Open(ctx, databasePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	engine.Store = store
 	decisionBody, _ := workflowv3.CanonicalJSON(PublicationDecision{SchemaVersion: PublicationDecisionSchema, Approved: true, ShardDigest: digestOf("a"), PolicyDigest: digestOf("b")})
 	decisionRef, err := artifacts.Put(ctx, PublicationDecisionSchema, "application/json", decisionBody)
 	if err != nil {
@@ -202,6 +230,16 @@ func TestProductionWorkflowWaitsWithoutLeaseThenPublishesAfterAuthorizedDecision
 	deadline := time.Now().Add(15 * time.Second)
 	for time.Now().Before(deadline) {
 		snapshot, snapshotErr := engine.Snapshot(ctx, "production-gate")
+		if snapshotErr == nil && snapshot.Status == "failed" {
+			cancel()
+			<-done
+			for _, attempt := range snapshot.Attempts {
+				if attempt.Failure != nil {
+					t.Fatalf("production attempt %s failed: %+v", attempt.NodeKey, *attempt.Failure)
+				}
+			}
+			t.Fatal("production workflow failed without attempt evidence")
+		}
 		if snapshotErr == nil && snapshot.Status == "succeeded" {
 			cancel()
 			<-done
@@ -218,5 +256,7 @@ func TestProductionWorkflowWaitsWithoutLeaseThenPublishesAfterAuthorizedDecision
 	}
 	cancel()
 	<-done
-	t.Fatal("production workflow did not publish")
+	snapshot, _ := engine.Snapshot(ctx, "production-gate")
+	queue, _ := store.QueueSnapshot(ctx, registry, map[string]int{ResourceGeneration: 2, ResourceEmbedding: 2, ResourceLocal: 1, ResourceEvaluation: 1}, time.Now().UTC())
+	t.Fatalf("production workflow did not publish: status=%s maps=%+v blocked=%+v", snapshot.Status, queue.Maps, queue.BlockedByReason)
 }

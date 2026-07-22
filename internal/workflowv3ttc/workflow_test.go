@@ -2,6 +2,7 @@ package workflowv3ttc
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -44,17 +45,25 @@ func (p *fixtureProvider) Embed(_ context.Context, generated Generated) (Result[
 }
 
 func TestWorkflowV3PreparationFastIntegration(t *testing.T) {
-	runPreparationIntegration(t, 65)
+	runPreparationIntegration(t, 65, 12, 8)
+}
+
+func TestWorkflowV3PreparationDigestIsIndependentOfCapacity(t *testing.T) {
+	serial := runPreparationIntegration(t, 9, 1, 1)
+	concurrent := runPreparationIntegration(t, 9, 12, 8)
+	if serial != concurrent {
+		t.Fatalf("capacity changed prepared digest: %s != %s", serial, concurrent)
+	}
 }
 
 func TestP1DeterministicWorkflowCompilesAndRunsAll1807Items(t *testing.T) {
 	if os.Getenv("RAG_TTC_FULL_PREFLIGHT") != "1" {
 		t.Skip("set RAG_TTC_FULL_PREFLIGHT=1 for production-cardinality preflight")
 	}
-	runPreparationIntegration(t, 1807)
+	runPreparationIntegration(t, 1807, 12, 8)
 }
 
-func runPreparationIntegration(t *testing.T, itemCount int) {
+func runPreparationIntegration(t *testing.T, itemCount, generationCapacity, embeddingCapacity int) string {
 	t.Helper()
 	ctx := context.Background()
 	registry, err := Registry()
@@ -75,6 +84,7 @@ func runPreparationIntegration(t *testing.T, itemCount int) {
 		t.Fatal(err)
 	}
 	items := make([]workflowv3.ManifestItem, itemCount)
+	var sourceBytes int64
 	const sourceCanary = "PRIVATE_TTC_SOURCE_CANARY_8d88c0d5"
 	for index := range items {
 		text := fmt.Sprintf("%s source %04d", sourceCanary, index)
@@ -85,6 +95,7 @@ func runPreparationIntegration(t *testing.T, itemCount int) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		sourceBytes += int64(len(body))
 		ref, err := artifacts.Put(ctx, ChunkSchema, "application/json", body)
 		if err != nil {
 			t.Fatal(err)
@@ -118,7 +129,7 @@ func runPreparationIntegration(t *testing.T, itemCount int) {
 	if err := engine.Submit(ctx, "ttc-p1-1807", authored.Plan, map[string]workflowv3.ArtifactRef{"chunks": manifestRef}); err != nil {
 		t.Fatal(err)
 	}
-	dispatcher := &workflowv3runtime.Dispatcher{Engine: engine, Capacities: map[string]int{ResourceGeneration: 12, ResourceEmbedding: 8, ResourceLocal: 4}, PollInterval: time.Millisecond}
+	dispatcher := &workflowv3runtime.Dispatcher{Engine: engine, Capacities: map[string]int{ResourceGeneration: generationCapacity, ResourceEmbedding: embeddingCapacity, ResourceLocal: 4}, PollInterval: time.Millisecond}
 	dispatchContext, cancel := context.WithCancel(ctx)
 	done := make(chan error, 1)
 	go func() { done <- dispatcher.Run(dispatchContext) }()
@@ -184,17 +195,39 @@ func runPreparationIntegration(t *testing.T, itemCount int) {
 					t.Fatalf("budget reservation leaked: %+v", budget)
 				}
 			}
-			if err := store.Close(); err != nil {
-				t.Fatal(err)
-			}
-			database, err := os.ReadFile(databasePath)
+			operational, err := store.OperationalSnapshot(ctx, &runID, registry, dispatcher.Capacities, time.Now().UTC())
 			if err != nil {
 				t.Fatal(err)
 			}
-			if contains(database, []byte(sourceCanary)) {
-				t.Fatal("source canary leaked into workflow SQLite")
+			operationalBody, err := json.Marshal(operational)
+			if err != nil {
+				t.Fatal(err)
 			}
-			return
+			if contains(operationalBody, []byte(sourceCanary)) {
+				t.Fatal("source canary leaked into operational projection")
+			}
+			if err := store.Close(); err != nil {
+				t.Fatal(err)
+			}
+			databaseFiles, err := filepath.Glob(databasePath + "*")
+			if err != nil {
+				t.Fatal(err)
+			}
+			var databaseBytes int64
+			for _, path := range databaseFiles {
+				database, readErr := os.ReadFile(path)
+				if readErr != nil {
+					t.Fatal(readErr)
+				}
+				databaseBytes += int64(len(database))
+				if contains(database, []byte(sourceCanary)) {
+					t.Fatalf("source canary leaked into %s", filepath.Base(path))
+				}
+			}
+			if databaseBytes > int64(1<<20)+int64(itemCount)*(20<<10) {
+				t.Fatalf("workflow control storage is unbounded: source=%d database=%d", sourceBytes, databaseBytes)
+			}
+			return shard.Digest
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
@@ -203,6 +236,7 @@ func runPreparationIntegration(t *testing.T, itemCount int) {
 	snapshot, _ := engine.Snapshot(ctx, "ttc-p1-1807")
 	queue, _ := store.QueueSnapshot(ctx, registry, dispatcher.Capacities, time.Now().UTC())
 	t.Fatalf("workflow did not succeed: status=%s maps=%+v reductions=%+v blocked=%+v", snapshot.Status, queue.Maps, queue.Reductions, queue.BlockedByReason)
+	return ""
 }
 
 func contains(body, fragment []byte) bool {

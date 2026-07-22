@@ -18,6 +18,7 @@ const (
 	ResourceGeneration = "rag.generation.remote"
 	ResourceEmbedding  = "rag.embedding.local"
 	ResourceLocal      = "rag.local"
+	ResourceEvaluation = "rag.evaluation.remote"
 
 	ChunkSchema     = "rag-ttc-chunk/v1"
 	GeneratedSchema = "rag-ttc-generated/v1"

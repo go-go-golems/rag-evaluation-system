@@ -22,6 +22,7 @@ var (
 	MergeKey               = workflowv3.TaskKey{Kind: "rag.ttc.merge-prepared-shard", Version: "v1"}
 	ValidatePublicationKey = workflowv3.TaskKey{Kind: "rag.ttc.validate-publication", Version: "v1"}
 	PublishKey             = workflowv3.TaskKey{Kind: "rag.ttc.publish-prepared", Version: "v1"}
+	EvaluateKey            = workflowv3.TaskKey{Kind: "rag.ttc.evaluate-query", Version: "v1"}
 )
 
 func Bundle() (*workflowv3.Bundle, error) {
@@ -33,6 +34,7 @@ func Bundle() (*workflowv3.Bundle, error) {
 			{TaskKey: MergeKey, Entrypoint: "tasks.cjs#merge", Inputs: map[string]string{"partition": workflowv3.ReductionPartitionSchemaV1}, Outputs: map[string]string{"shard": ShardSchema}, Modules: []string{ModuleAlias}, ResourceClass: ResourceLocal},
 			{TaskKey: ValidatePublicationKey, Entrypoint: "tasks.cjs#validatePublication", Inputs: map[string]string{"shard": ShardSchema}, Outputs: map[string]string{"receipt": ValidationReceiptSchema}, Modules: []string{ModuleAlias}, ResourceClass: ResourceLocal},
 			{TaskKey: PublishKey, Entrypoint: "tasks.cjs#publish", Inputs: map[string]string{"shard": ShardSchema, "decision": PublicationDecisionSchema}, Outputs: map[string]string{"publication": PublicationReceiptSchema}, Modules: []string{ModuleAlias}, ResourceClass: ResourceLocal},
+			{TaskKey: EvaluateKey, Entrypoint: "tasks.cjs#evaluate", Inputs: map[string]string{"publication": PublicationReceiptSchema, "query": QuerySchema}, Outputs: map[string]string{"evidence": QueryEvidenceSchema}, Modules: []string{ModuleAlias}, ResourceClass: ResourceEvaluation, Retry: workflowv3.RetryPolicy{MaxAttempts: 2, BackoffMillis: 100}, BudgetMaximum: &workflowv3.BudgetClaim{Account: "evaluation", Reserve: []workflowv3.BudgetAmount{{Dimension: "cost_microunits", Units: 50_000}, {Dimension: "embedding_tokens", Units: 1_000}, {Dimension: "input_tokens", Units: 10_000}, {Dimension: "output_tokens", Units: 2_000}, {Dimension: "requests", Units: 3}}, OnExhausted: "fail-run"}},
 		},
 	}, map[string][]byte{"tasks.cjs": taskSource})
 }
@@ -53,7 +55,7 @@ func Registry() (*workflowv3.SealedRegistry, error) {
 }
 
 func DescriptorModule() workflowmodule.DescriptorModule {
-	return workflowmodule.DescriptorModule{Name: "rag-ttc-v3-tasks", Factories: map[string]workflowv3.TaskKey{"generate": GenerateKey, "embed": EmbedKey, "merge": MergeKey, "validatePublication": ValidatePublicationKey, "publish": PublishKey}}
+	return workflowmodule.DescriptorModule{Name: "rag-ttc-v3-tasks", Factories: map[string]workflowv3.TaskKey{"generate": GenerateKey, "embed": EmbedKey, "merge": MergeKey, "validatePublication": ValidatePublicationKey, "publish": PublishKey, "evaluate": EvaluateKey}}
 }
 
 func WorkflowSource() string           { return workflowSource }
