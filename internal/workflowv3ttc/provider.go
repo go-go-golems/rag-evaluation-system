@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
+	"github.com/go-go-golems/scraper/pkg/workflowv3"
 )
 
 type EnvironmentResolver func(context.Context) (*ragoperators.Environment, error)
@@ -26,7 +27,10 @@ type OperatorProviderConfig struct {
 	ResolveEnvironment         EnvironmentResolver
 }
 
-type OperatorProvider struct{ config OperatorProviderConfig }
+type OperatorProvider struct {
+	config     OperatorProviderConfig
+	operations []workflowv3.ExternalOperationDescriptor
+}
 
 func NewOperatorProvider(config OperatorProviderConfig) (*OperatorProvider, error) {
 	if config.ResolveEnvironment == nil || config.ProviderProfileDigest == "" || config.GenerationModelDigest == "" ||
@@ -42,7 +46,19 @@ func NewOperatorProvider(config OperatorProviderConfig) (*OperatorProvider, erro
 	if _, err := ragoperators.PlanEmbeddingBatches([]ragoperators.Representation{{Record: ragcontract.RepresentationRecord{ID: "probe", ParentChunkID: "probe"}, Text: "probe"}}, config.EmbeddingNode); err != nil {
 		return nil, fmt.Errorf("embedding configuration: %w", err)
 	}
-	return &OperatorProvider{config: config}, nil
+	generation, err := workflowv3.NewExternalOperationDescriptor(workflowv3.ExternalOperationDescriptor{Kind: workflowv3.ExternalOperationKind{Name: "provider.generate", Version: "v1"}, AuthorityDigest: config.ProviderProfileDigest, MaxPerAttempt: 1, Counters: []workflowv3.ExternalOperationCounterDescriptor{{Name: "chunk_count", Unit: "items", Roles: []workflowv3.ExternalOperationCounterRole{workflowv3.ExternalOperationCounterMeasure}}, {Name: "cost_microunits", Unit: "microunits", Roles: []workflowv3.ExternalOperationCounterRole{workflowv3.ExternalOperationCounterReservation, workflowv3.ExternalOperationCounterUsage}}, {Name: "input_tokens", Unit: "tokens", Roles: []workflowv3.ExternalOperationCounterRole{workflowv3.ExternalOperationCounterReservation, workflowv3.ExternalOperationCounterUsage}}, {Name: "output_tokens", Unit: "tokens", Roles: []workflowv3.ExternalOperationCounterRole{workflowv3.ExternalOperationCounterReservation, workflowv3.ExternalOperationCounterUsage}}, {Name: "requests", Unit: "requests", Roles: []workflowv3.ExternalOperationCounterRole{workflowv3.ExternalOperationCounterReservation, workflowv3.ExternalOperationCounterUsage}}}})
+	if err != nil {
+		return nil, err
+	}
+	embedding, err := workflowv3.NewExternalOperationDescriptor(workflowv3.ExternalOperationDescriptor{Kind: workflowv3.ExternalOperationKind{Name: "provider.embed", Version: "v1"}, AuthorityDigest: config.EmbeddingProfileDigest, MaxPerAttempt: 8, Counters: []workflowv3.ExternalOperationCounterDescriptor{{Name: "embedding_tokens", Unit: "tokens", Roles: []workflowv3.ExternalOperationCounterRole{workflowv3.ExternalOperationCounterUsage}}, {Name: "representation_count", Unit: "items", Roles: []workflowv3.ExternalOperationCounterRole{workflowv3.ExternalOperationCounterMeasure}}, {Name: "requests", Unit: "requests", Roles: []workflowv3.ExternalOperationCounterRole{workflowv3.ExternalOperationCounterReservation, workflowv3.ExternalOperationCounterUsage}}}})
+	if err != nil {
+		return nil, err
+	}
+	return &OperatorProvider{config: config, operations: []workflowv3.ExternalOperationDescriptor{generation, embedding}}, nil
+}
+
+func (p *OperatorProvider) ExternalOperationDescriptors() []workflowv3.ExternalOperationDescriptor {
+	return workflowv3.CloneExternalOperationDescriptors(p.operations)
 }
 
 func (p *OperatorProvider) Generate(ctx context.Context, chunk Chunk) (Result[Generated], error) {
@@ -78,6 +94,14 @@ func (p *OperatorProvider) Generate(ctx context.Context, chunk Chunk) (Result[Ge
 }
 
 func (p *OperatorProvider) GenerateBatch(ctx context.Context, batch ChunkBatch) (Result[GeneratedBatch], error) {
+	return p.generateBatch(ctx, nil, batch)
+}
+
+func (p *OperatorProvider) GenerateBatchWithOperations(ctx context.Context, recorder workflowv3.ExternalOperationRecorder, batch ChunkBatch) (Result[GeneratedBatch], error) {
+	return p.generateBatch(ctx, recorder, batch)
+}
+
+func (p *OperatorProvider) generateBatch(ctx context.Context, recorder workflowv3.ExternalOperationRecorder, batch ChunkBatch) (Result[GeneratedBatch], error) {
 	if batch.Key == "" || len(batch.Chunks) == 0 {
 		return Result[GeneratedBatch]{}, &Failure{Class: "validation", Code: "RAG_TTC_BATCH_INVALID", Retryable: false}
 	}
@@ -104,9 +128,26 @@ func (p *OperatorProvider) GenerateBatch(ctx context.Context, batch ChunkBatch) 
 		}
 	}
 	before := env.Usage
+	var ticket workflowv3.ExternalOperationTicket
+	if recorder != nil {
+		var admissionErr error
+		ticket, admissionErr = recorder.BeginExternalOperation(ctx, workflowv3.ExternalOperationSpec{DescriptorDigest: p.operations[0].Digest, Reservation: []workflowv3.ExternalOperationCounter{{Name: "cost_microunits", Units: SweepGenerationCostMicrounitsPerRequest}, {Name: "input_tokens", Units: SweepGenerationInputTokensPerRequest}, {Name: "output_tokens", Units: SweepGenerationOutputTokensPerRequest}, {Name: "requests", Units: 1}}, Measures: []workflowv3.ExternalOperationCounter{{Name: "chunk_count", Units: int64(len(batch.Chunks))}}})
+		if admissionErr != nil {
+			return Result[GeneratedBatch]{}, &Failure{Class: "budget", Code: "RAG_TTC_GENERATION_REQUEST_CEILING", Retryable: false}
+		}
+	}
 	started := time.Now()
 	result, err := ragoperators.ExecuteCombinedPreparationBatch(ctx, plan, plan.Batches[0], env)
 	elapsed := time.Since(started).Microseconds()
+	if recorder != nil && err != nil {
+		completion := workflowv3.ExternalOperationCompletion{ProviderStartedAt: started.UTC(), ElapsedMicros: elapsed, Outcome: workflowv3.ExternalOperationOutcomeFailed, AccountingMode: workflowv3.ExternalOperationAccountingConservative, Failure: &workflowv3.ExternalOperationFailure{Class: "transport", Code: "RAG_TTC_GENERATION_PROVIDER"}}
+		finishCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		finishErr := recorder.FinishExternalOperation(finishCtx, ticket, completion)
+		cancel()
+		if finishErr != nil {
+			return Result[GeneratedBatch]{}, &Failure{Class: "internal", Code: "RAG_TTC_OPERATION_EVIDENCE", Retryable: true}
+		}
+	}
 	if err != nil {
 		return Result[GeneratedBatch]{}, classifyOperatorError(err, true)
 	}
@@ -130,6 +171,19 @@ func (p *OperatorProvider) GenerateBatch(ctx context.Context, batch ChunkBatch) 
 	usage, err = completeGenerationUsage(usage)
 	if err != nil {
 		return Result[GeneratedBatch]{}, err
+	}
+	if recorder != nil {
+		counters := make([]workflowv3.ExternalOperationCounter, len(usage))
+		for i, amount := range usage {
+			counters[i] = workflowv3.ExternalOperationCounter{Name: amount.Dimension, Units: amount.Units}
+		}
+		completion := workflowv3.ExternalOperationCompletion{ProviderStartedAt: started.UTC(), ElapsedMicros: elapsed, Outcome: workflowv3.ExternalOperationOutcomeSucceeded, AccountingMode: workflowv3.ExternalOperationAccountingActual, Counters: counters}
+		finishCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		finishErr := recorder.FinishExternalOperation(finishCtx, ticket, completion)
+		cancel()
+		if finishErr != nil {
+			return Result[GeneratedBatch]{}, &Failure{Class: "internal", Code: "RAG_TTC_OPERATION_EVIDENCE", Retryable: true}
+		}
 	}
 	return Result[GeneratedBatch]{Value: GeneratedBatch{Key: batch.Key, Items: items, Measurement: ProviderMeasurement{ProviderStartedAt: started.UTC().Format(time.RFC3339Nano), ProviderElapsedMicros: elapsed, ChunkCount: len(batch.Chunks), InputRunes: inputRunes}}, Usage: usage}, nil
 }

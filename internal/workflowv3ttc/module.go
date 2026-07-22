@@ -19,8 +19,12 @@ func ModuleWithPublication(provider Provider, publication PublicationService) wo
 }
 
 func ModuleWithAuthorities(provider Provider, publication PublicationService, evaluation EvaluationService) workflowv3runtime.TaskModuleFactory {
+	operations := []workflowv3.ExternalOperationDescriptor(nil)
+	if observed, ok := provider.(OperationDescriptorProvider); ok {
+		operations = observed.ExternalOperationDescriptors()
+	}
 	return workflowv3runtime.TaskModuleFactory{
-		Alias: ModuleAlias,
+		Alias: ModuleAlias, Operations: operations,
 		Validate: func() error {
 			if provider == nil {
 				return fmt.Errorf("TTC provider is required")
@@ -61,7 +65,13 @@ func ModuleWithAuthorities(provider Provider, publication PublicationService, ev
 					if err := readInput(moduleContext, "batch", &batch); err != nil {
 						return vm.ToValue(closedFailure("validation", "RAG_TTC_BATCH_INPUT", false))
 					}
-					result, err := batchProvider.GenerateBatch(moduleContext.Context, batch)
+					var result Result[GeneratedBatch]
+					var err error
+					if observed, ok := provider.(OperationAwareGenerationProvider); ok && moduleContext.ExternalOperations != nil {
+						result, err = observed.GenerateBatchWithOperations(moduleContext.Context, moduleContext.ExternalOperations, batch)
+					} else {
+						result, err = batchProvider.GenerateBatch(moduleContext.Context, batch)
+					}
 					if err != nil {
 						return vm.ToValue(providerFailure(err))
 					}
@@ -76,7 +86,13 @@ func ModuleWithAuthorities(provider Provider, publication PublicationService, ev
 					if err := readInput(moduleContext, "generated", &generated); err != nil {
 						return vm.ToValue(closedFailure("validation", "RAG_TTC_GENERATED_BATCH_INPUT", false))
 					}
-					result, err := batchProvider.EmbedBatch(moduleContext.Context, generated)
+					var result Result[MeasuredBatch]
+					var err error
+					if observed, ok := provider.(OperationAwareEmbeddingProvider); ok && moduleContext.ExternalOperations != nil {
+						result, err = observed.EmbedBatchWithOperations(moduleContext.Context, moduleContext.ExternalOperations, generated)
+					} else {
+						result, err = batchProvider.EmbedBatch(moduleContext.Context, generated)
+					}
 					if err != nil {
 						return vm.ToValue(providerFailure(err))
 					}

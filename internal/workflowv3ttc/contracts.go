@@ -111,6 +111,23 @@ type BatchProvider interface {
 	EmbedBatch(context.Context, GeneratedBatch) (Result[MeasuredBatch], error)
 }
 
+// OperationDescriptorProvider advertises host-owned operation policies to the
+// exact Workflow module that may exercise them.
+type OperationDescriptorProvider interface {
+	ExternalOperationDescriptors() []workflowv3.ExternalOperationDescriptor
+}
+
+// OperationAwareGenerationProvider records one durable span for each real
+// generation request. Embedding has its own interface because one batch may
+// contain several provider requests.
+type OperationAwareGenerationProvider interface {
+	GenerateBatchWithOperations(context.Context, workflowv3.ExternalOperationRecorder, ChunkBatch) (Result[GeneratedBatch], error)
+}
+
+type OperationAwareEmbeddingProvider interface {
+	EmbedBatchWithOperations(context.Context, workflowv3.ExternalOperationRecorder, GeneratedBatch) (Result[MeasuredBatch], error)
+}
+
 type Failure struct {
 	Class     string
 	Code      string
