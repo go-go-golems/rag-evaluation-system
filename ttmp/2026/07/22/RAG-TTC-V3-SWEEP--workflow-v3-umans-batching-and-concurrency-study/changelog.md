@@ -175,3 +175,13 @@ Step 21: compiled current Umans Flash TTC canonical specification and passed no-
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/profile.go — Preflight profile/model/artifact gate
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/sha256 — 53a4934fba2135e2515e2f8b30d7108d3e21d4e349f867f5b7bf369be1ffb9b1.json:Current canonical immutable specification
 
+
+## 2026-07-22
+
+Step 22: completed the authorized 8-cell real Umans qualification (60 planned requests, 125 cumulative admissions), clean compact-evidence scan, and fresh researchctl custody import
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/scripts/08-build-operation-custody-export.go — Post-hoc custody export builder
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-attempt-003/evidence.json — Real aggregate evidence
+

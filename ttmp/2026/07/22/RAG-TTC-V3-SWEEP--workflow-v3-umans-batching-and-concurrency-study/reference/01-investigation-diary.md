@@ -11,6 +11,8 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: repo://cmd/rag-ttc-v3-sweep/main.go
+      Note: Real execution authority and original custody-export contract
     - Path: repo://cmd/rag-ttc-v3-sweep/profile.go
       Note: Real profile identity and verified corpus loading gates
     - Path: repo://experiments/real-provider-v2/inputs.json
@@ -21,6 +23,12 @@ RelatedFiles:
       Note: Authoring source for the validated one-cell Umans Flash combined-preparation specification
     - Path: repo://pkg/ragproviders/provider_set.go
       Note: Profile-backed provider construction and default Pinocchio registry resolution
+    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/scripts/08-build-operation-custody-export.go
+      Note: Post-hoc compact custody export without provider/runtime access
+    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-attempt-003/evidence.json
+      Note: Aggregate real qualification evidence
+    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-attempt-003/researchctl-run-export.json
+      Note: Verified downstream researchctl custody export
     - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/compile-result.json
       Note: Compiler result recording the resolved specification
     - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/sha256
@@ -31,6 +39,7 @@ LastUpdated: 2026-07-22T10:15:00-04:00
 WhatFor: Preserve commands, decisions, failures, results, and review instructions for reproducing the study.
 WhenToUse: When implementing, operating, reviewing, or resuming RAG-TTC-V3-SWEEP.
 ---
+
 
 
 
@@ -1278,3 +1287,98 @@ exit status 1
 - Artifact root: `data/artifacts` (custody root; source bodies were not copied into the ticket).
 - Host profile: `ttc-umans-flash-local-embedding-v1`; generation resolves through the local Pinocchio `umans-flash` profile and embedding/reranking through the loopback SSH tunnels.
 - The output cost ceiling is 1,373,850 microunits, i.e. USD $1.37385 under the profile's pinned tariff. This is a ceiling requiring explicit approval, not a charge incurred by preflight.
+
+## Step 22: Execute the authorized real qualification and verify custody import
+
+After the user gave affirmative authority immediately after the exact preflight ceiling, I ran one bounded real TTC qualification in a dedicated tmux session. The run completed all eight cells (batch sizes 1/2/4/8 and concurrency 1/2), wrote durable per-cell operation custody before runtime cleanup, and stopped with 125 cumulative admissions—61 prior plus 64 newly admitted calls—under the authorized ceiling of 129.
+
+I then scanned the compact retained evidence for prohibited operational material and built a post-hoc researchctl custody export because the real invocation had not been given import identity flags. A fresh researchctl laboratory imported the export, verifying 25 artifacts and four scalar metrics. The temporary import bundle included source artifacts only outside the ticket to satisfy researchctl's input-verification contract and was deleted immediately afterward.
+
+### Prompt Context
+
+**User prompt (verbatim):** "affirmative"
+
+**Assistant interpretation:** Provide affirmative authority for the exact cumulative real-run envelope stated in the preceding preflight, permitting one bounded `--execute-real` qualification.
+
+**Inferred user intent:** Obtain real provider evidence now that all preflight gates passed, while retaining the explicit cost/request limit and downstream custody checks.
+
+**Commit (code):** pending — real evidence, custody-export script, diary, and changelog bookkeeping will be committed after remaining review artifacts are finalized.
+
+### What I did
+- Read the sweep CLI flags and used the exact preflight envelope: 16 chunks; concurrency 1,2; 60 planned generation requests; 61 prior admissions; eight retry admissions; cumulative generation maximum 129; embedding maximum 128; maximum cost 1,373,850 microunits; input/output maxima 2,113,536/1,056,768; embedding-token maximum 3,932,160.
+- Started `rag-ttc-real-qualification` in tmux with `--execute-real`, the validated host config, current canonical specification, verified artifact root, and loopback-only Mac tunnel bindings.
+- The first launch exited before work because I had pre-created the real output directory. The CLI correctly rejected this with `RAG_SWEEP_REAL_OUTPUT_EXISTS`; the directory contained no authority record or runtime state, so no provider request had been admitted. I removed the empty directory and launched once more.
+- Monitored durable `generation-authority.json` and per-cell custody rather than inferring progress from a terminal. Admission advanced from 61 to 67, 80, 95, 124, then final 125.
+- Confirmed final compact evidence: eight cell checkpoints, eight JSONL operation ledgers, eight operation manifests, `evidence.json`, `cells.csv`, and `measurements.jsonl`; the source-bearing runtime directory was empty after cleanup.
+- Performed a retained-evidence scan for source canary, provider-body field, authorization/bearer, URL, key, private-key, and vector patterns. It found no match.
+- Added `scripts/08-build-operation-custody-export.go`, a post-hoc builder that reads only compact sweep evidence and operation paths, writes an explicit researchctl export, and never reads the corpus, provider configuration, runtime SQLite, or provider payload.
+- The first export-builder run used invalid human-readable IDs and failed validation. I corrected this to required 26-character Crockford IDs and generated `researchctl-run-export.json`.
+- Built researchctl and imported the real custody export into a fresh lab. The initial import surfaced two custody mechanics: the canonical specification's referenced input artifacts must be present in the temporary bundle, and a stale `/tmp/artifacts` laboratory root caused a content-addressed collision. I rebuilt a fresh temporary bundle with the verified input artifacts, reset the fresh lab root, and imported successfully. The temporary bundle/artifact root was deleted.
+
+### Why
+- `--execute-real` is permitted only after exact authority. The command's immutable numeric flags prevent a generic confirmation from turning into unbounded spend.
+- Per-cell JSONL/manifests and the durable admission file are the call-time evidence; they remain inspectable even if a terminal session fails.
+- Researchctl import verifies digest-based downstream custody independently of the live Workflow/RAG run path.
+
+### What worked
+- The qualification completed: `profile=real cells=8 planned_requests=60`.
+- Final authority state was `maximumGenerationRequests=129`, `priorGenerationRequests=61`, `admittedGenerationRequests=125`; the run remained four admissions below its ceiling.
+- Real custody contains 25 imported artifacts: eight cell records, eight operation JSONL files, eight manifests, and aggregate evidence, plus the canonical specification's two verified input artifacts.
+- Fresh researchctl import recorded one run, one attempt, 25 artifacts, and four metrics. The scalar operation metrics were eight cells, 60 generation requests, 128 embedding requests, and 875,199,023 total cell-makespan microseconds.
+- The retained-evidence scan was clean and no runtime SQLite/WAL file remained under the real output root.
+
+### What didn't work
+- First execution setup failed closed before provider admission:
+
+```text
+RAG_SWEEP_REAL_OUTPUT_EXISTS
+```
+
+- First post-hoc export attempt failed because researchctl requires canonical identifier shape:
+
+```text
+panic: validate operation custody run export: run.id: invalid run ID "run_20260722_ttc_real_003"
+```
+
+- First and second fresh import attempts failed respectively because the temporary bundle lacked canonical specification inputs and because stale `/tmp/artifacts` contained same-URI fixture artifacts with different bytes:
+
+```text
+stage run export artifacts: artifact specification/1: resolve artifact path "inputs/corpus/...json": .../inputs: no such file or directory
+```
+
+```text
+content-addressed staging conflict at cells/cell-00-b1-c1.json: destination exists with different content
+```
+
+  Both were custody staging errors after the real run, not provider execution errors. The successful import used a new temporary bundle with verified input artifacts and a reset laboratory artifact root.
+
+### What I learned
+- A real sweep refuses a pre-existing output directory before it initializes durable admission; this prevents accidental overwriting or reusing a real authority ledger.
+- Real providers may omit usage fields. The evidence records actual request counts and explicit zero/unavailable token/cost counters instead of inventing usage; only two cells reported nonzero generation usage/cost in their existing bounded fields.
+- Researchctl imports the canonical specification's inputs as verified artifacts in addition to the operation-custody artifacts. Temporary staging must therefore contain both the compact output bundle and the referenced immutable inputs.
+
+### What was tricky to build
+- The real invocation had no `--researchctl-custody-*` IDs, so it correctly did not write a custody export during run completion. Re-running the sweep merely to attach IDs would have violated the one-run authority. The post-hoc script reconstructs the same export artifact list from retained compact evidence, uses explicit IDs/timestamp, and preserves the original canonical specification. It does not reopen a provider or a runtime database.
+- Researchctl's content-addressed staging root is derived from the temporary laboratory database directory (`/tmp/artifacts`), not the temporary project file's `.researchctl` directory. Deleting only the latter left stale fixture files; resetting the actual root fixed the collision.
+
+### What warrants a second pair of eyes
+- Review the post-hoc custody script against `cmd/rag-ttc-v3-sweep/main.go:writeResearchctlCustodyExport` to ensure the artifact roles, schemas, metrics, and relative URIs remain aligned.
+- Review the two cells reporting bounded nonzero generation usage alongside the explicit missing usage in the other cells; provider accounting availability is an observation, not evidence that unreported use was free.
+- Inspect the rendered real graphs before publishing a performance conclusion. The current renderer has fixture-specific title text and must not label real-provider figures as fixture control.
+
+### What should be done in the future
+- Render and visually inspect real-provider graphs using labels that accurately identify the real qualification.
+- Produce the analysis/report and reMarkable bundle, then complete the ticket's publication task. No second real matrix is authorized by this run.
+- Keep the completed real output and imported export immutable; do not edit operation JSONL, manifests, aggregate evidence, or authority state.
+
+### Code review instructions
+- Review `sources/real-attempt-003/generation-authority.json`, `evidence.json`, `cells/`, and `operations/` for durable run/call evidence and confirm `runtime/` is absent/empty.
+- Run the post-hoc builder against a copy of the output and confirm `researchctl-run-export.json` validates with relative artifact URIs only.
+- Reproduce a fresh import with a temporary bundle containing only compact output plus the two canonical input artifact files; verify the output reports 25 artifacts and four metrics.
+
+### Technical details
+- Real output root: `sources/real-attempt-003/`.
+- Custody source identity: `rag-ttc-v3-sweep` / `ttc-real-qualification-003`.
+- Import identity: `run_00000000000000000000000003` / `attempt_00000000000000000000000003`.
+- Import export digest: `sha256:86399c8e99dbd4dddddc8b19c3d66fa49aac4b1ad1c074c24cc545b7a994da41`.
+- The real sweep's retained evidence scan covered compact artifacts only; the canonical corpus/evaluation source artifacts were used solely in a temporary researchctl input-verification bundle and were removed afterward.
