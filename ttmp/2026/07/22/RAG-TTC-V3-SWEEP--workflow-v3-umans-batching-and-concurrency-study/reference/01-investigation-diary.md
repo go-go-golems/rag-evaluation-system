@@ -408,3 +408,15 @@ I traced the zero-overlap result to the sweep composition rather than generic Wo
 I changed only the downstream map page size from 16 to 1. The regenerated 12-cell fixture control now records generation/embedding overlap in 9 of 12 cells; the three zero cells remain honest timing outcomes for the extremely short fixture calls. Request arithmetic remains exactly 90 generation and 192 embedding requests, and peak active generation remains within each cell's admitted limit and the hard cap of four. The workflow plan digest changed to `sha256:9efd478fc91aef90acf30e4160542b1eebc492d245fb200fcdd8f9c5004a636b` as required for this semantic change.
 
 Visual QA also found that the concurrency timeline showed only generation. I changed it to display solid generation and dotted embedding activity for every batch size, labeled the cap explicitly as the Umans generation cap, clamped elapsed time at zero, and kept the fixture-control qualification. The canonical JSON/JSONL/CSV and all eight SVG/PNG pairs were regenerated from the corrected run.
+
+## Step 8: Attempt an explicit operator approval prompt
+
+To avoid treating a generic continuation as spend authority, I attempted to collect the exact numeric authorization through the local `plz-confirm` operator gate. The prompt named all limits: 60 Umans generation requests, 128 local embedding requests, four active Umans calls, 983,040 input tokens, 983,040 output tokens, 3,932,160 embedding tokens, and 9,600,000 cost microunits ($9.60 if denominated in USD).
+
+The approval service was not running, and the command failed before presenting any prompt:
+
+```text
+Error: create confirm request: post /api/requests: Post "http://localhost:3000/api/requests": dial tcp 127.0.0.1:3000: connect: connection refused
+```
+
+This is not approval. No provider inference request was made. The remaining valid path is an explicit conversational approval of the same numeric ceilings (or revised lower ceilings).
