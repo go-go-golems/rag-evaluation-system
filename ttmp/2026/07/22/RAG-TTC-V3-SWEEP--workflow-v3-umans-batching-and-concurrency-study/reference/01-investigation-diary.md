@@ -572,3 +572,58 @@ Review `cmd/rag-ttc-v3-sweep/main.go` and `main_test.go` for interval semantics 
 - Cells with attempt overlap: 9/12.
 - Provider timeline: solid generation spans, dotted embedding span envelopes.
 - Evidence schema: `rag-ttc-v3-sweep-evidence/v2`.
+
+## Step 12: Correct the operator-decision record from rejection to timeout
+
+### Prompt Context
+
+**User prompt (verbatim):** (same active-goal continuation as Step 1)
+
+**Assistant interpretation:** Reinspect the remaining authorization blocker and take the next evidence-backed action without making provider calls.
+
+**Inferred user intent:** Ensure the spend gate and its audit trail are accurate before any real execution.
+
+### What I did
+
+I reopened both structured `plz-confirm` response artifacts rather than relying only on the parsed boolean. Each response contained `approved=false` together with `comment: AUTO_TIMEOUT`. The first $9.60 request and the later $0.639 request therefore expired after the server-side default timeout; neither was an explicit rejection.
+
+I corrected the current design document and appended this correction to the diary and changelog. Earlier diary entries remain as chronological evidence of the mistaken interpretation, but this step supersedes their conclusion. No provider inference call was made.
+
+### Why
+
+An approval timeout and a rejection have different operator semantics. The real run remains blocked in both cases, but claiming an explicit negative decision when no decision occurred would make the custody record inaccurate.
+
+### What worked
+
+The raw response artifacts retained enough structured metadata to resolve the ambiguity exactly: `approved=false` plus `comment=AUTO_TIMEOUT`.
+
+### What didn't work
+
+The earlier parser selected only the boolean `approved` field and discarded `comment`, causing the timeout to be misclassified as a rejection. The `plz-confirm` command defaults both request expiration and wait timeout to 300 seconds unless explicitly overridden.
+
+### What I learned
+
+Operator-gate consumers must preserve and branch on the full terminal reason, not collapse approval, rejection, timeout, cancellation, and transport failure into one boolean.
+
+### What was tricky to build
+
+No code was needed, but the correction had to preserve append-only diary history while updating the current design statement. Rewriting prior diary entries would have erased the investigation path.
+
+### What warrants a second pair of eyes
+
+- Confirm future approval wrappers treat `AUTO_TIMEOUT` as missing authority rather than rejection.
+- Ensure the real command remains gated until an affirmative response or explicit conversational approval is received.
+
+### What should be done in the future
+
+Request explicit conversational approval, or run `plz-confirm` with both `--timeout` and `--wait-timeout` long enough for an attended operator session. Do not make real calls meanwhile.
+
+### Code review instructions
+
+Review the raw response shape and this correction against Steps 9 and 10. No runtime code changed in this step.
+
+### Technical details
+
+- Original request result: `approved=false`, `comment=AUTO_TIMEOUT`.
+- Reduced request result: `approved=false`, `comment=AUTO_TIMEOUT`.
+- Current blocker: missing affirmative authority, not an explicit rejection.

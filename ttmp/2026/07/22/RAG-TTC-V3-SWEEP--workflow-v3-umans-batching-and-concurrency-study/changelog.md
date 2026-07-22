@@ -113,3 +113,8 @@ Added non-secret reproducible Umans Flash host-config example; exact dry-run pro
 
 Commit 3dbb512 pins exact Umans pricing/response authority, canonical provider-wall evidence v2, reproducible host config, regenerated fixture custody, and regression tests
 
+
+## 2026-07-22
+
+Correction: both plz-confirm responses were AUTO_TIMEOUT, not explicit rejections; real execution remains blocked by missing affirmative authority
+
