@@ -874,3 +874,9 @@ The fixture manifest count was 282, and all 12 referenced JSONL and manifest fil
 Failed-cell checkpoints now include a closed, deterministic reduction of the exported operation rows: admitted/completed/incomplete counts, outcome counts, total provider elapsed microseconds, peak provider concurrency, generation/embedding overlap microseconds, and generation/embedding operation counts. The reduction reads no provider payload, free-form error message, URL, header, or credential.
 
 A forced `--cell-timeout 1ns` fixture failure verified that the failure path writes an operation JSONL, a manifest, and an `operationReduction` object before exiting non-zero. A unit test verifies interval overlap and incomplete-operation accounting.
+
+## Step 13: Generic researchctl operation-custody export builder
+
+Added `researchctladapter.BuildOperationCustodyRunExport`. The RAG-owned adapter converts compact operation JSONL/manifest files and scalar counters into a strict `lab.RunExport`. It derives artifacts' digest and size from local files but persists only relative URIs and verified identities; timestamps and run identity remain explicit inputs. The builder rejects absolute/traversal URIs, duplicate artifacts/metrics, missing source identity, and non-terminal status. A unit test verifies the resulting bundle using researchctl's public artifact verifier.
+
+This is intentionally an adapter primitive; the sweep CLI still needs an operator-facing export/import command that supplies a canonical specification and explicit custody identity.
