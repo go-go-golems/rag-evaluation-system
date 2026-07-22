@@ -185,6 +185,8 @@ github.com/go-go-golems/researchctl v0.0.1 h1:O2L3LjjYFBq6n7x+Ig61HSzegn51dmniTo
 github.com/go-go-golems/researchctl v0.0.1/go.mod h1:+4rHsRUf8Py5i/yi/Bm/xJ9yQoMvdmmtH43aJJqdgfk=
 github.com/go-go-golems/scraper v0.0.5-0.20260722020313-9d714e600649 h1:XSAWdxswUJ+7Fr0ljiwGuRvWlUdHWo8tenCretObJx4=
 github.com/go-go-golems/scraper v0.0.5-0.20260722020313-9d714e600649/go.mod h1:Eq7qba6y0TINsVGcniDYwED0OeHga4+xtfEW5hz6t9k=
+github.com/go-go-golems/scraper v0.0.5-0.20260722024410-f15938d16606 h1:uGHTQ2oISffW5BxzUwhmwxHps4TiQXAay18I/o/D5Es=
+github.com/go-go-golems/scraper v0.0.5-0.20260722024410-f15938d16606/go.mod h1:Eq7qba6y0TINsVGcniDYwED0OeHga4+xtfEW5hz6t9k=
 github.com/go-jose/go-jose/v4 v4.1.4 h1:moDMcTHmvE6Groj34emNPLs/qtYXRVcd6S7NHbHz3kA=
 github.com/go-jose/go-jose/v4 v4.1.4/go.mod h1:x4oUasVrzR7071A4TnHLGSPpNOm2a21K9Kf04k1rs08=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=

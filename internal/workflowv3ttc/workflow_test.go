@@ -19,8 +19,10 @@ import (
 )
 
 type fixtureProvider struct {
-	mu    sync.Mutex
-	calls map[string]int
+	mu                 sync.Mutex
+	calls              map[string]int
+	firstEmbeddingAt   time.Time
+	generation64DoneAt time.Time
 }
 
 func (p *fixtureProvider) Generate(_ context.Context, chunk Chunk) (Result[Generated], error) {
@@ -28,10 +30,18 @@ func (p *fixtureProvider) Generate(_ context.Context, chunk Chunk) (Result[Gener
 	p.calls["generate:"+chunk.Key]++
 	attempt := p.calls["generate:"+chunk.Key]
 	p.mu.Unlock()
+	if chunk.Key == "chunk-0064" {
+		time.Sleep(500 * time.Millisecond)
+	}
 	representation := ragoperators.Representation{Record: ragcontract.RepresentationRecord{ID: "representation:" + chunk.Key, ParentChunkID: chunk.Key, ParentUnitID: chunk.Chunk.Record.ParentUnitID, ContentDigest: chunk.Chunk.Record.TextDigest, EvidenceRole: "derived", Citation: chunk.Chunk.Record.Citation}, Text: "representation:" + chunk.Key}
 	generated := Generated{Key: chunk.Key, Chunk: chunk.Chunk, Representations: []ragoperators.Representation{representation}, CitationIDs: append([]string(nil), chunk.CitationIDs...), ProviderProfileDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", ModelDigest: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
 	if chunk.Key == "chunk-0007" && attempt == 1 {
 		generated.Representations = nil
+	}
+	if chunk.Key == "chunk-0064" {
+		p.mu.Lock()
+		p.generation64DoneAt = time.Now()
+		p.mu.Unlock()
 	}
 	return Result[Generated]{Value: generated, Usage: []Usage{{Dimension: "cost_microunits", Units: 0}, {Dimension: "requests", Units: 1}, {Dimension: "input_tokens", Units: 4}, {Dimension: "output_tokens", Units: 2}}}, nil
 }
@@ -39,6 +49,9 @@ func (p *fixtureProvider) Generate(_ context.Context, chunk Chunk) (Result[Gener
 func (p *fixtureProvider) Embed(_ context.Context, generated Generated) (Result[Embedded], error) {
 	p.mu.Lock()
 	p.calls["embed:"+generated.Key]++
+	if p.firstEmbeddingAt.IsZero() {
+		p.firstEmbeddingAt = time.Now()
+	}
 	p.mu.Unlock()
 	embedding := ragoperators.Embedding{Record: ragcontract.EmbeddingRecord{RepresentationID: generated.Representations[0].Record.ID, ModelManifestDigest: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", Dimensions: 3, VectorDigest: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}, Vector: []float64{0.25, 0.5, 0.75}}
 	return Result[Embedded]{Value: Embedded{Generated: generated, Representations: generated.Representations, Embeddings: []ragoperators.Embedding{embedding}, EmbeddingProfileDigest: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}, Usage: []Usage{{Dimension: "embedding_tokens", Units: 3}}}, nil
@@ -172,9 +185,13 @@ func runPreparationIntegration(t *testing.T, itemCount, generationCapacity, embe
 			}
 			provider.mu.Lock()
 			malformedCalls := provider.calls["generate:chunk-0007"]
+			firstEmbeddingAt, generation64DoneAt := provider.firstEmbeddingAt, provider.generation64DoneAt
 			provider.mu.Unlock()
 			if malformedCalls != 2 {
 				t.Fatalf("malformed output attempts=%d", malformedCalls)
+			}
+			if itemCount >= 65 && (firstEmbeddingAt.IsZero() || generation64DoneAt.IsZero() || !firstEmbeddingAt.Before(generation64DoneAt)) {
+				t.Fatalf("embedding resource did not refill before final generation completed: embedding=%s generation=%s", firstEmbeddingAt, generation64DoneAt)
 			}
 			malformedEvidence := 0
 			for _, attempt := range snapshot.Attempts {
