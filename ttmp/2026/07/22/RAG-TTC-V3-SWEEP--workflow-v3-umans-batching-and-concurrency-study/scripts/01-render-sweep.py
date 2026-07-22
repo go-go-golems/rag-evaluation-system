@@ -74,21 +74,27 @@ plt.close(fig)
 
 fig,ax=plt.subplots(figsize=(10,6))
 rows=sorted([cell for cell in cells if cell["cell"]["concurrency"]==4],key=lambda x:x["cell"]["chunksPerRequest"])
+batch_colors={1:"#1f77b4",2:"#ff7f0e",4:"#2ca02c",8:"#d62728"}; peak=4
 for cell in rows:
-    parsed=[(datetime.fromisoformat(a["startedAt"].replace("Z","+00:00")),datetime.fromisoformat(a["finishedAt"].replace("Z","+00:00"))) for a in cell["attempts"]]
-    origin=min(start for start,_ in parsed); events=[]
-    for start,end in parsed: events.extend([((start-origin).total_seconds(),1),((end-origin).total_seconds(),-1)])
-    events.sort(key=lambda item:(item[0],item[1])); x=[0.0]; y=[0]; active=0
-    for stamp,delta in events: x.extend([stamp,stamp]); y.extend([active,active+delta]); active+=delta
-    ax.plot(x,y,label=f"batch={cell['cell']['chunksPerRequest']}")
-ax.axhline(4,color="#333333",linestyle="--",linewidth=1,label="hard cap=4")
-ax.set(xlabel="Seconds since cell admission",ylabel="Active generation attempts",title="Workflow V3 fixture control — observed concurrency timeline")
-ax.set_yticks([0,1,2,3,4]); ax.grid(True,alpha=.25); ax.legend(); fig.tight_layout()
+    batch=cell["cell"]["chunksPerRequest"]
+    all_attempts=cell["attempts"]+cell["embeddingAttempts"]
+    origin=min(datetime.fromisoformat(a["startedAt"].replace("Z","+00:00")) for a in all_attempts)
+    for attempts,phase,style in ((cell["attempts"],"generation","-"),(cell["embeddingAttempts"],"embedding",":")):
+        events=[]
+        for attempt in attempts:
+            start=datetime.fromisoformat(attempt["startedAt"].replace("Z","+00:00")); end=datetime.fromisoformat(attempt["finishedAt"].replace("Z","+00:00"))
+            events.extend([((start-origin).total_seconds(),1),((end-origin).total_seconds(),-1)])
+        events.sort(key=lambda item:(item[0],item[1])); x=[0.0]; y=[0]; active=0
+        for stamp,delta in events: x.extend([stamp,stamp]); y.extend([active,active+delta]); active+=delta
+        peak=max(peak,max(y,default=0)); ax.plot(x,y,color=batch_colors[batch],linestyle=style,label=f"batch={batch} {phase}")
+ax.axhline(4,color="#333333",linestyle="--",linewidth=1,label="Umans generation hard cap=4")
+ax.set(xlabel="Seconds since cell admission",ylabel="Active attempts",title="Workflow V3 fixture control — generation and embedding activity")
+ax.set_xlim(left=0); ax.set_yticks(range(0,peak+1)); ax.grid(True,alpha=.25); ax.legend(ncol=2,fontsize=9); fig.tight_layout()
 for ext in ("svg","png"): fig.savefig(out/f"request-timeline.{ext}",dpi=160)
 plt.close(fig)
 
 for svg in out.glob("*.svg"):
     svg.write_text("\n".join(line.rstrip() for line in svg.read_text().splitlines())+"\n")
-summary={"schemaVersion":"rag-ttc-v3-sweep-graph-manifest/v1","evidencePlanDigest":data["plan"]["digest"],"graphs":sorted(x.name for x in out.iterdir())}
+summary={"schemaVersion":"rag-ttc-v3-sweep-graph-manifest/v1","evidencePlanDigest":data["plan"]["digest"],"graphs":sorted(x.name for x in out.iterdir() if x.suffix in {".svg",".png"})}
 (out/"manifest.json").write_text(json.dumps(summary,indent=2)+"\n")
 print(f"rendered={len(summary['graphs'])} output={out}")

@@ -56,3 +56,13 @@ Step 6: resolved secure Umans/local-embedding authority and completed exact 16-c
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/main.go — Real dry-run now verifies frozen source materialization before authority output
 
+
+## 2026-07-22
+
+Step 7: fixed downstream chained-map page threshold, regenerated fixture custody with observed overlap in 9/12 cells, and expanded timeline visual QA
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/workflowv3ttc/sweep_workflow.js — Downstream embedding map materializes each contiguous generated result for work-conserving overlap
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/scripts/01-render-sweep.py — Timeline distinguishes generation and embedding while labeling the generation-only hard cap
+

@@ -46,7 +46,7 @@ module.exports = workflow.compile(
 			(generatedBatch) => tasks.embedBatch({ generated: generatedBatch }),
 			(map) =>
 				map
-					.pageSize(16)
+					.pageSize(1)
 					.maxItems(100)
 					.maxMaterializedAhead(16)
 					.budget({
