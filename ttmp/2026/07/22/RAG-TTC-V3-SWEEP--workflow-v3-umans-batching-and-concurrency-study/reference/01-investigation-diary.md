@@ -868,3 +868,9 @@ GOWORK=off golangci-lint run ./cmd/rag-ttc-v3-sweep/... ./internal/workflowv3ttc
 ```
 
 The fixture manifest count was 282, and all 12 referenced JSONL and manifest files existed.
+
+## Step 12: Deterministic failed-cell operation reductions
+
+Failed-cell checkpoints now include a closed, deterministic reduction of the exported operation rows: admitted/completed/incomplete counts, outcome counts, total provider elapsed microseconds, peak provider concurrency, generation/embedding overlap microseconds, and generation/embedding operation counts. The reduction reads no provider payload, free-form error message, URL, header, or credential.
+
+A forced `--cell-timeout 1ns` fixture failure verified that the failure path writes an operation JSONL, a manifest, and an `operationReduction` object before exiting non-zero. A unit test verifies interval overlap and incomplete-operation accounting.

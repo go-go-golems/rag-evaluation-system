@@ -49,7 +49,7 @@ func TestWriteFailedCellCheckpointExcludesFailureMessage(t *testing.T) {
 	root := t.TempDir()
 	snapshot := workflowv3.RunSnapshot{RunID: "run-1", Status: "failed", Attempts: []workflowv3.Attempt{{ResourceClass: workflowv3ttc.ResourceGeneration, Status: "failed", Failure: &workflowv3.Failure{Class: "provider", Code: "SAFE_CODE", Message: "sensitive provider body"}}}}
 	budget := []workflowv3.BudgetProgress{{RunID: "run-1", Account: "generation", Dimension: "requests", Limit: 2, Used: 1, Remaining: 1}}
-	if err := writeFailedCellCheckpoint(root, "cell-00", snapshot, workflowv3ttc.SweepCell{ChunksPerRequest: 1, Concurrency: 1, Replicate: 1}, "terminal", budget, nil); err != nil {
+	if err := writeFailedCellCheckpoint(root, "cell-00", snapshot, workflowv3ttc.SweepCell{ChunksPerRequest: 1, Concurrency: 1, Replicate: 1}, "terminal", budget, nil, failedOperationReduction{}); err != nil {
 		t.Fatal(err)
 	}
 	body, err := os.ReadFile(filepath.Join(root, "failures", "cell-00.json"))
@@ -58,6 +58,19 @@ func TestWriteFailedCellCheckpointExcludesFailureMessage(t *testing.T) {
 	}
 	if strings.Contains(string(body), "sensitive provider body") || !strings.Contains(string(body), "SAFE_CODE") {
 		t.Fatalf("unexpected failed checkpoint: %s", body)
+	}
+}
+
+func TestReduceFailedOperationsUsesOnlyClosedOperationFields(t *testing.T) {
+	started := time.Date(2026, 7, 22, 12, 0, 0, 0, time.UTC)
+	operations := []workflowv3.ExternalOperation{
+		{Kind: workflowv3.ExternalOperationKind{Name: "provider.generate", Version: "v1"}, Completion: &workflowv3.ExternalOperationCompletion{ProviderStartedAt: started, ElapsedMicros: 10, Outcome: workflowv3.ExternalOperationOutcomeSucceeded}},
+		{Kind: workflowv3.ExternalOperationKind{Name: "provider.embed", Version: "v1"}, Completion: &workflowv3.ExternalOperationCompletion{ProviderStartedAt: started.Add(5 * time.Microsecond), ElapsedMicros: 10, Outcome: workflowv3.ExternalOperationOutcomeFailed}},
+		{Kind: workflowv3.ExternalOperationKind{Name: "provider.embed", Version: "v1"}},
+	}
+	reduction := reduceFailedOperations(operations)
+	if reduction.Admitted != 3 || reduction.Completed != 2 || reduction.Incomplete != 1 || reduction.ProviderElapsedMicros != 20 || reduction.ProviderPeakActive != 2 || reduction.ProviderOverlapMicros != 5 || reduction.GenerationOperationCount != 1 || reduction.EmbeddingOperationCount != 2 || reduction.Outcomes[workflowv3.ExternalOperationOutcomeFailed] != 1 {
+		t.Fatalf("unexpected reduction: %#v", reduction)
 	}
 }
 

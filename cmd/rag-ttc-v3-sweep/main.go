@@ -82,16 +82,29 @@ type cellCheckpoint struct {
 	Cell                  cellEvidence `json:"cell"`
 }
 
+type failedOperationReduction struct {
+	Admitted                 int            `json:"admitted"`
+	Completed                int            `json:"completed"`
+	Incomplete               int            `json:"incomplete"`
+	Outcomes                 map[string]int `json:"outcomes"`
+	ProviderElapsedMicros    int64          `json:"providerElapsedMicros"`
+	ProviderPeakActive       int            `json:"providerPeakActive"`
+	ProviderOverlapMicros    int64          `json:"providerOverlapMicros"`
+	GenerationOperationCount int            `json:"generationOperationCount"`
+	EmbeddingOperationCount  int            `json:"embeddingOperationCount"`
+}
+
 type failedCellCheckpoint struct {
-	SchemaVersion string                      `json:"schemaVersion"`
-	Cell          workflowv3ttc.SweepCell     `json:"cell"`
-	RunID         string                      `json:"runId"`
-	RunStatus     string                      `json:"runStatus"`
-	Reason        string                      `json:"reason"`
-	Attempts      map[string]map[string]int   `json:"attempts"`
-	FailureCodes  map[string]int              `json:"failureCodes"`
-	Budget        []workflowv3.BudgetProgress `json:"budget"`
-	Operations    *operationEvidence          `json:"operations,omitempty"`
+	SchemaVersion      string                      `json:"schemaVersion"`
+	Cell               workflowv3ttc.SweepCell     `json:"cell"`
+	RunID              string                      `json:"runId"`
+	RunStatus          string                      `json:"runStatus"`
+	Reason             string                      `json:"reason"`
+	Attempts           map[string]map[string]int   `json:"attempts"`
+	FailureCodes       map[string]int              `json:"failureCodes"`
+	Budget             []workflowv3.BudgetProgress `json:"budget"`
+	Operations         *operationEvidence          `json:"operations,omitempty"`
+	OperationReduction failedOperationReduction    `json:"operationReduction"`
 }
 
 type delayedGenerator struct{ ragoperators.FixtureProviders }
@@ -297,12 +310,17 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 				_ = store.Close()
 				return fmt.Errorf("snapshot budget for timed-out cell %+v: %w", cell, budgetErr)
 			}
+			operationRows, operationErr := store.ExternalOperations(ctx, runID)
+			if operationErr != nil {
+				_ = store.Close()
+				return fmt.Errorf("query operations for timed-out cell %+v: %w", cell, operationErr)
+			}
 			operations, exportErr := exportCellOperations(ctx, store, output, cellName, runID)
 			if exportErr != nil {
 				_ = store.Close()
 				return fmt.Errorf("export operations for timed-out cell %+v: %w", cell, exportErr)
 			}
-			if checkpointErr := writeFailedCellCheckpoint(output, cellName, snapshot, cell, "timeout", budget, operations); checkpointErr != nil {
+			if checkpointErr := writeFailedCellCheckpoint(output, cellName, snapshot, cell, "timeout", budget, operations, reduceFailedOperations(operationRows)); checkpointErr != nil {
 				_ = store.Close()
 				return fmt.Errorf("write failed-cell checkpoint for timed-out cell %+v: %w", cell, checkpointErr)
 			}
@@ -315,12 +333,17 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 				_ = store.Close()
 				return fmt.Errorf("snapshot budget for failed cell %+v: %w", cell, budgetErr)
 			}
+			operationRows, operationErr := store.ExternalOperations(ctx, runID)
+			if operationErr != nil {
+				_ = store.Close()
+				return fmt.Errorf("query operations for failed cell %+v: %w", cell, operationErr)
+			}
 			operations, exportErr := exportCellOperations(ctx, store, output, cellName, runID)
 			if exportErr != nil {
 				_ = store.Close()
 				return fmt.Errorf("export operations for failed cell %+v: %w", cell, exportErr)
 			}
-			if checkpointErr := writeFailedCellCheckpoint(output, cellName, snapshot, cell, "terminal", budget, operations); checkpointErr != nil {
+			if checkpointErr := writeFailedCellCheckpoint(output, cellName, snapshot, cell, "terminal", budget, operations, reduceFailedOperations(operationRows)); checkpointErr != nil {
 				_ = store.Close()
 				return fmt.Errorf("write failed-cell checkpoint for failed cell %+v: %w", cell, checkpointErr)
 			}
@@ -481,7 +504,7 @@ func exportCellOperations(ctx context.Context, store *workflowv3sqlite.Store, ou
 	return &operationEvidence{JSONLPath: filepath.ToSlash(filepath.Join("operations", cellName+".jsonl")), ManifestPath: filepath.ToSlash(filepath.Join("operations", cellName+".manifest.json")), Manifest: manifest}, nil
 }
 
-func writeFailedCellCheckpoint(output, cellName string, snapshot workflowv3.RunSnapshot, cell workflowv3ttc.SweepCell, reason string, budget []workflowv3.BudgetProgress, operations *operationEvidence) error {
+func writeFailedCellCheckpoint(output, cellName string, snapshot workflowv3.RunSnapshot, cell workflowv3ttc.SweepCell, reason string, budget []workflowv3.BudgetProgress, operations *operationEvidence, reduction failedOperationReduction) error {
 	attempts := map[string]map[string]int{}
 	failureCodes := map[string]int{}
 	for _, attempt := range snapshot.Attempts {
@@ -495,12 +518,47 @@ func writeFailedCellCheckpoint(output, cellName string, snapshot workflowv3.RunS
 			failureCodes[attempt.Failure.Code]++
 		}
 	}
-	checkpoint := failedCellCheckpoint{SchemaVersion: "rag-ttc-v3-failed-cell-evidence/v1", Cell: cell, RunID: string(snapshot.RunID), RunStatus: snapshot.Status, Reason: reason, Attempts: attempts, FailureCodes: failureCodes, Budget: budget, Operations: operations}
+	checkpoint := failedCellCheckpoint{SchemaVersion: "rag-ttc-v3-failed-cell-evidence/v1", Cell: cell, RunID: string(snapshot.RunID), RunStatus: snapshot.Status, Reason: reason, Attempts: attempts, FailureCodes: failureCodes, Budget: budget, Operations: operations, OperationReduction: reduction}
 	body, err := workflowv3.CanonicalJSON(checkpoint)
 	if err != nil {
 		return err
 	}
 	return writeFileAtomically(filepath.Join(output, "failures", cellName+".json"), append(body, '\n'), 0o644)
+}
+
+func reduceFailedOperations(operations []workflowv3.ExternalOperation) failedOperationReduction {
+	reduction := failedOperationReduction{Admitted: len(operations), Outcomes: map[string]int{}}
+	var all, generation, embedding []measuredInterval
+	for _, operation := range operations {
+		switch operation.Kind.Name {
+		case "provider.generate":
+			reduction.GenerationOperationCount++
+		case "provider.embed":
+			reduction.EmbeddingOperationCount++
+		}
+		if operation.Completion == nil {
+			reduction.Incomplete++
+			continue
+		}
+		completion := operation.Completion
+		reduction.Completed++
+		reduction.Outcomes[completion.Outcome]++
+		if completion.ProviderStartedAt.IsZero() || completion.ElapsedMicros < 0 {
+			continue
+		}
+		interval := measuredInterval{start: completion.ProviderStartedAt, end: completion.ProviderStartedAt.Add(time.Duration(completion.ElapsedMicros) * time.Microsecond)}
+		all = append(all, interval)
+		reduction.ProviderElapsedMicros += completion.ElapsedMicros
+		switch operation.Kind.Name {
+		case "provider.generate":
+			generation = append(generation, interval)
+		case "provider.embed":
+			embedding = append(embedding, interval)
+		}
+	}
+	reduction.ProviderPeakActive = peakIntervals(all)
+	reduction.ProviderOverlapMicros = overlapIntervals(generation, embedding)
+	return reduction
 }
 
 func evidenceRows(attempts []workflowv3.Attempt) []attemptEvidence {
