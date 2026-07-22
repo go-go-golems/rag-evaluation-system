@@ -627,3 +627,60 @@ Review the raw response shape and this correction against Steps 9 and 10. No run
 - Original request result: `approved=false`, `comment=AUTO_TIMEOUT`.
 - Reduced request result: `approved=false`, `comment=AUTO_TIMEOUT`.
 - Current blocker: missing affirmative authority, not an explicit rejection.
+
+## Step 13: Attempt an attended approval and stop without a decision
+
+### Prompt Context
+
+**User prompt (verbatim):** (same active-goal continuation as Step 1)
+
+**Assistant interpretation:** Try one attended operator path for the exact $0.639 authority, then obey the objective's stop condition if no decision is available.
+
+**Inferred user intent:** Advance the real study only through explicit operator authority and leave no ambiguous or dangling control process.
+
+### What I did
+
+I started the local `plz-confirm` backend, opened its Agent UI in a browser, and submitted a one-hour confirmation request with both `--timeout 3600` and `--wait-timeout 3600`. The visible request listed all exact ceilings and separate approve/reject buttons. Repeated status checks showed the request remained pending and its output artifact remained empty.
+
+Because no operator decision was available, I terminated the pending confirmation process, stopped the local approval backend, and closed the browser. No provider inference call was made.
+
+### Why
+
+The prior five-minute requests had expired before an attended decision. This attempt verified that the complete UI path worked and that the exact prompt was visible, while preserving the rule that only a human affirmative response can authorize spend.
+
+### What worked
+
+- The backend, WebSocket, browser UI, request rendering, exact ceilings, and one-hour expiration all worked.
+- The process remained safely blocked while approval was pending.
+- Cleanup left no unattended approval process capable of completing later.
+
+### What didn't work
+
+No operator selected approve or reject during the attended window available to this session. The attempt produced no decision artifact.
+
+### What I learned
+
+A visible and technically functioning approval UI is not authorization. Pending state must remain fail-closed, and unattended requests should be canceled when the agent stops.
+
+### What was tricky to build
+
+The output file exists at request start because of shell redirection but remains zero bytes until completion. Status checks therefore had to combine file size with process liveness rather than treating file existence as a terminal response.
+
+### What warrants a second pair of eyes
+
+- Confirm the operator can use either an explicit conversational response or a separately attended Agent UI session next time.
+- Ensure no future automation interprets generic goal continuation as spend authority.
+
+### What should be done in the future
+
+Stop until an operator explicitly authorizes or declines the exact bounded matrix. Do not launch real calls while authority is absent.
+
+### Code review instructions
+
+No repository runtime code changed. Review the chronological approval evidence in Steps 8 through 13 and the current blocker statement.
+
+### Technical details
+
+- Attended request: one-hour server and client wait timeouts.
+- Terminal state: canceled locally while pending; no approval/rejection payload.
+- Provider requests made: zero.

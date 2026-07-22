@@ -118,3 +118,8 @@ Commit 3dbb512 pins exact Umans pricing/response authority, canonical provider-w
 
 Correction: both plz-confirm responses were AUTO_TIMEOUT, not explicit rejections; real execution remains blocked by missing affirmative authority
 
+
+## 2026-07-22
+
+Step 13: opened a one-hour attended exact spend prompt, received no operator decision, canceled pending processes, and made zero provider calls
+
