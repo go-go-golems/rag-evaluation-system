@@ -159,7 +159,7 @@ I also wrote the consolidation design for turning this prototype into maintained
 
 **Inferred user intent:** Receive a readable, visually verified technical deliverable rather than another list of artifact paths or an uninspected report.
 
-**Commit (code):** pending — the audit script, derived evidence, report, design, diary, and bookkeeping will be committed after final validation.
+**Commit (code):** `1207fb2128376778f9828dfff31e79c1e6ccae35` — "docs: audit TTC performance pipeline and rebuild report"; PNG graph assets were added in `e43578c8ed1e1d63e9a429d5d4e9f9e81e88a301` — "docs: add TTC audit graph renders".
 
 ### What I did
 
@@ -190,6 +190,8 @@ I also wrote the consolidation design for turning this prototype into maintained
 - It showed provider coverage of 98.99%–99.94%, refuting the hypothesis of broad scheduler pauses in completed cells.
 - It identified batch-8/concurrency-2 as the fastest observed cell at 34.389 seconds and 0.4653 chunks/s while keeping the single-replicate limitation explicit.
 - `md-view` loaded every image and all expected report headings.
+- `docmgr doctor` passed cleanly for both the new audit ticket and repaired original sweep ticket.
+- The reMarkable dry-run and real bundle upload succeeded; cloud listing verified `RAG Pipeline TTC Performance Audit and Consolidation Plan` under `/ai/2026/07/22/RAG-PIPELINE-CONSOLIDATION-AUDIT`.
 
 ### What didn't work
 
@@ -202,6 +204,9 @@ I also wrote the consolidation design for turning this prototype into maintained
   - inconsistent timeline axes.
 - After the second QA pass said the figures were publication-ready, direct read-tool inspection still found provider-coverage value labels overlapping the subplot title. The labels were moved inside the bars and the graph set was regenerated.
 - Generation token/s and cost efficiency remain unavailable because most operations lack actual provider usage counters. The report explicitly refuses to infer them from reservation ceilings.
+- The first commit attempt failed `git diff --cached --check` because Matplotlib emits multiline SVG path data with trailing spaces. I added deterministic SVG line normalization to the analysis script and regenerated all figures.
+- The second commit attempt then found one extra final blank line in the docmgr-generated changelog and CRLF CSV output. I removed the changelog blank line, set the CSV writer's `lineterminator="\n"`, regenerated outputs, and the next diff check and commit passed.
+- Repository `.gitignore` excludes `*.png`, so the first successful commit contained SVG but not the PNG files referenced by Markdown. I verified the ignore rule and force-added exactly the five reviewed PNG outputs in a separate focused commit.
 
 ### What I learned
 

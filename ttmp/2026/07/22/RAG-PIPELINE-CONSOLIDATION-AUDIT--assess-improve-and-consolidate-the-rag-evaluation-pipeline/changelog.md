@@ -13,3 +13,12 @@ Steps 1-2: audited the 6,943-turn Pi session and cross-worktree artifacts, recon
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-PIPELINE-CONSOLIDATION-AUDIT--assess-improve-and-consolidate-the-rag-evaluation-pipeline/analysis/01-ttc-real-run-performance-audit-and-pipeline-consolidation-assessment.md — Complete corrected analysis and graph showcase
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-PIPELINE-CONSOLIDATION-AUDIT--assess-improve-and-consolidate-the-rag-evaluation-pipeline/scripts/01-analyze-ttc-real-run.py — Reproducible analysis pipeline prototype
+
+## 2026-07-22
+
+Published final audited bundle after clean doctor, artifact reconciliation, md-view verification, and two-stage visual QA (commits 1207fb2 and e43578c); verified reMarkable cloud path /ai/2026/07/22/RAG-PIPELINE-CONSOLIDATION-AUDIT
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-PIPELINE-CONSOLIDATION-AUDIT--assess-improve-and-consolidate-the-rag-evaluation-pipeline/analysis/01-ttc-real-run-performance-audit-and-pipeline-consolidation-assessment.md — Published graph-rich audit report
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-PIPELINE-CONSOLIDATION-AUDIT--assess-improve-and-consolidate-the-rag-evaluation-pipeline/reference/01-investigation-diary.md — Final validation, commit, and upload evidence

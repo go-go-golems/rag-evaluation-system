@@ -7,4 +7,4 @@
 - [x] Replace the shallow TTC report with a rigorous evidence-backed performance analysis and graphs <!-- t:ux6a -->
 - [x] Assess instrumentation and pipeline architecture gaps across rag-evaluation-system, scraper, and researchctl <!-- t:9xmw -->
 - [x] Write a phased consolidation and implementation plan with validation criteria <!-- t:11rx -->
-- [ ] Validate ticket bookkeeping and publish the final bundle <!-- t:v3vn -->
+- [x] Validate ticket bookkeeping and publish the final bundle <!-- t:v3vn -->
