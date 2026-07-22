@@ -900,3 +900,7 @@ RAG_MODEL_MANIFEST_INVALID: RAG_MODEL_MANIFEST_DIGEST
 ```
 
 The host provider configuration and the discovered canonical specification have incompatible pinned model-manifest identity. I did not substitute a spec, alter the host configuration, or launch a paid call. A current canonical real-run specification whose model-manifest digest agrees with the host profile is required before the approved bounded run can start.
+
+## Step 17: Preserve reproducible experiment scripts and redacted config
+
+Per user request, moved the fixture custody specification generator, researchctl project config, fixture custody validation command, and non-submitting real preflight into this ticket's `scripts/` directory. The real preflight script uses required environment variables for operator-owned paths and never copies or prints the host-only provider YAML. `/tmp` remains only a caller-selected ephemeral output location; the reproducible scripts/configuration are now versioned with the ticket.
