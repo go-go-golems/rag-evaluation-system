@@ -904,3 +904,85 @@ The host provider configuration and the discovered canonical specification have 
 ## Step 17: Preserve reproducible experiment scripts and redacted config
 
 Per user request, moved the fixture custody specification generator, researchctl project config, fixture custody validation command, and non-submitting real preflight into this ticket's `scripts/` directory. The real preflight script uses required environment variables for operator-owned paths and never copies or prints the host-only provider YAML. `/tmp` remains only a caller-selected ephemeral output location; the reproducible scripts/configuration are now versioned with the ticket.
+
+## Step 18: Retroactive diary normalization and host-manifest repair preflight
+
+This step repairs missing continuation detail in the compacted diary record for the post-fixture Workflow V3 ledger work. Earlier short entries established results but omitted the standard Prompt Context, failure, review, and validation sections; this entry records the shared chronology and the exact durable evidence that reviewers need to retrace the fixture-custody, researchctl, and real-preflight work.
+
+It also captures the current non-submitting host-profile repair attempt. The model manifests in the operator-owned profile used placeholder digest values, so the first real preflight could never reach an authority decision. I added a ticket-local preview/write utility rather than leaving an ad-hoc `/tmp` experiment, previewed all three mismatches, updated only their digest fields after the user's `ok, update`, and reran provider validation. Validation then exposed the next independent stale identity: prompt template digests.
+
+### Prompt Context
+
+**User prompt (verbatim):** "don't forget to read the skill for the diary to make sure you are using the right format, and retroactively update all the steps you forgot for. We need a lot of info to get quality results. do this first. we can continue the code after that."
+
+**Assistant interpretation:** Apply the diary skill's strict structure now, backfill missing operational context from the ledger/custody work, and preserve every experiment/configuration in ticket-local scripts before further provider changes.
+
+**Inferred user intent:** Make the work auditable and reproducible enough to support a trustworthy paid measurement and future review, rather than relying on terse status notes or ephemeral `/tmp` commands.
+
+**Commit (code):** `e98e7d2` — "docs: preserve TTC qualification scripts" (ticket scripts/config); host-only manifest repair remains outside the repository and is intentionally not committed.
+
+### What I did
+- Re-read `/home/manuel/.pi/agent/skills/diary/SKILL.md` and its worked reference before writing this correction.
+- Added ticket-local scripts under `scripts/`: fixture custody specification generator, researchctl project configuration, fixture custody/export/import validation, real preflight wrapper, and model-manifest digest refresher.
+- Preserved no provider data, source text, credential, endpoint, or host configuration content in the ticket; host paths are supplied through required environment variables.
+- Audited the prior short entries collectively: fixture matrix/canonical graphs (Steps 4–7), operator authority attempts (Steps 8–13), partial real custody/retry accounting (later Steps 12–13), generic operation integration/export/reduction/researchctl custody (later Steps 11–14), graph inspection (Step 15), stale real preflight (Step 16), and script preservation (Step 17).
+- Ran the new digest script in preview mode against the host model-manifest directory. It reported three incorrect placeholder values.
+- After the user said `ok, update`, ran the same script with `--write`; it updated only the `Digest` field of the three model manifests atomically.
+- Ran `GOWORK=off go run ./cmd/rag-eval providers validate --provider-config "$REAL_PROVIDER_CONFIG"` (with the actual host path supplied locally).
+
+### Why
+- The external-operation evidence is only useful if its run instructions, authority boundaries, and failure identities can be reproduced without rediscovering hidden `/tmp` state.
+- Manifest digests are identity fences. Updating them from canonical manifest content is necessary to make an old placeholder configuration internally valid; bypassing validation or pinning the old digest would invalidate the real measurement.
+
+### What worked
+- The ticket-local scripts committed and passed the RAG repository pre-commit/pre-push checks: lint, vet, core tests, TypeScript typecheck, and GoReleaser snapshot.
+- The digest preview deterministically identified all three stale model-manifest digest fields without printing host configuration or credentials.
+- Updating model digests advanced provider validation past `RAG_MODEL_MANIFEST_INVALID: RAG_MODEL_MANIFEST_DIGEST`.
+
+### What didn't work
+- The prior non-submitting real preflight failed before provider submission:
+
+```text
+RAG_MODEL_MANIFEST_INVALID: RAG_MODEL_MANIFEST_DIGEST
+```
+
+- After model-digest repair, provider validation failed at the next integrity check:
+
+```text
+Error: load real provider host: RAG_PROMPT_MANIFEST_INVALID: RAG_PROMPT_MANIFEST_TEMPLATE_DIGEST
+```
+
+- No real provider request, embedding request, or paid inference call was made in either failed preflight.
+
+### What I learned
+- The host profile was stale in more than one independent content-addressed identity: model manifests used placeholder digests, and prompt manifests no longer match their template text.
+- The ordered validation behavior is useful: it exposes one deterministic identity violation at a time and prevents a mismatched profile from reaching cost authority or provider submission.
+- Ticket scripts must contain reproducible commands and redacted configuration interfaces, while host-only configuration stays outside source control.
+
+### What was tricky to build
+- The host provider configuration is intentionally private, so the repair utility must operate on it without copying it into the ticket or printing secrets. The script accepts only `--models-dir`, prints filename/digest identities, computes `ragcontract.Digest` after clearing the self-referential `Digest` field, and writes only via a temporary file plus rename. This retains the same content-addressed invariant as `ragproviders.validateModelManifest`.
+- Backfilling diary quality without inventing historical prompt text is constrained by compaction. This entry quotes the current prompt verbatim and identifies older steps by recorded commands, commits, files, and exact observed errors rather than fabricating prior user wording.
+
+### What warrants a second pair of eyes
+- Review `scripts/06-refresh-model-manifest-digests.go` before any additional `--write` use: it changes host configuration, though only the derived digest field.
+- Review prompt-manifest repair separately: template digest and manifest digest must be recomputed from the exact host text and canonical manifest fields, not guessed or copied from the old specification.
+- Confirm the updated profile identity is intentionally the desired real model/profile before accepting a newly compiled canonical TTC specification.
+
+### What should be done in the future
+- Add a ticket-local prompt-manifest preview/refresh script, validate the host profile, then compile a current canonical real specification against the validated profile and rerun the non-submitting preflight.
+- Do not make a paid call until that preflight succeeds and the operator reaffirms the documented cumulative authority envelope.
+
+### Code review instructions
+- Start with `scripts/04-fixture-custody-validation.sh` and `scripts/05-real-preflight.sh` to understand the non-paid reproducibility boundary.
+- Review `scripts/06-refresh-model-manifest-digests.go` against `pkg/ragproviders/manifests.go:modelManifestContentDigest`.
+- Validate with:
+
+```text
+GOWORK=off go run scripts/06-refresh-model-manifest-digests.go --models-dir "$MODELS_DIR"
+GOWORK=off go run ./cmd/rag-eval providers validate --provider-config "$REAL_PROVIDER_CONFIG"
+```
+
+### Technical details
+- Model manifest digest algorithm: clear `ModelManifest.Digest`, then calculate `ragcontract.Digest` over canonical content.
+- Current preflight shape: 16 chunks, batch sizes 1/2/4/8, concurrency 1/2, 60 planned generation requests, 61 prior admitted generation requests, and eight explicit retry admissions.
+- The failing prompt validation is a separate gate from the model-manifest repair and must be resolved before a current specification can be trusted.
