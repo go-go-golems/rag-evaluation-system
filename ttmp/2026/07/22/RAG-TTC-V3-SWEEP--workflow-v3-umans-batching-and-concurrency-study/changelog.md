@@ -108,3 +108,8 @@ Added non-secret reproducible Umans Flash host-config example; exact dry-run pro
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/experiments/real-provider-v2/provider-config.umans-flash.example.yaml — Reproducible non-secret real-sweep provider policy and local embedding boundary
 
+
+## 2026-07-22
+
+Commit 3dbb512 pins exact Umans pricing/response authority, canonical provider-wall evidence v2, reproducible host config, regenerated fixture custody, and regression tests
+

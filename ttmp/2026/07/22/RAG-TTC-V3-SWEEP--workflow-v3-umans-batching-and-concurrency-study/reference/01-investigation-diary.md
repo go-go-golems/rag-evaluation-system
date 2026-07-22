@@ -437,6 +437,8 @@ The real matrix must remain blocked unless the operator later supplies a new exp
 
 **Inferred user intent:** Finish the exact, reproducible study while preserving the explicit spend gate and avoiding repeated fixture work.
 
+**Commit (code):** `3dbb512` — "workflowv3: pin exact Umans sweep authority"
+
 ### What I did
 
 I investigated whether the rejected $9.60 ceiling could be tightened without making an inference call. The public Umans tariff states that Flash costs USD $0.15 per million input tokens, $1.00 per million output tokens, and $0.05 per million cache-read tokens, with no per-call minimum. The pinned host policy now caps each response at 8,192 tokens and records all tariff dimensions as integer microunits per million tokens. Cache writes use the conservative input rate of $0.15/M.
@@ -519,6 +521,8 @@ Validate with focused provider/sweep tests, the exact real dry-run without `--ex
 **Assistant interpretation:** Validate the regenerated fixture custody after pricing changes and fix any evidence defect rather than masking it.
 
 **Inferred user intent:** Preserve precise, auditable distinctions between Workflow V3 control-plane timing and actual provider activity.
+
+**Commit (code):** `3dbb512` — "workflowv3: pin exact Umans sweep authority"
 
 ### What I did
 
