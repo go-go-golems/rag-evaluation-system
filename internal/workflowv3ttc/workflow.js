@@ -4,7 +4,7 @@ const tasks = require("rag-ttc-v3-tasks");
 module.exports = workflow.compile(
 	workflow.define("rag-ttc-preparation-v1", (plan) => {
 		plan.budget("generation", {
-			limits: { requests: 2000, input_tokens: 8000, output_tokens: 4000 },
+			limits: { requests: 2000, input_tokens: 8000, output_tokens: 4000, cost_microunits: 2000 },
 			policyDigest: "sha256:1111111111111111111111111111111111111111111111111111111111111111",
 		});
 		plan.budget("embedding", {
@@ -26,7 +26,7 @@ module.exports = workflow.compile(
 					.maxMaterializedAhead(128)
 					.budget({
 						account: "generation",
-						reserve: { requests: 1, input_tokens: 4, output_tokens: 2 },
+						reserve: { requests: 1, input_tokens: 4, output_tokens: 2, cost_microunits: 1 },
 						onExhausted: "fail-run",
 					}),
 		);

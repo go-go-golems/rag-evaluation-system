@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
 	"github.com/go-go-golems/scraper/pkg/workflowv3"
 )
 
@@ -20,31 +21,31 @@ const (
 
 	ChunkSchema     = "rag-ttc-chunk/v1"
 	GeneratedSchema = "rag-ttc-generated/v1"
-	EmbeddedSchema  = "rag-ttc-embedded/v1"
 	ShardSchema     = "rag-ttc-prepared-shard/v1"
 )
 
 type Chunk struct {
-	Key          string   `json:"key"`
-	Text         string   `json:"text"`
-	TextDigest   string   `json:"textDigest"`
-	CitationIDs  []string `json:"citationIds"`
-	SourceDigest string   `json:"sourceDigest"`
+	Key          string             `json:"key"`
+	Chunk        ragoperators.Chunk `json:"chunk"`
+	CitationIDs  []string           `json:"citationIds"`
+	SourceDigest string             `json:"sourceDigest"`
 }
 
 type Generated struct {
-	Key                   string   `json:"key"`
-	TextDigest            string   `json:"textDigest"`
-	Representation        string   `json:"representation"`
-	CitationIDs           []string `json:"citationIds"`
-	ProviderProfileDigest string   `json:"providerProfileDigest"`
-	ModelDigest           string   `json:"modelDigest"`
+	Key                   string                        `json:"key"`
+	Chunk                 ragoperators.Chunk            `json:"chunk"`
+	Representations       []ragoperators.Representation `json:"representations"`
+	CitationIDs           []string                      `json:"citationIds"`
+	ProviderProfileDigest string                        `json:"providerProfileDigest"`
+	ModelDigest           string                        `json:"modelDigest"`
 }
 
 type Embedded struct {
-	Generated              Generated `json:"generated"`
-	Vector                 []float64 `json:"vector"`
-	EmbeddingProfileDigest string    `json:"embeddingProfileDigest"`
+	Generated              Generated                     `json:"generated"`
+	RawRepresentations     []ragoperators.Representation `json:"rawRepresentations"`
+	Representations        []ragoperators.Representation `json:"representations"`
+	Embeddings             []ragoperators.Embedding      `json:"embeddings"`
+	EmbeddingProfileDigest string                        `json:"embeddingProfileDigest"`
 }
 
 type PreparedShard struct {
@@ -79,12 +80,9 @@ type Failure struct {
 func (f *Failure) Error() string { return f.Class + "/" + f.Code }
 
 func validateChunk(chunk Chunk) error {
-	if strings.TrimSpace(chunk.Key) == "" || strings.TrimSpace(chunk.Text) == "" {
-		return fmt.Errorf("chunk key and text are required")
-	}
-	digest, err := workflowv3.Digest(chunk.Text)
-	if err != nil || digest != chunk.TextDigest {
-		return fmt.Errorf("chunk text digest does not match")
+	if strings.TrimSpace(chunk.Key) == "" || chunk.Chunk.Record.ID != chunk.Key ||
+		strings.TrimSpace(chunk.Chunk.Text) == "" || chunk.Chunk.Record.TextDigest == "" || chunk.SourceDigest == "" {
+		return fmt.Errorf("chunk identity is invalid")
 	}
 	if len(chunk.CitationIDs) == 0 {
 		return fmt.Errorf("chunk citations are required")
@@ -98,25 +96,39 @@ func validateChunk(chunk Chunk) error {
 }
 
 func validateGenerated(chunk Chunk, generated Generated) error {
-	if generated.Key != chunk.Key || generated.TextDigest != chunk.TextDigest ||
+	if generated.Key != chunk.Key || generated.Chunk.Record.ID != chunk.Chunk.Record.ID ||
+		generated.Chunk.Record.TextDigest != chunk.Chunk.Record.TextDigest ||
 		generated.ProviderProfileDigest == "" || generated.ModelDigest == "" ||
-		strings.TrimSpace(generated.Representation) == "" {
+		len(generated.Representations) == 0 {
 		return fmt.Errorf("generated representation identity is invalid")
 	}
 	if strings.Join(generated.CitationIDs, "\x00") != strings.Join(chunk.CitationIDs, "\x00") {
 		return fmt.Errorf("generated citations do not match source")
 	}
+	previous := ""
+	for _, representation := range generated.Representations {
+		if representation.Record.ID == "" || representation.Record.ParentChunkID != chunk.Key || representation.Record.ID <= previous {
+			return fmt.Errorf("generated representations are invalid or unordered")
+		}
+		previous = representation.Record.ID
+	}
 	return nil
 }
 
 func validateEmbedded(generated Generated, embedded Embedded) error {
-	if embedded.Generated.Key != generated.Key || embedded.Generated.TextDigest != generated.TextDigest ||
-		embedded.EmbeddingProfileDigest == "" || len(embedded.Vector) == 0 {
+	if embedded.Generated.Key != generated.Key || embedded.Generated.Chunk.Record.TextDigest != generated.Chunk.Record.TextDigest ||
+		embedded.EmbeddingProfileDigest == "" || len(embedded.Representations) == 0 || len(embedded.Embeddings) != len(embedded.Representations) {
 		return fmt.Errorf("embedded representation identity is invalid")
 	}
-	for _, value := range embedded.Vector {
-		if math.IsNaN(value) || math.IsInf(value, 0) {
-			return fmt.Errorf("embedding contains non-finite values")
+	for index, embedding := range embedded.Embeddings {
+		if embedding.Record.RepresentationID != embedded.Representations[index].Record.ID ||
+			embedding.Record.Dimensions != len(embedding.Vector) || len(embedding.Vector) == 0 {
+			return fmt.Errorf("embedding cardinality or identity is invalid")
+		}
+		for _, value := range embedding.Vector {
+			if math.IsNaN(value) || math.IsInf(value, 0) {
+				return fmt.Errorf("embedding contains non-finite values")
+			}
 		}
 	}
 	return nil

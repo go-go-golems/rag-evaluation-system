@@ -11,6 +11,10 @@ import (
 )
 
 func Module(provider Provider) workflowv3runtime.TaskModuleFactory {
+	return ModuleWithPublication(provider, nil)
+}
+
+func ModuleWithPublication(provider Provider, publication PublicationService) workflowv3runtime.TaskModuleFactory {
 	return workflowv3runtime.TaskModuleFactory{
 		Alias: ModuleAlias,
 		Validate: func() error {
@@ -72,6 +76,38 @@ func Module(provider Provider) workflowv3runtime.TaskModuleFactory {
 						return vm.ToValue(closedFailure("validation", "RAG_TTC_SHARD_INVALID", false))
 					}
 					return vm.ToValue(successResponse(shard, nil))
+				})
+				mustSet("validatePublication", func(goja.FunctionCall) goja.Value {
+					if publication == nil {
+						return vm.ToValue(closedFailure("configuration", "RAG_TTC_PUBLICATION_UNAVAILABLE", false))
+					}
+					var shard PreparedShard
+					if err := readInput(moduleContext, "shard", &shard); err != nil {
+						return vm.ToValue(closedFailure("validation", "RAG_TTC_SHARD_INPUT", false))
+					}
+					receipt, err := publication.Validate(shard)
+					if err != nil {
+						return vm.ToValue(closedFailure("validation", "RAG_TTC_PUBLICATION_INVALID", false))
+					}
+					return vm.ToValue(successResponse(receipt, nil))
+				})
+				mustSet("publish", func(goja.FunctionCall) goja.Value {
+					if publication == nil {
+						return vm.ToValue(closedFailure("configuration", "RAG_TTC_PUBLICATION_UNAVAILABLE", false))
+					}
+					var shard PreparedShard
+					var decision PublicationDecision
+					if err := readInput(moduleContext, "shard", &shard); err != nil {
+						return vm.ToValue(closedFailure("validation", "RAG_TTC_SHARD_INPUT", false))
+					}
+					if err := readInput(moduleContext, "decision", &decision); err != nil {
+						return vm.ToValue(closedFailure("validation", "RAG_TTC_PUBLICATION_DECISION", false))
+					}
+					receipt, err := publication.Publish(moduleContext.Context, shard, decision)
+					if err != nil {
+						return vm.ToValue(closedFailure("publication", "RAG_TTC_PUBLICATION_FAILED", false))
+					}
+					return vm.ToValue(successResponse(receipt, nil))
 				})
 			}
 			return gggengine.NativeModuleRegistrar{ModuleID: "rag-evaluation-system:workflowv3-ttc", ModuleName: ModuleAlias, Loader: loader}, nil

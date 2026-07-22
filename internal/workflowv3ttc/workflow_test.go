@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
 	workflowmodule "github.com/go-go-golems/scraper/pkg/gojamodules/workflow"
 	"github.com/go-go-golems/scraper/pkg/workflowv3"
 	"github.com/go-go-golems/scraper/pkg/workflowv3runtime"
@@ -25,18 +27,20 @@ func (p *fixtureProvider) Generate(_ context.Context, chunk Chunk) (Result[Gener
 	p.calls["generate:"+chunk.Key]++
 	attempt := p.calls["generate:"+chunk.Key]
 	p.mu.Unlock()
-	generated := Generated{Key: chunk.Key, TextDigest: chunk.TextDigest, Representation: "representation:" + chunk.Key, CitationIDs: append([]string(nil), chunk.CitationIDs...), ProviderProfileDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", ModelDigest: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
+	representation := ragoperators.Representation{Record: ragcontract.RepresentationRecord{ID: "representation:" + chunk.Key, ParentChunkID: chunk.Key, ParentUnitID: chunk.Chunk.Record.ParentUnitID, ContentDigest: chunk.Chunk.Record.TextDigest, EvidenceRole: "derived", Citation: chunk.Chunk.Record.Citation}, Text: "representation:" + chunk.Key}
+	generated := Generated{Key: chunk.Key, Chunk: chunk.Chunk, Representations: []ragoperators.Representation{representation}, CitationIDs: append([]string(nil), chunk.CitationIDs...), ProviderProfileDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", ModelDigest: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
 	if chunk.Key == "chunk-0007" && attempt == 1 {
-		generated.Representation = ""
+		generated.Representations = nil
 	}
-	return Result[Generated]{Value: generated, Usage: []Usage{{Dimension: "requests", Units: 1}, {Dimension: "input_tokens", Units: 4}, {Dimension: "output_tokens", Units: 2}}}, nil
+	return Result[Generated]{Value: generated, Usage: []Usage{{Dimension: "cost_microunits", Units: 0}, {Dimension: "requests", Units: 1}, {Dimension: "input_tokens", Units: 4}, {Dimension: "output_tokens", Units: 2}}}, nil
 }
 
 func (p *fixtureProvider) Embed(_ context.Context, generated Generated) (Result[Embedded], error) {
 	p.mu.Lock()
 	p.calls["embed:"+generated.Key]++
 	p.mu.Unlock()
-	return Result[Embedded]{Value: Embedded{Generated: generated, Vector: []float64{0.25, 0.5, 0.75}, EmbeddingProfileDigest: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}, Usage: []Usage{{Dimension: "embedding_tokens", Units: 3}}}, nil
+	embedding := ragoperators.Embedding{Record: ragcontract.EmbeddingRecord{RepresentationID: generated.Representations[0].Record.ID, ModelManifestDigest: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", Dimensions: 3, VectorDigest: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}, Vector: []float64{0.25, 0.5, 0.75}}
+	return Result[Embedded]{Value: Embedded{Generated: generated, Representations: generated.Representations, Embeddings: []ragoperators.Embedding{embedding}, EmbeddingProfileDigest: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}, Usage: []Usage{{Dimension: "embedding_tokens", Units: 3}}}, nil
 }
 
 func TestWorkflowV3PreparationFastIntegration(t *testing.T) {
@@ -75,7 +79,8 @@ func runPreparationIntegration(t *testing.T, itemCount int) {
 	for index := range items {
 		text := fmt.Sprintf("%s source %04d", sourceCanary, index)
 		digest, _ := workflowv3.Digest(text)
-		chunk := Chunk{Key: fmt.Sprintf("chunk-%04d", index), Text: text, TextDigest: digest, CitationIDs: []string{fmt.Sprintf("citation-%04d", index)}, SourceDigest: "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}
+		key := fmt.Sprintf("chunk-%04d", index)
+		chunk := Chunk{Key: key, Chunk: ragoperators.Chunk{Record: ragcontract.ChunkRecord{ID: key, ParentUnitID: fmt.Sprintf("unit-%04d", index), TextDigest: digest, Citation: ragcontract.CitationRef{SourceID: fmt.Sprintf("citation-%04d", index)}}, Text: text}, CitationIDs: []string{fmt.Sprintf("citation-%04d", index)}, SourceDigest: "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}
 		body, err := workflowv3.CanonicalJSON(chunk)
 		if err != nil {
 			t.Fatal(err)

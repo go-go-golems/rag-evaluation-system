@@ -11,7 +11,7 @@ require (
 	github.com/go-go-golems/glazed v1.3.6
 	github.com/go-go-golems/go-go-goja v0.10.6
 	github.com/go-go-golems/logcopter v0.1.1
-	github.com/go-go-golems/scraper v0.0.5-0.20260722014411-481980b893eb
+	github.com/go-go-golems/scraper v0.0.5-0.20260722020313-9d714e600649
 	github.com/mattn/go-sqlite3 v1.14.44
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.35.1

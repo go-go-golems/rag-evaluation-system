@@ -2,10 +2,13 @@ package workflowv3ttc
 
 import (
 	"context"
-	"github.com/go-go-golems/scraper/pkg/workflowv3"
-	"github.com/go-go-golems/scraper/pkg/workflowv3runtime"
 	"path/filepath"
 	"testing"
+
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
+	"github.com/go-go-golems/scraper/pkg/workflowv3"
+	"github.com/go-go-golems/scraper/pkg/workflowv3runtime"
 )
 
 func TestGenerateTaskDirectContract(t *testing.T) {
@@ -17,7 +20,7 @@ func TestGenerateTaskDirectContract(t *testing.T) {
 	a, _ := workflowv3.NewFileArtifactStore(filepath.Join(t.TempDir(), "a"), 1<<20)
 	text := "x"
 	d, _ := workflowv3.Digest(text)
-	body, _ := workflowv3.CanonicalJSON(Chunk{Key: "k", Text: text, TextDigest: d, CitationIDs: []string{"c"}, SourceDigest: d})
+	body, _ := workflowv3.CanonicalJSON(Chunk{Key: "k", Chunk: ragoperators.Chunk{Record: ragcontract.ChunkRecord{ID: "k", ParentUnitID: "u", TextDigest: d, Citation: ragcontract.CitationRef{SourceID: "c"}}, Text: text}, CitationIDs: []string{"c"}, SourceDigest: d})
 	ref, _ := a.Put(ctx, ChunkSchema, "application/json", body)
 	p := &fixtureProvider{calls: map[string]int{}}
 	m, _ := workflowv3runtime.NewTaskModuleRegistry(Module(p))

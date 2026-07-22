@@ -21,3 +21,13 @@ exports.merge = task.implementation(ctx => {
   const output = finish(ctx, rag.merge(), "shard", "rag-ttc-prepared-shard/v1");
   return task.success({shard: output});
 });
+
+exports.validatePublication = task.implementation(ctx => {
+  const output = finish(ctx, rag.validatePublication(), "receipt", "rag-ttc-validation-receipt/v1");
+  return task.success({receipt: output});
+});
+
+exports.publish = task.implementation(ctx => {
+  const output = finish(ctx, rag.publish(), "publication", "rag-ttc-publication-receipt/v1");
+  return task.success({publication: output});
+});

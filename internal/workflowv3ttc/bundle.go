@@ -13,19 +13,26 @@ var taskSource []byte
 //go:embed workflow.js
 var workflowSource string
 
+//go:embed production_workflow.js
+var productionWorkflowSource string
+
 var (
-	GenerateKey = workflowv3.TaskKey{Kind: "rag.ttc.generate-representations", Version: "v1"}
-	EmbedKey    = workflowv3.TaskKey{Kind: "rag.ttc.embed-representations", Version: "v1"}
-	MergeKey    = workflowv3.TaskKey{Kind: "rag.ttc.merge-prepared-shard", Version: "v1"}
+	GenerateKey            = workflowv3.TaskKey{Kind: "rag.ttc.generate-representations", Version: "v1"}
+	EmbedKey               = workflowv3.TaskKey{Kind: "rag.ttc.embed-representations", Version: "v1"}
+	MergeKey               = workflowv3.TaskKey{Kind: "rag.ttc.merge-prepared-shard", Version: "v1"}
+	ValidatePublicationKey = workflowv3.TaskKey{Kind: "rag.ttc.validate-publication", Version: "v1"}
+	PublishKey             = workflowv3.TaskKey{Kind: "rag.ttc.publish-prepared", Version: "v1"}
 )
 
 func Bundle() (*workflowv3.Bundle, error) {
 	return workflowv3.NewBundle(workflowv3.BundleManifest{
 		Name: "rag-ttc-v3", Version: "1.0.0", ABI: workflowv3.TaskABI,
 		Tasks: []workflowv3.BundleTask{
-			{TaskKey: GenerateKey, Entrypoint: "tasks.cjs#generate", Inputs: map[string]string{"chunk": ChunkSchema}, Outputs: map[string]string{"generated": GeneratedSchema}, Modules: []string{ModuleAlias}, ResourceClass: ResourceGeneration, Retry: workflowv3.RetryPolicy{MaxAttempts: 3, BackoffMillis: 25}, BudgetMaximum: &workflowv3.BudgetClaim{Account: "generation", Reserve: []workflowv3.BudgetAmount{{Dimension: "input_tokens", Units: 4}, {Dimension: "output_tokens", Units: 2}, {Dimension: "requests", Units: 1}}, OnExhausted: "fail-run"}},
-			{TaskKey: EmbedKey, Entrypoint: "tasks.cjs#embed", Inputs: map[string]string{"generated": GeneratedSchema}, Outputs: map[string]string{"embedded": ShardSchema}, Modules: []string{ModuleAlias}, ResourceClass: ResourceEmbedding, Retry: workflowv3.RetryPolicy{MaxAttempts: 3, BackoffMillis: 25}, BudgetMaximum: &workflowv3.BudgetClaim{Account: "embedding", Reserve: []workflowv3.BudgetAmount{{Dimension: "embedding_tokens", Units: 3}}, OnExhausted: "fail-run"}},
+			{TaskKey: GenerateKey, Entrypoint: "tasks.cjs#generate", Inputs: map[string]string{"chunk": ChunkSchema}, Outputs: map[string]string{"generated": GeneratedSchema}, Modules: []string{ModuleAlias}, ResourceClass: ResourceGeneration, Retry: workflowv3.RetryPolicy{MaxAttempts: 3, BackoffMillis: 25}, BudgetMaximum: &workflowv3.BudgetClaim{Account: "generation", Reserve: []workflowv3.BudgetAmount{{Dimension: "cost_microunits", Units: 20_000}, {Dimension: "input_tokens", Units: 2_048}, {Dimension: "output_tokens", Units: 2_048}, {Dimension: "requests", Units: 1}}, OnExhausted: "fail-run"}},
+			{TaskKey: EmbedKey, Entrypoint: "tasks.cjs#embed", Inputs: map[string]string{"generated": GeneratedSchema}, Outputs: map[string]string{"embedded": ShardSchema}, Modules: []string{ModuleAlias}, ResourceClass: ResourceEmbedding, Retry: workflowv3.RetryPolicy{MaxAttempts: 3, BackoffMillis: 25}, BudgetMaximum: &workflowv3.BudgetClaim{Account: "embedding", Reserve: []workflowv3.BudgetAmount{{Dimension: "embedding_tokens", Units: 4_096}}, OnExhausted: "fail-run"}},
 			{TaskKey: MergeKey, Entrypoint: "tasks.cjs#merge", Inputs: map[string]string{"partition": workflowv3.ReductionPartitionSchemaV1}, Outputs: map[string]string{"shard": ShardSchema}, Modules: []string{ModuleAlias}, ResourceClass: ResourceLocal},
+			{TaskKey: ValidatePublicationKey, Entrypoint: "tasks.cjs#validatePublication", Inputs: map[string]string{"shard": ShardSchema}, Outputs: map[string]string{"receipt": ValidationReceiptSchema}, Modules: []string{ModuleAlias}, ResourceClass: ResourceLocal},
+			{TaskKey: PublishKey, Entrypoint: "tasks.cjs#publish", Inputs: map[string]string{"shard": ShardSchema, "decision": PublicationDecisionSchema}, Outputs: map[string]string{"publication": PublicationReceiptSchema}, Modules: []string{ModuleAlias}, ResourceClass: ResourceLocal},
 		},
 	}, map[string][]byte{"tasks.cjs": taskSource})
 }
@@ -46,7 +53,8 @@ func Registry() (*workflowv3.SealedRegistry, error) {
 }
 
 func DescriptorModule() workflowmodule.DescriptorModule {
-	return workflowmodule.DescriptorModule{Name: "rag-ttc-v3-tasks", Factories: map[string]workflowv3.TaskKey{"generate": GenerateKey, "embed": EmbedKey, "merge": MergeKey}}
+	return workflowmodule.DescriptorModule{Name: "rag-ttc-v3-tasks", Factories: map[string]workflowv3.TaskKey{"generate": GenerateKey, "embed": EmbedKey, "merge": MergeKey, "validatePublication": ValidatePublicationKey, "publish": PublishKey}}
 }
 
-func WorkflowSource() string { return workflowSource }
+func WorkflowSource() string           { return workflowSource }
+func ProductionWorkflowSource() string { return productionWorkflowSource }
