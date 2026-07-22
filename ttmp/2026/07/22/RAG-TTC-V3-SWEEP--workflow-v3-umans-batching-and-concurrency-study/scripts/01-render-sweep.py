@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import argparse, csv, json
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 import matplotlib.pyplot as plt
 
@@ -24,7 +24,7 @@ def plot_metric(field,ylabel,name,unavailable_if_zero=False):
     fig,ax=plt.subplots(figsize=(8,5))
     unavailable = unavailable_if_zero and all(cell[field] == 0 for cell in cells)
     if unavailable:
-        ax.text(.5,.5,"Data unavailable\nFixture provider reports no token/cost usage",ha="center",va="center",transform=ax.transAxes,fontsize=14,color="#555555")
+        ax.text(.5,.5,"N/A\nFixture provider reports no token/cost usage",ha="center",va="center",transform=ax.transAxes,fontsize=14,color="#555555")
     for concurrency,values in sorted(series(field).items()):
         if not unavailable:
             ax.plot([x for x,_ in values],[y for _,y in values],marker="o",color=colors[concurrency],label=f"concurrency={concurrency}")
@@ -45,7 +45,7 @@ for cell in cells:
 plot_metric("tokensPerSecond","Tokens / second (not reported by fixture)","token-rate",True)
 plot_metric("costMicrounitsPerChunk","Cost, microunits / chunk (not reported by fixture)","cost-efficiency",True)
 for cell in cells:
-    cell["overlapMillis"] = cell.get("overlapMicros", 0) / 1000
+    cell["overlapMillis"] = cell["providerOverlapMicros"] / 1000
 if all(cell["overlapMillis"] == 0 for cell in cells):
     fig,ax=plt.subplots(figsize=(8,5)); ax.axhline(0,color="#333333",linewidth=2)
     ax.text(.5,.55,"Observed zero in all fixture cells\nAll concurrency series coincide at 0 ms\nNot indicative of real-provider performance",ha="center",va="center",transform=ax.transAxes,fontsize=13,color="#555555")
@@ -77,24 +77,27 @@ rows=sorted([cell for cell in cells if cell["cell"]["concurrency"]==4],key=lambd
 batch_colors={1:"#1f77b4",2:"#ff7f0e",4:"#2ca02c",8:"#d62728"}; peak=4
 for cell in rows:
     batch=cell["cell"]["chunksPerRequest"]
-    all_attempts=cell["attempts"]+cell["embeddingAttempts"]
-    origin=min(datetime.fromisoformat(a["startedAt"].replace("Z","+00:00")) for a in all_attempts)
-    for attempts,phase,style in ((cell["attempts"],"generation","-"),(cell["embeddingAttempts"],"embedding",":")):
+    measurements=[]
+    for item in cell["batches"]:
+        measurements.extend((item["generation"],item["embedding"]))
+    origin=min(datetime.fromisoformat(item["providerStartedAt"].replace("Z","+00:00")) for item in measurements)
+    for field,phase,style in (("generation","generation","-"),("embedding","embedding",":")):
         events=[]
-        for attempt in attempts:
-            start=datetime.fromisoformat(attempt["startedAt"].replace("Z","+00:00")); end=datetime.fromisoformat(attempt["finishedAt"].replace("Z","+00:00"))
+        for item in cell["batches"]:
+            measurement=item[field]
+            start=datetime.fromisoformat(measurement["providerStartedAt"].replace("Z","+00:00")); end=start+timedelta(microseconds=measurement["providerElapsedMicros"])
             events.extend([((start-origin).total_seconds(),1),((end-origin).total_seconds(),-1)])
         events.sort(key=lambda item:(item[0],item[1])); x=[0.0]; y=[0]; active=0
         for stamp,delta in events: x.extend([stamp,stamp]); y.extend([active,active+delta]); active+=delta
         peak=max(peak,max(y,default=0)); ax.plot(x,y,color=batch_colors[batch],linestyle=style,label=f"batch={batch} {phase}")
 ax.axhline(4,color="#333333",linestyle="--",linewidth=1,label="Umans generation hard cap=4")
-ax.set(xlabel="Seconds since cell admission",ylabel="Active attempts",title="Workflow V3 fixture control — generation and embedding activity")
+ax.set(xlabel="Seconds since first provider span",ylabel="Active provider spans",title="Workflow V3 fixture control — provider concurrency timeline")
 ax.set_xlim(left=0); ax.set_yticks(range(0,peak+1)); ax.grid(True,alpha=.25); ax.legend(ncol=2,fontsize=9); fig.tight_layout()
 for ext in ("svg","png"): fig.savefig(out/f"request-timeline.{ext}",dpi=160)
 plt.close(fig)
 
 for svg in out.glob("*.svg"):
     svg.write_text("\n".join(line.rstrip() for line in svg.read_text().splitlines())+"\n")
-summary={"schemaVersion":"rag-ttc-v3-sweep-graph-manifest/v1","evidencePlanDigest":data["plan"]["digest"],"graphs":sorted(x.name for x in out.iterdir() if x.suffix in {".svg",".png"})}
+summary={"schemaVersion":"rag-ttc-v3-sweep-graph-manifest/v2","evidencePlanDigest":data["plan"]["digest"],"graphs":sorted(x.name for x in out.iterdir() if x.suffix in {".svg",".png"})}
 (out/"manifest.json").write_text(json.dumps(summary,indent=2)+"\n")
 print(f"rendered={len(summary['graphs'])} output={out}")

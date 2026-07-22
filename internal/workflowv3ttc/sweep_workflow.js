@@ -34,8 +34,8 @@ module.exports = workflow.compile(
 						reserve: {
 							requests: 1,
 							input_tokens: 16384,
-							output_tokens: 16384,
-							cost_microunits: 160000,
+							output_tokens: 8192,
+							cost_microunits: 10650,
 						},
 						onExhausted: "fail-run",
 					}),

@@ -76,3 +76,35 @@ Step 8: attempted exact plz-confirm spend gate; local approval service was unava
 
 Step 9: started plz-confirm and received approved=false for the exact .60 bounded real sweep; stopped without provider calls
 
+
+## 2026-07-22
+
+Step 10: pinned public Umans Flash pricing and 8,192-token response cap, reduced exact matrix ceiling to /bin/bash.639, regenerated fixture custody, and recorded the second explicit rejection
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/profile.go — Fail closed unless real provider authority matches the pinned study tariff and limits
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/internal/workflowv3ttc/sweep.go — Canonical per-request token and cost reservations
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/ragproviders/config.go — Strict integer generation pricing and response-cap policy
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/ragproviders/provider_set.go — Apply policy before identity fingerprinting and expose non-secret effective tariff
+
+
+## 2026-07-22
+
+Step 11: split control-plane attempt timing from provider-wall concurrency/overlap, versioned evidence to v2, regenerated fixture custody, and passed follow-up visual QA
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/main.go — Canonical v2 evidence separates attempt and provider interval semantics
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/main_test.go — Regression tests for provider interval overlap and touching boundaries
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/scripts/01-render-sweep.py — Provider-wall timeline and overlap with explicit N/A panels
+
+
+## 2026-07-22
+
+Added non-secret reproducible Umans Flash host-config example; exact dry-run profile digest is sha256:cf092e0f1a389169a22e519beb8b81b7f059dd6bb66ec391ea934bf857e46702
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/experiments/real-provider-v2/provider-config.umans-flash.example.yaml — Reproducible non-secret real-sweep provider policy and local embedding boundary
+

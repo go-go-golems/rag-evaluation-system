@@ -8,6 +8,18 @@ import (
 	"github.com/go-go-golems/scraper/pkg/workflowv3"
 )
 
+const (
+	SweepGenerationInputTokensPerRequest  int64 = 16_384
+	SweepGenerationOutputTokensPerRequest int64 = 8_192
+	// Umans Flash's published rates are USD $0.15/M input tokens and $1.00/M
+	// output tokens. Integer microunits and ceiling division keep admission exact.
+	SweepGenerationInputCostMicrounitsPerMillion  int64 = 150_000
+	SweepGenerationOutputCostMicrounitsPerMillion int64 = 1_000_000
+	SweepGenerationCacheReadMicrounitsPerMillion  int64 = 50_000
+	SweepGenerationCacheWriteMicrounitsPerMillion int64 = 150_000
+	SweepGenerationCostMicrounitsPerRequest       int64 = 10_650
+)
+
 type SweepCell struct {
 	ChunksPerRequest int `json:"chunksPerRequest"`
 	Concurrency      int `json:"concurrency"`

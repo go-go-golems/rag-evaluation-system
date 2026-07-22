@@ -58,6 +58,17 @@ func loadProviderAuthority(ctx context.Context, profile, providerConfig, specifi
 		return nil, err
 	}
 	descriptor := set.CapabilityDescriptor()
+	var generationIdentity *ragproviders.EffectiveProviderIdentity
+	for index := range descriptor.EffectiveProviderIdentities {
+		if descriptor.EffectiveProviderIdentities[index].Role == "generator-primary" {
+			generationIdentity = &descriptor.EffectiveProviderIdentities[index]
+			break
+		}
+	}
+	if generationIdentity == nil || !generationIdentity.PricingConfigured || generationIdentity.ConcurrencyLimit < 4 || generationIdentity.MaxResponseTokens != int(workflowv3ttc.SweepGenerationOutputTokensPerRequest) || generationIdentity.InputCostMicrounitsPerMillion != workflowv3ttc.SweepGenerationInputCostMicrounitsPerMillion || generationIdentity.OutputCostMicrounitsPerMillion != workflowv3ttc.SweepGenerationOutputCostMicrounitsPerMillion || generationIdentity.CacheReadCostMicrounitsPerMillion != workflowv3ttc.SweepGenerationCacheReadMicrounitsPerMillion || generationIdentity.CacheWriteCostMicrounitsPerMillion != workflowv3ttc.SweepGenerationCacheWriteMicrounitsPerMillion {
+		_ = set.Close()
+		return nil, fmt.Errorf("RAG_SWEEP_GENERATION_AUTHORITY_MISMATCH")
+	}
 	profileDigest, err := workflowv3.Digest(descriptor)
 	if err != nil {
 		_ = set.Close()

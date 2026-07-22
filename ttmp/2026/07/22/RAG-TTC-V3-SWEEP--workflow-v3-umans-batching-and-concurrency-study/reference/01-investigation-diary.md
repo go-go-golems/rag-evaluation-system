@@ -426,3 +426,145 @@ This is not approval. No provider inference request was made. The remaining vali
 I started the local `plz-confirm` backend on `127.0.0.1:3000` and repeated the exact approval prompt from Step 8. The structured response was `approved=false`. I treated that as a rejection, not as missing or ambiguous authority. No provider inference request was made.
 
 The real matrix must remain blocked unless the operator later supplies a new explicit affirmative approval for the stated ceilings or replacement lower ceilings. The active goal therefore remains incomplete by design.
+
+## Step 10: Replace the conservative cost ceiling with exact published pricing
+
+### Prompt Context
+
+**User prompt (verbatim):** (same active-goal continuation as Step 1)
+
+**Assistant interpretation:** Continue with the next no-cost action that can reduce the authorization blocker without making real provider calls.
+
+**Inferred user intent:** Finish the exact, reproducible study while preserving the explicit spend gate and avoiding repeated fixture work.
+
+### What I did
+
+I investigated whether the rejected $9.60 ceiling could be tightened without making an inference call. The public Umans tariff states that Flash costs USD $0.15 per million input tokens, $1.00 per million output tokens, and $0.05 per million cache-read tokens, with no per-call minimum. The pinned host policy now caps each response at 8,192 tokens and records all tariff dimensions as integer microunits per million tokens. Cache writes use the conservative input rate of $0.15/M.
+
+I added a strict host-side generation policy to `ragproviders`. It overlays a profile-resolved generator with an exact response-token cap and integer pricing, includes those non-secret values in the effective provider identity and settings fingerprint, and rejects incomplete policies. The sweep command now rejects any real authority whose effective concurrency, response cap, or tariff differs from the pinned study policy.
+
+I reduced the per-attempt reservation from 160,000 to 10,650 cost microunits and from 16,384 to 8,192 output tokens. The cost is checked integer ceiling arithmetic: 16,384 input tokens at $0.15/M plus 8,192 output tokens at $1.00/M. The exact 60-request matrix ceiling is therefore 639,000 microunits (USD $0.639), 983,040 input tokens, and 491,520 output tokens. The embedding ceiling remains 3,932,160 tokens and 128 actual requests.
+
+The exact real dry-run succeeded first with an untracked host configuration and then with the checked-in non-secret `provider-config.umans-flash.example.yaml`. The reproducible checked-in configuration has effective provider profile digest `sha256:cf092e0f1a389169a22e519beb8b81b7f059dd6bb66ec391ea934bf857e46702`; it verified all 16 frozen chunks and made no inference call. I regenerated the fixture control under workflow plan digest `sha256:eeada085d929a376eb7ab67abee1bc6da5d9e2a939bbab4a79bafee6526a7a17` and bundle digest `sha256:45fc68911c33c29b399e65ac18a893381b86df40b9d3a1cbd7275893678bee62`.
+
+I presented a second structured approval prompt for the materially lower $0.639 ceiling. The response was again `approved=false`. I treated that as an explicit rejection and made no provider inference calls.
+
+### Why
+
+- Replace a generic conservative reservation with an exact profile- and tariff-backed ceiling before requesting authority again.
+- Ensure real cost evidence is computed from explicit rates rather than treating unknown price as zero.
+
+### What worked
+
+- Strict policy validation, identity custody, exact dry-run, fixture regeneration, and focused tests all succeeded.
+- The maximum monetary authority fell from $9.60 to $0.639 without narrowing the required 60-request matrix.
+
+### What I learned
+
+The original $9.60 figure was a generic task maximum rather than an exact profile-derived bound. Exact integer tariff custody both improves safety and makes provider cost available for real evidence instead of silently treating unknown price as zero.
+
+### What was tricky to build
+
+A cost rate of zero and an unknown cost rate are semantically different. The policy requires explicit positive input/output rates and carries them into Geppetto `ModelInfo`; this lets provider usage produce a real cost while preserving checked integer microunit admission. Applying the policy before fingerprinting was essential—the prior default response cap was assigned after identity recording.
+
+### What didn't work
+
+A temporary cross-registry profile overlay failed because an engine profile stack cannot reference a profile in a different YAML registry:
+
+```text
+RAG_PROVIDER_PROFILE_CHAIN: engine profile YAML registry validation failed: validation error (registry.profiles[ttc-umans-flash-priced].stack[0]): referenced profile "umans-flash" not found in registry "rag-ttc-v3-pricing"
+```
+
+I did not copy credentials into another registry. Instead, the host provider config now applies the non-secret execution policy after resolving the existing secure profile.
+
+Two fresh visual-QA calls failed with the same external TLS error:
+
+```text
+pinocchio exited with code 1: inference failed: remote error: tls: bad record MAC
+```
+
+The renderer itself is unchanged and regenerated all eight SVG/PNG pairs; this external inspection failure must remain recorded rather than being called a pass.
+
+### What warrants a second pair of eyes
+
+- Confirm that cache-write tokens should retain the conservative standard-input rate until Umans publishes a distinct cache-write tariff.
+- Review the new provider-policy identity fields and fail-closed real-authority comparison.
+- Re-run visual QA when the external image-analysis service is healthy.
+
+### What should be done in the future
+
+Stop. The reduced exact spend request was explicitly rejected. Resume only after a new affirmative numeric authorization supersedes that decision.
+
+### Code review instructions
+
+Review `pkg/ragproviders/config.go` and `provider_set.go` for strict policy validation and non-secret identity custody; review `internal/workflowv3ttc/sweep.go`, `bundle.go`, and `sweep_workflow.js` for exact matching reservations; review `cmd/rag-ttc-v3-sweep/profile.go` and `main.go` for fail-closed authority and ceiling checks.
+
+Validate with focused provider/sweep tests, the exact real dry-run without `--execute-real`, fixture custody assertions, Python compilation, `docmgr doctor`, and `git diff --check`.
+
+### Technical details
+
+- Input tariff: 150,000 microunits per million tokens.
+- Output tariff: 1,000,000 microunits per million tokens.
+- Cache-read tariff: 50,000 microunits per million tokens.
+- Conservative cache-write tariff: 150,000 microunits per million tokens.
+- Per request: ceil(16,384 × 0.15) + ceil(8,192 × 1.00) = 10,650 microunits.
+- Matrix: 60 × 10,650 = 639,000 microunits.
+
+## Step 11: Separate lease-attempt concurrency from provider-call concurrency
+
+### Prompt Context
+
+**User prompt (verbatim):** (same active-goal continuation as Step 1)
+
+**Assistant interpretation:** Validate the regenerated fixture custody after pricing changes and fix any evidence defect rather than masking it.
+
+**Inferred user intent:** Preserve precise, auditable distinctions between Workflow V3 control-plane timing and actual provider activity.
+
+### What I did
+
+The fixture accounting assertion found one concurrency-1 cell with `peakActive=2`. Inspection showed that `peakActive` and `overlapMicros` were derived from lease-attempt timestamps, even though their labels and hard-cap graph implied provider calls. Attempt finalization can overlap the next admitted task's control-plane work without overlapping provider calls, so this was a semantic evidence defect rather than a provider-cap violation.
+
+I versioned canonical sweep evidence to v2 and split the fields into `attemptPeakActive`, `providerPeakActive`, `attemptOverlapMicros`, and `providerOverlapMicros`. Provider values are now computed exclusively from the monotonic provider start plus elapsed spans retained in each measured batch. The CSV uses equally explicit columns. The graph renderer now consumes provider overlap and provider spans, labels elapsed time from the first provider span, and describes active provider spans rather than active attempts. Unit tests pin touching-interval ordering and provider-wall overlap arithmetic.
+
+### Why
+
+The objective requires both exact queue/attempt evidence and exact provider-wall/concurrency evidence. Conflating them could falsely report a hard-cap violation or claim generation/embedding overlap where only control-plane finalization overlapped.
+
+### What worked
+
+The regenerated fixture matrix reports provider peaks within every cell's configured limit: all concurrency-1 cells peak at one, concurrency-2 cells peak at two or less, and concurrency-4 cells peak at four or less. Provider-wall generation/embedding overlap is observed in seven of twelve cells, while attempt overlap is separately observed in nine of twelve.
+
+Fresh visual QA accepted the provider overlap and provider concurrency timeline. It rejected the initial missing-usage wording because it said `Data unavailable` rather than the required explicit `N/A`; I changed both token-rate and cost-efficiency panels to `N/A`, regenerated them, and follow-up visual QA found no defects.
+
+### What didn't work
+
+The initial fixture validation failed on the old ambiguous assertion because a concurrency-1 cell had attempt peak two. Treating that value as provider concurrency would have been incorrect. I changed the evidence model rather than loosening the assertion.
+
+### What I learned
+
+Workflow attempt spans are control-plane evidence; provider spans are data-plane evidence. Both are useful, but only provider spans prove the maximum number of active Umans calls.
+
+### What was tricky to build
+
+Events ending and starting at the same timestamp must process the end first or the sweep would invent overlap. The shared interval reducer sorts negative deltas before positive deltas at equal timestamps and has a dedicated regression test.
+
+### What warrants a second pair of eyes
+
+- Verify that embedding batch spans are correctly described as provider-wall envelopes around their sequential per-representation requests.
+- Confirm every report and graph uses provider fields for provider claims and attempt fields only for Workflow V3 control-plane analysis.
+
+### What should be done in the future
+
+Use the v2 evidence schema for the real run. Do not execute it until a new affirmative spend decision supersedes the rejection.
+
+### Code review instructions
+
+Review `cmd/rag-ttc-v3-sweep/main.go` and `main_test.go` for interval semantics and canonical fields, then review `scripts/01-render-sweep.py` for provider-only graph inputs and explicit N/A panels.
+
+### Technical details
+
+- Fixture provider peak: never above the cell limit or four.
+- Cells with provider overlap: 7/12.
+- Cells with attempt overlap: 9/12.
+- Provider timeline: solid generation spans, dotted embedding span envelopes.
+- Evidence schema: `rag-ttc-v3-sweep-evidence/v2`.

@@ -35,22 +35,24 @@ type attemptEvidence struct {
 	FinishedAt string `json:"finishedAt"`
 }
 type cellEvidence struct {
-	Cell              workflowv3ttc.SweepCell `json:"cell"`
-	RunID             string                  `json:"runId"`
-	PlanDigest        string                  `json:"planDigest"`
-	Requests          int                     `json:"requests"`
-	Chunks            int                     `json:"chunks"`
-	MakespanMicros    int64                   `json:"makespanMicros"`
-	ProviderMicros    []int64                 `json:"providerMicros"`
-	Batches           []batchEvidence         `json:"batches"`
-	Attempts          []attemptEvidence       `json:"attempts"`
-	EmbeddingAttempts []attemptEvidence       `json:"embeddingAttempts"`
-	EmbeddingRequests int                     `json:"embeddingRequests"`
-	OverlapMicros     int64                   `json:"overlapMicros"`
-	PeakActive        int                     `json:"peakActive"`
-	ChunksPerSecond   float64                 `json:"chunksPerSecond"`
-	RequestsPerSecond float64                 `json:"requestsPerSecond"`
-	Usage             map[string]int64        `json:"usage"`
+	Cell                  workflowv3ttc.SweepCell `json:"cell"`
+	RunID                 string                  `json:"runId"`
+	PlanDigest            string                  `json:"planDigest"`
+	Requests              int                     `json:"requests"`
+	Chunks                int                     `json:"chunks"`
+	MakespanMicros        int64                   `json:"makespanMicros"`
+	ProviderMicros        []int64                 `json:"providerMicros"`
+	Batches               []batchEvidence         `json:"batches"`
+	Attempts              []attemptEvidence       `json:"attempts"`
+	EmbeddingAttempts     []attemptEvidence       `json:"embeddingAttempts"`
+	EmbeddingRequests     int                     `json:"embeddingRequests"`
+	AttemptOverlapMicros  int64                   `json:"attemptOverlapMicros"`
+	ProviderOverlapMicros int64                   `json:"providerOverlapMicros"`
+	AttemptPeakActive     int                     `json:"attemptPeakActive"`
+	ProviderPeakActive    int                     `json:"providerPeakActive"`
+	ChunksPerSecond       float64                 `json:"chunksPerSecond"`
+	RequestsPerSecond     float64                 `json:"requestsPerSecond"`
+	Usage                 map[string]int64        `json:"usage"`
 }
 type evidence struct {
 	SchemaVersion         string                  `json:"schemaVersion"`
@@ -146,11 +148,14 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 		if plan.PlannedRequests != maximum {
 			return fmt.Errorf("real request authority must equal the exact planned request count")
 		}
+		requiredMaximumCost := int64(plan.PlannedRequests) * workflowv3ttc.SweepGenerationCostMicrounitsPerRequest
+		requiredInputTokens := int64(plan.PlannedRequests) * workflowv3ttc.SweepGenerationInputTokensPerRequest
+		requiredOutputTokens := int64(plan.PlannedRequests) * workflowv3ttc.SweepGenerationOutputTokensPerRequest
 		if !config.executeReal {
-			fmt.Printf("real dry-run profile_digest=%s model_digest=%s frozen_chunks=%d planned_generation_requests=%d planned_embedding_requests=%d required_maximum_cost_microunits=%d required_input_tokens=%d required_output_tokens=%d required_embedding_tokens=%d\n", authority.profileDigest, authority.modelDigest, len(chunks), plan.PlannedRequests, expectedEmbeddingRequests, int64(plan.PlannedRequests)*160000, int64(plan.PlannedRequests)*16384, int64(plan.PlannedRequests)*16384, requiredEmbeddingTokens)
+			fmt.Printf("real dry-run profile_digest=%s model_digest=%s frozen_chunks=%d planned_generation_requests=%d planned_embedding_requests=%d required_maximum_cost_microunits=%d required_input_tokens=%d required_output_tokens=%d required_embedding_tokens=%d\n", authority.profileDigest, authority.modelDigest, len(chunks), plan.PlannedRequests, expectedEmbeddingRequests, requiredMaximumCost, requiredInputTokens, requiredOutputTokens, requiredEmbeddingTokens)
 			return nil
 		}
-		if config.maximumCost < int64(plan.PlannedRequests)*160000 || config.maximumInputTokens < int64(plan.PlannedRequests)*16384 || config.maximumOutputTokens < int64(plan.PlannedRequests)*16384 || config.maximumEmbeddingTokens < requiredEmbeddingTokens || config.maximumEmbeddingRequests != expectedEmbeddingRequests {
+		if config.maximumCost < requiredMaximumCost || config.maximumInputTokens < requiredInputTokens || config.maximumOutputTokens < requiredOutputTokens || config.maximumEmbeddingTokens < requiredEmbeddingTokens || config.maximumEmbeddingRequests != expectedEmbeddingRequests {
 			return fmt.Errorf("real numeric authority is below the task reservation maximum")
 		}
 	}
@@ -176,7 +181,7 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 	if err != nil {
 		return err
 	}
-	result := evidence{SchemaVersion: "rag-ttc-v3-sweep-evidence/v1", Profile: config.profile, ProviderProfileDigest: authority.profileDigest, GenerationModelDigest: authority.modelDigest, WorkflowPlanDigest: authored.Plan.Digest, RegistryGeneration: registry.Generation(), BundleDigest: bundle.Digest(), Plan: plan}
+	result := evidence{SchemaVersion: "rag-ttc-v3-sweep-evidence/v2", Profile: config.profile, ProviderProfileDigest: authority.profileDigest, GenerationModelDigest: authority.modelDigest, WorkflowPlanDigest: authored.Plan.Digest, RegistryGeneration: registry.Generation(), BundleDigest: bundle.Digest(), Plan: plan}
 	for index, cell := range plan.Cells {
 		cellRoot := filepath.Join(output, fmt.Sprintf("cell-%02d-b%d-c%d", index, cell.ChunksPerRequest, cell.Concurrency))
 		artifacts, err := workflowv3.NewFileArtifactStore(filepath.Join(cellRoot, "artifacts"), 1<<30)
@@ -347,7 +352,11 @@ func readCell(ctx context.Context, a workflowv3.ArtifactStore, s workflowv3.RunS
 			usage[amount.Dimension] = amount.Used
 		}
 	}
-	return cellEvidence{Cell: c, RunID: string(s.RunID), PlanDigest: s.PlanDigest, Requests: len(attempts), Chunks: chunks, MakespanMicros: makespan.Microseconds(), ProviderMicros: durations, Batches: batches, Attempts: evidenceRows(attempts), EmbeddingAttempts: evidenceRows(embeddingAttempts), EmbeddingRequests: embeddingRequests, OverlapMicros: overlapMicros(attempts, embeddingAttempts), PeakActive: peakActive(attempts), ChunksPerSecond: float64(chunks) / makespan.Seconds(), RequestsPerSecond: float64(len(attempts)) / makespan.Seconds(), Usage: usage}, nil
+	generationProvider, embeddingProvider, err := providerIntervals(batches)
+	if err != nil {
+		return cellEvidence{}, err
+	}
+	return cellEvidence{Cell: c, RunID: string(s.RunID), PlanDigest: s.PlanDigest, Requests: len(attempts), Chunks: chunks, MakespanMicros: makespan.Microseconds(), ProviderMicros: durations, Batches: batches, Attempts: evidenceRows(attempts), EmbeddingAttempts: evidenceRows(embeddingAttempts), EmbeddingRequests: embeddingRequests, AttemptOverlapMicros: overlapIntervals(attemptIntervals(attempts), attemptIntervals(embeddingAttempts)), ProviderOverlapMicros: overlapIntervals(generationProvider, embeddingProvider), AttemptPeakActive: peakIntervals(attemptIntervals(attempts)), ProviderPeakActive: peakIntervals(generationProvider), ChunksPerSecond: float64(chunks) / makespan.Seconds(), RequestsPerSecond: float64(len(attempts)) / makespan.Seconds(), Usage: usage}, nil
 }
 
 func evidenceRows(attempts []workflowv3.Attempt) []attemptEvidence {
@@ -358,17 +367,49 @@ func evidenceRows(attempts []workflowv3.Attempt) []attemptEvidence {
 	return rows
 }
 
-func overlapMicros(left, right []workflowv3.Attempt) int64 {
+type measuredInterval struct{ start, end time.Time }
+
+func attemptIntervals(attempts []workflowv3.Attempt) []measuredInterval {
+	intervals := make([]measuredInterval, len(attempts))
+	for index, attempt := range attempts {
+		intervals[index] = measuredInterval{start: attempt.StartedAt, end: attempt.FinishedAt}
+	}
+	return intervals
+}
+
+func providerIntervals(batches []batchEvidence) ([]measuredInterval, []measuredInterval, error) {
+	generation := make([]measuredInterval, 0, len(batches))
+	embedding := make([]measuredInterval, 0, len(batches))
+	appendMeasurement := func(target *[]measuredInterval, startedAt string, elapsedMicros int64) error {
+		start, err := time.Parse(time.RFC3339Nano, startedAt)
+		if err != nil || elapsedMicros < 0 {
+			return fmt.Errorf("invalid provider measurement")
+		}
+		*target = append(*target, measuredInterval{start: start, end: start.Add(time.Duration(elapsedMicros) * time.Microsecond)})
+		return nil
+	}
+	for _, batch := range batches {
+		if err := appendMeasurement(&generation, batch.Generation.ProviderStartedAt, batch.Generation.ProviderElapsedMicros); err != nil {
+			return nil, nil, err
+		}
+		if err := appendMeasurement(&embedding, batch.Embedding.ProviderStartedAt, batch.Embedding.ProviderElapsedMicros); err != nil {
+			return nil, nil, err
+		}
+	}
+	return generation, embedding, nil
+}
+
+func overlapIntervals(left, right []measuredInterval) int64 {
 	type event struct {
 		at          time.Time
 		side, delta int
 	}
 	events := []event{}
 	for _, x := range left {
-		events = append(events, event{x.StartedAt, 0, 1}, event{x.FinishedAt, 0, -1})
+		events = append(events, event{x.start, 0, 1}, event{x.end, 0, -1})
 	}
 	for _, x := range right {
-		events = append(events, event{x.StartedAt, 1, 1}, event{x.FinishedAt, 1, -1})
+		events = append(events, event{x.start, 1, 1}, event{x.end, 1, -1})
 	}
 	sort.Slice(events, func(i, j int) bool {
 		if events[i].at.Equal(events[j].at) {
@@ -388,17 +429,26 @@ func overlapMicros(left, right []workflowv3.Attempt) int64 {
 	}
 	return total.Microseconds()
 }
-func peakActive(a []workflowv3.Attempt) int {
-	peak := 0
-	for _, x := range a {
-		n := 0
-		for _, y := range a {
-			if !y.StartedAt.After(x.StartedAt) && y.FinishedAt.After(x.StartedAt) {
-				n++
-			}
+func peakIntervals(intervals []measuredInterval) int {
+	type event struct {
+		at    time.Time
+		delta int
+	}
+	events := make([]event, 0, 2*len(intervals))
+	for _, interval := range intervals {
+		events = append(events, event{at: interval.start, delta: 1}, event{at: interval.end, delta: -1})
+	}
+	sort.Slice(events, func(i, j int) bool {
+		if events[i].at.Equal(events[j].at) {
+			return events[i].delta < events[j].delta
 		}
-		if n > peak {
-			peak = n
+		return events[i].at.Before(events[j].at)
+	})
+	active, peak := 0, 0
+	for _, item := range events {
+		active += item.delta
+		if active > peak {
+			peak = active
 		}
 	}
 	return peak
@@ -453,9 +503,9 @@ func writeCSV(path string, cells []cellEvidence) error {
 		return e
 	}
 	w := csv.NewWriter(f)
-	_ = w.Write([]string{"batch_size", "concurrency", "replicate", "generation_requests", "embedding_requests", "chunks", "makespan_us", "overlap_us", "peak_active", "chunks_per_second", "requests_per_second", "input_tokens", "output_tokens", "embedding_tokens", "cost_microunits"})
+	_ = w.Write([]string{"batch_size", "concurrency", "replicate", "generation_requests", "embedding_requests", "chunks", "makespan_us", "attempt_overlap_us", "provider_overlap_us", "attempt_peak_active", "provider_peak_active", "chunks_per_second", "requests_per_second", "input_tokens", "output_tokens", "embedding_tokens", "cost_microunits"})
 	for _, c := range cells {
-		_ = w.Write([]string{strconv.Itoa(c.Cell.ChunksPerRequest), strconv.Itoa(c.Cell.Concurrency), strconv.Itoa(c.Cell.Replicate), strconv.Itoa(c.Requests), strconv.Itoa(c.EmbeddingRequests), strconv.Itoa(c.Chunks), strconv.FormatInt(c.MakespanMicros, 10), strconv.FormatInt(c.OverlapMicros, 10), strconv.Itoa(c.PeakActive), strconv.FormatFloat(c.ChunksPerSecond, 'f', 6, 64), strconv.FormatFloat(c.RequestsPerSecond, 'f', 6, 64), strconv.FormatInt(c.Usage["input_tokens"], 10), strconv.FormatInt(c.Usage["output_tokens"], 10), strconv.FormatInt(c.Usage["embedding.embedding_tokens"], 10), strconv.FormatInt(c.Usage["cost_microunits"], 10)})
+		_ = w.Write([]string{strconv.Itoa(c.Cell.ChunksPerRequest), strconv.Itoa(c.Cell.Concurrency), strconv.Itoa(c.Cell.Replicate), strconv.Itoa(c.Requests), strconv.Itoa(c.EmbeddingRequests), strconv.Itoa(c.Chunks), strconv.FormatInt(c.MakespanMicros, 10), strconv.FormatInt(c.AttemptOverlapMicros, 10), strconv.FormatInt(c.ProviderOverlapMicros, 10), strconv.Itoa(c.AttemptPeakActive), strconv.Itoa(c.ProviderPeakActive), strconv.FormatFloat(c.ChunksPerSecond, 'f', 6, 64), strconv.FormatFloat(c.RequestsPerSecond, 'f', 6, 64), strconv.FormatInt(c.Usage["input_tokens"], 10), strconv.FormatInt(c.Usage["output_tokens"], 10), strconv.FormatInt(c.Usage["embedding.embedding_tokens"], 10), strconv.FormatInt(c.Usage["cost_microunits"], 10)})
 	}
 	w.Flush()
 	if err := w.Error(); err != nil {

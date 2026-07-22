@@ -88,7 +88,7 @@ profiles:
 		t.Fatal(err)
 	}
 	replaceConfig(t, config, "endpointRef: env:TEST_RAG_EMBED_URL\n    allowHttp: true\n    allowLocalNetworks: true", "profile: test-embed")
-	replaceConfig(t, config, "endpointRef: env:TEST_RAG_GENERATE_URL\n    allowHttp: true\n    allowLocalNetworks: true", "profile: test-generator\n    concurrency:\n      maxInFlight: 3")
+	replaceConfig(t, config, "endpointRef: env:TEST_RAG_GENERATE_URL\n    allowHttp: true\n    allowLocalNetworks: true", "profile: test-generator\n    concurrency:\n      maxInFlight: 3\n    generation:\n      maxResponseTokens: 8192\n      pricing:\n        inputMicrounitsPerMillion: 150000\n        outputMicrounitsPerMillion: 1000000\n        cacheReadMicrounitsPerMillion: 50000\n        cacheWriteMicrounitsPerMillion: 150000")
 	replaceConfig(t, config, "endpointRef: env:TEST_RAG_RERANK_URL\n    allowHttp: true\n    allowLocalNetworks: true", "profile: test-reranker")
 	set, err := Load(context.Background(), config)
 	if err != nil {
@@ -118,6 +118,9 @@ profiles:
 		if identity.SettingsFingerprint == "" || identity.ModelID == "" {
 			t.Fatalf("incomplete identity: %#v", identity)
 		}
+		if identity.Role == "generator-primary" && (!identity.PricingConfigured || identity.MaxResponseTokens != 8192 || identity.InputCostMicrounitsPerMillion != 150000 || identity.OutputCostMicrounitsPerMillion != 1000000 || identity.CacheReadCostMicrounitsPerMillion != 50000 || identity.CacheWriteCostMicrounitsPerMillion != 150000) {
+			t.Fatalf("generation policy identity = %#v", identity)
+		}
 	}
 
 	if err := os.WriteFile(profilePath, []byte(strings.Replace(profiles, "engine: qwen3:8b", "engine: wrong-model", 1)), 0o600); err != nil {
@@ -145,6 +148,15 @@ func TestLoadProviderSetRejectsInvalidProviderSpecifications(t *testing.T) {
 				t.Fatalf("Load() error = %v, want %s", err, test.want)
 			}
 		})
+	}
+}
+
+func TestLoadProviderSetRejectsIncompleteGenerationPolicy(t *testing.T) {
+	config := writeProviderFixture(t)
+	replaceConfig(t, config, "    allowLocalNetworks: true\n  reranker-primary:", "    allowLocalNetworks: true\n    generation:\n      maxResponseTokens: 8192\n  reranker-primary:")
+	_, err := Load(context.Background(), config)
+	if err == nil || !strings.Contains(err.Error(), "RAG_PROVIDER_CONFIG_GENERATION_POLICY") {
+		t.Fatalf("Load() error = %v", err)
 	}
 }
 

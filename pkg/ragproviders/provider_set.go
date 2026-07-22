@@ -29,13 +29,19 @@ import (
 )
 
 type EffectiveProviderIdentity struct {
-	Role                string `json:"role"`
-	ProfileSlug         string `json:"profileSlug,omitempty"`
-	ProfileSource       string `json:"profileSource,omitempty"`
-	ModelManifestDigest string `json:"modelManifestDigest"`
-	ModelID             string `json:"modelId"`
-	SettingsFingerprint string `json:"settingsFingerprint"`
-	ConcurrencyLimit    int    `json:"concurrencyLimit"`
+	Role                               string `json:"role"`
+	ProfileSlug                        string `json:"profileSlug,omitempty"`
+	ProfileSource                      string `json:"profileSource,omitempty"`
+	ModelManifestDigest                string `json:"modelManifestDigest"`
+	ModelID                            string `json:"modelId"`
+	SettingsFingerprint                string `json:"settingsFingerprint"`
+	ConcurrencyLimit                   int    `json:"concurrencyLimit"`
+	MaxResponseTokens                  int    `json:"maxResponseTokens,omitempty"`
+	PricingConfigured                  bool   `json:"pricingConfigured"`
+	InputCostMicrounitsPerMillion      int64  `json:"inputCostMicrounitsPerMillion"`
+	OutputCostMicrounitsPerMillion     int64  `json:"outputCostMicrounitsPerMillion"`
+	CacheReadCostMicrounitsPerMillion  int64  `json:"cacheReadCostMicrounitsPerMillion"`
+	CacheWriteCostMicrounitsPerMillion int64  `json:"cacheWriteCostMicrounitsPerMillion"`
 }
 
 type CapabilityDescriptor struct {
@@ -189,6 +195,9 @@ func Load(ctx context.Context, path string) (*ProviderSet, error) {
 			}
 			generatorSettings, err = newGeneratorSettings(endpoint, model, spec)
 			if err != nil {
+				return nil, err
+			}
+			if err := applyGenerationPolicy(generatorSettings, spec); err != nil {
 				return nil, err
 			}
 		}
@@ -606,9 +615,6 @@ func newGeneratorSettingsFromProfileForRole(ctx context.Context, role string, sp
 	if err := validateProfileModelIdentity("generator", model, merged); err != nil {
 		return nil, err
 	}
-	if err := set.recordProfileIdentity(role, spec, model, merged); err != nil {
-		return nil, err
-	}
 	merged.Chat.Stream = true
 	// Reasoning models (GLM-5.2, GPT-5, etc.) burn tokens on reasoning before
 	// producing visible output. Set a generous max_response_tokens so the
@@ -617,7 +623,38 @@ func newGeneratorSettingsFromProfileForRole(ctx context.Context, role string, sp
 		maxTokens := 8192
 		merged.Chat.MaxResponseTokens = &maxTokens
 	}
+	if err := applyGenerationPolicy(merged, spec); err != nil {
+		return nil, err
+	}
+	if err := set.recordProfileIdentity(role, spec, model, merged); err != nil {
+		return nil, err
+	}
 	return merged, nil
+}
+
+func applyGenerationPolicy(ss *settings.InferenceSettings, spec ProviderSpec) error {
+	if spec.Generation == nil {
+		return nil
+	}
+	if ss == nil || ss.Chat == nil || spec.Generation.Pricing == nil {
+		return fmt.Errorf("RAG_PROVIDER_GENERATION_POLICY")
+	}
+	maxTokens := spec.Generation.MaxResponseTokens
+	ss.Chat.MaxResponseTokens = &maxTokens
+	if ss.ModelInfo == nil {
+		ss.ModelInfo = &settings.ModelInfo{}
+	} else {
+		ss.ModelInfo = ss.ModelInfo.Clone()
+	}
+	pricing := spec.Generation.Pricing
+	const microunitsPerUnit = 1_000_000.0
+	ss.ModelInfo.Cost = &settings.ModelCost{
+		Input:      float64(pricing.InputMicrounitsPerMillion) / microunitsPerUnit,
+		Output:     float64(pricing.OutputMicrounitsPerMillion) / microunitsPerUnit,
+		CacheRead:  float64(pricing.CacheReadMicrounitsPerMillion) / microunitsPerUnit,
+		CacheWrite: float64(pricing.CacheWriteMicrounitsPerMillion) / microunitsPerUnit,
+	}
+	return nil
 }
 func validateProfileModelIdentity(role string, model ragcontract.ModelManifest, settings *settings.InferenceSettings) error {
 	if settings == nil {
@@ -711,11 +748,23 @@ func (p *ProviderSet) recordProfileIdentity(role string, spec ProviderSpec, mode
 	if spec.ProfileRegistries != "" {
 		source = "configured"
 	}
-	p.EffectiveProviderIdentities[role] = EffectiveProviderIdentity{
+	identity := EffectiveProviderIdentity{
 		Role: role, ProfileSlug: spec.Profile, ProfileSource: source,
 		ModelManifestDigest: model.Digest, ModelID: model.ModelID,
 		SettingsFingerprint: fingerprint, ConcurrencyLimit: providerConcurrencyLimit(spec),
 	}
+	if maxResponseTokens != nil {
+		identity.MaxResponseTokens = *maxResponseTokens
+	}
+	if spec.Generation != nil && spec.Generation.Pricing != nil {
+		pricing := spec.Generation.Pricing
+		identity.PricingConfigured = true
+		identity.InputCostMicrounitsPerMillion = pricing.InputMicrounitsPerMillion
+		identity.OutputCostMicrounitsPerMillion = pricing.OutputMicrounitsPerMillion
+		identity.CacheReadCostMicrounitsPerMillion = pricing.CacheReadMicrounitsPerMillion
+		identity.CacheWriteCostMicrounitsPerMillion = pricing.CacheWriteMicrounitsPerMillion
+	}
+	p.EffectiveProviderIdentities[role] = identity
 	return nil
 }
 

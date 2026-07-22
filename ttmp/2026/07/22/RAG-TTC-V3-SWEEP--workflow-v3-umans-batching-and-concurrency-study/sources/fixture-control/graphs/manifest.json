@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "rag-ttc-v3-sweep-graph-manifest/v1",
+  "schemaVersion": "rag-ttc-v3-sweep-graph-manifest/v2",
   "evidencePlanDigest": "sha256:57d83a39233fb8c061273148ef47476c0c5cce78a4fabacae6bdcbdb8e713a65",
   "graphs": [
     "chunks-throughput.png",

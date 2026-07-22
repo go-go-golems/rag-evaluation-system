@@ -41,14 +41,27 @@ type ConcurrencyConfig struct {
 	MaxInFlight int `yaml:"maxInFlight,omitempty"`
 }
 
+type TokenPricingConfig struct {
+	InputMicrounitsPerMillion      int64 `yaml:"inputMicrounitsPerMillion"`
+	OutputMicrounitsPerMillion     int64 `yaml:"outputMicrounitsPerMillion"`
+	CacheReadMicrounitsPerMillion  int64 `yaml:"cacheReadMicrounitsPerMillion"`
+	CacheWriteMicrounitsPerMillion int64 `yaml:"cacheWriteMicrounitsPerMillion"`
+}
+
+type GenerationPolicyConfig struct {
+	MaxResponseTokens int                 `yaml:"maxResponseTokens"`
+	Pricing           *TokenPricingConfig `yaml:"pricing,omitempty"`
+}
+
 type ProviderSpec struct {
-	Kind               string            `yaml:"kind"`
-	ModelManifest      string            `yaml:"modelManifest"`
-	EndpointRef        string            `yaml:"endpointRef,omitempty"`
-	CredentialRef      string            `yaml:"credentialRef,omitempty"`
-	AllowHTTP          bool              `yaml:"allowHttp,omitempty"`
-	AllowLocalNetworks bool              `yaml:"allowLocalNetworks,omitempty"`
-	Concurrency        ConcurrencyConfig `yaml:"concurrency,omitempty"`
+	Kind               string                  `yaml:"kind"`
+	ModelManifest      string                  `yaml:"modelManifest"`
+	EndpointRef        string                  `yaml:"endpointRef,omitempty"`
+	CredentialRef      string                  `yaml:"credentialRef,omitempty"`
+	AllowHTTP          bool                    `yaml:"allowHttp,omitempty"`
+	AllowLocalNetworks bool                    `yaml:"allowLocalNetworks,omitempty"`
+	Concurrency        ConcurrencyConfig       `yaml:"concurrency,omitempty"`
+	Generation         *GenerationPolicyConfig `yaml:"generation,omitempty"`
 	// Profile, when set, resolves InferenceSettings from a Geppetto engine
 	// profile registry (e.g. ~/.config/pinocchio/profiles.yaml) instead of
 	// manually constructing endpoint/credential settings. The value is a
@@ -126,6 +139,12 @@ func loadConfig(path string) (HostConfig, string, error) {
 	for name, spec := range cfg.Providers {
 		if strings.TrimSpace(name) == "" || strings.TrimSpace(spec.Kind) == "" || strings.TrimSpace(spec.ModelManifest) == "" || spec.Concurrency.MaxInFlight < 0 {
 			return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_PROVIDER_INVALID")
+		}
+		if spec.Generation != nil {
+			pricing := spec.Generation.Pricing
+			if !strings.HasPrefix(name, "generator-") || spec.Kind != "geppetto-generation/v1" || spec.Generation.MaxResponseTokens <= 0 || pricing == nil || pricing.InputMicrounitsPerMillion <= 0 || pricing.OutputMicrounitsPerMillion <= 0 || pricing.CacheReadMicrounitsPerMillion < 0 || pricing.CacheWriteMicrounitsPerMillion < 0 {
+				return HostConfig{}, "", fmt.Errorf("RAG_PROVIDER_CONFIG_GENERATION_POLICY")
+			}
 		}
 		cfg.Providers[name] = spec
 	}
