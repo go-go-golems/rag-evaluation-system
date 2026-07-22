@@ -203,6 +203,14 @@ func completeGenerationUsage(usage []Usage) ([]Usage, error) {
 }
 
 func (p *OperatorProvider) EmbedBatch(ctx context.Context, generated GeneratedBatch) (Result[MeasuredBatch], error) {
+	return p.embedBatch(ctx, nil, generated)
+}
+
+func (p *OperatorProvider) EmbedBatchWithOperations(ctx context.Context, recorder workflowv3.ExternalOperationRecorder, generated GeneratedBatch) (Result[MeasuredBatch], error) {
+	return p.embedBatch(ctx, recorder, generated)
+}
+
+func (p *OperatorProvider) embedBatch(ctx context.Context, recorder workflowv3.ExternalOperationRecorder, generated GeneratedBatch) (Result[MeasuredBatch], error) {
 	if generated.Key == "" || len(generated.Items) == 0 {
 		return Result[MeasuredBatch]{}, &Failure{Class: "validation", Code: "RAG_TTC_GENERATED_BATCH_INVALID", Retryable: false}
 	}
@@ -210,7 +218,7 @@ func (p *OperatorProvider) EmbedBatch(ctx context.Context, generated GeneratedBa
 	totalRepresentations := 0
 	embeddingTokens := int64(0)
 	for _, item := range generated.Items {
-		result, err := p.Embed(ctx, item)
+		result, err := p.embed(ctx, recorder, item)
 		if err != nil {
 			return Result[MeasuredBatch]{}, err
 		}
@@ -225,6 +233,10 @@ func (p *OperatorProvider) EmbedBatch(ctx context.Context, generated GeneratedBa
 }
 
 func (p *OperatorProvider) Embed(ctx context.Context, generated Generated) (Result[Embedded], error) {
+	return p.embed(ctx, nil, generated)
+}
+
+func (p *OperatorProvider) embed(ctx context.Context, recorder workflowv3.ExternalOperationRecorder, generated Generated) (Result[Embedded], error) {
 	raw, err := ragoperators.RawRepresentations(p.config.RawRepresentationName, []ragoperators.Chunk{generated.Chunk})
 	if err != nil {
 		return Result[Embedded]{}, &Failure{Class: "configuration", Code: "RAG_TTC_RAW_REPRESENTATION", Retryable: false}
@@ -248,7 +260,26 @@ func (p *OperatorProvider) Embed(ctx context.Context, generated Generated) (Resu
 		return Result[Embedded]{}, &Failure{Class: "configuration", Code: "RAG_TTC_PROVIDER_RESOLUTION", Retryable: false}
 	}
 	before := env.Usage
+	var ticket workflowv3.ExternalOperationTicket
+	if recorder != nil {
+		var admissionErr error
+		ticket, admissionErr = recorder.BeginExternalOperation(ctx, workflowv3.ExternalOperationSpec{DescriptorDigest: p.operations[1].Digest, Reservation: []workflowv3.ExternalOperationCounter{{Name: "requests", Units: 1}}, Measures: []workflowv3.ExternalOperationCounter{{Name: "representation_count", Units: int64(len(representations))}}})
+		if admissionErr != nil {
+			return Result[Embedded]{}, &Failure{Class: "budget", Code: "RAG_TTC_EMBEDDING_REQUEST_CEILING", Retryable: false}
+		}
+	}
+	started := time.Now()
 	result, err := ragoperators.ExecuteEmbeddingBatch(ctx, plan, plan.Batches[0], env)
+	elapsed := time.Since(started).Microseconds()
+	if recorder != nil && err != nil {
+		completion := workflowv3.ExternalOperationCompletion{ProviderStartedAt: started.UTC(), ElapsedMicros: elapsed, Outcome: workflowv3.ExternalOperationOutcomeFailed, AccountingMode: workflowv3.ExternalOperationAccountingConservative, Failure: &workflowv3.ExternalOperationFailure{Class: "transport", Code: "RAG_TTC_EMBEDDING_PROVIDER"}}
+		finishCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		finishErr := recorder.FinishExternalOperation(finishCtx, ticket, completion)
+		cancel()
+		if finishErr != nil {
+			return Result[Embedded]{}, &Failure{Class: "internal", Code: "RAG_TTC_OPERATION_EVIDENCE", Retryable: true}
+		}
+	}
 	if err != nil {
 		return Result[Embedded]{}, classifyOperatorError(err, false)
 	}
@@ -256,6 +287,21 @@ func (p *OperatorProvider) Embed(ctx context.Context, generated Generated) (Resu
 	usage, err := usageDelta(before, env.Usage)
 	if err != nil {
 		return Result[Embedded]{}, err
+	}
+	if recorder != nil {
+		embeddingTokens := int64(0)
+		for _, amount := range usage {
+			if amount.Dimension == "embedding_tokens" {
+				embeddingTokens = amount.Units
+			}
+		}
+		completion := workflowv3.ExternalOperationCompletion{ProviderStartedAt: started.UTC(), ElapsedMicros: elapsed, Outcome: workflowv3.ExternalOperationOutcomeSucceeded, AccountingMode: workflowv3.ExternalOperationAccountingActual, Counters: []workflowv3.ExternalOperationCounter{{Name: "embedding_tokens", Units: embeddingTokens}, {Name: "requests", Units: 1}}}
+		finishCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		finishErr := recorder.FinishExternalOperation(finishCtx, ticket, completion)
+		cancel()
+		if finishErr != nil {
+			return Result[Embedded]{}, &Failure{Class: "internal", Code: "RAG_TTC_OPERATION_EVIDENCE", Retryable: true}
+		}
 	}
 	return Result[Embedded]{Value: embedded, Usage: usage}, nil
 }
