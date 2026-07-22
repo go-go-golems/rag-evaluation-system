@@ -161,6 +161,15 @@ func (p *OperatorProvider) generateBatch(ctx context.Context, recorder workflowv
 		sort.Slice(representations, func(i, j int) bool { return representations[i].Record.ID < representations[j].Record.ID })
 		items[i] = Generated{Key: chunk.Key, Chunk: chunk.Chunk, Representations: representations, CitationIDs: append([]string(nil), chunk.CitationIDs...), ProviderProfileDigest: p.config.ProviderProfileDigest, ModelDigest: p.config.GenerationModelDigest}
 		if err := validateGenerated(chunk, items[i]); err != nil {
+			if recorder != nil {
+				completion := workflowv3.ExternalOperationCompletion{ProviderStartedAt: started.UTC(), ElapsedMicros: elapsed, Outcome: workflowv3.ExternalOperationOutcomeFailed, AccountingMode: workflowv3.ExternalOperationAccountingConservative, Failure: &workflowv3.ExternalOperationFailure{Class: "malformed-output", Code: "RAG_TTC_GENERATED_INVALID"}}
+				finishCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+				finishErr := recorder.FinishExternalOperation(finishCtx, ticket, completion)
+				cancel()
+				if finishErr != nil {
+					return Result[GeneratedBatch]{}, &Failure{Class: "internal", Code: "RAG_TTC_OPERATION_EVIDENCE", Retryable: true}
+				}
+			}
 			return Result[GeneratedBatch]{}, &Failure{Class: "malformed-output", Code: "RAG_TTC_GENERATED_INVALID", Retryable: true}
 		}
 	}
