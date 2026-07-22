@@ -34,6 +34,15 @@ func newGenerationAdmission(path string, maximum, prior int) (*generationAdmissi
 	return a, nil
 }
 
+func (a *generationAdmission) State() generationAuthorityState {
+	if a == nil {
+		return generationAuthorityState{}
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.state
+}
+
 func (a *generationAdmission) Admit() error {
 	if a == nil {
 		return fmt.Errorf("RAG_SWEEP_GENERATION_AUTHORITY_INVALID")
@@ -57,18 +66,21 @@ func (a *generationAdmission) persist(state generationAuthorityState) error {
 	if err != nil {
 		return err
 	}
-	body = append(body, '\n')
-	dir := filepath.Dir(a.path)
+	return writeFileAtomically(a.path, append(body, '\n'), 0o600)
+}
+
+func writeFileAtomically(path string, body []byte, mode os.FileMode) error {
+	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
-	tmp, err := os.CreateTemp(dir, ".generation-authority-*")
+	tmp, err := os.CreateTemp(dir, ".atomic-evidence-*")
 	if err != nil {
 		return err
 	}
 	tmpName := tmp.Name()
 	defer func() { _ = os.Remove(tmpName) }()
-	if err := tmp.Chmod(0o600); err != nil {
+	if err := tmp.Chmod(mode); err != nil {
 		_ = tmp.Close()
 		return err
 	}
@@ -83,7 +95,7 @@ func (a *generationAdmission) persist(state generationAuthorityState) error {
 	if err := tmp.Close(); err != nil {
 		return err
 	}
-	if err := os.Rename(tmpName, a.path); err != nil {
+	if err := os.Rename(tmpName, path); err != nil {
 		return err
 	}
 	directory, err := os.Open(dir)

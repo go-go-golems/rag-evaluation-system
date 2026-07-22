@@ -139,3 +139,14 @@ Step 12: first authorized real request timed out at the fixture-oriented 30s cel
 
 Commit 59097f6 preserves cumulative real-sweep request authority after the first admitted request timed out
 
+
+## 2026-07-22
+
+Step 13: cumulative authority stopped the second real attempt at 61 after one retry; exported compact custody, scrubbed transient runtime, and added durable per-cell/failure checkpoints plus explicit retry headroom
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/main.go — Per-cell durable custody, failed-cell redaction, retry authority, and runtime cleanup
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/main_test.go — Failure checkpoint redaction regression
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-attempt-002/evidence.json — Compact custody for request-ceiling terminal failure
+

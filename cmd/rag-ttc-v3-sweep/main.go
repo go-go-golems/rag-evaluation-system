@@ -55,15 +55,35 @@ type cellEvidence struct {
 	Usage                 map[string]int64        `json:"usage"`
 }
 type evidence struct {
-	SchemaVersion         string                  `json:"schemaVersion"`
-	Profile               string                  `json:"profile"`
-	ProviderProfileDigest string                  `json:"providerProfileDigest"`
-	GenerationModelDigest string                  `json:"generationModelDigest"`
-	WorkflowPlanDigest    string                  `json:"workflowPlanDigest"`
-	RegistryGeneration    string                  `json:"registryGeneration"`
-	BundleDigest          string                  `json:"bundleDigest"`
-	Plan                  workflowv3ttc.SweepPlan `json:"plan"`
-	Cells                 []cellEvidence          `json:"cells"`
+	SchemaVersion         string                    `json:"schemaVersion"`
+	Profile               string                    `json:"profile"`
+	ProviderProfileDigest string                    `json:"providerProfileDigest"`
+	GenerationModelDigest string                    `json:"generationModelDigest"`
+	WorkflowPlanDigest    string                    `json:"workflowPlanDigest"`
+	RegistryGeneration    string                    `json:"registryGeneration"`
+	BundleDigest          string                    `json:"bundleDigest"`
+	Plan                  workflowv3ttc.SweepPlan   `json:"plan"`
+	Cells                 []cellEvidence            `json:"cells"`
+	GenerationAuthority   *generationAuthorityState `json:"generationAuthority,omitempty"`
+}
+
+type cellCheckpoint struct {
+	SchemaVersion         string       `json:"schemaVersion"`
+	Profile               string       `json:"profile"`
+	ProviderProfileDigest string       `json:"providerProfileDigest"`
+	GenerationModelDigest string       `json:"generationModelDigest"`
+	Cell                  cellEvidence `json:"cell"`
+}
+
+type failedCellCheckpoint struct {
+	SchemaVersion string                      `json:"schemaVersion"`
+	Cell          workflowv3ttc.SweepCell     `json:"cell"`
+	RunID         string                      `json:"runId"`
+	RunStatus     string                      `json:"runStatus"`
+	Reason        string                      `json:"reason"`
+	Attempts      map[string]map[string]int   `json:"attempts"`
+	FailureCodes  map[string]int              `json:"failureCodes"`
+	Budget        []workflowv3.BudgetProgress `json:"budget"`
 }
 
 type delayedGenerator struct{ ragoperators.FixtureProviders }
@@ -87,7 +107,7 @@ func main() {
 	var chunkCount, maximum int
 	var executeReal bool
 	var maximumCost, maximumInputTokens, maximumOutputTokens, maximumEmbeddingTokens int64
-	var maximumEmbeddingRequests, maximumGenerationRequests, priorGenerationRequests int
+	var maximumEmbeddingRequests, maximumGenerationRequests, priorGenerationRequests, maximumGenerationRetries int
 	var cellTimeout time.Duration
 	flag.StringVar(&output, "output", "sweep-evidence", "output directory")
 	flag.IntVar(&chunkCount, "chunks", 16, "fixed chunk count")
@@ -105,6 +125,7 @@ func main() {
 	flag.IntVar(&maximumEmbeddingRequests, "maximum-embedding-requests", 0, "authorized real-run embedding-request ceiling")
 	flag.IntVar(&maximumGenerationRequests, "maximum-generation-requests", 0, "authorized cumulative real-run generation-request ceiling")
 	flag.IntVar(&priorGenerationRequests, "prior-generation-requests", 0, "conservatively consumed generation requests before this invocation")
+	flag.IntVar(&maximumGenerationRetries, "maximum-generation-retries", 0, "authorized generation retry headroom for this matrix")
 	flag.DurationVar(&cellTimeout, "cell-timeout", 0, "per-cell terminal deadline (default 30s fixtures, 30m real)")
 	flag.Parse()
 	concurrency, err := parseLevels(concurrencyText)
@@ -112,7 +133,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
-	config := runConfig{profile: profile, providerConfig: providerConfig, specification: specification, artifactRoot: artifactRoot, executeReal: executeReal, maximumCost: maximumCost, maximumInputTokens: maximumInputTokens, maximumOutputTokens: maximumOutputTokens, maximumEmbeddingTokens: maximumEmbeddingTokens, maximumEmbeddingRequests: maximumEmbeddingRequests, maximumGenerationRequests: maximumGenerationRequests, priorGenerationRequests: priorGenerationRequests, cellTimeout: cellTimeout}
+	config := runConfig{profile: profile, providerConfig: providerConfig, specification: specification, artifactRoot: artifactRoot, executeReal: executeReal, maximumCost: maximumCost, maximumInputTokens: maximumInputTokens, maximumOutputTokens: maximumOutputTokens, maximumEmbeddingTokens: maximumEmbeddingTokens, maximumEmbeddingRequests: maximumEmbeddingRequests, maximumGenerationRequests: maximumGenerationRequests, priorGenerationRequests: priorGenerationRequests, maximumGenerationRetries: maximumGenerationRetries, cellTimeout: cellTimeout}
 	if err := run(context.Background(), output, chunkCount, maximum, concurrency, config); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -124,6 +145,7 @@ type runConfig struct {
 	executeReal                                                                  bool
 	maximumCost, maximumInputTokens, maximumOutputTokens, maximumEmbeddingTokens int64
 	maximumEmbeddingRequests, maximumGenerationRequests, priorGenerationRequests int
+	maximumGenerationRetries                                                     int
 	cellTimeout                                                                  time.Duration
 }
 
@@ -159,14 +181,12 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 		if plan.PlannedRequests != maximum {
 			return fmt.Errorf("real request authority must equal the exact planned request count")
 		}
-		requiredMaximumCost := int64(plan.PlannedRequests) * workflowv3ttc.SweepGenerationCostMicrounitsPerRequest
-		requiredInputTokens := int64(plan.PlannedRequests) * workflowv3ttc.SweepGenerationInputTokensPerRequest
-		requiredOutputTokens := int64(plan.PlannedRequests) * workflowv3ttc.SweepGenerationOutputTokensPerRequest
+		cumulativeGenerationRequests := config.priorGenerationRequests + plan.PlannedRequests + config.maximumGenerationRetries
 		if !config.executeReal {
-			fmt.Printf("real dry-run profile_digest=%s model_digest=%s frozen_chunks=%d planned_generation_requests=%d prior_generation_requests=%d required_cumulative_generation_requests=%d planned_embedding_requests=%d required_maximum_cost_microunits=%d required_input_tokens=%d required_output_tokens=%d required_embedding_tokens=%d\n", authority.profileDigest, authority.modelDigest, len(chunks), plan.PlannedRequests, config.priorGenerationRequests, plan.PlannedRequests+config.priorGenerationRequests, expectedEmbeddingRequests, requiredMaximumCost+int64(config.priorGenerationRequests)*workflowv3ttc.SweepGenerationCostMicrounitsPerRequest, requiredInputTokens+int64(config.priorGenerationRequests)*workflowv3ttc.SweepGenerationInputTokensPerRequest, requiredOutputTokens+int64(config.priorGenerationRequests)*workflowv3ttc.SweepGenerationOutputTokensPerRequest, requiredEmbeddingTokens)
+			fmt.Printf("real dry-run profile_digest=%s model_digest=%s frozen_chunks=%d planned_generation_requests=%d prior_generation_requests=%d maximum_generation_retries=%d required_cumulative_generation_requests=%d planned_embedding_requests=%d required_maximum_cost_microunits=%d required_input_tokens=%d required_output_tokens=%d required_embedding_tokens=%d\n", authority.profileDigest, authority.modelDigest, len(chunks), plan.PlannedRequests, config.priorGenerationRequests, config.maximumGenerationRetries, cumulativeGenerationRequests, expectedEmbeddingRequests, int64(cumulativeGenerationRequests)*workflowv3ttc.SweepGenerationCostMicrounitsPerRequest, int64(cumulativeGenerationRequests)*workflowv3ttc.SweepGenerationInputTokensPerRequest, int64(cumulativeGenerationRequests)*workflowv3ttc.SweepGenerationOutputTokensPerRequest, requiredEmbeddingTokens)
 			return nil
 		}
-		if config.priorGenerationRequests < 0 || config.maximumGenerationRequests != plan.PlannedRequests+config.priorGenerationRequests || config.maximumCost < requiredMaximumCost+int64(config.priorGenerationRequests)*workflowv3ttc.SweepGenerationCostMicrounitsPerRequest || config.maximumInputTokens < requiredInputTokens+int64(config.priorGenerationRequests)*workflowv3ttc.SweepGenerationInputTokensPerRequest || config.maximumOutputTokens < requiredOutputTokens+int64(config.priorGenerationRequests)*workflowv3ttc.SweepGenerationOutputTokensPerRequest || config.maximumEmbeddingTokens < requiredEmbeddingTokens || config.maximumEmbeddingRequests != expectedEmbeddingRequests {
+		if config.priorGenerationRequests < 0 || config.maximumGenerationRetries < 0 || config.maximumGenerationRequests != cumulativeGenerationRequests || config.maximumCost < int64(cumulativeGenerationRequests)*workflowv3ttc.SweepGenerationCostMicrounitsPerRequest || config.maximumInputTokens < int64(cumulativeGenerationRequests)*workflowv3ttc.SweepGenerationInputTokensPerRequest || config.maximumOutputTokens < int64(cumulativeGenerationRequests)*workflowv3ttc.SweepGenerationOutputTokensPerRequest || config.maximumEmbeddingTokens < requiredEmbeddingTokens || config.maximumEmbeddingRequests != expectedEmbeddingRequests {
 			return fmt.Errorf("real numeric authority is below the task reservation maximum")
 		}
 	}
@@ -182,11 +202,15 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 	if err := os.MkdirAll(output, 0o755); err != nil {
 		return err
 	}
+	runtimeRoot := filepath.Join(output, "runtime")
+	defer func() { _ = os.RemoveAll(runtimeRoot) }()
+	var generationAuthority *generationAdmission
 	if config.profile == "real" {
 		admission, err := newGenerationAdmission(filepath.Join(output, "generation-authority.json"), config.maximumGenerationRequests, config.priorGenerationRequests)
 		if err != nil {
 			return err
 		}
+		generationAuthority = admission
 		authority.admitGeneration = admission.Admit
 	}
 	registry, err := workflowv3ttc.Registry()
@@ -207,7 +231,8 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 	}
 	result := evidence{SchemaVersion: "rag-ttc-v3-sweep-evidence/v2", Profile: config.profile, ProviderProfileDigest: authority.profileDigest, GenerationModelDigest: authority.modelDigest, WorkflowPlanDigest: authored.Plan.Digest, RegistryGeneration: registry.Generation(), BundleDigest: bundle.Digest(), Plan: plan}
 	for index, cell := range plan.Cells {
-		cellRoot := filepath.Join(output, fmt.Sprintf("cell-%02d-b%d-c%d", index, cell.ChunksPerRequest, cell.Concurrency))
+		cellName := fmt.Sprintf("cell-%02d-b%d-c%d", index, cell.ChunksPerRequest, cell.Concurrency)
+		cellRoot := filepath.Join(runtimeRoot, cellName)
 		artifacts, err := workflowv3.NewFileArtifactStore(filepath.Join(cellRoot, "artifacts"), 1<<30)
 		if err != nil {
 			return err
@@ -259,10 +284,14 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 			if current, snapshotErr := engine.Snapshot(ctx, runID); snapshotErr == nil {
 				snapshot = current
 			}
+			budget, _ := store.BudgetSnapshot(ctx, &runID)
+			_ = writeFailedCellCheckpoint(output, cellName, snapshot, cell, "timeout", budget)
 			_ = store.Close()
 			return fmt.Errorf("cell %+v timed out after %s with status %s (dispatcher: %v)", cell, config.cellTimeout, snapshot.Status, dispatchErr)
 		}
 		if snapshot.Status != "succeeded" {
+			budget, _ := store.BudgetSnapshot(ctx, &runID)
+			_ = writeFailedCellCheckpoint(output, cellName, snapshot, cell, "terminal", budget)
 			_ = store.Close()
 			return fmt.Errorf("cell %+v status %s", cell, snapshot.Status)
 		}
@@ -276,6 +305,16 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 			_ = store.Close()
 			return err
 		}
+		checkpoint := cellCheckpoint{SchemaVersion: "rag-ttc-v3-cell-evidence/v1", Profile: config.profile, ProviderProfileDigest: authority.profileDigest, GenerationModelDigest: authority.modelDigest, Cell: cellResult}
+		checkpointBody, err := workflowv3.CanonicalJSON(checkpoint)
+		if err != nil {
+			_ = store.Close()
+			return err
+		}
+		if err := writeFileAtomically(filepath.Join(output, "cells", cellName+".json"), append(checkpointBody, '\n'), 0o644); err != nil {
+			_ = store.Close()
+			return err
+		}
 		result.Cells = append(result.Cells, cellResult)
 		if err := store.Close(); err != nil {
 			return err
@@ -284,11 +323,15 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 			return err
 		}
 	}
-	body, err := json.MarshalIndent(result, "", "  ")
+	if generationAuthority != nil {
+		state := generationAuthority.State()
+		result.GenerationAuthority = &state
+	}
+	body, err := workflowv3.CanonicalJSON(result)
 	if err != nil {
 		return err
 	}
-	if err = os.WriteFile(filepath.Join(output, "evidence.json"), append(body, '\n'), 0o644); err != nil {
+	if err = writeFileAtomically(filepath.Join(output, "evidence.json"), append(body, '\n'), 0o644); err != nil {
 		return err
 	}
 	if err = writeCSV(filepath.Join(output, "cells.csv"), result.Cells); err != nil {
@@ -388,6 +431,28 @@ func readCell(ctx context.Context, a workflowv3.ArtifactStore, s workflowv3.RunS
 		return cellEvidence{}, err
 	}
 	return cellEvidence{Cell: c, RunID: string(s.RunID), PlanDigest: s.PlanDigest, Requests: len(attempts), Chunks: chunks, MakespanMicros: makespan.Microseconds(), ProviderMicros: durations, Batches: batches, Attempts: evidenceRows(attempts), EmbeddingAttempts: evidenceRows(embeddingAttempts), EmbeddingRequests: embeddingRequests, AttemptOverlapMicros: overlapIntervals(attemptIntervals(attempts), attemptIntervals(embeddingAttempts)), ProviderOverlapMicros: overlapIntervals(generationProvider, embeddingProvider), AttemptPeakActive: peakIntervals(attemptIntervals(attempts)), ProviderPeakActive: peakIntervals(generationProvider), ChunksPerSecond: float64(chunks) / makespan.Seconds(), RequestsPerSecond: float64(len(attempts)) / makespan.Seconds(), Usage: usage}, nil
+}
+
+func writeFailedCellCheckpoint(output, cellName string, snapshot workflowv3.RunSnapshot, cell workflowv3ttc.SweepCell, reason string, budget []workflowv3.BudgetProgress) error {
+	attempts := map[string]map[string]int{}
+	failureCodes := map[string]int{}
+	for _, attempt := range snapshot.Attempts {
+		byStatus := attempts[attempt.ResourceClass]
+		if byStatus == nil {
+			byStatus = map[string]int{}
+			attempts[attempt.ResourceClass] = byStatus
+		}
+		byStatus[attempt.Status]++
+		if attempt.Failure != nil && attempt.Failure.Code != "" {
+			failureCodes[attempt.Failure.Code]++
+		}
+	}
+	checkpoint := failedCellCheckpoint{SchemaVersion: "rag-ttc-v3-failed-cell-evidence/v1", Cell: cell, RunID: string(snapshot.RunID), RunStatus: snapshot.Status, Reason: reason, Attempts: attempts, FailureCodes: failureCodes, Budget: budget}
+	body, err := workflowv3.CanonicalJSON(checkpoint)
+	if err != nil {
+		return err
+	}
+	return writeFileAtomically(filepath.Join(output, "failures", cellName+".json"), append(body, '\n'), 0o644)
 }
 
 func evidenceRows(attempts []workflowv3.Attempt) []attemptEvidence {

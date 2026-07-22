@@ -770,3 +770,83 @@ GOWORK=off golangci-lint run ./cmd/rag-ttc-v3-sweep/... ./internal/workflowv3ttc
 - Required cumulative generation ceiling: 61.
 - Incremental maximum: 10,650 cost microunits, 16,384 input tokens, 8,192 output tokens.
 - No provider response, usage, body, prompt, source text, or vector is present in the compact aborted evidence.
+
+## Step 13: Exhaust cumulative authority after one real retry and preserve partial custody
+
+The user replied `do it` directly to the cumulative 61-request ceiling. I ran the corrected 30-minute-timeout command with one prior request and exactly 60 newly available admissions. Seven cells completed. The final concurrency-4, one-chunk cell then failed because one earlier malformed/transient generation retry had consumed the only request that the final node needed. The durable authority ledger reached exactly 61 and correctly denied the next provider call before submission.
+
+I stopped without extending authority. The failed cell had twelve succeeded generation nodes, three generation calls running when cancellation propagated, and one generation node failed with `RAG_TTC_GENERATION_REQUEST_CEILING`. The current implementation had already deleted each successful cell runtime after accumulating its evidence only in memory, so process exit lost the seven completed cell measurements. I recorded that loss explicitly rather than reconstructing or fabricating results, exported compact attempt custody, and deleted the remaining source-bearing runtime.
+
+### Prompt Context
+
+**User prompt (verbatim):** "do it"
+
+**Assistant interpretation:** Execute the corrected real matrix under the immediately preceding cumulative 61-request authority.
+
+**Inferred user intent:** Complete the real study now that the first aborted request is included in the cumulative budget.
+
+### What I did
+
+- Executed with cumulative maximum 61 and prior count one.
+- Verified the durable ledger stopped exactly at 61 admitted generation requests.
+- Inspected only bounded control-plane status, failure-code, and budget columns.
+- Added `sources/real-attempt-002/evidence.json`; removed all transient SQLite and source artifacts.
+- Changed successful cells to atomically publish standalone canonical checkpoints before transient deletion.
+- Added automatic privacy-safe failed-cell checkpoints and a test proving failure messages/provider bodies are excluded.
+- Added a deferred real-runtime scrub for every normal return path.
+- Added explicit retry-headroom authority; retries now contribute to cumulative request/token/cost maxima.
+- Made final aggregate evidence atomic and include the final generation-authority state.
+
+### Why
+
+Real provider output validation can legitimately consume retry debt. A 60-node matrix with an exact 60-call ceiling cannot finish after even one malformed response. Retry headroom must be explicitly authorized and globally admitted, not hidden inside per-cell Workflow budgets.
+
+### What worked
+
+- The cumulative limiter denied request 62 before a provider call.
+- Seven cells reached Workflow V3 success before the final cell failure.
+- The terminal failure code was compact and non-sensitive.
+- Privacy cleanup removed all transient databases and source-bearing artifacts.
+- Focused tests, race tests, lint, a 12-cell checkpoint control, and diff checks pass.
+
+### What didn't work
+
+The run failed exactly with:
+
+```text
+cell {ChunksPerRequest:1 Concurrency:4 Replicate:1} status failed
+exit status 1
+```
+
+The failed node recorded `budget / RAG_TTC_GENERATION_REQUEST_CEILING / retryable=false`. Complete measurements from the seven successful cells were unavailable after process exit because publication occurred only after the whole matrix. That custody defect is fixed for future runs, but the missing evidence cannot be recovered.
+
+### What I learned
+
+A matrix-wide aggregate written only at the end is not durable evidence. Each successful cell must publish independently before its source-bearing runtime is erased. Also, planned requests and authorized retry requests are different quantities and both must appear in the cumulative authority.
+
+### What was tricky to build
+
+The automatic failure checkpoint must retain failure codes and budget amounts while excluding arbitrary failure messages, which may contain provider bodies. Runtime cleanup must run after checkpoint publication on normal error paths without deleting durable cell evidence or the cumulative authority ledger.
+
+### What warrants a second pair of eyes
+
+- Review the proposed eight-request retry headroom against observed and diagnostic malformed-output rates.
+- Verify successful cell checkpoints contain all fields needed to reconstruct final JSON/JSONL/CSV after a later cell failure.
+- Confirm runtime cleanup behavior under SIGKILL remains an operational recovery concern; normal returns are scrubbed automatically.
+
+### What should be done in the future
+
+Obtain new cumulative authority before rerunning. With 61 requests already consumed, a fresh 60-request matrix plus eight retry requests requires a cumulative ceiling of 129 generation requests, 1,373,850 cost microunits (USD $1.37385), 2,113,536 input tokens, and 1,056,768 output tokens. Embedding ceilings remain 128 requests and 3,932,160 tokens; concurrency remains four. Do not retry without approval.
+
+### Code review instructions
+
+Review the per-cell checkpoint ordering and runtime-root defer in `cmd/rag-ttc-v3-sweep/main.go`, atomic writer in `admission.go`, and failure-redaction regression in `main_test.go`. Inspect both compact aborted-attempt evidence files and verify no transient databases remain.
+
+### Technical details
+
+- Cumulative admitted generation requests: 61/61.
+- New calls in attempt 2: 60.
+- Successful cells before failure: 7/8.
+- Earlier-cell retry inferred from admission arithmetic: 1.
+- Proposed fresh matrix allowance: 60 planned + 8 retries.
+- Proposed new cumulative ceiling: 61 prior + 68 new = 129.
