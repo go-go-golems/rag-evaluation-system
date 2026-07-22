@@ -387,6 +387,8 @@ The goal remains incomplete: the real provider environment is absent, no numeric
 
 ## Step 5: Complete canonical JSONL and expanded CSV custody
 
+**Commit (code):** `15fb9ea` — "workflowv3: add canonical TTC measurement custody"
+
 The active goal explicitly requires canonical JSON/JSONL and CSV. The first committed tranche had canonical aggregate JSON and CSV but no line-oriented evidence stream. I added deterministic `measurements.jsonl` export with one canonical record per generation attempt, embedding attempt, and provider batch measurement. The 12-cell fixture run emits exactly 270 lines: 90 generation attempts, 90 embedding task attempts, and 90 paired generation/embedding provider measurements.
 
 I also expanded `cells.csv` with generation and embedding request counts, overlap, token dimensions, and cost microunits. Aggregate evidence now pins the Workflow V3 plan digest, registry generation, bundle digest, provider-profile digest, and generation-model digest. I reran the fixture study and regenerated all graphs from the same fresh evidence file so tables and rendered views cannot drift.
