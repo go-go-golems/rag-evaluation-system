@@ -49,7 +49,7 @@ func TestWriteFailedCellCheckpointExcludesFailureMessage(t *testing.T) {
 	root := t.TempDir()
 	snapshot := workflowv3.RunSnapshot{RunID: "run-1", Status: "failed", Attempts: []workflowv3.Attempt{{ResourceClass: workflowv3ttc.ResourceGeneration, Status: "failed", Failure: &workflowv3.Failure{Class: "provider", Code: "SAFE_CODE", Message: "sensitive provider body"}}}}
 	budget := []workflowv3.BudgetProgress{{RunID: "run-1", Account: "generation", Dimension: "requests", Limit: 2, Used: 1, Remaining: 1}}
-	if err := writeFailedCellCheckpoint(root, "cell-00", snapshot, workflowv3ttc.SweepCell{ChunksPerRequest: 1, Concurrency: 1, Replicate: 1}, "terminal", budget); err != nil {
+	if err := writeFailedCellCheckpoint(root, "cell-00", snapshot, workflowv3ttc.SweepCell{ChunksPerRequest: 1, Concurrency: 1, Replicate: 1}, "terminal", budget, nil); err != nil {
 		t.Fatal(err)
 	}
 	body, err := os.ReadFile(filepath.Join(root, "failures", "cell-00.json"))

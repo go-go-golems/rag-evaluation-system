@@ -34,6 +34,12 @@ type attemptEvidence struct {
 	StartedAt  string `json:"startedAt"`
 	FinishedAt string `json:"finishedAt"`
 }
+type operationEvidence struct {
+	JSONLPath    string                                     `json:"jsonlPath"`
+	ManifestPath string                                     `json:"manifestPath"`
+	Manifest     workflowv3.ExternalOperationExportManifest `json:"manifest"`
+}
+
 type cellEvidence struct {
 	Cell                  workflowv3ttc.SweepCell `json:"cell"`
 	RunID                 string                  `json:"runId"`
@@ -53,6 +59,7 @@ type cellEvidence struct {
 	ChunksPerSecond       float64                 `json:"chunksPerSecond"`
 	RequestsPerSecond     float64                 `json:"requestsPerSecond"`
 	Usage                 map[string]int64        `json:"usage"`
+	Operations            *operationEvidence      `json:"operations,omitempty"`
 }
 type evidence struct {
 	SchemaVersion         string                    `json:"schemaVersion"`
@@ -84,6 +91,7 @@ type failedCellCheckpoint struct {
 	Attempts      map[string]map[string]int   `json:"attempts"`
 	FailureCodes  map[string]int              `json:"failureCodes"`
 	Budget        []workflowv3.BudgetProgress `json:"budget"`
+	Operations    *operationEvidence          `json:"operations,omitempty"`
 }
 
 type delayedGenerator struct{ ragoperators.FixtureProviders }
@@ -284,18 +292,47 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 			if current, snapshotErr := engine.Snapshot(ctx, runID); snapshotErr == nil {
 				snapshot = current
 			}
-			budget, _ := store.BudgetSnapshot(ctx, &runID)
-			_ = writeFailedCellCheckpoint(output, cellName, snapshot, cell, "timeout", budget)
+			budget, budgetErr := store.BudgetSnapshot(ctx, &runID)
+			if budgetErr != nil {
+				_ = store.Close()
+				return fmt.Errorf("snapshot budget for timed-out cell %+v: %w", cell, budgetErr)
+			}
+			operations, exportErr := exportCellOperations(ctx, store, output, cellName, runID)
+			if exportErr != nil {
+				_ = store.Close()
+				return fmt.Errorf("export operations for timed-out cell %+v: %w", cell, exportErr)
+			}
+			if checkpointErr := writeFailedCellCheckpoint(output, cellName, snapshot, cell, "timeout", budget, operations); checkpointErr != nil {
+				_ = store.Close()
+				return fmt.Errorf("write failed-cell checkpoint for timed-out cell %+v: %w", cell, checkpointErr)
+			}
 			_ = store.Close()
 			return fmt.Errorf("cell %+v timed out after %s with status %s (dispatcher: %v)", cell, config.cellTimeout, snapshot.Status, dispatchErr)
 		}
 		if snapshot.Status != "succeeded" {
-			budget, _ := store.BudgetSnapshot(ctx, &runID)
-			_ = writeFailedCellCheckpoint(output, cellName, snapshot, cell, "terminal", budget)
+			budget, budgetErr := store.BudgetSnapshot(ctx, &runID)
+			if budgetErr != nil {
+				_ = store.Close()
+				return fmt.Errorf("snapshot budget for failed cell %+v: %w", cell, budgetErr)
+			}
+			operations, exportErr := exportCellOperations(ctx, store, output, cellName, runID)
+			if exportErr != nil {
+				_ = store.Close()
+				return fmt.Errorf("export operations for failed cell %+v: %w", cell, exportErr)
+			}
+			if checkpointErr := writeFailedCellCheckpoint(output, cellName, snapshot, cell, "terminal", budget, operations); checkpointErr != nil {
+				_ = store.Close()
+				return fmt.Errorf("write failed-cell checkpoint for failed cell %+v: %w", cell, checkpointErr)
+			}
 			_ = store.Close()
 			return fmt.Errorf("cell %+v status %s", cell, snapshot.Status)
 		}
 		budget, err := store.BudgetSnapshot(ctx, &runID)
+		if err != nil {
+			_ = store.Close()
+			return err
+		}
+		operations, err := exportCellOperations(ctx, store, output, cellName, runID)
 		if err != nil {
 			_ = store.Close()
 			return err
@@ -305,6 +342,7 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 			_ = store.Close()
 			return err
 		}
+		cellResult.Operations = operations
 		checkpoint := cellCheckpoint{SchemaVersion: "rag-ttc-v3-cell-evidence/v1", Profile: config.profile, ProviderProfileDigest: authority.profileDigest, GenerationModelDigest: authority.modelDigest, Cell: cellResult}
 		checkpointBody, err := workflowv3.CanonicalJSON(checkpoint)
 		if err != nil {
@@ -433,7 +471,17 @@ func readCell(ctx context.Context, a workflowv3.ArtifactStore, s workflowv3.RunS
 	return cellEvidence{Cell: c, RunID: string(s.RunID), PlanDigest: s.PlanDigest, Requests: len(attempts), Chunks: chunks, MakespanMicros: makespan.Microseconds(), ProviderMicros: durations, Batches: batches, Attempts: evidenceRows(attempts), EmbeddingAttempts: evidenceRows(embeddingAttempts), EmbeddingRequests: embeddingRequests, AttemptOverlapMicros: overlapIntervals(attemptIntervals(attempts), attemptIntervals(embeddingAttempts)), ProviderOverlapMicros: overlapIntervals(generationProvider, embeddingProvider), AttemptPeakActive: peakIntervals(attemptIntervals(attempts)), ProviderPeakActive: peakIntervals(generationProvider), ChunksPerSecond: float64(chunks) / makespan.Seconds(), RequestsPerSecond: float64(len(attempts)) / makespan.Seconds(), Usage: usage}, nil
 }
 
-func writeFailedCellCheckpoint(output, cellName string, snapshot workflowv3.RunSnapshot, cell workflowv3ttc.SweepCell, reason string, budget []workflowv3.BudgetProgress) error {
+func exportCellOperations(ctx context.Context, store *workflowv3sqlite.Store, output, cellName string, runID workflowv3.RunID) (*operationEvidence, error) {
+	jsonlPath := filepath.Join(output, "operations", cellName+".jsonl")
+	manifestPath := filepath.Join(output, "operations", cellName+".manifest.json")
+	manifest, err := store.ExportExternalOperations(ctx, runID, jsonlPath, manifestPath)
+	if err != nil {
+		return nil, err
+	}
+	return &operationEvidence{JSONLPath: filepath.ToSlash(filepath.Join("operations", cellName+".jsonl")), ManifestPath: filepath.ToSlash(filepath.Join("operations", cellName+".manifest.json")), Manifest: manifest}, nil
+}
+
+func writeFailedCellCheckpoint(output, cellName string, snapshot workflowv3.RunSnapshot, cell workflowv3ttc.SweepCell, reason string, budget []workflowv3.BudgetProgress, operations *operationEvidence) error {
 	attempts := map[string]map[string]int{}
 	failureCodes := map[string]int{}
 	for _, attempt := range snapshot.Attempts {
@@ -447,7 +495,7 @@ func writeFailedCellCheckpoint(output, cellName string, snapshot workflowv3.RunS
 			failureCodes[attempt.Failure.Code]++
 		}
 	}
-	checkpoint := failedCellCheckpoint{SchemaVersion: "rag-ttc-v3-failed-cell-evidence/v1", Cell: cell, RunID: string(snapshot.RunID), RunStatus: snapshot.Status, Reason: reason, Attempts: attempts, FailureCodes: failureCodes, Budget: budget}
+	checkpoint := failedCellCheckpoint{SchemaVersion: "rag-ttc-v3-failed-cell-evidence/v1", Cell: cell, RunID: string(snapshot.RunID), RunStatus: snapshot.Status, Reason: reason, Attempts: attempts, FailureCodes: failureCodes, Budget: budget, Operations: operations}
 	body, err := workflowv3.CanonicalJSON(checkpoint)
 	if err != nil {
 		return err

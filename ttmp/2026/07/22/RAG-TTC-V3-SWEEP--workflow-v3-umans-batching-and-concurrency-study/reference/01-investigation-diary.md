@@ -852,3 +852,19 @@ Review the per-cell checkpoint ordering and runtime-root defer in `cmd/rag-ttc-v
 - Earlier-cell retry inferred from admission arithmetic: 1.
 - Proposed fresh matrix allowance: 60 planned + 8 retries.
 - Proposed new cumulative ceiling: 61 prior + 68 new = 129.
+
+## Step 11: Per-cell durable operation custody
+
+The sweep now exports the generic Workflow V3 operation ledger before closing and deleting each successful cell runtime. Each cell checkpoint and the aggregate evidence refer to the relative JSONL and manifest paths plus the canonical manifest. Timeout and terminal-failure paths use the same export before writing their privacy-safe failed-cell checkpoint. Failure custody no longer silently drops a budget, operation export, or checkpoint write error.
+
+Fixture validation produced 12 cells and 282 durable provider-operation records. Every cell manifest and JSONL path existed under the sweep output. The default 30-second control also passed on a repeat. An earlier timeout was therefore retained as a transient investigation record rather than “fixed” by increasing the application default; the five-minute timeout was used only as an explicit diagnostic bound during one repeat.
+
+**Validation:**
+
+```text
+GOWORK=off go test ./cmd/rag-ttc-v3-sweep ./internal/workflowv3ttc -count=1
+GOWORK=off go run ./cmd/rag-ttc-v3-sweep --profile fixtures --chunks 16 --concurrency 1,2,4 --maximum-requests 90 --output /tmp/rag-ledger-default-check
+GOWORK=off golangci-lint run ./cmd/rag-ttc-v3-sweep/... ./internal/workflowv3ttc/...
+```
+
+The fixture manifest count was 282, and all 12 referenced JSONL and manifest files existed.
