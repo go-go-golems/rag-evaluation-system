@@ -1,84 +1,77 @@
 package document
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 
-	cmds2 "github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds"
+	"github.com/go-go-golems/glazed/pkg/cli"
+	"github.com/go-go-golems/glazed/pkg/cmds"
+	"github.com/go-go-golems/glazed/pkg/cmds/fields"
+	"github.com/go-go-golems/glazed/pkg/cmds/schema"
+	"github.com/go-go-golems/glazed/pkg/cmds/values"
+	cmdhelpers "github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds"
 	documentprocessing "github.com/go-go-golems/rag-evaluation-system/internal/services/documentprocessing"
 	"github.com/spf13/cobra"
 )
 
-type preprocessOptions struct {
-	db                string
-	documentID        string
-	artifactType      string
-	promptVersion     string
-	provider          string
-	model             string
-	profile           string
-	profileRegistries []string
-	force             bool
+type PreprocessCommand struct{ *cmds.CommandDescription }
+
+var _ cmds.WriterCommand = (*PreprocessCommand)(nil)
+
+type PreprocessSettings struct {
+	DB                string   `glazed:"db"`
+	DocumentID        string   `glazed:"document-id"`
+	ArtifactType      string   `glazed:"artifact-type"`
+	PromptVersion     string   `glazed:"prompt-version"`
+	Provider          string   `glazed:"provider"`
+	Model             string   `glazed:"model"`
+	Profile           string   `glazed:"profile"`
+	ProfileRegistries []string `glazed:"profile-registries"`
+	Force             bool     `glazed:"force"`
 }
 
 func newPreprocessCommand() *cobra.Command {
-	opts := &preprocessOptions{}
-	cmd := &cobra.Command{
-		Use:   "preprocess",
-		Short: "Create a non-destructive document processing artifact",
-		Long: `Create a document-level preprocessing artifact without modifying documents.content_text.
-
-This Phase 3 command intentionally supports the deterministic fake provider first.
-Live LLM providers are reserved for the bounded live-provider smoke phase.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			queries, err := cmds2.OpenDBAtPath(opts.db)
-			if err != nil {
-				return err
-			}
-			defer queries.Close()
-			var provider documentprocessing.Provider
-			switch opts.provider {
-			case "fake":
-				provider = documentprocessing.FakeProvider{ProviderName: opts.provider, ModelName: opts.model}
-			case "openai-responses":
-				profile := opts.profile
-				if profile == "" {
-					profile = opts.model
-				}
-				provider, err = documentprocessing.NewOpenAIResponsesProvider(cmd.Context(), profile, opts.profileRegistries)
-				if err != nil {
-					return err
-				}
-			default:
-				return fmt.Errorf("unsupported document processing provider %q", opts.provider)
-			}
-			result, err := documentprocessing.NewService(queries).Process(cmd.Context(), documentprocessing.ProcessRequest{
-				DocumentID:    opts.documentID,
-				ArtifactType:  opts.artifactType,
-				PromptVersion: opts.promptVersion,
-				Provider:      provider,
-				Force:         opts.force,
-			})
-			if err != nil {
-				return err
-			}
-			b, err := json.MarshalIndent(result, "", "  ")
-			if err != nil {
-				return err
-			}
-			fmt.Fprintln(cmd.OutOrStdout(), string(b))
-			return nil
-		},
+	command, err := NewPreprocessCommand()
+	cobra.CheckErr(err)
+	cobraCommand, err := cli.BuildCobraCommandFromCommand(command, cli.WithParserConfig(cli.CobraParserConfig{AppName: "rag-eval", ShortHelpSections: []string{schema.DefaultSlug}}))
+	cobra.CheckErr(err)
+	return cobraCommand
+}
+func NewPreprocessCommand() (*PreprocessCommand, error) {
+	return &PreprocessCommand{CommandDescription: cmds.NewCommandDescription("preprocess", cmds.WithShort("Create a non-destructive document processing artifact"), cmds.WithLong("Create a document-level preprocessing artifact without modifying documents.content_text."), cmds.WithFlags(
+		fields.New("db", fields.TypeString, fields.WithDefault("data/rag-eval.db"), fields.WithHelp("Path to the SQLite database")), fields.New("document-id", fields.TypeString, fields.WithHelp("Document ID to preprocess"), fields.WithRequired(true)), fields.New("artifact-type", fields.TypeString, fields.WithDefault("clean_text"), fields.WithHelp("Artifact type to produce")), fields.New("prompt-version", fields.TypeString, fields.WithDefault("v1"), fields.WithHelp("Prompt version identity")), fields.New("provider", fields.TypeString, fields.WithDefault("fake"), fields.WithHelp("Document processing provider: fake or openai-responses")), fields.New("model", fields.TypeString, fields.WithDefault("fake-document-processor"), fields.WithHelp("Document processing model identity")), fields.New("profile", fields.TypeString, fields.WithHelp("Pinocchio profile slug for live document processing")), fields.New("profile-registries", fields.TypeStringList, fields.WithDefault([]string{}), fields.WithHelp("Profile registry sources for live document processing")), fields.New("force", fields.TypeBool, fields.WithDefault(false), fields.WithHelp("Recompute even if an artifact is fresh"))))}, nil
+}
+func (c *PreprocessCommand) RunIntoWriter(ctx context.Context, vals *values.Values, writer io.Writer) error {
+	s := &PreprocessSettings{}
+	if err := vals.DecodeSectionInto(schema.DefaultSlug, s); err != nil {
+		return err
 	}
-	cmd.Flags().StringVar(&opts.db, "db", "data/rag-eval.db", "Path to the SQLite database")
-	cmd.Flags().StringVar(&opts.documentID, "document-id", "", "Document ID to preprocess")
-	cmd.Flags().StringVar(&opts.artifactType, "artifact-type", "clean_text", "Artifact type to produce")
-	cmd.Flags().StringVar(&opts.promptVersion, "prompt-version", "v1", "Prompt version identity")
-	cmd.Flags().StringVar(&opts.provider, "provider", "fake", "Document processing provider: fake or openai-responses")
-	cmd.Flags().StringVar(&opts.model, "model", "fake-document-processor", "Document processing model identity, or profile slug for openai-responses when --profile is omitted")
-	cmd.Flags().StringVar(&opts.profile, "profile", "", "Pinocchio profile slug for live document processing")
-	cmd.Flags().StringSliceVar(&opts.profileRegistries, "profile-registries", nil, "Profile registry sources for live document processing")
-	cmd.Flags().BoolVar(&opts.force, "force", false, "Recompute even if an artifact is fresh")
-	_ = cmd.MarkFlagRequired("document-id")
-	return cmd
+	queries, err := cmdhelpers.OpenDBAtPath(s.DB)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = queries.Close() }()
+	var provider documentprocessing.Provider
+	switch s.Provider {
+	case "fake":
+		provider = documentprocessing.FakeProvider{ProviderName: s.Provider, ModelName: s.Model}
+	case "openai-responses":
+		profile := s.Profile
+		if profile == "" {
+			profile = s.Model
+		}
+		provider, err = documentprocessing.NewOpenAIResponsesProvider(ctx, profile, s.ProfileRegistries)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unsupported document processing provider %q", s.Provider)
+	}
+	result, err := documentprocessing.NewService(queries).Process(ctx, documentprocessing.ProcessRequest{DocumentID: s.DocumentID, ArtifactType: s.ArtifactType, PromptVersion: s.PromptVersion, Provider: provider, Force: s.Force})
+	if err != nil {
+		return err
+	}
+	return json.NewEncoder(writer).Encode(result)
 }

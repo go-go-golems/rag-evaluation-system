@@ -1,0 +1,16 @@
+{
+	"schemaVersion": "rag-model-manifest/v1",
+	"digest": "sha256:8dae21e1fdcd225b6a904b16e0c9bd406ceb50956e1401f0302567e63d330808",
+	"parents": [],
+	"providerAdapterVersion": "geppetto-generation/v1",
+	"modelId": "umans-flash",
+	"modelDigest": "sha256:de4fd2ae4ab9b359e5ce7fee7b7773258f6eb9643cd61a682f54d76b7584a684",
+	"tokenization": "manifest-exact/v1",
+	"truncation": "none",
+	"normalization": "none",
+	"implementationVersion": "umans/openai-chat-completions/v1",
+	"requestParameters": {
+		"temperature": 0,
+		"stream": true
+	}
+}

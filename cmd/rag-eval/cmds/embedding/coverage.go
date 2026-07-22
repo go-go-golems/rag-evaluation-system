@@ -100,7 +100,7 @@ func (c *CoverageCommand) RunIntoGlazeProcessor(
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	service := embeddingservice.NewService(queries)
 	result, err := service.Coverage(ctx, embeddingservice.CoverageRequest{

@@ -1,0 +1,16 @@
+{
+	"schemaVersion": "rag-model-manifest/v1",
+	"digest": "sha256:58f1b51cc87dc74fa5616bb90532275366c1a7b1ad229bff6a9b7bee293e13f0",
+	"parents": [],
+	"providerAdapterVersion": "geppetto-generation/v1",
+	"modelId": "umans-glm-5.2",
+	"modelDigest": "sha256:8817b6ab7841469c55121027e31a03acc605fc3d855a60dd99488285f70229aa",
+	"tokenization": "manifest-exact/v1",
+	"truncation": "none",
+	"normalization": "none",
+	"implementationVersion": "umans/v1",
+	"requestParameters": {
+		"temperature": 0,
+		"stream": true
+	}
+}

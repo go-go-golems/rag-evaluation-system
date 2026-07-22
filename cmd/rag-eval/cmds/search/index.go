@@ -76,7 +76,7 @@ func (c *IndexCommand) RunIntoGlazeProcessor(ctx context.Context, vals *values.V
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	service := searchservice.NewService(queries, s.IndexRoot)
 	result, err := service.BuildBM25(ctx, searchservice.BuildIndexRequest{

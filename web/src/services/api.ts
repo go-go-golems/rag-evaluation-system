@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { WidgetNode } from "@go-go-golems/rag-evaluation-site/ir";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export interface DslPageResponse {
 	id: string;
@@ -289,6 +289,44 @@ export interface EmbeddingCoverageResult {
 	}>;
 }
 
+// --- Immutable experiment laboratory ---
+
+export interface RAGArtifactSnapshot {
+	id: string;
+	document_count: number;
+	created_at: string;
+}
+
+export interface RAGArtifactChunkSet {
+	id: string;
+	corpus_snapshot_id: string;
+	chunk_plan_id: string;
+	chunk_count: number;
+	created_at: string;
+}
+
+export interface RAGArtifactEmbeddingSet {
+	id: string;
+	chunk_set_id: string;
+	embedding_plan_id: string;
+	embedding_count: number;
+	created_at: string;
+}
+
+export interface RAGArtifactBM25Index {
+	id: string;
+	chunk_set_id: string;
+	chunk_count: number;
+	created_at: string;
+}
+
+export interface RAGArtifactCatalog {
+	snapshots: RAGArtifactSnapshot[];
+	chunk_sets: RAGArtifactChunkSet[];
+	embedding_sets: RAGArtifactEmbeddingSet[];
+	bm25_artifacts: RAGArtifactBM25Index[];
+}
+
 function filterIdentityParams(
 	args: CorpusIdentityArgs,
 ): Record<string, string | number | undefined> {
@@ -312,6 +350,7 @@ export const ragApi = createApi({
 		"Corpus",
 		"Workflows",
 		"Artifacts",
+		"Lab",
 	],
 	endpoints: (builder) => ({
 		getDslPage: builder.query<DslPageResponse, string>({
@@ -489,6 +528,12 @@ export const ragApi = createApi({
 		>({
 			query: (args) =>
 				`chunks/${args.chunkId}/enrichments${args.strategyId ? "?strategy_id=" + args.strategyId : ""}${args.promptVersion ? "&prompt_version=" + args.promptVersion : ""}`,
+			providesTags: ["Artifacts"],
+		}),
+
+		// --- Read-only immutable domain artifact catalog ---
+		getRAGArtifactCatalog: builder.query<RAGArtifactCatalog, void>({
+			query: () => "artifacts/rag/catalog",
 			providesTags: ["Artifacts"],
 		}),
 	}),
@@ -778,6 +823,8 @@ export const {
 	useGetChunkEnrichmentCoverageQuery,
 	useGetDocumentProcessingArtifactsQuery,
 	useGetChunkEnrichmentsQuery,
+	// Read-only immutable domain artifact catalog
+	useGetRAGArtifactCatalogQuery,
 	// Op result
 	useGetOpResultQuery,
 } = ragApi;

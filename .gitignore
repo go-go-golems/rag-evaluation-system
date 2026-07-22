@@ -20,6 +20,7 @@ web/storybook-static/
 packages/rag-evaluation-site/storybook-static/
 examples/xgoja-widgetdsl-v3/dist/
 /node_modules/
+/js/types/
 
 # IDE
 .idea/

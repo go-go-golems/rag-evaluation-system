@@ -1,0 +1,26 @@
+{
+	"$id": "rag-combined-preparation/v2",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["items"],
+	"properties": {
+		"items": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["chunkId", "summary", "questions"],
+				"properties": {
+					"chunkId": { "type": "string", "minLength": 1 },
+					"summary": { "type": "string", "minLength": 1 },
+					"questions": {
+						"type": "array",
+						"minItems": 4,
+						"maxItems": 4,
+						"items": { "type": "string", "minLength": 1 }
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,89 +1,106 @@
+schema: xgoja/v2
 name: rag-eval-js
-appName: rag-eval-js
-envPrefix: RAG_EVAL_JS
-config:
-  enabled: true
-  layers:
-    - cwd
-    - explicit
-  fileName: rag-eval-js.yaml
-target:
-  kind: xgoja
-  output: dist/rag-eval-js
-packages:
+app:
+  name: rag-eval-js
+  envPrefix: RAG_EVAL_JS
+  configFile:
+    enabled: true
+    layers: [cwd, explicit]
+    fileName: rag-eval-js.yaml
+go:
+  module: github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/generated
+  version: "1.26"
+workspace:
+  mode: auto
+providers:
   - id: go-go-goja-core
     import: github.com/go-go-golems/go-go-goja/pkg/xgoja/providers/core
-    replace: ../../../go-go-goja
+    register: Register
   - id: go-go-goja-host
     import: github.com/go-go-golems/go-go-goja/pkg/xgoja/providers/host
-    replace: ../../../go-go-goja
+    register: Register
   - id: go-go-goja-http
     import: github.com/go-go-golems/go-go-goja/pkg/xgoja/providers/http
-    replace: ../../../go-go-goja
+    register: Register
   - id: goja-text
     import: github.com/go-go-golems/goja-text/pkg/xgoja/providers/text
-    replace: ../../../goja-text
+    register: Register
+    module:
+      version: v0.1.2
   - id: geppetto
     import: github.com/go-go-golems/geppetto/pkg/js/modules/geppetto/provider
-    replace: ../../../geppetto
-runtimes:
-  main:
-    modules:
-      - package: go-go-goja-core
-        name: path
-        as: path
-      - package: go-go-goja-core
-        name: yaml
-        as: yaml
-      - package: go-go-goja-host
-        name: fs
-        as: fs
-        config:
-          allow: true
-      - package: go-go-goja-host
-        name: db
-        as: db
-        config:
-          allowConfigure: true
-      - package: goja-text
-        name: markdown
-        as: markdown
-      - package: goja-text
-        name: sanitize
-        as: sanitize
-      - package: goja-text
-        name: extract
-        as: extract
-      - package: go-go-goja-http
-        name: express
-        as: express
-      - package: geppetto
-        name: geppetto
-        as: geppetto
-        config:
-          allowRegistryLoad: true
-          allowNetwork: true
+    register: Register
+  - id: rag-evaluation-system
+    import: github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/rag
+    register: Register
+    module:
+      replace: ../..
+runtime:
+  modules:
+    - provider: go-go-goja-core
+      name: path
+      as: path
+    - provider: go-go-goja-core
+      name: yaml
+      as: yaml
+    - provider: go-go-goja-host
+      name: fs
+      as: fs
+      config:
+        allow: true
+    - provider: go-go-goja-host
+      name: db
+      as: db
+      config:
+        allowConfigure: true
+    - provider: goja-text
+      name: markdown
+      as: markdown
+    - provider: goja-text
+      name: sanitize
+      as: sanitize
+    - provider: goja-text
+      name: extract
+      as: extract
+    - provider: go-go-goja-http
+      name: express
+      as: express
+    - provider: geppetto
+      name: geppetto
+      as: geppetto
+    - provider: rag-evaluation-system
+      name: rag
+      as: rag
+sources:
+  - id: rag-eval-jsverbs
+    kind: jsverbs
+    from:
+      dir: ./jsverbs
+    language: javascript
 commands:
-  eval:
-    enabled: true
-    runtime: main
-  run:
-    enabled: true
-    runtime: main
-  repl:
-    enabled: true
-    runtime: main
-  jsverbs:
-    enabled: true
-    runtime: main
+  - id: eval
+    type: builtin.eval
+    name: eval
+  - id: run
+    type: builtin.run
+    name: run
+  - id: repl
+    type: builtin.repl
+    name: repl
+  - id: verbs
+    type: builtin.jsverbs
     name: verbs
     mount: root
-jsverbs:
-  - id: rag-eval-jsverbs
-    path: ./jsverbs
-    embed: true
-help:
-  sources:
-    - id: goja-text-runtime-api
-      package: goja-text
-      source: runtime-api
+    sources: [rag-eval-jsverbs]
+artifacts:
+  - id: binary
+    type: binary
+    output: dist/rag-eval-js
+    sources: [rag-eval-jsverbs]
+  - id: declarations
+    type: dts
+    output: js/types/xgoja-modules.d.ts
+    # Geppetto's provider currently has no declaration descriptor. Keep the
+    # RAG declaration artifact generated, and track strict whole-runtime
+    # coverage separately instead of removing that runtime module.
+    strict: false

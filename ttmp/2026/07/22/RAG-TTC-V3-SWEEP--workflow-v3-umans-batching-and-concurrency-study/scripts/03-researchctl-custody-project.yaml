@@ -1,0 +1,21 @@
+schemaVersion: 2
+kind: ResearchProject
+id: PRJ-TTC-CUSTODY
+name: TTC custody validation
+hypotheses:
+  - id: H-001
+    claim: Durable compact operation evidence can be imported without source payloads.
+    status: open
+    priority: P1
+    testedBy: [EXP-001]
+    confidence: unknown
+experiments:
+  - id: EXP-001
+    title: Fixture operation custody
+    status: planned
+    priority: P1
+    hypotheses: [H-001]
+    expectedArtifacts: []
+    metrics: []
+    successCriteria: []
+reviewRules: []

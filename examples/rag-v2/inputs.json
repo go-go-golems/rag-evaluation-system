@@ -1,0 +1,16 @@
+{
+	"inputs": {
+		"corpus": {
+			"role": "corpus",
+			"kind": "manifest",
+			"digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			"schemaVersion": "rag-corpus-snapshot-manifest/v2"
+		},
+		"judgments": {
+			"role": "judgments",
+			"kind": "manifest",
+			"digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+			"schemaVersion": "rag-evaluation-dataset-manifest/v2"
+		}
+	}
+}

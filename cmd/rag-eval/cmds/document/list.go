@@ -102,7 +102,7 @@ func (c *ListCommand) RunIntoGlazeProcessor(
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	service := documentservice.NewService(queries)
 	docs, err := service.List(ctx, documentservice.ListRequest{Limit: s.Limit, Offset: s.Offset})

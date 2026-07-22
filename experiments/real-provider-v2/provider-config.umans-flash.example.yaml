@@ -1,0 +1,37 @@
+schemaVersion: rag-provider-host-config/v1
+profileId: ttc-umans-flash-local-embedding-v1
+manifests:
+  modelsDir: manifests/models
+  promptsDir: manifests/prompts
+schemas:
+  directory: schemas
+cache:
+  kind: filesystem-content-addressed/v1
+  directory: .cache/umans-flash-sweep
+  maxEntryBytes: 4194304
+providers:
+  embedding-primary:
+    kind: geppetto-embedding/v1
+    modelManifest: embedding-primary
+    endpointRef: env:RAG_EMBEDDING_BASE_URL
+    allowHttp: true
+    allowLocalNetworks: true
+  generator-primary:
+    kind: geppetto-generation/v1
+    modelManifest: generator-umans-flash
+    profile: umans-flash
+    concurrency:
+      maxInFlight: 4
+    generation:
+      maxResponseTokens: 8192
+      pricing:
+        inputMicrounitsPerMillion: 150000
+        outputMicrounitsPerMillion: 1000000
+        cacheReadMicrounitsPerMillion: 50000
+        cacheWriteMicrounitsPerMillion: 150000
+  reranker-primary:
+    kind: geppetto-reranker/v1
+    modelManifest: reranker-primary
+    endpointRef: env:RAG_RERANKER_BASE_URL
+    allowHttp: true
+    allowLocalNetworks: true

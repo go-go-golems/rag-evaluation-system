@@ -120,7 +120,7 @@ func (c *ChunksCommand) RunIntoGlazeProcessor(
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	service := documentservice.NewService(queries)
 	chunks, err := service.Chunks(ctx, documentservice.ChunksRequest{DocumentID: s.DocID})

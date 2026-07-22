@@ -129,6 +129,14 @@ topics:
       description: Widget DSL authoring and helper APIs
     - slug: workshops
       description: Workshop planning, sales, and delivery workflows
+    - slug: reranking
+      description: Cross-encoder post-retrieval candidate scoring and ordering.
+    - slug: ollama
+      description: Local model runtime and model-store integration.
+    - slug: obsidian
+      description: Obsidian vault corpus structure, Markdown metadata, and wikilink semantics
+    - slug: adjudication
+      description: Human review and evidence labeling
 docTypes:
     - slug: design-doc
       description: Structured rationale and architecture notes

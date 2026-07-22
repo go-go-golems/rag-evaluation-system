@@ -1,0 +1,347 @@
+// Package preparationworkflow adapts immutable RAG combined-preparation plans
+// to scraper's durable workflow runtime. It deliberately leaves prompt/model
+// resolution and validation in ragoperators.
+package preparationworkflow
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"sort"
+	"strings"
+	"time"
+
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragengine"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
+	"github.com/go-go-golems/scraper/pkg/engine/model"
+	scraperworkflow "github.com/go-go-golems/scraper/pkg/workflow"
+)
+
+const (
+	PackageName       = "rag-preparation/v1"
+	CombinedStepKind  = "rag-preparation/combined-batch/v1"
+	EmbeddingStepKind = "rag-preparation/embedding-batch/v1"
+	FinalizeStepKind  = "rag-preparation/finalize/v1"
+	GenerationQueue   = model.QueueKey("rag:generator")
+	EmbeddingQueue    = model.QueueKey("rag:embedding")
+	LocalQueue        = model.QueueKey("rag:local")
+
+	providerRequestTimeout = 3 * time.Minute
+)
+
+type Identity struct {
+	SchemaVersion  string `json:"schemaVersion"`
+	PreparedDigest string `json:"preparedDigest"`
+}
+
+type EmbeddingSpec struct {
+	Node                       ragcontract.Node `json:"node"`
+	RawRepresentationName      string           `json:"rawRepresentationName"`
+	MaxRepresentationsPerChunk int              `json:"maxRepresentationsPerChunk"`
+}
+
+type PublicationSpec struct {
+	Identity           ragengine.PreparedCorpusIdentity `json:"identity"`
+	ChunksOutputKey    string                           `json:"chunksOutputKey"`
+	RawOutputKey       string                           `json:"rawOutputKey"`
+	DerivedOutputKey   string                           `json:"derivedOutputKey"`
+	MergedOutputKey    string                           `json:"mergedOutputKey"`
+	EmbeddingOutputKey string                           `json:"embeddingOutputKey"`
+}
+
+type Input struct {
+	Identity    Identity                             `json:"identity"`
+	Plan        ragoperators.CombinedPreparationPlan `json:"plan"`
+	Embedding   *EmbeddingSpec                       `json:"embedding,omitempty"`
+	Publication *PublicationSpec                     `json:"publication,omitempty"`
+}
+
+type batchInput struct {
+	Identity Identity                              `json:"identity"`
+	Plan     ragoperators.CombinedPreparationPlan  `json:"plan"`
+	Batch    ragoperators.CombinedPreparationBatch `json:"batch"`
+}
+
+type batchOutput struct {
+	Representations []ragoperators.Representation `json:"representations"`
+	CacheHit        bool                          `json:"cacheHit"`
+	ProviderCall    bool                          `json:"providerCall"`
+}
+
+type embeddingInput struct {
+	Identity       Identity                              `json:"identity"`
+	Plan           ragoperators.CombinedPreparationPlan  `json:"plan"`
+	Batch          ragoperators.CombinedPreparationBatch `json:"batch"`
+	CombinedStepID model.OpID                            `json:"combinedStepId"`
+	Spec           EmbeddingSpec                         `json:"spec"`
+}
+
+type embeddingOutput struct {
+	Chunks                 []ragoperators.Chunk          `json:"chunks"`
+	RawRepresentations     []ragoperators.Representation `json:"rawRepresentations"`
+	DerivedRepresentations []ragoperators.Representation `json:"derivedRepresentations"`
+	Representations        []ragoperators.Representation `json:"representations"`
+	Embeddings             []ragoperators.Embedding      `json:"embeddings"`
+	ProviderCall           bool                          `json:"providerCall"`
+}
+
+type finalizerInput struct {
+	Identity        Identity         `json:"identity"`
+	ExpectedBatches int              `json:"expectedBatches"`
+	Embeddings      bool             `json:"embeddings"`
+	Publication     *PublicationSpec `json:"publication,omitempty"`
+}
+
+// EnvironmentResolver resolves process-local provider configuration without
+// placing credentials in durable scraper operation inputs.
+type EnvironmentResolver func(context.Context, Identity) (*ragoperators.Environment, error)
+
+// PublicationTarget supplies process-local publication dependencies. Its pipeline,
+// corpus, stores, and provider configuration are never durable workflow input.
+type PublicationTarget struct {
+	Store    ragengine.PreparedCorpusStore
+	Engine   *ragengine.Engine
+	Pipeline ragcontract.PipelineIR
+	Corpus   ragoperators.Corpus
+	Options  ragengine.Options
+}
+
+type PublicationResolver func(context.Context, Identity, PublicationSpec) (PublicationTarget, error)
+
+// Register installs the preparation package and its two domain executors into a
+// scraper runtime. The caller owns runtime lifetime and scheduling.
+func Register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver) error {
+	return register(runtime, resolve, nil)
+}
+
+// RegisterWithPublication installs a finalizer that atomically publishes a complete
+// prepared corpus when Input.Publication is provided.
+func RegisterWithPublication(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, publication PublicationResolver) error {
+	if publication == nil {
+		return fmt.Errorf("preparation workflow publication resolver is required")
+	}
+	return register(runtime, resolve, publication)
+}
+
+func register(runtime *scraperworkflow.Runtime, resolve EnvironmentResolver, publication PublicationResolver) error {
+	if runtime == nil || resolve == nil {
+		return fmt.Errorf("preparation workflow runtime and environment resolver are required")
+	}
+	if err := runtime.RegisterExecutor(scraperworkflow.NewTypedExecutor(CombinedStepKind, func(ctx context.Context, step *scraperworkflow.StepContext, in batchInput) error {
+		env, err := resolve(ctx, in.Identity)
+		if err != nil {
+			return err
+		}
+		requestCtx, cancel := context.WithTimeout(ctx, providerRequestTimeout)
+		defer cancel()
+		result, err := ragoperators.ExecuteCombinedPreparationBatch(requestCtx, in.Plan, in.Batch, env)
+		if err != nil {
+			if strings.Contains(err.Error(), "RAG_GEPPETTO_GENERATOR_PROVIDER") {
+				return scraperworkflow.Retryable("rag_generator_provider", err)
+			}
+			if strings.Contains(err.Error(), "RAG_COMBINED_RESPONSE_") {
+				// A response that fails strict shape/cardinality validation is never persisted.
+				// Retrying obtains a new bounded provider response; exhaustion remains terminal.
+				return scraperworkflow.Retryable("rag_generator_response_validation", err)
+			}
+			return err
+		}
+		output := batchOutput{Representations: result.Representations, CacheHit: result.CacheHit, ProviderCall: result.ProviderCall}
+		body, err := json.Marshal(output)
+		if err != nil {
+			return fmt.Errorf("marshal combined batch artifact: %w", err)
+		}
+		if _, err := step.Artifact("combined-batch-result.json", "application/json", body, scraperworkflow.ArtifactKind("rag-preparation-batch-result")); err != nil {
+			return err
+		}
+		return step.Result(output)
+	})); err != nil {
+		return err
+	}
+	if err := runtime.RegisterExecutor(scraperworkflow.NewTypedExecutor(EmbeddingStepKind, func(ctx context.Context, step *scraperworkflow.StepContext, in embeddingInput) error {
+		var combined batchOutput
+		if err := step.DependencyData(in.CombinedStepID, &combined); err != nil {
+			return err
+		}
+		raw, err := ragoperators.RawRepresentations(in.Spec.RawRepresentationName, in.Batch.Chunks)
+		if err != nil {
+			return err
+		}
+		representations := append(raw, combined.Representations...)
+		sort.Slice(representations, func(i, j int) bool { return representations[i].Record.ID < representations[j].Record.ID })
+		for i := 1; i < len(representations); i++ {
+			if representations[i].Record.ID == representations[i-1].Record.ID {
+				return fmt.Errorf("RAG_PREPARATION_REPRESENTATION_DUPLICATE: %s", representations[i].Record.ID)
+			}
+		}
+		if len(representations) > len(in.Batch.Chunks)*in.Spec.MaxRepresentationsPerChunk {
+			return fmt.Errorf("RAG_PREPARATION_REPRESENTATION_CARDINALITY: got %d exceeds declared maximum %d", len(representations), len(in.Batch.Chunks)*in.Spec.MaxRepresentationsPerChunk)
+		}
+		plan, err := ragoperators.PlanEmbeddingBatches(representations, in.Spec.Node)
+		if err != nil {
+			return err
+		}
+		if len(plan.Batches) != 1 {
+			return fmt.Errorf("RAG_PREPARATION_EMBED_BATCH_CONFIG: combined batch %d requires %d embedding requests", in.Batch.Index, len(plan.Batches))
+		}
+		env, err := resolve(ctx, in.Identity)
+		if err != nil {
+			return err
+		}
+		requestCtx, cancel := context.WithTimeout(ctx, providerRequestTimeout)
+		defer cancel()
+		result, err := ragoperators.ExecuteEmbeddingBatch(requestCtx, plan, plan.Batches[0], env)
+		if err != nil {
+			if strings.Contains(err.Error(), "RAG_GEPPETTO_EMBED") || requestCtx.Err() != nil {
+				return scraperworkflow.Retryable("rag_embedding_provider", err)
+			}
+			return err
+		}
+		output := embeddingOutput{Chunks: in.Batch.Chunks, RawRepresentations: raw, DerivedRepresentations: combined.Representations, Representations: representations, Embeddings: result.Embeddings, ProviderCall: result.ProviderCall}
+		body, err := json.Marshal(output)
+		if err != nil {
+			return fmt.Errorf("marshal embedding batch artifact: %w", err)
+		}
+		if _, err := step.Artifact("embedding-batch-result.json", "application/json", body, scraperworkflow.ArtifactKind("rag-preparation-embedding-batch-result")); err != nil {
+			return err
+		}
+		return step.Result(output)
+	})); err != nil {
+		return err
+	}
+	if err := runtime.RegisterExecutor(scraperworkflow.NewTypedExecutor(FinalizeStepKind, func(ctx context.Context, step *scraperworkflow.StepContext, in finalizerInput) error {
+		if len(step.Step().DependsOn) != in.ExpectedBatches {
+			return fmt.Errorf("RAG_PREPARATION_FINALIZE_DEPENDENCIES: got %d want %d", len(step.Step().DependsOn), in.ExpectedBatches)
+		}
+		chunks := []ragoperators.Chunk{}
+		rawRepresentations := []ragoperators.Representation{}
+		derivedRepresentations := []ragoperators.Representation{}
+		representations := []ragoperators.Representation{}
+		embeddings := []ragoperators.Embedding{}
+		for _, dep := range step.Step().DependsOn {
+			if in.Embeddings {
+				var output embeddingOutput
+				if err := step.DependencyData(dep.OpID, &output); err != nil {
+					return err
+				}
+				chunks = append(chunks, output.Chunks...)
+				rawRepresentations = append(rawRepresentations, output.RawRepresentations...)
+				derivedRepresentations = append(derivedRepresentations, output.DerivedRepresentations...)
+				representations = append(representations, output.Representations...)
+				embeddings = append(embeddings, output.Embeddings...)
+				continue
+			}
+			var output batchOutput
+			if err := step.DependencyData(dep.OpID, &output); err != nil {
+				return err
+			}
+			representations = append(representations, output.Representations...)
+		}
+		sort.Slice(representations, func(i, j int) bool { return representations[i].Record.ID < representations[j].Record.ID })
+		for i := 1; i < len(representations); i++ {
+			if representations[i].Record.ID == representations[i-1].Record.ID {
+				return fmt.Errorf("RAG_PREPARATION_FINALIZE_REPRESENTATION_DUPLICATE: %s", representations[i].Record.ID)
+			}
+		}
+		result := map[string]any{"schemaVersion": "rag-preparation-finalize/v1", "representationCount": len(representations), "embeddingCount": len(embeddings)}
+		if in.Publication != nil {
+			if publication == nil || !in.Embeddings || in.Publication.ChunksOutputKey == "" || in.Publication.RawOutputKey == "" || in.Publication.DerivedOutputKey == "" || in.Publication.MergedOutputKey == "" || in.Publication.EmbeddingOutputKey == "" {
+				return fmt.Errorf("RAG_PREPARATION_PUBLICATION_CONFIG")
+			}
+			target, err := publication(ctx, in.Identity, *in.Publication)
+			if err != nil {
+				return err
+			}
+			values := map[string]any{
+				in.Publication.ChunksOutputKey:    chunks,
+				in.Publication.RawOutputKey:       rawRepresentations,
+				in.Publication.DerivedOutputKey:   derivedRepresentations,
+				in.Publication.MergedOutputKey:    representations,
+				in.Publication.EmbeddingOutputKey: embeddings,
+			}
+			digest, err := ragengine.PublishPreparedCorpus(ctx, ragengine.PreparedCorpusPublication{Store: target.Store, Engine: target.Engine, Pipeline: target.Pipeline, Corpus: target.Corpus, Options: target.Options, Identity: in.Publication.Identity, Values: values})
+			if err != nil {
+				return err
+			}
+			body, err := json.Marshal(map[string]any{"schemaVersion": "rag-prepared-corpus-publication/v1", "preparedDigest": digest, "identity": in.Publication.Identity})
+			if err != nil {
+				return err
+			}
+			if _, err := step.Artifact("prepared-corpus-publication.json", "application/json", body, scraperworkflow.ArtifactKind("rag-prepared-corpus-publication")); err != nil {
+				return err
+			}
+			result["preparedDigest"] = digest
+		}
+		return step.Result(result)
+	})); err != nil {
+		return err
+	}
+	return runtime.RegisterPackage(scraperworkflow.NewPackage(PackageName).DisplayName("RAG preparation").Entrypoint(scraperworkflow.EntrypointFunc[Input](build)).Build())
+}
+
+func build(_ context.Context, run *scraperworkflow.RunBuilder, input Input) error {
+	if input.Identity.SchemaVersion != "rag-preparation-workflow/v1" || input.Identity.PreparedDigest == "" {
+		return fmt.Errorf("RAG_PREPARATION_IDENTITY")
+	}
+	if len(input.Plan.Batches) == 0 {
+		return fmt.Errorf("RAG_PREPARATION_EMPTY_PLAN")
+	}
+	combinedSteps := make([]scraperworkflow.StepHandle, 0, len(input.Plan.Batches))
+	for _, batch := range input.Plan.Batches {
+		handle, err := run.Step(fmt.Sprintf("combined-%04d", batch.Index), batchInput{Identity: input.Identity, Plan: input.Plan, Batch: batch}, scraperworkflow.StepOpts{Kind: CombinedStepKind, Queue: GenerationQueue, DedupKey: batchID(input.Identity, batch), Retry: model.RetryPolicy{MaxAttempts: 3}})
+		if err != nil {
+			return err
+		}
+		combinedSteps = append(combinedSteps, handle)
+	}
+	finalDependencies := combinedSteps
+	if input.Embedding != nil {
+		if input.Embedding.RawRepresentationName == "" || input.Embedding.MaxRepresentationsPerChunk < 1 {
+			return fmt.Errorf("RAG_PREPARATION_EMBEDDING_CARDINALITY")
+		}
+		batchSize, err := embeddingBatchSize(input.Embedding.Node)
+		if err != nil {
+			return err
+		}
+		for _, batch := range input.Plan.Batches {
+			if len(batch.Chunks)*input.Embedding.MaxRepresentationsPerChunk > batchSize {
+				return fmt.Errorf("RAG_PREPARATION_EMBED_BATCH_CONFIG: combined batch %d can require %d embedding items, over configured limit %d", batch.Index, len(batch.Chunks)*input.Embedding.MaxRepresentationsPerChunk, batchSize)
+			}
+		}
+		embeddingSteps := make([]scraperworkflow.StepHandle, 0, len(input.Plan.Batches))
+		for index, batch := range input.Plan.Batches {
+			handle, err := run.Step(fmt.Sprintf("embedding-%04d", batch.Index), embeddingInput{Identity: input.Identity, Plan: input.Plan, Batch: batch, CombinedStepID: combinedSteps[index].ID, Spec: *input.Embedding}, scraperworkflow.StepOpts{Kind: EmbeddingStepKind, Queue: EmbeddingQueue, DedupKey: fmt.Sprintf("%s:embedding:%04d", input.Identity.PreparedDigest, batch.Index), DependsOn: scraperworkflow.Require(combinedSteps[index]), Retry: model.RetryPolicy{MaxAttempts: 3}})
+			if err != nil {
+				return err
+			}
+			embeddingSteps = append(embeddingSteps, handle)
+		}
+		finalDependencies = embeddingSteps
+	}
+	if input.Publication != nil {
+		if input.Publication.Identity.SchemaVersion != "rag-prepared-corpus-manifest/v1" {
+			return fmt.Errorf("RAG_PREPARATION_PUBLICATION_IDENTITY")
+		}
+		publicationDigest, err := ragcontract.Digest(input.Publication.Identity)
+		if err != nil || publicationDigest != input.Identity.PreparedDigest {
+			return fmt.Errorf("RAG_PREPARATION_PUBLICATION_IDENTITY")
+		}
+	}
+	_, err := run.Step("finalize", finalizerInput{Identity: input.Identity, ExpectedBatches: len(finalDependencies), Embeddings: input.Embedding != nil, Publication: input.Publication}, scraperworkflow.StepOpts{Kind: FinalizeStepKind, Queue: LocalQueue, DependsOn: scraperworkflow.Require(finalDependencies...)})
+	return err
+}
+
+func embeddingBatchSize(node ragcontract.Node) (int, error) {
+	var config struct {
+		BatchSize int `json:"batchSize"`
+	}
+	if err := json.Unmarshal(node.Config, &config); err != nil || config.BatchSize < 1 {
+		return 0, fmt.Errorf("RAG_PREPARATION_EMBEDDING_BATCH_SIZE")
+	}
+	return config.BatchSize, nil
+}
+
+func batchID(identity Identity, batch ragoperators.CombinedPreparationBatch) string {
+	return fmt.Sprintf("%s:combined:%04d", identity.PreparedDigest, batch.Index)
+}

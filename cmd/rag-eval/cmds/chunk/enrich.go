@@ -1,68 +1,76 @@
 package chunk
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 
-	cmds2 "github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds"
+	"github.com/go-go-golems/glazed/pkg/cli"
+	"github.com/go-go-golems/glazed/pkg/cmds"
+	"github.com/go-go-golems/glazed/pkg/cmds/fields"
+	"github.com/go-go-golems/glazed/pkg/cmds/schema"
+	"github.com/go-go-golems/glazed/pkg/cmds/values"
+	cmdhelpers "github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds"
 	chunkenrichment "github.com/go-go-golems/rag-evaluation-system/internal/services/chunkenrichment"
 	"github.com/spf13/cobra"
 )
 
-type enrichOptions struct {
-	db            string
-	chunkID       string
-	strategyID    string
-	promptVersion string
-	provider      string
-	model         string
-	force         bool
+type EnrichCommand struct{ *cmds.CommandDescription }
+
+var _ cmds.WriterCommand = (*EnrichCommand)(nil)
+
+type EnrichSettings struct {
+	DB            string `glazed:"db"`
+	ChunkID       string `glazed:"chunk-id"`
+	StrategyID    string `glazed:"strategy-id"`
+	PromptVersion string `glazed:"prompt-version"`
+	Provider      string `glazed:"provider"`
+	Model         string `glazed:"model"`
+	Force         bool   `glazed:"force"`
 }
 
 func newEnrichCommand() *cobra.Command {
-	opts := &enrichOptions{}
-	cmd := &cobra.Command{
-		Use:   "enrich",
-		Short: "Create a non-destructive chunk enrichment artifact",
-		Long: `Create a chunk-level enrichment artifact without modifying canonical chunk text.
+	command, err := NewEnrichCommand()
+	cobra.CheckErr(err)
+	cobraCommand, err := cli.BuildCobraCommandFromCommand(command, cli.WithParserConfig(cli.CobraParserConfig{AppName: "rag-eval", ShortHelpSections: []string{schema.DefaultSlug}}))
+	cobra.CheckErr(err)
+	return cobraCommand
+}
 
-This Phase 4 command intentionally supports the deterministic fake provider first.
-Live LLM providers are reserved for the bounded live-provider smoke phase.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			queries, err := cmds2.OpenDBAtPath(opts.db)
-			if err != nil {
-				return err
-			}
-			defer queries.Close()
-			if opts.provider != "fake" {
-				return fmt.Errorf("unsupported chunk enrichment provider %q; only fake is available before live provider smoke", opts.provider)
-			}
-			result, err := chunkenrichment.NewService(queries).Enrich(cmd.Context(), chunkenrichment.EnrichRequest{
-				ChunkID:       opts.chunkID,
-				StrategyID:    opts.strategyID,
-				PromptVersion: opts.promptVersion,
-				Provider:      chunkenrichment.FakeProvider{ProviderName: opts.provider, ModelName: opts.model},
-				Force:         opts.force,
-			})
-			if err != nil {
-				return err
-			}
-			b, err := json.MarshalIndent(result, "", "  ")
-			if err != nil {
-				return err
-			}
-			fmt.Fprintln(cmd.OutOrStdout(), string(b))
-			return nil
-		},
+func NewEnrichCommand() (*EnrichCommand, error) {
+	return &EnrichCommand{CommandDescription: cmds.NewCommandDescription(
+		"enrich",
+		cmds.WithShort("Create a non-destructive chunk enrichment artifact"),
+		cmds.WithLong("Create a chunk-level enrichment artifact without modifying canonical chunk text. Only the deterministic fake provider is currently supported."),
+		cmds.WithFlags(
+			fields.New("db", fields.TypeString, fields.WithDefault("data/rag-eval.db"), fields.WithHelp("Path to the SQLite database")),
+			fields.New("chunk-id", fields.TypeString, fields.WithHelp("Chunk ID to enrich"), fields.WithRequired(true)),
+			fields.New("strategy-id", fields.TypeString, fields.WithHelp("Chunking strategy ID"), fields.WithRequired(true)),
+			fields.New("prompt-version", fields.TypeString, fields.WithDefault("v1"), fields.WithHelp("Prompt version identity")),
+			fields.New("provider", fields.TypeString, fields.WithDefault("fake"), fields.WithHelp("Chunk enrichment provider; currently only fake")),
+			fields.New("model", fields.TypeString, fields.WithDefault("fake-chunk-enricher"), fields.WithHelp("Chunk enrichment model identity")),
+			fields.New("force", fields.TypeBool, fields.WithDefault(false), fields.WithHelp("Recompute even if enrichment is fresh")),
+		),
+	)}, nil
+}
+
+func (c *EnrichCommand) RunIntoWriter(ctx context.Context, vals *values.Values, writer io.Writer) error {
+	settings := &EnrichSettings{}
+	if err := vals.DecodeSectionInto(schema.DefaultSlug, settings); err != nil {
+		return err
 	}
-	cmd.Flags().StringVar(&opts.db, "db", "data/rag-eval.db", "Path to the SQLite database")
-	cmd.Flags().StringVar(&opts.chunkID, "chunk-id", "", "Chunk ID to enrich")
-	cmd.Flags().StringVar(&opts.strategyID, "strategy-id", "", "Chunking strategy ID")
-	cmd.Flags().StringVar(&opts.promptVersion, "prompt-version", "v1", "Prompt version identity")
-	cmd.Flags().StringVar(&opts.provider, "provider", "fake", "Chunk enrichment provider; currently only fake")
-	cmd.Flags().StringVar(&opts.model, "model", "fake-chunk-enricher", "Chunk enrichment model identity")
-	cmd.Flags().BoolVar(&opts.force, "force", false, "Recompute even if enrichment is fresh")
-	_ = cmd.MarkFlagRequired("chunk-id")
-	_ = cmd.MarkFlagRequired("strategy-id")
-	return cmd
+	queries, err := cmdhelpers.OpenDBAtPath(settings.DB)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = queries.Close() }()
+	if settings.Provider != "fake" {
+		return fmt.Errorf("unsupported chunk enrichment provider %q; only fake is available before live provider smoke", settings.Provider)
+	}
+	result, err := chunkenrichment.NewService(queries).Enrich(ctx, chunkenrichment.EnrichRequest{ChunkID: settings.ChunkID, StrategyID: settings.StrategyID, PromptVersion: settings.PromptVersion, Provider: chunkenrichment.FakeProvider{ProviderName: settings.Provider, ModelName: settings.Model}, Force: settings.Force})
+	if err != nil {
+		return err
+	}
+	return json.NewEncoder(writer).Encode(result)
 }

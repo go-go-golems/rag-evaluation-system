@@ -120,7 +120,7 @@ func (c *CreateCommand) RunIntoGlazeProcessor(
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	service := sourceservice.NewService(queries)
 	result, err := service.Create(ctx, sourceservice.CreateRequest{

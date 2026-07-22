@@ -1,0 +1,30 @@
+schemaVersion: rag-provider-host-config/v1
+profileId: ttc-real-local-v1
+manifests:
+  modelsDir: manifests/models
+  promptsDir: manifests/prompts
+schemas:
+  directory: schemas
+cache:
+  kind: filesystem-content-addressed/v1
+  directory: .cache/provider-results
+  maxEntryBytes: 4194304
+providers:
+  embedding-primary:
+    kind: geppetto-embedding/v1
+    modelManifest: embedding-primary
+    endpointRef: env:RAG_EMBEDDING_BASE_URL
+    allowHttp: true
+    allowLocalNetworks: true
+  generator-primary:
+    kind: geppetto-generation/v1
+    modelManifest: generator-primary
+    endpointRef: env:RAG_GENERATOR_BASE_URL
+    allowHttp: true
+    allowLocalNetworks: true
+  reranker-primary:
+    kind: geppetto-reranker/v1
+    modelManifest: reranker-primary
+    endpointRef: env:RAG_RERANKER_BASE_URL
+    allowHttp: true
+    allowLocalNetworks: true
