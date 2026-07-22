@@ -886,3 +886,7 @@ This is intentionally an adapter primitive; the sweep CLI still needs an operato
 The sweep now optionally writes `researchctl-run-export.json` at its output root when all explicit custody identity flags are provided. It includes the aggregate evidence, each cell checkpoint, every operation JSONL and manifest, and four scalar-only metrics. It requires the export's canonical researchctl specification and explicit run/attempt/external-run/timestamp values; it does not generate identities or timestamps.
 
 A 12-cell fixture sweep produced the bundle. `researchctl lab init` followed by `researchctl experiment import-run` staged and atomically imported 37 verified artifacts and four metrics into a fresh laboratory.
+
+## Step 15: Fixture graph visual inspection
+
+Visually inspected four rendered fixture figures: makespan, generation/embedding overlap, provider latency, and request timeline. Axes, markers, legends, and reference lines were legible; no clipping, blank regions, or sensitive content appeared. The vision review suggested a possible spelling issue in the overlap title, but the renderer source has the correct `embedding` spelling, so no speculative rendering change was made. These figures are suitable as fixture evidence only, not as real-provider conclusions.
