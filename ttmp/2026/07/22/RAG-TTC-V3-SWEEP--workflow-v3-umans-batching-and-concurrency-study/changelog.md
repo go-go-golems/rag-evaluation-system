@@ -165,3 +165,13 @@ Step 20: recovered Pinocchio-backed Umans provider host and Mac loopback tunnels
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/profile.go — Canonical qualification gate
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/ragproviders/provider_set.go — Provider construction gate
 
+
+## 2026-07-22
+
+Step 21: compiled current Umans Flash TTC canonical specification and passed no-submit preflight with 16 frozen chunks and the explicit 129-request cumulative ceiling
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/profile.go — Preflight profile/model/artifact gate
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/sha256 — 53a4934fba2135e2515e2f8b30d7108d3e21d4e349f867f5b7bf369be1ffb9b1.json:Current canonical immutable specification
+

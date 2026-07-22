@@ -13,16 +13,25 @@ Owners: []
 RelatedFiles:
     - Path: repo://cmd/rag-ttc-v3-sweep/profile.go
       Note: Real profile identity and verified corpus loading gates
+    - Path: repo://experiments/real-provider-v2/inputs.json
+      Note: Catalog input bindings resolved during canonical compilation
     - Path: repo://experiments/real-provider-v2/provider-config.umans-flash.example.yaml
       Note: Non-secret host policy split between Umans profile and local service endpoints
+    - Path: repo://experiments/real-provider-v2/study-flash-combined-speed.js
+      Note: Authoring source for the validated one-cell Umans Flash combined-preparation specification
     - Path: repo://pkg/ragproviders/provider_set.go
       Note: Profile-backed provider construction and default Pinocchio registry resolution
+    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/compile-result.json
+      Note: Compiler result recording the resolved specification
+    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/sha256
+      Note: 53a4934fba2135e2515e2f8b30d7108d3e21d4e349f867f5b7bf369be1ffb9b1.json:Canonical current real-qualification specification with immutable input references
 ExternalSources: []
 Summary: Chronological implementation and execution evidence for the Workflow V3 Umans batching and concurrency study.
 LastUpdated: 2026-07-22T10:15:00-04:00
 WhatFor: Preserve commands, decisions, failures, results, and review instructions for reproducing the study.
 WhenToUse: When implementing, operating, reviewing, or resuming RAG-TTC-V3-SWEEP.
 ---
+
 
 
 # Diary
@@ -1155,3 +1164,117 @@ find: you have too many ')'
 - Host validation result: embedding, generation, and reranker were all `true` for profile `ttc-umans-flash-local-embedding-v1`.
 - The current repository contains source-bearing corpus/evaluation custody artifacts under `data/artifacts`; only their digest and byte-size metadata were inspected during this step. No source body was printed or copied.
 - The next gate is canonical compilation, not provider configuration or tunnels. The explicit no-submit wrapper requires `REAL_PROVIDER_CONFIG`, `REAL_SPECIFICATION`, and `REAL_ARTIFACT_ROOT`.
+
+## Step 21: Compile a current TTC specification and pass non-submitting real preflight
+
+I compiled the exact Umans Flash combined-preparation speed study against the custody-verified TTC catalog and artifact root. The compiler resolved the real corpus/evaluation inputs, overwrote the authoring file's deliberate placeholder bindings with immutable artifact references, and emitted one canonical specification under the ticket. The resulting specification passed the real sweep's full no-submit authority and frozen-chunk preflight.
+
+This is a qualification result, not a paid measurement. The successful preflight constructed the validated provider host, checked profile/model authority and the corpus artifact's digest/size, deterministically materialized the first 16 chunks, and calculated the requested envelope. It did not set `--execute-real`, admit a Workflow V3 operation, call Umans, invoke the embedding service, or invoke the reranker.
+
+### Prompt Context
+
+**User prompt (verbatim):** "do it"
+
+**Assistant interpretation:** Continue from validated provider infrastructure by compiling the replacement canonical TTC specification and running the non-submitting real qualification preflight.
+
+**Inferred user intent:** Remove the stale-specification block with an auditable immutable binding while preserving the explicit authority gate before any paid provider work.
+
+**Commit (code):** pending — canonical specification, compile record, diary, and changelog will be committed together; no runtime source code changed.
+
+### What I did
+- Inspected the real-provider study and input binding sources. `study-flash-combined-speed.js` declares the intended 16-chunk-compatible combined-preparation workflow using `generator-umans-flash`, `ttc-combined-preparation-v2`, `embedding-primary`, and `reranker-primary`.
+- Confirmed the authoring file's all-`a`/all-`b` input digests are intentional placeholders and that `rag-eval study compile` replaces them through `experiments/real-provider-v2/inputs.json`, `data/rag-eval.db`, and the catalog resolver.
+- Verified only corpus/evaluation artifact digest and byte-size metadata in `data/artifacts`; no source-bearing artifact body was printed or copied.
+- Created `sources/real-qualification/specifications/` in the ticket and ran validation:
+
+```text
+GOWORK=off go run ./cmd/rag-eval study validate experiments/real-provider-v2/study-flash-combined-speed.js \\
+  --inputs experiments/real-provider-v2/inputs.json \\
+  --ttc-database data/rag-eval.db \\
+  --artifact-root data/artifacts
+```
+
+- Validation returned:
+
+```json
+{"cells":1,"schemaVersion":"rag-study/v2","valid":true,"variants":1}
+```
+
+- Compiled the canonical specification to the ticket with the same immutable input sources and recorded `compile-result.json`.
+- Ran the ticket's no-submit wrapper with the profile-backed host YAML, local Mac tunnel endpoint bindings, compiled specification, and `data/artifacts` root:
+
+```text
+RAG_EMBEDDING_BASE_URL='http://127.0.0.1:11435' \\
+RAG_RERANKER_BASE_URL='http://127.0.0.1:18012' \\
+REAL_PROVIDER_CONFIG="$PWD/experiments/real-provider-v2/provider-config.yaml" \\
+REAL_SPECIFICATION="$SPEC" \\
+REAL_ARTIFACT_ROOT="$PWD/data/artifacts" \\
+  bash ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/scripts/05-real-preflight.sh
+```
+
+### Why
+- The old canonical specification could not be reused after host model/prompt identity repair. A fresh canonical specification binds the actual study pipeline and verified immutable inputs to the current profile policy.
+- Compilation must occur through the established adapter and catalog resolver, rather than manually replacing placeholder digests in JavaScript. That preserves canonical encoding, envelope identity, input staging, and reproducibility.
+- The preflight is intentionally separate from execution: it gives an operator exact request/token/cost ceilings and verifies the frozen source selection before any provider admission.
+
+### What worked
+- Study validation passed with one variant and one expanded cell.
+- Compilation produced exactly one specification: `sha256:53a4934fba2135e2515e2f8b30d7108d3e21d4e349f867f5b7bf369be1ffb9b1.json`.
+- The real preflight passed and reported:
+
+```text
+profile_digest=sha256:cf092e0f1a389169a22e519beb8b81b7f059dd6bb66ec391ea934bf857e46702
+model_digest=sha256:de4fd2ae4ab9b359e5ce7fee7b7773258f6eb9643cd61a682f54d76b7584a684
+frozen_chunks=16
+planned_generation_requests=60
+prior_generation_requests=61
+maximum_generation_retries=8
+required_cumulative_generation_requests=129
+planned_embedding_requests=128
+required_maximum_cost_microunits=1373850
+required_input_tokens=2113536
+required_output_tokens=1056768
+required_embedding_tokens=3932160
+```
+
+- The command reached and passed frozen-chunk materialization, which verifies the referenced corpus file's byte length and SHA-256 before the pipeline produces the deterministic 16-chunk slice.
+
+### What didn't work
+- The first compile attempt included the obsolete documented `--output json` flag and failed before study loading:
+
+```text
+Error: unknown flag: --output
+exit status 1
+```
+
+  The installed Glazed command does not expose that generic output flag. I removed it and reran the exact command successfully; no provider call was possible in either compile invocation.
+
+### What I learned
+- Placeholder input identities in study authoring code are not a defect when the compile path has an explicit immutable catalog-binding phase. The compiled specification, not the JavaScript placeholder, is the real run identity.
+- `loadRealChunks` has a stronger boundary than a path lookup: it verifies file byte size and SHA-256 against the canonical artifact reference before decoding the corpus and materializing chunks.
+- A passing preflight means configuration, profile policy, canonical execution, and source custody agree. It is not monetary authorization and it does not consume the durable generation-request authority.
+
+### What was tricky to build
+- There are two different identity layers: the catalog artifact's file digest/size and the RAG manifest digest bound into the execution. Manually substituting the digest in `study-flash-combined-speed.js` would risk conflating them. The safe solution was to keep the source file unchanged and let `rag-eval study compile` resolve inputs, stage their bytes under `data/artifacts`, derive the artifact references, and construct the researchctl canonical identity.
+- The preflight requires host endpoints only for provider construction, while the compiled specification must remain independent of those operational locations. I supplied the two loopback URLs only as command environment values and retained no endpoint configuration in the ticket specification.
+
+### What warrants a second pair of eyes
+- Review the generated canonical specification and `compile-result.json` to confirm their only corpus/evaluation references are relative artifact URIs, digests, sizes, and schema identities—never source text or host endpoints.
+- Verify the reported model digest and profile digest match the repaired intended Umans Flash policy before giving any spend authority.
+- Recheck the cumulative envelope includes the 61 prior admissions and eight retry admissions; the next real command must not silently reset those counters.
+
+### What should be done in the future
+- Obtain explicit affirmative authority for exactly the reported cumulative limits before adding `--execute-real` and all required authority flags.
+- Run one bounded real qualification only, then preserve per-cell operation custody before runtime cleanup and perform post-run privacy scans, fresh researchctl import, graph inspection, diary/changelog/task updates, and a completion audit.
+- Do not re-run a failed whole matrix automatically; retries must remain within the eight explicit admissions and cumulative 129-request ceiling.
+
+### Code review instructions
+- Review `cmd/rag-eval/cmds/study/command.go:resolve` and `pkg/researchctladapter/adapter.go:ResolveInputs`/`WrapExecution` to trace immutable input resolution and canonical specification construction.
+- Review `cmd/rag-ttc-v3-sweep/profile.go:loadProviderAuthority` and `loadRealChunks` to verify real provider policy and artifact verification precede all potential provider effects.
+- Re-run the validate, compile, and preflight commands above. Confirm preflight output reports `frozen_chunks=16` and the exact stated limits, while tmux tunnel logs show no inference payload activity.
+
+### Technical details
+- Canonical output directory: `sources/real-qualification/specifications/`.
+- Artifact root: `data/artifacts` (custody root; source bodies were not copied into the ticket).
+- Host profile: `ttc-umans-flash-local-embedding-v1`; generation resolves through the local Pinocchio `umans-flash` profile and embedding/reranking through the loopback SSH tunnels.
+- The output cost ceiling is 1,373,850 microunits, i.e. USD $1.37385 under the profile's pinned tariff. This is a ceiling requiring explicit approval, not a charge incurred by preflight.
