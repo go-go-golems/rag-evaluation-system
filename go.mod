@@ -9,9 +9,9 @@ require (
 	github.com/dop251/goja_nodejs v0.0.0-20260212111938-1f56ff5bcf14
 	github.com/go-go-golems/geppetto v0.13.8-0.20260718223621-4c0b1f9b779e
 	github.com/go-go-golems/glazed v1.3.6
-	github.com/go-go-golems/go-go-goja v0.10.3
+	github.com/go-go-golems/go-go-goja v0.10.6
 	github.com/go-go-golems/logcopter v0.1.1
-	github.com/go-go-golems/scraper v0.0.5-0.20260720202952-5f8a94d29cc1
+	github.com/go-go-golems/scraper v0.0.5-0.20260722014411-481980b893eb
 	github.com/mattn/go-sqlite3 v1.14.44
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.35.1
