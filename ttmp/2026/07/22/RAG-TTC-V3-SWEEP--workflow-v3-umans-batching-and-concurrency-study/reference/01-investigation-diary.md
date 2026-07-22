@@ -699,6 +699,8 @@ I did not retry. I inspected only compact control-plane columns in the transient
 
 **Inferred user intent:** Proceed from validated preflight to real provider evidence without weakening any privacy or budget guard.
 
+**Commit (code):** `59097f6` — "workflowv3: preserve cumulative sweep authority"
+
 ### What I did
 
 - Submitted the exact authorized command with `--execute-real` and every numeric gate.

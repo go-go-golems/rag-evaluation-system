@@ -134,3 +134,8 @@ Step 12: first authorized real request timed out at the fixture-oriented 30s cel
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/main.go — Real timeout, prior authority, fail-closed output, and corrected run identity
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-attempt-001/evidence.json — Compact privacy-safe custody for the consumed canceled request
 
+
+## 2026-07-22
+
+Commit 59097f6 preserves cumulative real-sweep request authority after the first admitted request timed out
+
