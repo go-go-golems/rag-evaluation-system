@@ -33,3 +33,8 @@ Step 3: added exact real-profile preflight and expanded fixture evidence to usag
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/profile.go — Host-only real provider and frozen source loader
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/scripts/01-render-sweep.py — Expanded graph suite with honest unavailable-data semantics
 
+
+## 2026-07-22
+
+Step 4: validated and committed fixture study implementation and evidence as d68fe9a; real execution remains blocked by missing provider environment and numeric spend authority
+
