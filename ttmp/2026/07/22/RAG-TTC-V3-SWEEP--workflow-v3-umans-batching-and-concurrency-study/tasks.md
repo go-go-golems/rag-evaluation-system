@@ -7,4 +7,4 @@
 - [x] Implement deterministic graph generation from canonical evidence <!-- t:suqp -->
 - [x] Run no-cost fixture control and validate measurements <!-- t:7evq -->
 - [x] Run bounded real Umans smoke sweep after credentials and cost authority are available <!-- t:w92n -->
-- [ ] Analyze results, publish report, and upload bundle to reMarkable <!-- t:nu0k -->
+- [x] Analyze results, publish report, and upload bundle to reMarkable <!-- t:nu0k -->

@@ -31,8 +31,8 @@ RelatedFiles:
       Note: Verified downstream researchctl custody export
     - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/compile-result.json
       Note: Compiler result recording the resolved specification
-    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/sha256
-      Note: 53a4934fba2135e2515e2f8b30d7108d3e21d4e349f867f5b7bf369be1ffb9b1.json:Canonical current real-qualification specification with immutable input references
+    - Path: "repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/sha256:53a4934fba2135e2515e2f8b30d7108d3e21d4e349f867f5b7bf369be1ffb9b1.json"
+      Note: Canonical current real-qualification specification with immutable input references
 ExternalSources: []
 Summary: Chronological implementation and execution evidence for the Workflow V3 Umans batching and concurrency study.
 LastUpdated: 2026-07-22T10:15:00-04:00

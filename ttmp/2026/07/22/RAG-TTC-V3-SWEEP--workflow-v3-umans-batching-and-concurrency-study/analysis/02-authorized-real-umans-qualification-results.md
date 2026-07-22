@@ -7,6 +7,9 @@ DocType: analysis
 
 # Authorized real Umans qualification results
 
+> [!IMPORTANT]
+> This initial result note is superseded by the operation-ledger-based [TTC real-run performance audit and pipeline consolidation assessment](../../RAG-PIPELINE-CONSOLIDATION-AUDIT--assess-improve-and-consolidate-the-rag-evaluation-pipeline/analysis/01-ttc-real-run-performance-audit-and-pipeline-consolidation-assessment.md). The newer analysis corrects a 21.472-second retry-boundary undercount, includes failed-call latency and request arithmetic, embeds five reviewed graph families, and documents unsupported token/cost conclusions.
+
 ## Result
 
 The authorized Workflow V3 qualification completed all eight planned cells: 16 fixed TTC chunks, batch sizes 1/2/4/8, and generation concurrency 1/2. It planned 60 generation requests and recorded exactly 60 successful generation attempts plus 128 embedding requests. The cumulative authority ledger ended at 125 admissions: 61 prior admissions plus 64 new admissions, remaining below the explicitly authorized maximum of 129.
