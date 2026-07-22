@@ -123,3 +123,14 @@ Correction: both plz-confirm responses were AUTO_TIMEOUT, not explicit rejection
 
 Step 13: opened a one-hour attended exact spend prompt, received no operator decision, canceled pending processes, and made zero provider calls
 
+
+## 2026-07-22
+
+Step 12: first authorized real request timed out at the fixture-oriented 30s cell deadline; exported compact evidence, deleted source-bearing runtime, and added cumulative durable request admission plus real timeout/output guards
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/admission.go — Durable fsync-before-call cumulative generation authority
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/main.go — Real timeout, prior authority, fail-closed output, and corrected run identity
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-attempt-001/evidence.json — Compact privacy-safe custody for the consumed canceled request
+

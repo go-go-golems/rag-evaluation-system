@@ -87,7 +87,8 @@ func main() {
 	var chunkCount, maximum int
 	var executeReal bool
 	var maximumCost, maximumInputTokens, maximumOutputTokens, maximumEmbeddingTokens int64
-	var maximumEmbeddingRequests int
+	var maximumEmbeddingRequests, maximumGenerationRequests, priorGenerationRequests int
+	var cellTimeout time.Duration
 	flag.StringVar(&output, "output", "sweep-evidence", "output directory")
 	flag.IntVar(&chunkCount, "chunks", 16, "fixed chunk count")
 	flag.IntVar(&maximum, "maximum-requests", 90, "hard request ceiling")
@@ -102,13 +103,16 @@ func main() {
 	flag.Int64Var(&maximumOutputTokens, "maximum-output-tokens", 0, "authorized real-run output-token ceiling")
 	flag.Int64Var(&maximumEmbeddingTokens, "maximum-embedding-tokens", 0, "authorized real-run embedding-token ceiling")
 	flag.IntVar(&maximumEmbeddingRequests, "maximum-embedding-requests", 0, "authorized real-run embedding-request ceiling")
+	flag.IntVar(&maximumGenerationRequests, "maximum-generation-requests", 0, "authorized cumulative real-run generation-request ceiling")
+	flag.IntVar(&priorGenerationRequests, "prior-generation-requests", 0, "conservatively consumed generation requests before this invocation")
+	flag.DurationVar(&cellTimeout, "cell-timeout", 0, "per-cell terminal deadline (default 30s fixtures, 30m real)")
 	flag.Parse()
 	concurrency, err := parseLevels(concurrencyText)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
-	config := runConfig{profile: profile, providerConfig: providerConfig, specification: specification, artifactRoot: artifactRoot, executeReal: executeReal, maximumCost: maximumCost, maximumInputTokens: maximumInputTokens, maximumOutputTokens: maximumOutputTokens, maximumEmbeddingTokens: maximumEmbeddingTokens, maximumEmbeddingRequests: maximumEmbeddingRequests}
+	config := runConfig{profile: profile, providerConfig: providerConfig, specification: specification, artifactRoot: artifactRoot, executeReal: executeReal, maximumCost: maximumCost, maximumInputTokens: maximumInputTokens, maximumOutputTokens: maximumOutputTokens, maximumEmbeddingTokens: maximumEmbeddingTokens, maximumEmbeddingRequests: maximumEmbeddingRequests, maximumGenerationRequests: maximumGenerationRequests, priorGenerationRequests: priorGenerationRequests, cellTimeout: cellTimeout}
 	if err := run(context.Background(), output, chunkCount, maximum, concurrency, config); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -119,7 +123,8 @@ type runConfig struct {
 	profile, providerConfig, specification, artifactRoot                         string
 	executeReal                                                                  bool
 	maximumCost, maximumInputTokens, maximumOutputTokens, maximumEmbeddingTokens int64
-	maximumEmbeddingRequests                                                     int
+	maximumEmbeddingRequests, maximumGenerationRequests, priorGenerationRequests int
+	cellTimeout                                                                  time.Duration
 }
 
 func run(ctx context.Context, output string, chunkCount, maximum int, concurrency []int, config runConfig) error {
@@ -138,6 +143,12 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 	}
 	defer func() { _ = authority.close() }()
 	chunks := fixtureChunks(chunkCount)
+	if config.cellTimeout <= 0 {
+		config.cellTimeout = 30 * time.Second
+		if config.profile == "real" {
+			config.cellTimeout = 30 * time.Minute
+		}
+	}
 	if config.profile == "real" {
 		chunks, err = loadRealChunks(ctx, config.specification, config.artifactRoot, chunkCount)
 		if err != nil {
@@ -152,18 +163,31 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 		requiredInputTokens := int64(plan.PlannedRequests) * workflowv3ttc.SweepGenerationInputTokensPerRequest
 		requiredOutputTokens := int64(plan.PlannedRequests) * workflowv3ttc.SweepGenerationOutputTokensPerRequest
 		if !config.executeReal {
-			fmt.Printf("real dry-run profile_digest=%s model_digest=%s frozen_chunks=%d planned_generation_requests=%d planned_embedding_requests=%d required_maximum_cost_microunits=%d required_input_tokens=%d required_output_tokens=%d required_embedding_tokens=%d\n", authority.profileDigest, authority.modelDigest, len(chunks), plan.PlannedRequests, expectedEmbeddingRequests, requiredMaximumCost, requiredInputTokens, requiredOutputTokens, requiredEmbeddingTokens)
+			fmt.Printf("real dry-run profile_digest=%s model_digest=%s frozen_chunks=%d planned_generation_requests=%d prior_generation_requests=%d required_cumulative_generation_requests=%d planned_embedding_requests=%d required_maximum_cost_microunits=%d required_input_tokens=%d required_output_tokens=%d required_embedding_tokens=%d\n", authority.profileDigest, authority.modelDigest, len(chunks), plan.PlannedRequests, config.priorGenerationRequests, plan.PlannedRequests+config.priorGenerationRequests, expectedEmbeddingRequests, requiredMaximumCost+int64(config.priorGenerationRequests)*workflowv3ttc.SweepGenerationCostMicrounitsPerRequest, requiredInputTokens+int64(config.priorGenerationRequests)*workflowv3ttc.SweepGenerationInputTokensPerRequest, requiredOutputTokens+int64(config.priorGenerationRequests)*workflowv3ttc.SweepGenerationOutputTokensPerRequest, requiredEmbeddingTokens)
 			return nil
 		}
-		if config.maximumCost < requiredMaximumCost || config.maximumInputTokens < requiredInputTokens || config.maximumOutputTokens < requiredOutputTokens || config.maximumEmbeddingTokens < requiredEmbeddingTokens || config.maximumEmbeddingRequests != expectedEmbeddingRequests {
+		if config.priorGenerationRequests < 0 || config.maximumGenerationRequests != plan.PlannedRequests+config.priorGenerationRequests || config.maximumCost < requiredMaximumCost+int64(config.priorGenerationRequests)*workflowv3ttc.SweepGenerationCostMicrounitsPerRequest || config.maximumInputTokens < requiredInputTokens+int64(config.priorGenerationRequests)*workflowv3ttc.SweepGenerationInputTokensPerRequest || config.maximumOutputTokens < requiredOutputTokens+int64(config.priorGenerationRequests)*workflowv3ttc.SweepGenerationOutputTokensPerRequest || config.maximumEmbeddingTokens < requiredEmbeddingTokens || config.maximumEmbeddingRequests != expectedEmbeddingRequests {
 			return fmt.Errorf("real numeric authority is below the task reservation maximum")
 		}
 	}
-	if err := os.RemoveAll(output); err != nil {
+	if config.profile == "real" {
+		if _, err := os.Stat(output); err == nil {
+			return fmt.Errorf("RAG_SWEEP_REAL_OUTPUT_EXISTS")
+		} else if !os.IsNotExist(err) {
+			return err
+		}
+	} else if err := os.RemoveAll(output); err != nil {
 		return err
 	}
 	if err := os.MkdirAll(output, 0o755); err != nil {
 		return err
+	}
+	if config.profile == "real" {
+		admission, err := newGenerationAdmission(filepath.Join(output, "generation-authority.json"), config.maximumGenerationRequests, config.priorGenerationRequests)
+		if err != nil {
+			return err
+		}
+		authority.admitGeneration = admission.Admit
 	}
 	registry, err := workflowv3ttc.Registry()
 	if err != nil {
@@ -205,7 +229,7 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 			return err
 		}
 		engine := &workflowv3runtime.Engine{Store: store, Registry: registry, Artifacts: artifacts, Modules: modules, LeaseDuration: time.Minute}
-		runID := workflowv3.RunID(fmt.Sprintf("fixture-b%d-c%d-r%d", cell.ChunksPerRequest, cell.Concurrency, cell.Replicate))
+		runID := workflowv3.RunID(fmt.Sprintf("%s-b%d-c%d-r%d", config.profile, cell.ChunksPerRequest, cell.Concurrency, cell.Replicate))
 		if err := engine.Submit(ctx, runID, authored.Plan, map[string]workflowv3.ArtifactRef{"batches": manifest}); err != nil {
 			_ = store.Close()
 			return err
@@ -215,7 +239,7 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 		dispatcher := &workflowv3runtime.Dispatcher{Engine: engine, Capacities: map[string]int{workflowv3ttc.ResourceGeneration: cell.Concurrency, workflowv3ttc.ResourceEmbedding: 4}, PollInterval: time.Millisecond}
 		go func() { done <- dispatcher.Run(dispatchCtx) }()
 		var snapshot workflowv3.RunSnapshot
-		deadline := time.Now().Add(30 * time.Second)
+		deadline := time.Now().Add(config.cellTimeout)
 		for time.Now().Before(deadline) {
 			snapshot, err = engine.Snapshot(ctx, runID)
 			if err == nil && (snapshot.Status == "succeeded" || snapshot.Status == "failed") {
@@ -230,7 +254,14 @@ func run(ctx context.Context, output string, chunkCount, maximum int, concurrenc
 			}
 		}
 		cancel()
-		<-done
+		dispatchErr := <-done
+		if snapshot.Status != "succeeded" && snapshot.Status != "failed" {
+			if current, snapshotErr := engine.Snapshot(ctx, runID); snapshotErr == nil {
+				snapshot = current
+			}
+			_ = store.Close()
+			return fmt.Errorf("cell %+v timed out after %s with status %s (dispatcher: %v)", cell, config.cellTimeout, snapshot.Status, dispatchErr)
+		}
 		if snapshot.Status != "succeeded" {
 			_ = store.Close()
 			return fmt.Errorf("cell %+v status %s", cell, snapshot.Status)

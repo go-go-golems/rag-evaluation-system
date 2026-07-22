@@ -20,12 +20,13 @@ import (
 )
 
 type providerAuthority struct {
-	profile       string
-	execution     ragcontract.PipelineExecution
-	options       ragengine.Options
-	profileDigest string
-	modelDigest   string
-	close         func() error
+	profile         string
+	execution       ragcontract.PipelineExecution
+	options         ragengine.Options
+	profileDigest   string
+	modelDigest     string
+	admitGeneration func() error
+	close           func() error
 }
 
 type specificationEnvelope struct {
@@ -119,7 +120,7 @@ func (a *providerAuthority) provider(batch int) (*workflowv3ttc.OperatorProvider
 	generationNode := mapping.CombinedNode
 	generationNode.Config = generationConfig
 	cache := ragoperators.NewMemoryCache()
-	return workflowv3ttc.NewOperatorProvider(workflowv3ttc.OperatorProviderConfig{GenerationNode: generationNode, EmbeddingNode: mapping.EmbeddingNode, RawRepresentationName: mapping.RawRepresentationName, MaxRepresentationsPerChunk: mapping.MaxRepresentationsPerChunk, ProviderProfileDigest: a.profileDigest, GenerationModelDigest: a.modelDigest, EmbeddingProfileDigest: "sha256:" + strings.Repeat("0", 64), ResolveEnvironment: func(context.Context) (*ragoperators.Environment, error) {
+	return workflowv3ttc.NewOperatorProvider(workflowv3ttc.OperatorProviderConfig{GenerationNode: generationNode, EmbeddingNode: mapping.EmbeddingNode, RawRepresentationName: mapping.RawRepresentationName, MaxRepresentationsPerChunk: mapping.MaxRepresentationsPerChunk, ProviderProfileDigest: a.profileDigest, GenerationModelDigest: a.modelDigest, EmbeddingProfileDigest: "sha256:" + strings.Repeat("0", 64), AdmitGeneration: a.admitGeneration, ResolveEnvironment: func(context.Context) (*ragoperators.Environment, error) {
 		return &ragoperators.Environment{Manifests: a.options.Manifests, Schemas: a.options.Schemas, Generator: a.options.Generator, Embedder: a.options.Embedder, Reranker: a.options.Reranker, Cache: cache, Usage: ragoperators.Usage{Cost: map[string]float64{}}, GenerationConcurrency: 1, GenerationSettingsFingerprint: a.options.GenerationSettingsFingerprint}, nil
 	}})
 }

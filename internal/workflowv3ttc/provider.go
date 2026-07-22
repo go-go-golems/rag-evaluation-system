@@ -22,6 +22,7 @@ type OperatorProviderConfig struct {
 	ProviderProfileDigest      string
 	GenerationModelDigest      string
 	EmbeddingProfileDigest     string
+	AdmitGeneration            func() error
 	ResolveEnvironment         EnvironmentResolver
 }
 
@@ -52,6 +53,11 @@ func (p *OperatorProvider) Generate(ctx context.Context, chunk Chunk) (Result[Ge
 	env, err := p.config.ResolveEnvironment(ctx)
 	if err != nil || env == nil {
 		return Result[Generated]{}, &Failure{Class: "configuration", Code: "RAG_TTC_PROVIDER_RESOLUTION", Retryable: false}
+	}
+	if p.config.AdmitGeneration != nil {
+		if err := p.config.AdmitGeneration(); err != nil {
+			return Result[Generated]{}, &Failure{Class: "budget", Code: "RAG_TTC_GENERATION_REQUEST_CEILING", Retryable: false}
+		}
 	}
 	before := env.Usage
 	result, err := ragoperators.ExecuteCombinedPreparationBatch(ctx, plan, plan.Batches[0], env)
@@ -91,6 +97,11 @@ func (p *OperatorProvider) GenerateBatch(ctx context.Context, batch ChunkBatch) 
 	env, err := p.config.ResolveEnvironment(ctx)
 	if err != nil {
 		return Result[GeneratedBatch]{}, &Failure{Class: "configuration", Code: "RAG_TTC_PROVIDER_RESOLUTION", Retryable: false}
+	}
+	if p.config.AdmitGeneration != nil {
+		if err := p.config.AdmitGeneration(); err != nil {
+			return Result[GeneratedBatch]{}, &Failure{Class: "budget", Code: "RAG_TTC_GENERATION_REQUEST_CEILING", Retryable: false}
+		}
 	}
 	before := env.Usage
 	started := time.Now()

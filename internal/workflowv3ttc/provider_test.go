@@ -12,11 +12,13 @@ import (
 
 func TestOperatorProviderUsesValidatedRAGOperators(t *testing.T) {
 	fixtures := ragoperators.NewFixtureProviders()
+	admitted := 0
 	provider, err := NewOperatorProvider(OperatorProviderConfig{
 		GenerationNode:        ragcontract.Node{Config: json.RawMessage(`{"model":"fixture-summary-v1","prompt":"fixture-transcript-summary-v1","outputSchema":"transcript-rag-summary/v1","batchSize":1,"questionsPerChunk":2,"maxBatchRunes":1000}`)},
 		EmbeddingNode:         ragcontract.Node{Config: json.RawMessage(`{"model":"fixture-hash-32-v1","dimensions":32,"normalize":"none","batchSize":8}`)},
 		RawRepresentationName: "raw", MaxRepresentationsPerChunk: 8,
 		ProviderProfileDigest: digestOf("a"), GenerationModelDigest: digestOf("b"), EmbeddingProfileDigest: digestOf("c"),
+		AdmitGeneration: func() error { admitted++; return nil },
 		ResolveEnvironment: func(context.Context) (*ragoperators.Environment, error) {
 			return &ragoperators.Environment{Manifests: fixtures.Resolver, Schemas: fixtures, Generator: fixtures, Embedder: fixtures, Cache: ragoperators.NewMemoryCache(), Usage: ragoperators.Usage{Cost: map[string]float64{}}}, nil
 		},
@@ -28,6 +30,9 @@ func TestOperatorProviderUsesValidatedRAGOperators(t *testing.T) {
 	generated, err := provider.Generate(context.Background(), chunk)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if admitted != 1 {
+		t.Fatalf("generation admissions = %d, want 1", admitted)
 	}
 	if len(generated.Value.Representations) != 3 {
 		t.Fatalf("representations=%d", len(generated.Value.Representations))

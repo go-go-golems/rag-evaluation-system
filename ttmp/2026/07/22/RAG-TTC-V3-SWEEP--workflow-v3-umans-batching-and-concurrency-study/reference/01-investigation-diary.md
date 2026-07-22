@@ -684,3 +684,87 @@ No repository runtime code changed. Review the chronological approval evidence i
 - Attended request: one-hour server and client wait timeouts.
 - Terminal state: canceled locally while pending; no approval/rejection payload.
 - Provider requests made: zero.
+
+## Step 12: Abort the first authorized run at the cell timeout and preserve cumulative authority
+
+The user explicitly authorized the bounded real matrix by replying `Ok, run it.` in direct response to the exact $0.639 ceiling and request/token/concurrency limits. I submitted the run with all matching command-line gates. The first concurrency-1, one-chunk batch attempt was admitted, but the command's fixture-oriented 30-second cell deadline expired before a provider response arrived. The command canceled the dispatcher and exited with the cell still recorded as running.
+
+I did not retry. I inspected only compact control-plane columns in the transient database: one generation attempt was running, fifteen nodes were pending, one request and its token/cost maxima remained reserved, and no provider usage or response had been persisted. I exported a bounded non-sensitive aborted-attempt record, then deleted the transient SQLite/WAL/artifact tree because it contained source-bearing inputs. The submitted request is counted conservatively even though no response or usage was observed.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Ok, run it."
+
+**Assistant interpretation:** Execute the exact real 16-chunk matrix under the immediately preceding $0.639, 60-generation-request, 128-embedding-request, token, and concurrency ceilings.
+
+**Inferred user intent:** Proceed from validated preflight to real provider evidence without weakening any privacy or budget guard.
+
+### What I did
+
+- Submitted the exact authorized command with `--execute-real` and every numeric gate.
+- Inspected compact node, attempt, event, and budget columns after failure without reading source artifacts or provider bodies.
+- Published `sources/real-attempt-001/evidence.json` and removed the source-bearing transient runtime.
+- Added a real-only 30-minute default cell deadline; fixtures retain 30 seconds.
+- Added a durable, fsync-before-call generation admission ledger with a cumulative request ceiling and prior-request offset.
+- Made real output directories fail closed instead of deleting existing evidence.
+- Corrected real run IDs so they use the `real-` prefix rather than `fixture-`.
+- Added concurrency and persistence tests for the authority ledger and wired admission immediately before generation provider execution.
+
+### Why
+
+The first admitted request consumed request authority even without a response. A fresh 60-request matrix would therefore require a cumulative ceiling of 61, not a silent reset to 60. Persisting admission before each call prevents concurrent workers from exceeding the approved cumulative request count.
+
+### What worked
+
+- Cancellation stopped the command; no second provider request was submitted.
+- Compact evidence and budget reservations made the consumed authority auditable.
+- The sensitive transient tree was removed after bounded export.
+- Focused tests, race tests, lint, and diff checks pass after the fix.
+
+### What didn't work
+
+The command failed exactly with:
+
+```text
+cell {ChunksPerRequest:1 Concurrency:1 Replicate:1} status running
+exit status 1
+```
+
+The root cause was a hard-coded 30-second deadline shared with fast fixtures. It was not a provider-schema or semantic workflow failure. The old timeout branch also reported the last snapshot as merely `running`; the corrected branch now reports the configured duration and dispatcher result.
+
+### What I learned
+
+Authorization is cumulative across aborted invocations, not just successful evidence exports. A request admitted before cancellation must remain charged against future authority even when provider usage is unknown.
+
+### What was tricky to build
+
+The authority ledger must reserve before the provider call, serialize concurrent workers, atomically rename a fully synced file, and fsync the containing directory. Persisting after the call would leave a crash window where a submitted request was not counted. Existing real output must not be automatically removed because it may be the only record of consumed authority.
+
+### What warrants a second pair of eyes
+
+- Confirm the conservative decision to count the canceled request at its full token/cost reservation.
+- Review the 30-minute per-cell default against expected Umans latency; the dispatcher still exits immediately on terminal workflow failure.
+- Verify final custody includes the aborted-attempt record and cumulative generation-authority ledger.
+
+### What should be done in the future
+
+Obtain new explicit authority for one additional generation request and its reservation. The cumulative ceilings are 61 generation requests, 649,650 cost microunits (USD $0.64965), 999,424 input tokens, 499,712 output tokens, 128 embedding requests, 3,932,160 embedding tokens, and four concurrent Umans calls. Do not retry before approval.
+
+### Code review instructions
+
+Review `cmd/rag-ttc-v3-sweep/admission.go` first, then the real-only output/timeout path in `main.go`, admission wiring in `profile.go` and `internal/workflowv3ttc/provider.go`, and the compact aborted evidence JSON.
+
+Validate with:
+
+```text
+GOWORK=off go test -race ./cmd/rag-ttc-v3-sweep ./internal/workflowv3ttc -count=1
+GOWORK=off golangci-lint run ./cmd/rag-ttc-v3-sweep/... ./internal/workflowv3ttc/...
+```
+
+### Technical details
+
+- Prior admitted requests: 1.
+- New matrix requests still required: 60.
+- Required cumulative generation ceiling: 61.
+- Incremental maximum: 10,650 cost microunits, 16,384 input tokens, 8,192 output tokens.
+- No provider response, usage, body, prompt, source text, or vector is present in the compact aborted evidence.

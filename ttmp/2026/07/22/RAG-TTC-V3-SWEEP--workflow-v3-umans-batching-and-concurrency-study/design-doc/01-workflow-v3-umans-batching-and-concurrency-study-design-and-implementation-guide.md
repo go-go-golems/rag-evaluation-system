@@ -344,7 +344,7 @@ Before real submission:
 - Server-side scheduling may vary over time. Counterbalancing reduces but cannot eliminate drift; replicates are needed before strong conclusions.
 - Provider usage may omit token fields. Such cells can still report request/chunk throughput but must display token throughput as unavailable.
 - Shared caches or HTTP connection warm-up can confound results. Provider-result caches are disabled; connection behavior and warm-up policy are recorded.
-- The exact monetary ceiling is 639,000 microunits (USD $0.639) for the 60-request smoke matrix, derived from the pinned 16,384-token input reservation, pinned 8,192-token response cap, and published Umans Flash rates of $0.15/M input and $1.00/M output tokens. The structured approval request for this reduced ceiling expired with `AUTO_TIMEOUT`, so no operator decision was obtained and the real run remains blocked; concurrency approval alone is not cost approval.
+- The operator approved the exact 639,000-microunit (USD $0.639) ceiling for the 60-request smoke matrix. The first request was admitted and then canceled when the fixture-oriented 30-second cell deadline expired before a response. It is counted conservatively at its full reservation. Completing a fresh 60-request matrix now requires new cumulative authority for 61 generation requests, 649,650 cost microunits, 999,424 input tokens, and 499,712 output tokens; embedding and concurrency ceilings remain 128 requests, 3,932,160 tokens, and four active Umans calls. No retry is authorized yet.
 - Real provider credentials and endpoints are currently unavailable in this process.
 
 ## Hard acceptance criteria
