@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 p=argparse.ArgumentParser()
 p.add_argument("evidence")
 p.add_argument("--output",required=True)
+p.add_argument("--title-prefix", default="Workflow V3 fixture control")
 a=p.parse_args()
 data=json.loads(Path(a.evidence).read_text())
 out=Path(a.output); out.mkdir(parents=True,exist_ok=True)
@@ -28,7 +29,7 @@ def plot_metric(field,ylabel,name,unavailable_if_zero=False):
     for concurrency,values in sorted(series(field).items()):
         if not unavailable:
             ax.plot([x for x,_ in values],[y for _,y in values],marker="o",color=colors[concurrency],label=f"concurrency={concurrency}")
-    ax.set(xlabel="Chunks per LLM request",ylabel=ylabel,title=f"Workflow V3 fixture control — {ylabel}")
+    ax.set(xlabel="Chunks per LLM request",ylabel=ylabel,title=f"{a.title_prefix} — {ylabel}")
     ax.set_xticks([1,2,4,8]); ax.grid(True,alpha=.25)
     if not unavailable: ax.legend()
     fig.tight_layout()
@@ -49,7 +50,7 @@ for cell in cells:
 if all(cell["overlapMillis"] == 0 for cell in cells):
     fig,ax=plt.subplots(figsize=(8,5)); ax.axhline(0,color="#333333",linewidth=2)
     ax.text(.5,.55,"Observed zero in all fixture cells\nAll concurrency series coincide at 0 ms\nNot indicative of real-provider performance",ha="center",va="center",transform=ax.transAxes,fontsize=13,color="#555555")
-    ax.set(xlabel="Chunks per LLM request",ylabel="Generation / embedding overlap (ms)",title="Workflow V3 fixture control — generation / embedding overlap")
+    ax.set(xlabel="Chunks per LLM request",ylabel="Generation / embedding overlap (ms)",title=f"{a.title_prefix} — generation / embedding overlap")
     ax.set_xticks([1,2,4,8]); ax.set_ylim(0,.05); ax.grid(True,alpha=.25); fig.tight_layout()
     for ext in ("svg","png"): fig.savefig(out/f"generation-embedding-overlap.{ext}",dpi=160)
     plt.close(fig)
@@ -65,7 +66,7 @@ for cell in cells:
     values=sorted(cell["providerMicros"])
     median=values[len(values)//2]
     ax.scatter(batch+offsets[concurrency],median,label=f"concurrency={concurrency}" if batch==1 else None,s=50,color=colors[concurrency])
-ax.set(xlabel="Chunks per LLM request",ylabel="Median provider span (µs)",title="Workflow V3 fixture control — provider wall time")
+ax.set(xlabel="Chunks per LLM request",ylabel="Median provider span (µs)",title=f"{a.title_prefix} — provider wall time")
 ax.set_xticks([1,2,4,8]); ax.grid(True,alpha=.25)
 handles,labels=ax.get_legend_handles_labels(); ax.legend(handles,labels)
 fig.tight_layout()
@@ -73,7 +74,8 @@ for ext in ("svg","png"): fig.savefig(out/f"provider-latency.{ext}",dpi=160)
 plt.close(fig)
 
 fig,ax=plt.subplots(figsize=(10,6))
-rows=sorted([cell for cell in cells if cell["cell"]["concurrency"]==4],key=lambda x:x["cell"]["chunksPerRequest"])
+timeline_concurrency=max(cell["cell"]["concurrency"] for cell in cells)
+rows=sorted([cell for cell in cells if cell["cell"]["concurrency"]==timeline_concurrency],key=lambda x:x["cell"]["chunksPerRequest"])
 batch_colors={1:"#1f77b4",2:"#ff7f0e",4:"#2ca02c",8:"#d62728"}; peak=4
 for cell in rows:
     batch=cell["cell"]["chunksPerRequest"]
@@ -91,7 +93,7 @@ for cell in rows:
         for stamp,delta in events: x.extend([stamp,stamp]); y.extend([active,active+delta]); active+=delta
         peak=max(peak,max(y,default=0)); ax.plot(x,y,color=batch_colors[batch],linestyle=style,label=f"batch={batch} {phase}")
 ax.axhline(4,color="#333333",linestyle="--",linewidth=1,label="Umans generation hard cap=4")
-ax.set(xlabel="Seconds since first provider span",ylabel="Active provider spans",title="Workflow V3 fixture control — provider concurrency timeline")
+ax.set(xlabel="Seconds since first provider span",ylabel="Active provider spans",title=f"{a.title_prefix} — provider concurrency timeline")
 ax.set_xlim(left=0); ax.set_yticks(range(0,peak+1)); ax.grid(True,alpha=.25); ax.legend(ncol=2,fontsize=9); fig.tight_layout()
 for ext in ("svg","png"): fig.savefig(out/f"request-timeline.{ext}",dpi=160)
 plt.close(fig)
