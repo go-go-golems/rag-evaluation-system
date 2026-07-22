@@ -890,3 +890,13 @@ A 12-cell fixture sweep produced the bundle. `researchctl lab init` followed by 
 ## Step 15: Fixture graph visual inspection
 
 Visually inspected four rendered fixture figures: makespan, generation/embedding overlap, provider latency, and request timeline. Axes, markers, legends, and reference lines were legible; no clipping, blank regions, or sensitive content appeared. The vision review suggested a possible spelling issue in the overlap title, but the renderer source has the correct `embedding` spelling, so no speculative rendering change was made. These figures are suitable as fixture evidence only, not as real-provider conclusions.
+
+## Step 16: Non-submitting real qualification preflight rejected stale specification
+
+After the operator said “do it”, I located an existing canonical TTC pipeline specification and artifact root, then ran only the sweep's non-submitting real dry-run with the planned 60-request matrix (`--concurrency 1,2`), 61 prior admissions, and eight retry admissions. It made no provider request and failed before submission:
+
+```text
+RAG_MODEL_MANIFEST_INVALID: RAG_MODEL_MANIFEST_DIGEST
+```
+
+The host provider configuration and the discovered canonical specification have incompatible pinned model-manifest identity. I did not substitute a spec, alter the host configuration, or launch a paid call. A current canonical real-run specification whose model-manifest digest agrees with the host profile is required before the approved bounded run can start.
