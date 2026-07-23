@@ -3,18 +3,12 @@ const rag = require("rag:workflow");
 
 async function run(ctx, operation, port, schema) {
   ctx.checkpoint();
-  let value;
-  try {
-    value = rag[operation]();
-  } catch (_) {
+  const result = rag[operation]();
+  if (!result.ok) {
     ctx.checkpoint();
-    throw task.failure({
-      class: "execution",
-      code: "RAG_WORKFLOW_TASK_FAILED",
-      retryable: false,
-      message: "RAG workflow task failed",
-    });
+    throw task.failure(result.failure);
   }
+  const value = result.value;
   ctx.checkpoint();
   const output = await ctx.outputs.putJSON(port, {schema, value});
   return task.success({[port]: output});

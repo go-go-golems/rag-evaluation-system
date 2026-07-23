@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -17,6 +18,7 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragengine"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragworkflowops"
 	"github.com/go-go-golems/scraper/pkg/workflowv3"
 	"github.com/go-go-golems/scraper/pkg/workflowv3runtime"
 )
@@ -43,11 +45,11 @@ func newTaskModuleFactory(alias string, operations []workflowv3.ExternalOperatio
 				for name, operation := range map[string]func() (any, error){"prepare": runtime.prepare, "query": runtime.query, "merge": runtime.merge, "publish": runtime.publish} {
 					operation := operation
 					if err := exports.Set(name, func(goja.FunctionCall) goja.Value {
-						value, err := operation()
-						if err != nil {
-							panic(vm.NewGoError(err))
+						value, operationErr := operation()
+						if operationErr != nil {
+							return vm.ToValue(map[string]any{"ok": false, "failure": workflowTaskFailure(operationErr)})
 						}
-						return vm.ToValue(value)
+						return vm.ToValue(map[string]any{"ok": true, "value": value})
 					}); err != nil {
 						panic(vm.NewGoError(err))
 					}
@@ -56,6 +58,25 @@ func newTaskModuleFactory(alias string, operations []workflowv3.ExternalOperatio
 			return gggengine.NativeModuleRegistrar{ModuleID: "rag-workflow-runtime-v1", ModuleName: ModuleAlias, Loader: loader}, nil
 		},
 	}
+}
+
+func workflowTaskFailure(err error) map[string]any {
+	failure := map[string]any{"class": "execution", "code": "RAG_WORKFLOW_TASK_FAILED", "retryable": false, "message": "RAG workflow task failed"}
+	var providerFailure *ragworkflowops.ProviderCallError
+	if errors.As(err, &providerFailure) {
+		failure["class"] = providerFailure.Class
+		failure["code"] = providerFailure.Code
+		failure["retryable"] = providerFailure.Class != "canceled"
+		failure["message"] = "RAG provider operation failed"
+		return failure
+	}
+	var resultFailure *ragworkflowops.ProviderResultError
+	if errors.As(err, &resultFailure) {
+		failure["class"] = "malformed-output"
+		failure["code"] = resultFailure.Code
+		failure["message"] = "RAG provider result invalid"
+	}
+	return failure
 }
 
 type taskRuntime struct {

@@ -2,7 +2,9 @@ package ragworkflow
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -14,15 +16,6 @@ import (
 	"github.com/go-go-golems/scraper/pkg/workflowv3sqlite"
 	"github.com/stretchr/testify/require"
 )
-
-func fixtureProviderPackage(t *testing.T) (*ProviderPackage, ProviderServices) {
-	t.Helper()
-	services, err := NewDeterministicProviderServices()
-	require.NoError(t, err)
-	providerPackage, err := NewProviderPackage(services, ragworkflowops.Policy{MaxPerAttempt: 100, FinishTimeout: time.Second})
-	require.NoError(t, err)
-	return providerPackage, services
-}
 
 func TestProviderPackageBindsAuthorityAndExecutesDurableOperations(t *testing.T) {
 	for _, test := range []struct {
@@ -40,8 +33,20 @@ func TestProviderPackageBindsAuthorityAndExecutesDurableOperations(t *testing.T)
 
 func runProviderPackageFixture(t *testing.T, variant string, expectedGenerationOperations int, expectedBudgetUnits int64) {
 	t.Helper()
+	runProviderPackageFixtureWithServices(t, variant, expectedGenerationOperations, expectedBudgetUnits, ProviderServices{}, 0)
+}
+
+func runProviderPackageFixtureWithServices(t *testing.T, variant string, expectedGenerationOperations int, expectedBudgetUnits int64, services ProviderServices, expectedFailedOperations int) {
+	t.Helper()
 	ctx := context.Background()
-	providerPackage, providers := fixtureProviderPackage(t)
+	baselineServices, err := NewDeterministicProviderServices()
+	require.NoError(t, err)
+	if services.Authority.SchemaVersion == "" {
+		services = baselineServices
+	}
+	providerPackage, err := NewProviderPackage(services, ragworkflowops.Policy{MaxPerAttempt: 100, FinishTimeout: time.Second})
+	require.NoError(t, err)
+	providers := baselineServices
 	fixture, err := NewDeterministicProviderFixtureVariant(variant)
 	require.NoError(t, err)
 	directEnvironment := &ragoperators.Environment{Manifests: providers.Manifests, Schemas: providers.Schemas, Generator: providers.Generator, Embedder: providers.Embedder, Reranker: providers.Reranker, GenerationConcurrency: 1, Usage: ragoperators.Usage{Cost: map[string]float64{}}}
@@ -100,14 +105,20 @@ func runProviderPackageFixture(t *testing.T, variant string, expectedGenerationO
 	require.Equal(t, "succeeded", snapshot.Status, "attempts=%#v operations=%#v", snapshot.Attempts, operations)
 	require.NotEmpty(t, operations)
 	kinds := map[string]int{}
+	failedOperations := 0
 	for _, operation := range operations {
 		require.NotNil(t, operation.Completion)
-		require.Equal(t, workflowv3.ExternalOperationOutcomeSucceeded, operation.Completion.Outcome)
+		if operation.Completion.Outcome == workflowv3.ExternalOperationOutcomeFailed {
+			failedOperations++
+		} else {
+			require.Equal(t, workflowv3.ExternalOperationOutcomeSucceeded, operation.Completion.Outcome)
+		}
 		require.Equal(t, providerPackage.authority.Digest, operation.AuthorityDigest)
 		require.Equal(t, []workflowv3.ExternalOperationCounter{{Name: "requests", Units: 1}}, operation.Reservation)
 		kinds[operation.Kind.Name]++
 	}
-	require.Equal(t, expectedGenerationOperations, kinds[ragworkflowops.GenerateOperation])
+	require.Equal(t, expectedFailedOperations, failedOperations)
+	require.Equal(t, expectedGenerationOperations+expectedFailedOperations, kinds[ragworkflowops.GenerateOperation])
 	require.Equal(t, 3, kinds[ragworkflowops.EmbedOperation])
 	require.Equal(t, 2, kinds[ragworkflowops.RerankOperation])
 	resultBody, err := workflowv3.ReadArtifact(ctx, artifacts, snapshot.Outputs["result"])
@@ -116,4 +127,25 @@ func runProviderPackageFixture(t *testing.T, variant string, expectedGenerationO
 	require.NoError(t, err)
 	require.Equal(t, directResult.Traces[0].Results, workflowResult.Results[0].Trace.Results)
 	require.Equal(t, directResult.Answers[0], workflowResult.Results[0].Answers[0])
+}
+
+type failOnceGenerator struct {
+	inner ragoperators.TextGenerator
+	calls atomic.Int64
+}
+
+func (g *failOnceGenerator) Generate(ctx context.Context, request ragoperators.GenerationRequest) (ragoperators.GenerationResult, error) {
+	if g.calls.Add(1) == 1 {
+		return ragoperators.GenerationResult{}, ragworkflowops.NewProviderCallError(errors.New("SECRET_PROVIDER_BODY_CANARY"), "transport", "PROVIDER_TRANSPORT", workflowv3.ExternalOperationOutcomeFailed)
+	}
+	return g.inner.Generate(ctx, request)
+}
+
+func TestProviderWorkflowRetriesFailedContactAsDistinctOperation(t *testing.T) {
+	services, err := NewDeterministicProviderServices()
+	require.NoError(t, err)
+	flaky := &failOnceGenerator{inner: services.Generator}
+	services.Generator = flaky
+	runProviderPackageFixtureWithServices(t, "structured", 5, 30_200, services, 1)
+	require.Equal(t, int64(6), flaky.calls.Load())
 }

@@ -3,6 +3,8 @@ package ragworkflow
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -12,6 +14,7 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragengine"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragworkflowops"
 	"github.com/go-go-golems/scraper/pkg/researchrunner"
 	"github.com/go-go-golems/scraper/pkg/workflowv3"
 	"github.com/go-go-golems/scraper/pkg/workflowv3runtime"
@@ -187,4 +190,21 @@ func TestPreparedFingerprintRejectsCorpusAndPipelineDrift(t *testing.T) {
 	values := []string{first, second}
 	sort.Strings(values)
 	require.NotEqual(t, values[0], values[1])
+}
+
+func TestWorkflowTaskFailurePreservesSafeProviderTaxonomy(t *testing.T) {
+	failure := workflowTaskFailure(fmt.Errorf("operator: %w", ragworkflowops.NewProviderCallError(errors.New("SECRET_PROVIDER_BODY_CANARY"), "rate-limit", "PROVIDER_RATE_LIMITED", workflowv3.ExternalOperationOutcomeFailed)))
+	require.Equal(t, "rate-limit", failure["class"])
+	require.Equal(t, "PROVIDER_RATE_LIMITED", failure["code"])
+	require.Equal(t, true, failure["retryable"])
+	body, err := json.Marshal(failure)
+	require.NoError(t, err)
+	require.NotContains(t, string(body), "SECRET_PROVIDER_BODY_CANARY")
+}
+
+func TestWorkflowTaskFailureKeepsInvalidProviderResultPermanent(t *testing.T) {
+	failure := workflowTaskFailure(fmt.Errorf("operator: %w", ragworkflowops.ProviderSucceededWithInvalidResult("RAG_EMBEDDING_DIMENSION")))
+	require.Equal(t, "malformed-output", failure["class"])
+	require.Equal(t, "RAG_EMBEDDING_DIMENSION", failure["code"])
+	require.Equal(t, false, failure["retryable"])
 }
