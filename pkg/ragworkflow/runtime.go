@@ -21,11 +21,23 @@ import (
 	"github.com/go-go-golems/scraper/pkg/workflowv3runtime"
 )
 
+type environmentFactory func(workflowv3runtime.TaskModuleContext, ragcontract.PipelineExecution) (*ragoperators.Environment, error)
+
 func TaskModuleFactory() workflowv3runtime.TaskModuleFactory {
+	return newTaskModuleFactory(ModuleAlias, nil, "fixture-embedding/v1", func(_ workflowv3runtime.TaskModuleContext, execution ragcontract.PipelineExecution) (*ragoperators.Environment, error) {
+		return providerFreeEnvironment(execution)
+	})
+}
+
+func newTaskModuleFactory(alias string, operations []workflowv3.ExternalOperationDescriptor, preparationIdentity string, factory environmentFactory) workflowv3runtime.TaskModuleFactory {
 	return workflowv3runtime.TaskModuleFactory{
-		Alias: ModuleAlias,
+		Alias:      alias,
+		Operations: operations,
 		Build: func(moduleContext workflowv3runtime.TaskModuleContext) (gggengine.RuntimeModuleRegistrar, error) {
-			runtime := &taskRuntime{context: moduleContext}
+			if factory == nil || preparationIdentity == "" {
+				return nil, fmt.Errorf("RAG_WORKFLOW_ENVIRONMENT_FACTORY")
+			}
+			runtime := &taskRuntime{context: moduleContext, environmentFactory: factory, preparationIdentity: preparationIdentity}
 			loader := func(vm *goja.Runtime, moduleObject *goja.Object) {
 				exports := moduleObject.Get("exports").ToObject(vm)
 				for name, operation := range map[string]func() (any, error){"prepare": runtime.prepare, "query": runtime.query, "merge": runtime.merge, "publish": runtime.publish} {
@@ -47,7 +59,9 @@ func TaskModuleFactory() workflowv3runtime.TaskModuleFactory {
 }
 
 type taskRuntime struct {
-	context workflowv3runtime.TaskModuleContext
+	context             workflowv3runtime.TaskModuleContext
+	environmentFactory  environmentFactory
+	preparationIdentity string
 }
 
 func (r *taskRuntime) prepare() (any, error) {
@@ -58,7 +72,7 @@ func (r *taskRuntime) prepare() (any, error) {
 	executionDigest, _ := ragcontract.Digest(execution)
 	pipelineDigest, _ := ragcontract.Digest(execution.Pipeline)
 	corpusDigest, _ := ragcontract.Digest(corpus)
-	fingerprint, err := preparationFingerprint(execution)
+	fingerprint, err := preparationFingerprint(execution, r.preparationIdentity)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +117,7 @@ func (r *taskRuntime) prepare() (any, error) {
 		}
 		inputs[binding.Port] = value
 	}
-	environment, err := providerFreeEnvironment(execution)
+	environment, err := r.environmentFactory(r.context, execution)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +156,7 @@ func (r *taskRuntime) query() (any, error) {
 	executionDigest, _ := ragcontract.Digest(execution)
 	pipelineDigest, _ := ragcontract.Digest(execution.Pipeline)
 	corpusDigest, _ := ragcontract.Digest(corpus)
-	fingerprint, _ := preparationFingerprint(execution)
+	fingerprint, _ := preparationFingerprint(execution, r.preparationIdentity)
 	if err := validatePrepared(bundle, executionDigest, pipelineDigest, corpusDigest, fingerprint); err != nil {
 		return nil, err
 	}
@@ -151,7 +165,7 @@ func (r *taskRuntime) query() (any, error) {
 		return nil, err
 	}
 	values["corpus/out"] = corpus
-	environment, err := providerFreeEnvironment(execution)
+	environment, err := r.environmentFactory(r.context, execution)
 	if err != nil {
 		return nil, err
 	}
@@ -363,7 +377,7 @@ func workflowMetrics(values []ragoperators.Metric) []Metric {
 
 func resultDigest(value Result) (string, error) { value.Digest = ""; return ragcontract.Digest(value) }
 
-func preparationFingerprint(execution ragcontract.PipelineExecution) (string, error) {
+func preparationFingerprint(execution ragcontract.PipelineExecution, implementationIdentity string) (string, error) {
 	pipelineDigest, _ := ragcontract.Digest(execution.Pipeline)
 	binding, err := corpusBinding(execution)
 	if err != nil {
@@ -374,7 +388,7 @@ func preparationFingerprint(execution ragcontract.PipelineExecution) (string, er
 		PipelineDigest          string `json:"pipelineDigest"`
 		CorpusDigest            string `json:"corpusDigest"`
 		EmbeddingImplementation string `json:"embeddingImplementation"`
-	}{"rag-workflow-preparation-fingerprint/v1", pipelineDigest, binding.Digest, "fixture-embedding/v1"})
+	}{"rag-workflow-preparation-fingerprint/v1", pipelineDigest, binding.Digest, implementationIdentity})
 }
 
 func rebuildIndexes(ctx context.Context, engine *ragengine.Engine, pipeline ragcontract.PipelineIR, values map[string]any, env *ragoperators.Environment, evidence []IndexEvidence) error {

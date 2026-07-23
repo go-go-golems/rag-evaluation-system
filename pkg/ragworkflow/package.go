@@ -27,12 +27,16 @@ func (Package) DescriptorModules() []workflowmodule.DescriptorModule {
 }
 
 func Bundle() (*workflowv3.Bundle, error) {
+	return bundleFor(PackageName, PackageVersion, map[string][]byte{"task.cjs": taskSource})
+}
+
+func bundleFor(name, version string, files map[string][]byte) (*workflowv3.Bundle, error) {
 	stageInputs := map[string]string{"execution": ragcontractExecutionSchema(), "corpus": CorpusSchema, "prepared": PreparedSchema}
 	stage := func(key workflowv3.TaskKey) workflowv3.BundleTask {
 		return workflowv3.BundleTask{TaskKey: key, Entrypoint: "task.cjs#prepare", Inputs: cloneSchemas(stageInputs), Outputs: map[string]string{"prepared": PreparedSchema}, Modules: []string{ModuleAlias}, ResourceClass: "cpu.rag.prepare", Retry: workflowv3.RetryPolicy{MaxAttempts: 2, BackoffMillis: 10}}
 	}
 	return workflowv3.NewBundle(workflowv3.BundleManifest{
-		Name: PackageName, Version: PackageVersion, ABI: workflowv3.TaskABI,
+		Name: name, Version: version, ABI: workflowv3.TaskABI,
 		Tasks: []workflowv3.BundleTask{
 			{TaskKey: TaskCorpusLoad, Entrypoint: "task.cjs#loadCorpus", Inputs: map[string]string{"execution": ragcontractExecutionSchema(), "corpus": CorpusSchema}, Outputs: map[string]string{"prepared": PreparedSchema}, Modules: []string{ModuleAlias}, ResourceClass: "cpu.rag.prepare", Retry: workflowv3.RetryPolicy{MaxAttempts: 2, BackoffMillis: 10}},
 			stage(TaskUnits), stage(TaskChunks), stage(TaskRepresent), stage(TaskEmbed), stage(TaskIndex),
@@ -40,7 +44,7 @@ func Bundle() (*workflowv3.Bundle, error) {
 			{TaskKey: TaskMerge, Entrypoint: "task.cjs#merge", Inputs: map[string]string{"partition": workflowv3.ReductionPartitionSchemaV1}, Outputs: map[string]string{"result": ResultPartitionSchema}, Modules: []string{ModuleAlias}, ResourceClass: "cpu.rag.reduce", Retry: workflowv3.RetryPolicy{MaxAttempts: 2, BackoffMillis: 10}},
 			{TaskKey: TaskPublish, Entrypoint: "task.cjs#publish", Inputs: map[string]string{"execution": ragcontractExecutionSchema(), "results": ResultPartitionSchema}, Outputs: map[string]string{"result": ResultSchema}, Modules: []string{ModuleAlias}, ResourceClass: "cpu.rag.reduce", Retry: workflowv3.RetryPolicy{MaxAttempts: 2, BackoffMillis: 10}},
 		},
-	}, map[string][]byte{"task.cjs": taskSource})
+	}, files)
 }
 
 func DescriptorModule() workflowmodule.DescriptorModule {

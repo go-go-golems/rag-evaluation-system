@@ -25,19 +25,32 @@ type embeddingConfig struct {
 }
 
 type Lowerer struct {
-	definitions *ragcompiler.Registry
-	lowerings   *OperatorRegistry
+	definitions         *ragcompiler.Registry
+	lowerings           *OperatorRegistry
+	bundle              func() (*workflowv3.Bundle, error)
+	allowProviders      bool
+	preparationIdentity string
 }
 
 func NewLowerer() *Lowerer {
-	return &Lowerer{definitions: ragcompiler.BuiltinRegistry(), lowerings: NewOperatorRegistry()}
+	return &Lowerer{definitions: ragcompiler.BuiltinRegistry(), lowerings: NewOperatorRegistry(), bundle: Bundle, preparationIdentity: "fixture-embedding/v1"}
+}
+
+func NewProviderLowerer(providerPackage *ProviderPackage) (*Lowerer, error) {
+	if providerPackage == nil {
+		return nil, fmt.Errorf("RAG_WORKFLOW_PROVIDER_PACKAGE")
+	}
+	if _, err := providerPackage.Bundle(); err != nil {
+		return nil, err
+	}
+	return &Lowerer{definitions: ragcompiler.BuiltinRegistry(), lowerings: NewOperatorRegistry(), bundle: providerPackage.Bundle, allowProviders: true, preparationIdentity: providerPackage.authority.Digest}, nil
 }
 
 func (l *Lowerer) Lower(_ context.Context, execution ragcontract.PipelineExecution) (LoweredExecution, error) {
 	if err := validateExecution(execution); err != nil {
 		return LoweredExecution{}, err
 	}
-	if l == nil || l.definitions == nil || l.lowerings == nil {
+	if l == nil || l.definitions == nil || l.lowerings == nil || l.bundle == nil || l.preparationIdentity == "" {
 		return LoweredExecution{}, fmt.Errorf("RAG_WORKFLOW_REGISTRY")
 	}
 	static := staticNodeIDs(execution.Pipeline)
@@ -49,11 +62,11 @@ func (l *Lowerer) Lower(_ context.Context, execution ragcontract.PipelineExecuti
 		if !known {
 			return LoweredExecution{}, fmt.Errorf("RAG_WORKFLOW_OPERATOR_UNKNOWN: %s", node.Operator.ID())
 		}
-		if err := validateSupportedNode(node, static[node.ID], lowering); err != nil {
+		if err := validateSupportedNode(node, static[node.ID], lowering, l.allowProviders); err != nil {
 			return LoweredExecution{}, err
 		}
 	}
-	bundle, err := Bundle()
+	bundle, err := l.bundle()
 	if err != nil {
 		return LoweredExecution{}, err
 	}
@@ -84,7 +97,7 @@ func (l *Lowerer) Lower(_ context.Context, execution ragcontract.PipelineExecuti
 		PipelineDigest          string `json:"pipelineDigest"`
 		CorpusDigest            string `json:"corpusDigest"`
 		EmbeddingImplementation string `json:"embeddingImplementation"`
-	}{"rag-workflow-preparation-fingerprint/v1", pipelineDigest, corpusBinding.Digest, "fixture-embedding/v1"})
+	}{"rag-workflow-preparation-fingerprint/v1", pipelineDigest, corpusBinding.Digest, l.preparationIdentity})
 	if err != nil {
 		return LoweredExecution{}, err
 	}
@@ -188,13 +201,16 @@ func corpusBinding(execution ragcontract.PipelineExecution) (ragcontract.Artifac
 	return ragcontract.ArtifactBinding{}, fmt.Errorf("RAG_WORKFLOW_CORPUS_BINDING")
 }
 
-func validateSupportedNode(node ragcontract.Node, static bool, lowering OperatorLowering) error {
-	if lowering.ProviderRequired {
+func validateSupportedNode(node ragcontract.Node, static bool, lowering OperatorLowering, allowProviders bool) error {
+	if lowering.ProviderRequired && !allowProviders {
 		return fmt.Errorf("RAG_WORKFLOW_PROVIDER_REQUIRED: %s", node.Operator.ID())
 	}
 	if node.Operator.Kind == "embed.model" {
 		var config embeddingConfig
-		if err := strictJSON(node.Config, &config); err != nil || config.Model != "fixture-embedding-v1" || config.Dimensions < 1 || config.Dimensions > 256 {
+		if err := strictJSON(node.Config, &config); err != nil || config.Dimensions < 1 || config.Dimensions > 65_536 {
+			return fmt.Errorf("RAG_WORKFLOW_EMBEDDING: %s", node.ID)
+		}
+		if !allowProviders && config.Model != "fixture-embedding-v1" {
 			return fmt.Errorf("RAG_WORKFLOW_FIXTURE_EMBEDDING: %s", node.ID)
 		}
 	}

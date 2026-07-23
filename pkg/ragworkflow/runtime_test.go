@@ -178,10 +178,10 @@ func semanticMetrics(metrics []Metric) map[string]json.RawMessage {
 
 func TestPreparedFingerprintRejectsCorpusAndPipelineDrift(t *testing.T) {
 	execution := fixtureExecution(t, false)
-	first, err := preparationFingerprint(execution)
+	first, err := preparationFingerprint(execution, "fixture-embedding/v1")
 	require.NoError(t, err)
 	execution.Bindings[0].Digest = "sha256:" + strings.Repeat("f", 64)
-	second, err := preparationFingerprint(execution)
+	second, err := preparationFingerprint(execution, "fixture-embedding/v1")
 	require.NoError(t, err)
 	require.NotEqual(t, first, second)
 	values := []string{first, second}

@@ -21,6 +21,17 @@ func BuildRunnerExecution(lowered LoweredExecution, bindings map[string]research
 	return researchrunner.BuildExecution(lowered.Plan, packages, bindings, researchrunner.ObservationPolicy{ExportOutputs: true, ExportExternalOperations: true, ExportCanonicalObservations: true})
 }
 
+func BuildProviderRunnerExecution(lowered LoweredExecution, bindings map[string]researchrunner.InputBinding, providerPackage *ProviderPackage) (researchrunner.WorkflowExecution, error) {
+	if lowered.SchemaVersion != LoweredExecutionSchema || lowered.Plan.Digest == "" || providerPackage == nil {
+		return researchrunner.WorkflowExecution{}, fmt.Errorf("RAG_WORKFLOW_PROVIDER_LOWERED_IDENTITY")
+	}
+	packages, err := workflowv3product.BuildPackageSet([]string{ProviderPackageName}, providerPackage)
+	if err != nil {
+		return researchrunner.WorkflowExecution{}, err
+	}
+	return researchrunner.BuildExecution(lowered.Plan, packages, bindings, researchrunner.ObservationPolicy{ExportOutputs: true, ExportExternalOperations: true, ExportCanonicalObservations: true})
+}
+
 func BuildQueryArchive(execution ragcontract.PipelineExecution, dataset ragoperators.EvaluationDataset) (researchrunner.SetInputArchive, error) {
 	if dataset.SchemaVersion != "rag-evaluation-data/v1" || len(dataset.Queries) == 0 || len(dataset.Queries) > 10_000 {
 		return researchrunner.SetInputArchive{}, fmt.Errorf("RAG_WORKFLOW_DATASET")
