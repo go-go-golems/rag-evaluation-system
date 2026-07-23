@@ -712,16 +712,16 @@ Audit renewal fencing in `workflowv3sqlite/store.go` and fail-closed behavior in
 - Provider cache copied to a fresh temporary host-config root for each acceptance run.
 
 ### Work and evidence
-- Added an opt-in real-provider test with one bounded corpus record and one query.
-- Executed five real contacts: two generation, two embedding, one rerank.
+- Added an opt-in real-provider test with one bounded source and query loaded from the canonical TTC WordPress SQLite database.
+- Recursive chunking produced six combined-preparation batches. The final run executed ten real contacts: seven generation, two embedding, and one rerank.
 - Asserted exact authority, one attempt per node under a two-second renewable lease, succeeded operation outcomes, generation input/output token and cost counters, rerank input tokens, embedding output cardinality, and grounded answer citations.
-- Final acceptance passed in 27.40 seconds; log is `sources/smoke/02-real-provider-acceptance.txt`.
+- Final TTC acceptance passed in 41.93 seconds; log is `sources/smoke/02-real-provider-acceptance.txt`.
 
 ### Failure and fix
 - The first post-heartbeat real run failed after a succeeded generation operation. A direct diagnostic exposed `RAG_COMBINED_RESPONSE_QUESTION_COUNT ... got 4 want 2`; the canonical `ttc-combined-preparation-v2` prompt requires four questions. Updated the real smoke fixture to `questionsPerChunk: 4`. Direct engine execution and durable Workflow execution then passed.
 
 ### Review
-Run the opt-in script only with reviewed endpoints and cost authority. Confirm `FixtureProviders=false`, fresh cache creation, five durable operations, and non-empty citations.
+Run the opt-in script only with reviewed endpoints and cost authority. Confirm `FixtureProviders=false`, a fresh cache, the canonical TTC database binding, ten durable operations, and non-empty citations.
 
 ## Step 14: Cross-repository crash, resume, and privacy acceptance
 

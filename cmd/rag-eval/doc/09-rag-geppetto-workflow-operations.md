@@ -76,7 +76,7 @@ RAG_RERANKER_BASE_URL=http://127.0.0.1:18012 \
 ttmp/2026/07/22/RAG-GEPPETTO-WORKFLOW-OPERATIONS--execute-geppetto-generation-embedding-and-reranking-as-durable-workflow-operations/scripts/02-authorized-real-provider-acceptance.sh
 ```
 
-The test uses a fresh provider cache, a two-second Workflow lease, real Geppetto generation, Ollama embeddings, and a llama.cpp cross-encoder. It proves lease renewal, all three operation kinds, usage/cost capture, grounded answer citations, and one-attempt completion.
+The test binds one bounded source and query from `data/ttc-wordpress-rag.sqlite` and uses a fresh provider cache, a two-second Workflow lease, real Geppetto generation, Ollama embeddings, and a llama.cpp cross-encoder. It proves TTC execution, lease renewal, all three operation kinds, usage/cost capture, grounded answer citations, and one-attempt completion.
 
 ## Troubleshooting
 

@@ -120,7 +120,7 @@ Safe portable evidence contains only bounded IDs, digests, integers, timestamps,
 
 For deterministic fixtures, direct `ragengine` and Workflow execution match exact retrieval result traces, metrics, and answers. All structured/synthetic/combined variants pass. The built-binary matrix independently compares each selected result with checked-in parity evidence.
 
-The authorized acceptance uses real Geppetto generation through `umans-flash`, real Ollama embeddings, and a real llama.cpp cross-encoder. It proves five contacts (generation 2, embedding 2, rerank 1), actual generation token/cost evidence, rerank tokens, embedding cardinality, one-attempt lease behavior, and grounded citations.
+The authorized acceptance binds one bounded source and query from `data/ttc-wordpress-rag.sqlite`, then uses real Geppetto generation through `umans-flash`, real Ollama embeddings, and a real llama.cpp cross-encoder. Recursive chunking produces six preparation batches, so the run proves ten contacts (generation 7, embedding 2, rerank 1), actual generation token/cost evidence, rerank tokens, embedding cardinality, one-attempt lease behavior, and grounded citations.
 
 ## Cross-repository acceptance
 
