@@ -154,6 +154,23 @@ Final RAG documentation:
 
 See also [`pkg/ragcontract/README.md`](pkg/ragcontract/README.md), `examples/rag-v2`, and [`experiments/rag-sol2/README.md`](experiments/rag-sol2/README.md). Candidate TTC datasets and fixture-provider metrics remain provisional development evidence until human adjudication and holdout freeze.
 
+### Provider-free Workflow V3 lowering
+
+`pkg/ragworkflow` is the production backend that deterministically lowers an exact `rag-pipeline-execution/v2` into a generic Scraper Workflow V3 plan. The closed `rag-v2-provider-free@1.0.0` task package covers corpus loading, unit preparation, chunking, raw representations, deterministic fixture embeddings, lexical/vector indexes, retrieval, ranking/fusion, evaluation, and publication. Unknown/provider-backed variants fail closed; real providers remain outside this package.
+
+The RAG-owned `rag-workflow-runner` links that package into Scraper's generic `scraper-workflow-execution/v2` process runner. Researchctl remains responsible for cases, replicates, process attempts, resume, and laboratory custody. Scraper remains responsible for Workflow runs, node attempts, leases, retries, cancellation, artifacts, and `scraper-workflow-observations/v1`.
+
+```bash
+# Generate deterministic contracts and parity fixtures.
+go run ./cmd/rag-workflow-fixture --out /tmp/rag-workflow-fixture
+
+# Run focused parity/lifecycle tests.
+GOWORK=off go test ./pkg/ragworkflow -count=1
+bash ttmp/2026/07/22/RAG-V2-WORKFLOW-LOWERING--*/scripts/02-smoke-rag-workflow-lowering.sh
+```
+
+See `examples/rag-workflow`, the embedded `rag-workflow-v3-lowering` help page, and the ticket design/acceptance documentation for schemas, limits, privacy rules, preparation reuse, and built-binary examples.
+
 ## Widget IR frontend
 
 The frontend uses a Widget IR (Interchange Representation) — a JSON-compatible data format that describes pages as trees of component nodes. Host applications expose Widget IR at routes such as `/api/widget/pages/{id}`, and the React `WidgetRenderer` renders it in the browser.

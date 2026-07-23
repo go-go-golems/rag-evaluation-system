@@ -1,7 +1,7 @@
 ---
 Title: RAG v2 to Workflow V3 lowering design and implementation guide
 Ticket: RAG-V2-WORKFLOW-LOWERING
-Status: active
+Status: complete
 Topics:
     - rag
     - rag-eval
@@ -20,7 +20,15 @@ RelatedFiles:
     - Path: repo://pkg/ragcontract/types.go
       Note: Canonical RAG execution contracts
     - Path: repo://pkg/ragengine/engine.go
-      Note: Current semantic execution source
+      Note: Semantic parity source
+    - Path: repo://pkg/ragworkflow/lower.go
+      Note: Production deterministic lowering backend
+    - Path: repo://pkg/ragworkflow/registry.go
+      Note: Closed versioned operator lowering registry
+    - Path: repo://pkg/ragworkflow/runtime.go
+      Note: Provider-free task runtime and preparation/query boundary
+    - Path: repo://pkg/ragworkflow/projector.go
+      Note: Bounded privacy-safe RAG observation projection
 ExternalSources: []
 Summary: Design for preserving canonical RAG v2 semantics while compiling executions into durable Workflow V3 plans.
 LastUpdated: 2026-07-22T23:15:00-04:00
@@ -40,6 +48,12 @@ This ticket belongs to **EXPERIMENT-PLATFORM-CONVERGENCE**. Siblings are `RESEAR
 RAG v2 already has a clean authoring/compiler boundary. JavaScript creates Go-backed pipeline, product, and study values; `pkg/ragcompiler` emits canonical data-only contracts in `pkg/ragcontract`; `pkg/ragengine` executes operators. This ticket keeps the authoring and canonical IR, but adds a lowering backend that maps a `rag-pipeline-execution/v2` into a Scraper Workflow V3 plan.
 
 The first slice is deterministic and provider-free: corpus input, chunking, raw representation, fixture embeddings, indexing, retrieval, and evaluation. Geppetto calls are added by the separate operations ticket. Researchctl integration is already generic through the Scraper runner.
+
+## Implementation outcome
+
+This design is implemented and accepted. `pkg/ragworkflow` now provides the exact operator registry, deterministic lowerer, versioned `rag-v2-provider-free@1.0.0` package, trusted `rag:workflow` runtime module, preparation/index evidence, bounded query map and reduction, result contract, and privacy-safe domain projector. The RAG-owned process runner links those capabilities into generic `scraper-workflow-execution/v2` without adding RAG semantics to Scraper.
+
+Deterministic examples are under `examples/rag-workflow`. The built-binary acceptance, generator, and boundary guards are under this ticket's `scripts/`; the durable summary is `sources/smoke/01-summary.json`; the requirement-to-evidence audit is `analysis/01-rag-workflow-lowering-acceptance-and-boundary-audit.md`. Real provider operations remain explicitly rejected and belong to `RAG-GEPPETTO-WORKFLOW-OPERATIONS`.
 
 ## RAG v2 orientation
 
