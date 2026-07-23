@@ -122,6 +122,48 @@ func NewDeterministicProviderFixtureVariant(variant string) (Fixture, error) {
 	return fixture, nil
 }
 
+func NewRealProviderSmokeFixture() (Fixture, error) {
+	fixture, err := NewDeterministicProviderFixtureVariant("combined")
+	if err != nil {
+		return Fixture{}, err
+	}
+	for index, node := range fixture.Execution.Pipeline.Nodes {
+		switch node.Operator.Kind {
+		case "representations.combined-summary-questions":
+			fixture.Execution.Pipeline.Nodes[index].Config = json.RawMessage(`{"model":"generator-umans-flash","prompt":"ttc-combined-preparation-v2","outputSchema":"rag-combined-preparation/v2","batchSize":1,"questionsPerChunk":4,"maxBatchRunes":1200}`)
+		case "embed.model":
+			fixture.Execution.Pipeline.Nodes[index].Config = json.RawMessage(`{"model":"embedding-primary","dimensions":768,"distance":"cosine","normalize":"l2","batchSize":8}`)
+		case "rerank.cross-encoder":
+			fixture.Execution.Pipeline.Nodes[index].Config = json.RawMessage(`{"model":"reranker-primary","candidateCount":20,"results":5,"inputTemplate":"query-document","truncation":"none","tokenization":"manifest-exact/v1","timeoutMilliseconds":30000}`)
+		case "generate.answer":
+			fixture.Execution.Pipeline.Nodes[index].Config = json.RawMessage(`{"model":"generator-umans-flash","prompt":"ttc-grounded-answer-v1","citations":"required","citationFailurePolicy":"abstain","contextBudgetTokens":2048}`)
+		}
+	}
+	fixture.Corpus.Records = fixture.Corpus.Records[:1]
+	fixture.Dataset.Queries = fixture.Dataset.Queries[:1]
+	corpusBody, err := ragcontract.CanonicalJSON(fixture.Corpus)
+	if err != nil {
+		return Fixture{}, err
+	}
+	corpusDigest, err := ragcontract.Digest(fixture.Corpus)
+	if err != nil {
+		return Fixture{}, err
+	}
+	corpusSize := int64(len(corpusBody) + 1)
+	fixture.Execution.Bindings[0].Digest = corpusDigest
+	fixture.Execution.Bindings[0].SizeBytes = &corpusSize
+	fixture.Execution.Pipeline, err = ragcompiler.Normalize(fixture.Execution.Pipeline, nil)
+	if err != nil {
+		return Fixture{}, err
+	}
+	fixture.Execution.CellID = ""
+	fixture.Execution.CellID, err = ragcontract.Digest(fixture.Execution)
+	if err != nil {
+		return Fixture{}, err
+	}
+	return fixture, nil
+}
+
 func NewDeterministicProviderServices() (ProviderServices, error) {
 	providers := deterministicProviderFixture{FixtureProviders: ragoperators.NewFixtureProviders()}
 	providers.Resolver.Models["fixture-rerank-v1"] = ragcontract.ModelManifest{ManifestBase: ragcontract.ManifestBase{SchemaVersion: ragcontract.ModelManifestSchema, Digest: "sha256:" + strings.Repeat("6", 64)}, ModelID: "fixture-rerank-v1", ModelDigest: "sha256:" + strings.Repeat("6", 64), Tokenization: "fixture-utf16", Truncation: "none", Normalization: "none", ImplementationVersion: "fixture/v1", RequestParameters: json.RawMessage(`{}`)}
