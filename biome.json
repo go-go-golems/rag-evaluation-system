@@ -32,6 +32,7 @@
 			"!**/node_modules",
 			"!**/dist",
 			"!examples/xgoja/**/assets/public",
+			"!examples/rag-workflow",
 			"!**/ttmp",
 			"!**/*.min.js",
 			"!**/*.min.css",
