@@ -434,3 +434,63 @@ It also converted the successful interactive smoke into reproducible ticket scri
 - Result schema: `rag-workflow-result/v1`.
 - Canonical observation schema: `scraper-workflow-observations/v1`.
 - Final smoke evidence: `sources/smoke/01-summary.json`.
+
+## Step 6: Publish the acceptance record and close the ticket
+
+This step converted the final implementation and validation evidence into the permanent operator help, acceptance audit, design outcome, ticket metadata, file relations, tasks, and changelog. The ticket was closed only after every task was checked and `docmgr doctor` passed without warnings.
+
+The documentation commit captures the complete review route and known validation failures rather than presenting only the green endpoint. Ticket closure then changed the ticket status from active to complete and refreshed its changelog/index metadata.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same active-goal continuation and diary requirement as Steps 4–5)
+
+**Assistant interpretation:** Complete documentation/bookkeeping and close only after evidence-backed validation.
+
+**Inferred user intent:** Leave a durable, discoverable handoff whose status accurately reflects production readiness.
+
+**Commit (code):** `189c146` — "docs: complete RAG Workflow lowering ticket"
+
+### What I did
+- Added embedded operator help and README usage.
+- Added the requirement-to-evidence acceptance and boundary audit.
+- Marked the accepted design outcome and linked production files.
+- Checked all ticket tasks with docmgr.
+- Related 13 material RAG, Scraper, and Researchctl files to the diary with absolute file notes.
+- Added cross-repository commit hashes and acceptance evidence to the changelog.
+- Corrected acceptance-report topics to the repository vocabulary after doctor warnings.
+- Ran `docmgr doctor --ticket RAG-V2-WORKFLOW-LOWERING --stale-after 30` until all checks passed.
+- Closed the ticket with `docmgr ticket close --ticket RAG-V2-WORKFLOW-LOWERING`.
+
+### Why
+- Production code without operator contracts and reproduction commands is not a complete cutover.
+- Ticket status must follow, not precede, validation and evidence.
+
+### What worked
+- All ticket tasks were complete.
+- Final doctor output was `✅ All checks passed`.
+- Ticket closure reported `Status: active → complete` and updated the changelog.
+
+### What didn't work
+- The first doctor run warned that `researchctl`, `semantic-parity`, and `workflow-v3` were not registered topic vocabulary values. I replaced them with existing precise topics: `rag`, `workflow`, `scraper`, and `evaluation`; the second doctor run passed.
+
+### What I learned
+- Acceptance documents are validated against repository-local vocabulary, even when cross-repository terms are technically accurate.
+
+### What was tricky to build
+- The audit had to distinguish evidence captured before the final docs-only changes from checks that needed fresh reruns. Generated contracts, code, dependency state, and guards were final before closure; documentation changes did not alter runtime behavior.
+
+### What warrants a second pair of eyes
+- Review the acceptance matrix against the durable goal language and confirm no provider-execution requirement was accidentally moved into this provider-free phase.
+
+### What should be done in the future
+- Begin `RAG-GEPPETTO-WORKFLOW-OPERATIONS` from the explicit provider-required attachment points.
+
+### Code review instructions
+- Read the acceptance audit first, then follow its six-step review route.
+- Run doctor and the two ticket scripts before merging.
+
+### Technical details
+- Documentation commit: `189c1466bde629964df6d19890261bd6b326fede`.
+- Ticket state: complete.
+- Doctor state: all checks passed.

@@ -1,7 +1,7 @@
 ---
 Title: Compile canonical RAG v2 executions into Scraper Workflow V3 plans
 Ticket: RAG-V2-WORKFLOW-LOWERING
-Status: active
+Status: complete
 Topics:
     - rag
     - rag-eval
@@ -15,10 +15,11 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2026-07-22T19:25:04.482936134-04:00
+LastUpdated: 2026-07-23T15:39:31.845249372-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 # Compile canonical RAG v2 executions into Scraper Workflow V3 plans
 

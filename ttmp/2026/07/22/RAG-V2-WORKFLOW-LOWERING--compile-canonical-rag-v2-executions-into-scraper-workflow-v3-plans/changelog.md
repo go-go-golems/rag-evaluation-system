@@ -26,3 +26,7 @@ Implemented and accepted deterministic provider-free RAG v2 lowering through Scr
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/ragworkflow/lower.go — Production lowerer and closed registry integration
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-V2-WORKFLOW-LOWERING--compile-canonical-rag-v2-executions-into-scraper-workflow-v3-plans/analysis/01-rag-workflow-lowering-acceptance-and-boundary-audit.md — Fresh requirement-to-evidence acceptance audit
+
+## 2026-07-23
+
+Ticket closed
