@@ -25,9 +25,24 @@ func fixtureProviderPackage(t *testing.T) (*ProviderPackage, ProviderServices) {
 }
 
 func TestProviderPackageBindsAuthorityAndExecutesDurableOperations(t *testing.T) {
+	for _, test := range []struct {
+		variant     string
+		generate    int
+		budgetUnits int64
+	}{
+		{variant: "structured", generate: 5, budgetUnits: 30_200},
+		{variant: "combined", generate: 4, budgetUnits: 30_200},
+		{variant: "synthetic", generate: 8, budgetUnits: 30_300},
+	} {
+		t.Run(test.variant, func(t *testing.T) { runProviderPackageFixture(t, test.variant, test.generate, test.budgetUnits) })
+	}
+}
+
+func runProviderPackageFixture(t *testing.T, variant string, expectedGenerationOperations int, expectedBudgetUnits int64) {
+	t.Helper()
 	ctx := context.Background()
 	providerPackage, providers := fixtureProviderPackage(t)
-	fixture, err := NewDeterministicProviderFixture()
+	fixture, err := NewDeterministicProviderFixtureVariant(variant)
 	require.NoError(t, err)
 	directEnvironment := &ragoperators.Environment{Manifests: providers.Manifests, Schemas: providers.Schemas, Generator: providers.Generator, Embedder: providers.Embedder, Reranker: providers.Reranker, GenerationConcurrency: 1, Usage: ragoperators.Usage{Cost: map[string]float64{}}}
 	directResult, directErr := ragengine.New(nil).Execute(ctx, fixture.Execution, fixture.Corpus, fixture.Dataset, nil, ragengine.Options{Manifests: directEnvironment.Manifests, Schemas: directEnvironment.Schemas, Generator: directEnvironment.Generator, Embedder: directEnvironment.Embedder, Reranker: directEnvironment.Reranker, GenerationConcurrency: 1, GenerationSettingsFingerprint: providerPackage.authority.Digest, EmbeddingFingerprint: providerPackage.authority.Digest})
@@ -41,7 +56,7 @@ func TestProviderPackageBindsAuthorityAndExecutesDurableOperations(t *testing.T)
 	expectedFingerprint, err := preparationFingerprint(fixture.Execution, providerPackage.authority.Digest)
 	require.NoError(t, err)
 	require.Equal(t, expectedFingerprint, lowered.PreparationFingerprint)
-	require.Equal(t, []workflowv3.BudgetAccount{{Account: "provider", Limits: []workflowv3.BudgetAmount{{Dimension: "requests", Units: 30_200}}, PolicyDigest: providerPackage.authority.Digest}}, lowered.IR.Budgets)
+	require.Equal(t, []workflowv3.BudgetAccount{{Account: "provider", Limits: []workflowv3.BudgetAmount{{Dimension: "requests", Units: expectedBudgetUnits}}, PolicyDigest: providerPackage.authority.Digest}}, lowered.IR.Budgets)
 	require.Equal(t, []workflowv3.BudgetAmount{{Dimension: "requests", Units: 3}}, lowered.IR.Maps[0].Budget.Reserve)
 	bundle, err := providerPackage.Bundle()
 	require.NoError(t, err)
@@ -92,7 +107,7 @@ func TestProviderPackageBindsAuthorityAndExecutesDurableOperations(t *testing.T)
 		require.Equal(t, []workflowv3.ExternalOperationCounter{{Name: "requests", Units: 1}}, operation.Reservation)
 		kinds[operation.Kind.Name]++
 	}
-	require.Equal(t, 5, kinds[ragworkflowops.GenerateOperation])
+	require.Equal(t, expectedGenerationOperations, kinds[ragworkflowops.GenerateOperation])
 	require.Equal(t, 3, kinds[ragworkflowops.EmbedOperation])
 	require.Equal(t, 2, kinds[ragworkflowops.RerankOperation])
 	resultBody, err := workflowv3.ReadArtifact(ctx, artifacts, snapshot.Outputs["result"])

@@ -33,6 +33,13 @@ func (deterministicProviderFixture) Rerank(_ context.Context, request ragoperato
 }
 
 func NewDeterministicProviderFixture() (Fixture, error) {
+	return NewDeterministicProviderFixtureVariant("structured")
+}
+
+func NewDeterministicProviderFixtureVariant(variant string) (Fixture, error) {
+	if variant != "structured" && variant != "combined" && variant != "synthetic" {
+		return Fixture{}, fmt.Errorf("RAG_PROVIDER_FIXTURE_VARIANT")
+	}
 	fixture, err := NewProviderFreeFixture(true)
 	if err != nil {
 		return Fixture{}, err
@@ -46,6 +53,47 @@ func NewDeterministicProviderFixture() (Fixture, error) {
 			fixture.Execution.Pipeline.Nodes[index].Config = json.RawMessage(`{"model":"fixture-hash-32-v1","dimensions":32,"distance":"cosine","normalize":"l2","batchSize":8}`)
 		case "retrieve.bm25", "retrieve.vector":
 			fixture.Execution.Pipeline.Nodes[index].Config = json.RawMessage(`{"index":"representations","representation":"summary","topK":10,"filter":{}}`)
+		}
+	}
+	if variant == "combined" {
+		for index, node := range fixture.Execution.Pipeline.Nodes {
+			if node.Operator.Kind == "representations.structured-summary" {
+				fixture.Execution.Pipeline.Nodes[index].Operator = ragcontract.OperatorRef{Kind: "representations.combined-summary-questions", Version: "v1"}
+				fixture.Execution.Pipeline.Nodes[index].Config = json.RawMessage(`{"model":"fixture-summary-v1","prompt":"fixture-transcript-summary-v1","outputSchema":"transcript-rag-summary/v1","batchSize":2,"questionsPerChunk":2,"maxBatchRunes":10000}`)
+			}
+		}
+	}
+	if variant == "synthetic" {
+		chunkID, representationID, embeddingIndex := "", "", -1
+		for index, node := range fixture.Execution.Pipeline.Nodes {
+			switch {
+			case strings.HasPrefix(node.Operator.Kind, "chunks."):
+				chunkID = node.ID
+			case node.Operator.Kind == "representations.structured-summary":
+				representationID = node.ID
+			case node.Operator.Kind == "embed.model":
+				embeddingIndex = index
+			}
+		}
+		if chunkID == "" || representationID == "" || embeddingIndex < 0 {
+			return Fixture{}, fmt.Errorf("RAG_PROVIDER_FIXTURE_SYNTHETIC_GRAPH")
+		}
+		synthetic := ragcontract.Node{ID: "fixture-synthetic", Operator: ragcontract.OperatorRef{Kind: "representations.synthetic-questions", Version: "v1"}, Inputs: []ragcontract.InputBinding{{Port: "chunks", From: ragcontract.PortRef{NodeID: chunkID, Port: "chunks"}}, {Port: "source", From: ragcontract.PortRef{NodeID: representationID, Port: "representations"}}}, Config: json.RawMessage(`{"name":"question","from":"summary","count":2,"model":"fixture-question-v1","prompt":"fixture-transcript-questions-v1"}`)}
+		fixture.Execution.Pipeline.Nodes = append(fixture.Execution.Pipeline.Nodes[:embeddingIndex], append([]ragcontract.Node{synthetic}, fixture.Execution.Pipeline.Nodes[embeddingIndex:]...)...)
+		for index, node := range fixture.Execution.Pipeline.Nodes {
+			if node.Operator.Kind == "embed.model" {
+				fixture.Execution.Pipeline.Nodes[index].Inputs[0].From = ragcontract.PortRef{NodeID: synthetic.ID, Port: "representations"}
+			}
+			if strings.HasPrefix(node.Operator.Kind, "index.") {
+				for inputIndex, input := range node.Inputs {
+					if input.Port == "representations.all" {
+						fixture.Execution.Pipeline.Nodes[index].Inputs[inputIndex].From = ragcontract.PortRef{NodeID: synthetic.ID, Port: "representations"}
+					}
+				}
+			}
+			if node.Operator.Kind == "retrieve.bm25" || node.Operator.Kind == "retrieve.vector" {
+				fixture.Execution.Pipeline.Nodes[index].Config = json.RawMessage(`{"index":"representations","representation":"question","topK":10,"filter":{}}`)
+			}
 		}
 	}
 	hydrationID := ""
