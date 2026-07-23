@@ -1,0 +1,17 @@
+{
+	"itemSchema": "rag-workflow-query/v1",
+	"items": [
+		{
+			"data": "eyJkYXRhc2V0TWFuaWZlc3REaWdlc3QiOiJzaGEyNTY6MDQ2MjUzOTYwY2I1YzkxNzMzOTc4NDA2YWUzNjU0MTdkODMxOTIwMzY2MzViNWQ3NWJmYTNiODIyMWZhNDNjMCIsInF1ZXJ5Ijp7ImlkIjoicTEiLCJyZWxldmFudElkcyI6WyJ1bml0OmZhOWZlOTllM2VmNGQwNzYiXSwidGV4dCI6InJlY2lwcm9jYWwgcmFuayBmdXNpb24ifSwic2NoZW1hVmVyc2lvbiI6InJhZy13b3JrZmxvdy1xdWVyeS92MSJ9",
+			"key": "q1",
+			"mediaType": "application/json"
+		},
+		{
+			"data": "eyJkYXRhc2V0TWFuaWZlc3REaWdlc3QiOiJzaGEyNTY6MDQ2MjUzOTYwY2I1YzkxNzMzOTc4NDA2YWUzNjU0MTdkODMxOTIwMzY2MzViNWQ3NWJmYTNiODIyMWZhNDNjMCIsInF1ZXJ5Ijp7ImlkIjoicTIiLCJyZWxldmFudElkcyI6WyJ1bml0OjAzOWEwMzE2MGI2ZGI5MDciXSwidGV4dCI6ImRldGVybWluaXN0aWMgZW1iZWRkaW5ncyJ9LCJzY2hlbWFWZXJzaW9uIjoicmFnLXdvcmtmbG93LXF1ZXJ5L3YxIn0=",
+			"key": "q2",
+			"mediaType": "application/json"
+		}
+	],
+	"manifestSchema": "scraper-workflow-item-manifest/v1",
+	"schemaVersion": "scraper-workflow-set-input-archive/v1"
+}

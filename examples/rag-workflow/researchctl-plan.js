@@ -1,0 +1,847 @@
+const research = require("researchctl");
+
+const execution0 = {
+	inputBindings: {
+		corpus: { id: "corpus-case-a", kind: "rag-corpus", role: "workflow-input" },
+		execution: { id: "execution-case-a", kind: "rag-execution", role: "workflow-input" },
+		queries: { id: "queries-case-a", kind: "rag-query-set", role: "workflow-input" },
+	},
+	observation: {
+		exportCanonicalObservations: true,
+		exportExternalOperations: true,
+		exportOutputs: true,
+	},
+	plan: {
+		catalogDigest: "sha256:b23a7e66773f9dd91909f70da0eb9764f87bd695ad7563b262fdfe8f23bfe98f",
+		digest: "sha256:f1a34f48a774e2fe0612a6143347e4c3f008aefd679b93386843326f8c1ffc2d",
+		inputs: [
+			{ name: "execution", schema: "rag-pipeline-execution/v2" },
+			{ name: "corpus", schema: "rag-workflow-corpus/v1" },
+		],
+		irDigest: "sha256:3addd70ffb4e1cd542a32860d646d4dbc718f9aeaf9c6c05c51a07f7264b2224",
+		maps: [
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					prepared: {
+						nodeKey: "prepare-004",
+						port: "prepared",
+						schema: "rag-workflow-prepared/v1",
+						source: "node-output",
+					},
+					query: {
+						mapKey: "evaluate-queries",
+						schema: "rag-workflow-query/v1",
+						source: "map-item",
+					},
+				},
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#query",
+					kind: "rag.query.evaluate",
+					version: "v1",
+				},
+				inputSchemas: {
+					corpus: "rag-workflow-corpus/v1",
+					execution: "rag-pipeline-execution/v2",
+					prepared: "rag-workflow-prepared/v1",
+					query: "rag-workflow-query/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "evaluate-queries",
+				modules: ["rag:workflow"],
+				outputSchemas: { result: "rag-workflow-result-partition/v1" },
+				policy: { maxItems: 10000, maxMaterializedAhead: 8, pageSize: 8 },
+				resourceClass: "cpu.rag.query",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+				source: {
+					itemSchema: "rag-workflow-query/v1",
+					manifestSchema: "scraper-workflow-item-manifest/v1",
+					name: "queries",
+					source: "set-input",
+				},
+			},
+		],
+		name: "rag-v2-4488291d5c9e",
+		nodes: [
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+				},
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#loadCorpus",
+					kind: "rag.corpus.load",
+					version: "v1",
+				},
+				inputSchemas: { corpus: "rag-workflow-corpus/v1", execution: "rag-pipeline-execution/v2" },
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "prepare-start",
+				modules: ["rag:workflow"],
+				outputSchemas: { prepared: "rag-workflow-prepared/v1" },
+				resourceClass: "cpu.rag.prepare",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					prepared: {
+						nodeKey: "prepare-start",
+						port: "prepared",
+						schema: "rag-workflow-prepared/v1",
+						source: "node-output",
+					},
+				},
+				dependsOn: ["prepare-start"],
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#prepare",
+					kind: "rag.units.prepare",
+					version: "v1",
+				},
+				inputSchemas: {
+					corpus: "rag-workflow-corpus/v1",
+					execution: "rag-pipeline-execution/v2",
+					prepared: "rag-workflow-prepared/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "prepare-000",
+				modules: ["rag:workflow"],
+				outputSchemas: { prepared: "rag-workflow-prepared/v1" },
+				resourceClass: "cpu.rag.prepare",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					prepared: {
+						nodeKey: "prepare-000",
+						port: "prepared",
+						schema: "rag-workflow-prepared/v1",
+						source: "node-output",
+					},
+				},
+				dependsOn: ["prepare-000"],
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#prepare",
+					kind: "rag.chunks.create",
+					version: "v1",
+				},
+				inputSchemas: {
+					corpus: "rag-workflow-corpus/v1",
+					execution: "rag-pipeline-execution/v2",
+					prepared: "rag-workflow-prepared/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "prepare-001",
+				modules: ["rag:workflow"],
+				outputSchemas: { prepared: "rag-workflow-prepared/v1" },
+				resourceClass: "cpu.rag.prepare",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					prepared: {
+						nodeKey: "prepare-001",
+						port: "prepared",
+						schema: "rag-workflow-prepared/v1",
+						source: "node-output",
+					},
+				},
+				dependsOn: ["prepare-001"],
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#prepare",
+					kind: "rag.represent.raw",
+					version: "v1",
+				},
+				inputSchemas: {
+					corpus: "rag-workflow-corpus/v1",
+					execution: "rag-pipeline-execution/v2",
+					prepared: "rag-workflow-prepared/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "prepare-002",
+				modules: ["rag:workflow"],
+				outputSchemas: { prepared: "rag-workflow-prepared/v1" },
+				resourceClass: "cpu.rag.prepare",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					prepared: {
+						nodeKey: "prepare-002",
+						port: "prepared",
+						schema: "rag-workflow-prepared/v1",
+						source: "node-output",
+					},
+				},
+				dependsOn: ["prepare-002"],
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#prepare",
+					kind: "rag.embed.fixture",
+					version: "v1",
+				},
+				inputSchemas: {
+					corpus: "rag-workflow-corpus/v1",
+					execution: "rag-pipeline-execution/v2",
+					prepared: "rag-workflow-prepared/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "prepare-003",
+				modules: ["rag:workflow"],
+				outputSchemas: { prepared: "rag-workflow-prepared/v1" },
+				resourceClass: "cpu.rag.prepare",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					prepared: {
+						nodeKey: "prepare-003",
+						port: "prepared",
+						schema: "rag-workflow-prepared/v1",
+						source: "node-output",
+					},
+				},
+				dependsOn: ["prepare-003"],
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#prepare",
+					kind: "rag.index.build",
+					version: "v1",
+				},
+				inputSchemas: {
+					corpus: "rag-workflow-corpus/v1",
+					execution: "rag-pipeline-execution/v2",
+					prepared: "rag-workflow-prepared/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "prepare-004",
+				modules: ["rag:workflow"],
+				outputSchemas: { prepared: "rag-workflow-prepared/v1" },
+				resourceClass: "cpu.rag.prepare",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+			{
+				bindings: {
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					results: {
+						reduceKey: "merge-results",
+						schema: "rag-workflow-result-partition/v1",
+						source: "reduction-output",
+					},
+				},
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#publish",
+					kind: "rag.results.publish",
+					version: "v1",
+				},
+				inputSchemas: {
+					execution: "rag-pipeline-execution/v2",
+					results: "rag-workflow-result-partition/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "publish-results",
+				modules: ["rag:workflow"],
+				outputSchemas: { result: "rag-workflow-result/v1" },
+				resourceClass: "cpu.rag.reduce",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+		],
+		outputs: [
+			{
+				name: "result",
+				value: {
+					nodeKey: "publish-results",
+					port: "result",
+					schema: "rag-workflow-result/v1",
+					source: "node-output",
+				},
+			},
+		],
+		reductions: [
+			{
+				bindings: {
+					partition: {
+						reduceKey: "merge-results",
+						schema: "scraper-workflow-reduction-partition/v1",
+						source: "reduction-partition",
+					},
+				},
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#merge",
+					kind: "rag.results.merge",
+					version: "v1",
+				},
+				inputSchemas: { partition: "scraper-workflow-reduction-partition/v1" },
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "merge-results",
+				modules: ["rag:workflow"],
+				outputSchemas: { result: "rag-workflow-result-partition/v1" },
+				policy: { fanIn: 16, maxLevels: 4 },
+				resourceClass: "cpu.rag.reduce",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+				source: {
+					itemSchema: "rag-workflow-result-partition/v1",
+					manifestSchema: "scraper-workflow-item-manifest/v1",
+					mapKey: "evaluate-queries",
+					source: "map-output",
+				},
+			},
+		],
+		schema: "scraper-workflow-plan/v3",
+		setInputs: [
+			{
+				itemSchema: "rag-workflow-query/v1",
+				manifestSchema: "scraper-workflow-item-manifest/v1",
+				name: "queries",
+			},
+		],
+	},
+	schemaVersion: "scraper-workflow-execution/v2",
+	taskCatalog: {
+		digest: "sha256:b23a7e66773f9dd91909f70da0eb9764f87bd695ad7563b262fdfe8f23bfe98f",
+		packages: [
+			{
+				bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+				name: "rag-v2-provider-free",
+				version: "1.0.0",
+			},
+		],
+	},
+};
+const execution1 = {
+	inputBindings: {
+		corpus: { id: "corpus-case-b", kind: "rag-corpus", role: "workflow-input" },
+		execution: { id: "execution-case-b", kind: "rag-execution", role: "workflow-input" },
+		queries: { id: "queries-case-b", kind: "rag-query-set", role: "workflow-input" },
+	},
+	observation: {
+		exportCanonicalObservations: true,
+		exportExternalOperations: true,
+		exportOutputs: true,
+	},
+	plan: {
+		catalogDigest: "sha256:b23a7e66773f9dd91909f70da0eb9764f87bd695ad7563b262fdfe8f23bfe98f",
+		digest: "sha256:fd0431f22d9d9d452b6b1f90a77e2d876554aa051ae13cb906024ee9185063e5",
+		inputs: [
+			{ name: "execution", schema: "rag-pipeline-execution/v2" },
+			{ name: "corpus", schema: "rag-workflow-corpus/v1" },
+		],
+		irDigest: "sha256:912bc4037f3e7d1bdee0a95a1aa098571444e3182f33e1c9681df90318de57e8",
+		maps: [
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					prepared: {
+						nodeKey: "prepare-004",
+						port: "prepared",
+						schema: "rag-workflow-prepared/v1",
+						source: "node-output",
+					},
+					query: {
+						mapKey: "evaluate-queries",
+						schema: "rag-workflow-query/v1",
+						source: "map-item",
+					},
+				},
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#query",
+					kind: "rag.query.evaluate",
+					version: "v1",
+				},
+				inputSchemas: {
+					corpus: "rag-workflow-corpus/v1",
+					execution: "rag-pipeline-execution/v2",
+					prepared: "rag-workflow-prepared/v1",
+					query: "rag-workflow-query/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "evaluate-queries",
+				modules: ["rag:workflow"],
+				outputSchemas: { result: "rag-workflow-result-partition/v1" },
+				policy: { maxItems: 10000, maxMaterializedAhead: 8, pageSize: 8 },
+				resourceClass: "cpu.rag.query",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+				source: {
+					itemSchema: "rag-workflow-query/v1",
+					manifestSchema: "scraper-workflow-item-manifest/v1",
+					name: "queries",
+					source: "set-input",
+				},
+			},
+		],
+		name: "rag-v2-8a26b3504dd8",
+		nodes: [
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+				},
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#loadCorpus",
+					kind: "rag.corpus.load",
+					version: "v1",
+				},
+				inputSchemas: { corpus: "rag-workflow-corpus/v1", execution: "rag-pipeline-execution/v2" },
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "prepare-start",
+				modules: ["rag:workflow"],
+				outputSchemas: { prepared: "rag-workflow-prepared/v1" },
+				resourceClass: "cpu.rag.prepare",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					prepared: {
+						nodeKey: "prepare-start",
+						port: "prepared",
+						schema: "rag-workflow-prepared/v1",
+						source: "node-output",
+					},
+				},
+				dependsOn: ["prepare-start"],
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#prepare",
+					kind: "rag.units.prepare",
+					version: "v1",
+				},
+				inputSchemas: {
+					corpus: "rag-workflow-corpus/v1",
+					execution: "rag-pipeline-execution/v2",
+					prepared: "rag-workflow-prepared/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "prepare-000",
+				modules: ["rag:workflow"],
+				outputSchemas: { prepared: "rag-workflow-prepared/v1" },
+				resourceClass: "cpu.rag.prepare",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					prepared: {
+						nodeKey: "prepare-000",
+						port: "prepared",
+						schema: "rag-workflow-prepared/v1",
+						source: "node-output",
+					},
+				},
+				dependsOn: ["prepare-000"],
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#prepare",
+					kind: "rag.chunks.create",
+					version: "v1",
+				},
+				inputSchemas: {
+					corpus: "rag-workflow-corpus/v1",
+					execution: "rag-pipeline-execution/v2",
+					prepared: "rag-workflow-prepared/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "prepare-001",
+				modules: ["rag:workflow"],
+				outputSchemas: { prepared: "rag-workflow-prepared/v1" },
+				resourceClass: "cpu.rag.prepare",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					prepared: {
+						nodeKey: "prepare-001",
+						port: "prepared",
+						schema: "rag-workflow-prepared/v1",
+						source: "node-output",
+					},
+				},
+				dependsOn: ["prepare-001"],
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#prepare",
+					kind: "rag.represent.raw",
+					version: "v1",
+				},
+				inputSchemas: {
+					corpus: "rag-workflow-corpus/v1",
+					execution: "rag-pipeline-execution/v2",
+					prepared: "rag-workflow-prepared/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "prepare-002",
+				modules: ["rag:workflow"],
+				outputSchemas: { prepared: "rag-workflow-prepared/v1" },
+				resourceClass: "cpu.rag.prepare",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					prepared: {
+						nodeKey: "prepare-002",
+						port: "prepared",
+						schema: "rag-workflow-prepared/v1",
+						source: "node-output",
+					},
+				},
+				dependsOn: ["prepare-002"],
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#prepare",
+					kind: "rag.embed.fixture",
+					version: "v1",
+				},
+				inputSchemas: {
+					corpus: "rag-workflow-corpus/v1",
+					execution: "rag-pipeline-execution/v2",
+					prepared: "rag-workflow-prepared/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "prepare-003",
+				modules: ["rag:workflow"],
+				outputSchemas: { prepared: "rag-workflow-prepared/v1" },
+				resourceClass: "cpu.rag.prepare",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+			{
+				bindings: {
+					corpus: { name: "corpus", schema: "rag-workflow-corpus/v1", source: "input" },
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					prepared: {
+						nodeKey: "prepare-003",
+						port: "prepared",
+						schema: "rag-workflow-prepared/v1",
+						source: "node-output",
+					},
+				},
+				dependsOn: ["prepare-003"],
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#prepare",
+					kind: "rag.index.build",
+					version: "v1",
+				},
+				inputSchemas: {
+					corpus: "rag-workflow-corpus/v1",
+					execution: "rag-pipeline-execution/v2",
+					prepared: "rag-workflow-prepared/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "prepare-004",
+				modules: ["rag:workflow"],
+				outputSchemas: { prepared: "rag-workflow-prepared/v1" },
+				resourceClass: "cpu.rag.prepare",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+			{
+				bindings: {
+					execution: { name: "execution", schema: "rag-pipeline-execution/v2", source: "input" },
+					results: {
+						reduceKey: "merge-results",
+						schema: "rag-workflow-result-partition/v1",
+						source: "reduction-output",
+					},
+				},
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#publish",
+					kind: "rag.results.publish",
+					version: "v1",
+				},
+				inputSchemas: {
+					execution: "rag-pipeline-execution/v2",
+					results: "rag-workflow-result-partition/v1",
+				},
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "publish-results",
+				modules: ["rag:workflow"],
+				outputSchemas: { result: "rag-workflow-result/v1" },
+				resourceClass: "cpu.rag.reduce",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+			},
+		],
+		outputs: [
+			{
+				name: "result",
+				value: {
+					nodeKey: "publish-results",
+					port: "result",
+					schema: "rag-workflow-result/v1",
+					source: "node-output",
+				},
+			},
+		],
+		reductions: [
+			{
+				bindings: {
+					partition: {
+						reduceKey: "merge-results",
+						schema: "scraper-workflow-reduction-partition/v1",
+						source: "reduction-partition",
+					},
+				},
+				implementation: {
+					abi: "scraper-js-task/v1",
+					bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+					entrypoint: "task.cjs#merge",
+					kind: "rag.results.merge",
+					version: "v1",
+				},
+				inputSchemas: { partition: "scraper-workflow-reduction-partition/v1" },
+				isolation: {
+					effective: { class: "in-process.trusted" },
+					policyDigest: "sha256:7b4a7a2aa4da8e02268512816ba3a6a36e8b90f8e4ff690b826023053666d581",
+					requested: { class: "in-process.trusted" },
+				},
+				key: "merge-results",
+				modules: ["rag:workflow"],
+				outputSchemas: { result: "rag-workflow-result-partition/v1" },
+				policy: { fanIn: 16, maxLevels: 4 },
+				resourceClass: "cpu.rag.reduce",
+				retry: { backoffMillis: 10, maxAttempts: 2 },
+				source: {
+					itemSchema: "rag-workflow-result-partition/v1",
+					manifestSchema: "scraper-workflow-item-manifest/v1",
+					mapKey: "evaluate-queries",
+					source: "map-output",
+				},
+			},
+		],
+		schema: "scraper-workflow-plan/v3",
+		setInputs: [
+			{
+				itemSchema: "rag-workflow-query/v1",
+				manifestSchema: "scraper-workflow-item-manifest/v1",
+				name: "queries",
+			},
+		],
+	},
+	schemaVersion: "scraper-workflow-execution/v2",
+	taskCatalog: {
+		digest: "sha256:b23a7e66773f9dd91909f70da0eb9764f87bd695ad7563b262fdfe8f23bfe98f",
+		packages: [
+			{
+				bundleDigest: "sha256:99faeb5285e2ad9b95903792ad56ddbbed2016cd6de88a148492451b3cdd9d00",
+				name: "rag-v2-provider-free",
+				version: "1.0.0",
+			},
+		],
+	},
+};
+
+function specification(label, execution, inputs) {
+	return {
+		canonicalIdentity: {
+			schemaVersion: "researchctl-execution-spec/v1",
+			identityScheme: "researchctl-execution-identity/v1",
+			domain: "scraper-workflow",
+			domainSchemaVersion: "scraper-workflow-execution/v2",
+			inputs,
+			domainConfig: execution,
+			requestedMeasures: [
+				{ name: "rag.mrr", valueKind: "number", unit: "ratio", required: true },
+				{ name: "workflow.elapsed", valueKind: "number", unit: "microseconds", required: true },
+				{ name: "workflow.retries", valueKind: "number", unit: "count", required: true },
+			],
+			factors: { ragCase: label },
+		},
+		displayName: `RAG Workflow ${label}`,
+		provenance: { authoring: "examples/rag-workflow/researchctl-plan.js" },
+		labels: { fixture: "rag-v2-workflow-lowering" },
+	};
+}
+
+module.exports = research.experimentPlan("rag-workflow-matrix", (plan) =>
+	plan
+		.experiment("EXP-RAG-WORKFLOW")
+		.case("case-a", (value) =>
+			value
+				.specification(
+					specification("case-a", execution0, [
+						{
+							digest: "sha256:c163c2195abdee10f5a43ecdf3856e69ac08b182ce5bbeb286ee2f17f6914939",
+							id: "execution-case-a",
+							kind: "rag-execution",
+							mediaType: "application/json",
+							role: "workflow-input",
+							schemaVersion: "rag-pipeline-execution/v2",
+							sizeBytes: 4316,
+							uri: "inputs/rag-workflow/case-a/execution.json",
+						},
+						{
+							digest: "sha256:262b50f85c1ee3144d9862fa36f9f36ebb725a4a2dfd8a21727054a29c12d85b",
+							id: "corpus-case-a",
+							kind: "rag-corpus",
+							mediaType: "application/json",
+							role: "workflow-input",
+							schemaVersion: "rag-workflow-corpus/v1",
+							sizeBytes: 375,
+							uri: "inputs/rag-workflow/case-a/corpus.json",
+						},
+						{
+							digest: "sha256:22150d8eb9c61c2686d569c2fb4768995fc7f573da69e52985701d69f880d1a1",
+							id: "queries-case-a",
+							kind: "rag-query-set",
+							mediaType: "application/json",
+							role: "workflow-input",
+							schemaVersion: "scraper-workflow-set-input-archive/v1",
+							sizeBytes: 886,
+							uri: "inputs/rag-workflow/case-a/queries.json",
+						},
+					]),
+				)
+				.factors({ ragCase: "case-a" })
+				.replicates(2),
+		)
+		.case("case-b", (value) =>
+			value
+				.specification(
+					specification("case-b", execution1, [
+						{
+							digest: "sha256:d8eb55dc150439de7a89ec8a333c5ec674a8b6d5a348f0b13c428c2d09ff8a07",
+							id: "execution-case-b",
+							kind: "rag-execution",
+							mediaType: "application/json",
+							role: "workflow-input",
+							schemaVersion: "rag-pipeline-execution/v2",
+							sizeBytes: 4316,
+							uri: "inputs/rag-workflow/case-b/execution.json",
+						},
+						{
+							digest: "sha256:4e5f32fbe300da11e985f2bd1c0a601d410942a70418ec7a0623e2a9d41aa6a3",
+							id: "corpus-case-b",
+							kind: "rag-corpus",
+							mediaType: "application/json",
+							role: "workflow-input",
+							schemaVersion: "rag-workflow-corpus/v1",
+							sizeBytes: 382,
+							uri: "inputs/rag-workflow/case-b/corpus.json",
+						},
+						{
+							digest: "sha256:22150d8eb9c61c2686d569c2fb4768995fc7f573da69e52985701d69f880d1a1",
+							id: "queries-case-b",
+							kind: "rag-query-set",
+							mediaType: "application/json",
+							role: "workflow-input",
+							schemaVersion: "scraper-workflow-set-input-archive/v1",
+							sizeBytes: 886,
+							uri: "inputs/rag-workflow/case-b/queries.json",
+						},
+					]),
+				)
+				.factors({ ragCase: "case-b" })
+				.replicates(2),
+		)
+		.ordering({ strategy: "blocked" })
+		.execution({ maxConcurrent: 2, failFast: false }),
+);
