@@ -58,6 +58,16 @@ func (f *fakeGenerator) Generate(ctx context.Context, _ ragoperators.GenerationR
 	return f.result, nil
 }
 
+type rejectingPreflightGenerator struct{ calls int }
+
+func (p *rejectingPreflightGenerator) Generate(context.Context, ragoperators.GenerationRequest) (ragoperators.GenerationResult, error) {
+	p.calls++
+	return ragoperators.GenerationResult{}, nil
+}
+func (p *rejectingPreflightGenerator) PrepareGeneration(ragoperators.GenerationRequest) (PreparedGeneration, error) {
+	return nil, errors.New("RAG_PREFLIGHT_REJECTED")
+}
+
 type fakeEmbedder struct {
 	vectors [][]float64
 	usage   ragoperators.Usage
@@ -131,6 +141,20 @@ func TestCanceledCallFinishesWithDetachedContextAndConservativeReservation(t *te
 	require.NoError(t, recorder.finishContextErrors[0])
 }
 
+func TestClassifiedProviderFailureRecordsSafeTaxonomyOnly(t *testing.T) {
+	recorder := &fakeRecorder{}
+	decorator := newTestDecorator(t, recorder, nil)
+	raw := errors.New("SECRET-PROVIDER-BODY")
+	provider := &fakeGenerator{err: NewProviderCallError(raw, "rate-limit", "PROVIDER_RATE_LIMITED", workflowv3.ExternalOperationOutcomeFailed)}
+	wrapped, err := decorator.Generator(provider)
+	require.NoError(t, err)
+	_, err = wrapped.Generate(context.Background(), ragoperators.GenerationRequest{Kind: "generate.answer", Model: "m", Prompt: "p", OutputSchema: "s"})
+	require.EqualError(t, err, "PROVIDER_RATE_LIMITED")
+	completion := recorder.completions[0]
+	require.Equal(t, &workflowv3.ExternalOperationFailure{Class: "rate-limit", Code: "PROVIDER_RATE_LIMITED"}, completion.Failure)
+	require.NotContains(t, completion.Failure.Code, "SECRET")
+}
+
 func TestAdmissionFailurePreventsProviderContact(t *testing.T) {
 	recorder := &fakeRecorder{beginErr: errors.New("budget exhausted")}
 	decorator := newTestDecorator(t, recorder, nil)
@@ -143,6 +167,23 @@ func TestAdmissionFailurePreventsProviderContact(t *testing.T) {
 	require.Empty(t, recorder.completions)
 }
 
+func TestPreflightFailureCreatesNoOperationAndNoProviderContact(t *testing.T) {
+	recorder := &fakeRecorder{}
+	decorator := newTestDecorator(t, recorder, nil)
+	provider := &rejectingPreflightGenerator{}
+	wrapped, err := decorator.Generator(provider)
+	require.NoError(t, err)
+	_, err = wrapped.Generate(context.Background(), ragoperators.GenerationRequest{Kind: "generate.answer", Model: "m", Prompt: "p", OutputSchema: "s"})
+	require.ErrorContains(t, err, "RAG_PREFLIGHT_REJECTED")
+	require.Zero(t, provider.calls)
+	require.Empty(t, recorder.specs)
+}
+
+func TestProviderResultErrorRejectsArbitraryText(t *testing.T) {
+	err := ProviderSucceededWithInvalidResult("SECRET-PROVIDER-BODY")
+	require.EqualError(t, err, "RAG_PROVIDER_RESULT_INVALID")
+}
+
 func TestProviderSuccessWithInvalidDomainObservationRemainsSucceeded(t *testing.T) {
 	recorder := &fakeRecorder{}
 	decorator := newTestDecorator(t, recorder, nil)
@@ -151,7 +192,7 @@ func TestProviderSuccessWithInvalidDomainObservationRemainsSucceeded(t *testing.
 	wrapped, err := decorator.Generator(provider)
 	require.NoError(t, err)
 	_, err = wrapped.Generate(context.Background(), ragoperators.GenerationRequest{Kind: "generate.answer", Model: "m", Prompt: "p", OutputSchema: "s"})
-	require.ErrorContains(t, err, "RAG_PROVIDER_RESULT_INVALID")
+	require.ErrorContains(t, err, "RAG_PROVIDER_COST_INVALID")
 	require.Equal(t, workflowv3.ExternalOperationOutcomeSucceeded, recorder.completions[0].Outcome)
 	require.Equal(t, []workflowv3.ExternalOperationCounter{{Name: "requests", Units: 1}}, recorder.completions[0].Counters)
 }

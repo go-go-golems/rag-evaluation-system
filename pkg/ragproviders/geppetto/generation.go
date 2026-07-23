@@ -3,7 +3,6 @@ package geppetto
 import (
 	"context"
 	"encoding/json"
-	stderrors "errors"
 	"fmt"
 	"strings"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/go-go-golems/geppetto/pkg/steps/ai/settings"
 	"github.com/go-go-golems/geppetto/pkg/turns"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragworkflowops"
 )
 
 type PromptTextResolver interface{ PromptText(string) (string, error) }
@@ -32,25 +32,40 @@ func NewGenerator(base *settings.InferenceSettings, prompts PromptTextResolver, 
 	}
 	return &Generator{settings: base.Clone(), prompts: prompts, schemas: schemas}, nil
 }
+
+type preparedGeneration struct {
+	engine  geppettoengine.Engine
+	turn    *turns.Turn
+	request ragoperators.GenerationRequest
+}
+
 func (g *Generator) Generate(ctx context.Context, request ragoperators.GenerationRequest) (ragoperators.GenerationResult, error) {
+	prepared, err := g.PrepareGeneration(request)
+	if err != nil {
+		return ragoperators.GenerationResult{}, err
+	}
+	return prepared.Execute(ctx)
+}
+
+func (g *Generator) PrepareGeneration(request ragoperators.GenerationRequest) (ragworkflowops.PreparedGeneration, error) {
 	if g == nil || g.settings == nil {
-		return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GEPPETTO_GENERATOR_UNAVAILABLE")
+		return nil, fmt.Errorf("RAG_GEPPETTO_GENERATOR_UNAVAILABLE")
 	}
 	prompt, err := g.prompts.PromptText(request.Prompt)
 	if err != nil {
-		return ragoperators.GenerationResult{}, err
+		return nil, err
 	}
 	schemaRaw, err := g.schemas.Raw(request.OutputSchema)
 	if err != nil {
-		return ragoperators.GenerationResult{}, err
+		return nil, err
 	}
 	var schema map[string]any
 	if err := json.Unmarshal(schemaRaw, &schema); err != nil {
-		return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GENERATOR_SCHEMA: %w", err)
+		return nil, fmt.Errorf("RAG_GENERATOR_SCHEMA: %w", err)
 	}
 	ss := g.settings.Clone()
 	if ss.Chat == nil {
-		return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GENERATOR_CHAT_SETTINGS")
+		return nil, fmt.Errorf("RAG_GENERATOR_CHAT_SETTINGS")
 	}
 	model := request.Model
 	ss.Chat.Engine = &model
@@ -63,21 +78,18 @@ func (g *Generator) Generate(ctx context.Context, request ragoperators.Generatio
 	ss.Chat.StructuredOutputRequireValid = true
 	engine, err := enginefactory.NewEngineFromSettings(ss)
 	if err != nil {
-		return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GEPPETTO_GENERATOR_ENGINE: %w", err)
+		return nil, fmt.Errorf("RAG_GEPPETTO_GENERATOR_ENGINE: %w", err)
 	}
-	user := buildUserPrompt(prompt, request)
-	turn := turns.NewTurnBuilder().WithUserPrompt(user).Build()
-	out, inference, err := geppettoengine.RunInferenceWithResult(ctx, engine, turn)
+	turn := turns.NewTurnBuilder().WithUserPrompt(buildUserPrompt(prompt, request)).Build()
+	return &preparedGeneration{engine: engine, turn: turn, request: request}, nil
+}
+
+func (p *preparedGeneration) Execute(ctx context.Context) (ragoperators.GenerationResult, error) {
+	out, inference, err := geppettoengine.RunInferenceWithResult(ctx, p.engine, p.turn)
 	if err != nil {
-		if stderrors.Is(err, context.Canceled) || stderrors.Is(err, context.DeadlineExceeded) {
-			return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GEPPETTO_GENERATOR: %w", err)
-		}
-		return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GEPPETTO_GENERATOR_PROVIDER")
+		return ragoperators.GenerationResult{}, classifyProviderError(err)
 	}
 	text := lastAssistantText(out)
-	if text == "" {
-		return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GEPPETTO_GENERATOR_EMPTY")
-	}
 	result := ragoperators.GenerationResult{Text: text, FinishReason: "completed"}
 	if inference != nil {
 		if inference.Usage != nil {
@@ -92,13 +104,16 @@ func (g *Generator) Generate(ctx context.Context, request ragoperators.Generatio
 			result.Cost = &cost
 		}
 	}
-	switch request.Kind {
+	if text == "" {
+		return result, ragworkflowops.ProviderSucceededWithInvalidResult("RAG_GEPPETTO_GENERATOR_EMPTY")
+	}
+	switch p.request.Kind {
 	case "representations.synthetic-questions":
 		var value struct {
 			Questions []string `json:"questions"`
 		}
 		if err := json.Unmarshal([]byte(text), &value); err != nil {
-			return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GENERATOR_QUESTIONS_JSON")
+			return result, ragworkflowops.ProviderSucceededWithInvalidResult("RAG_GENERATOR_QUESTIONS_JSON")
 		}
 		result.Questions = value.Questions
 	case "generate.answer":
@@ -108,7 +123,7 @@ func (g *Generator) Generate(ctx context.Context, request ragoperators.Generatio
 			Abstained        bool     `json:"abstained"`
 		}
 		if err := json.Unmarshal([]byte(text), &value); err != nil {
-			return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GENERATOR_ANSWER_JSON")
+			return result, ragworkflowops.ProviderSucceededWithInvalidResult("RAG_GENERATOR_ANSWER_JSON")
 		}
 		result.Text, result.CitationChunkIDs, result.Abstained = value.Answer, value.CitationChunkIDs, value.Abstained
 	case "representations.combined-summary-questions":
@@ -116,7 +131,7 @@ func (g *Generator) Generate(ctx context.Context, request ragoperators.Generatio
 			Items []ragoperators.CombinedGenerationItem `json:"items"`
 		}
 		if err := json.Unmarshal([]byte(text), &value); err != nil {
-			return ragoperators.GenerationResult{}, fmt.Errorf("RAG_GENERATOR_COMBINED_JSON")
+			return result, ragworkflowops.ProviderSucceededWithInvalidResult("RAG_GENERATOR_COMBINED_JSON")
 		}
 		result.CombinedItems = value.Items
 	}

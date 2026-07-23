@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"regexp"
 	"sort"
 	"time"
 
@@ -14,6 +15,8 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
 	"github.com/go-go-golems/scraper/pkg/workflowv3"
 )
+
+var providerResultCodePattern = regexp.MustCompile(`^RAG_[A-Z0-9_]{3,63}$`)
 
 const (
 	GenerateOperation = "provider.generate"
@@ -28,16 +31,32 @@ func (wallClock) Now() time.Time { return time.Now().UTC() }
 
 // ProviderResultError reports that provider contact succeeded but domain result
 // validation failed. The operation remains succeeded while the task fails.
-type ProviderResultError struct{ Err error }
+type ProviderCallError struct {
+	Cause   error
+	Class   string
+	Code    string
+	Outcome string
+}
 
-func (e *ProviderResultError) Error() string { return "RAG_PROVIDER_RESULT_INVALID" }
-func (e *ProviderResultError) Unwrap() error { return e.Err }
-
-func ProviderSucceededWithInvalidResult(err error) error {
-	if err == nil {
-		return nil
+func (e *ProviderCallError) Error() string { return e.Code }
+func (e *ProviderCallError) Unwrap() error { return e.Cause }
+func NewProviderCallError(cause error, class, code, outcome string) error {
+	failure := workflowv3.Failure{Class: class, Code: code}
+	if cause == nil || workflowv3.ValidateFailure(failure) != nil || (outcome != workflowv3.ExternalOperationOutcomeFailed && outcome != workflowv3.ExternalOperationOutcomeCanceled && outcome != workflowv3.ExternalOperationOutcomeTimedOut) {
+		return &ProviderCallError{Cause: cause, Class: "transport", Code: "PROVIDER_TRANSPORT", Outcome: workflowv3.ExternalOperationOutcomeFailed}
 	}
-	return &ProviderResultError{Err: err}
+	return &ProviderCallError{Cause: cause, Class: class, Code: code, Outcome: outcome}
+}
+
+type ProviderResultError struct{ Code string }
+
+func (e *ProviderResultError) Error() string { return e.Code }
+
+func ProviderSucceededWithInvalidResult(code string) error {
+	if !providerResultCodePattern.MatchString(code) {
+		code = "RAG_PROVIDER_RESULT_INVALID"
+	}
+	return &ProviderResultError{Code: code}
 }
 
 type Policy struct {
@@ -134,12 +153,43 @@ func (d *Decorator) Reranker(next ragoperators.Reranker) (ragoperators.Reranker,
 	return rerankDecorator{decorator: d, next: next}, nil
 }
 
+type PreparedGeneration interface {
+	Execute(context.Context) (ragoperators.GenerationResult, error)
+}
+type GenerationPreparer interface {
+	PrepareGeneration(ragoperators.GenerationRequest) (PreparedGeneration, error)
+}
+type PreparedEmbedding interface {
+	Execute(context.Context) ([][]float64, ragoperators.Usage, error)
+}
+type EmbeddingPreparer interface {
+	PrepareEmbedding(string, []string) (PreparedEmbedding, error)
+}
+type PreparedRerank interface {
+	Execute(context.Context) (ragoperators.RerankResult, error)
+}
+type RerankPreparer interface {
+	PrepareRerank(ragoperators.RerankRequest) (PreparedRerank, error)
+}
+
 type generationDecorator struct {
 	decorator *Decorator
 	next      ragoperators.TextGenerator
 }
 
 func (w generationDecorator) Generate(ctx context.Context, request ragoperators.GenerationRequest) (ragoperators.GenerationResult, error) {
+	var call func(context.Context) (ragoperators.GenerationResult, error)
+	if preparer, ok := w.next.(GenerationPreparer); ok {
+		prepared, err := preparer.PrepareGeneration(request)
+		if err != nil {
+			return ragoperators.GenerationResult{}, err
+		}
+		call = prepared.Execute
+	} else {
+		call = func(callCtx context.Context) (ragoperators.GenerationResult, error) {
+			return w.next.Generate(callCtx, request)
+		}
+	}
 	correlation, err := safeDigest(struct {
 		SchemaVersion, Kind, Model, Prompt, OutputSchema, ParentID string
 		Count                                                      int
@@ -153,10 +203,7 @@ func (w generationDecorator) Generate(ctx context.Context, request ragoperators.
 		sortCounters(measures)
 	}
 	return executeOperation(ctx, w.decorator, GenerateOperation, correlation, measures, func(callCtx context.Context) (ragoperators.GenerationResult, []workflowv3.ExternalOperationCounter, error) {
-		result, callErr := w.next.Generate(callCtx, request)
-		if callErr != nil {
-			return result, nil, callErr
-		}
+		result, callErr := call(callCtx)
 		observed := []workflowv3.ExternalOperationCounter{counter("requests", 1)}
 		if result.InputTokens > 0 {
 			observed = append(observed, counter("input_tokens", result.InputTokens))
@@ -167,12 +214,12 @@ func (w generationDecorator) Generate(ctx context.Context, request ragoperators.
 		if result.Cost != nil {
 			units, costErr := costMicrounits(*result.Cost)
 			if costErr != nil {
-				return result, observed, ProviderSucceededWithInvalidResult(costErr)
+				return result, observed, ProviderSucceededWithInvalidResult("RAG_PROVIDER_COST_INVALID")
 			}
 			observed = append(observed, counter("cost_microunits", units))
 		}
 		sortCounters(observed)
-		return result, observed, nil
+		return result, observed, callErr
 	})
 }
 
@@ -182,6 +229,18 @@ type embeddingDecorator struct {
 }
 
 func (w embeddingDecorator) Embed(ctx context.Context, model string, texts []string) ([][]float64, ragoperators.Usage, error) {
+	var call func(context.Context) ([][]float64, ragoperators.Usage, error)
+	if preparer, ok := w.next.(EmbeddingPreparer); ok {
+		prepared, err := preparer.PrepareEmbedding(model, texts)
+		if err != nil {
+			return nil, ragoperators.Usage{}, err
+		}
+		call = prepared.Execute
+	} else {
+		call = func(callCtx context.Context) ([][]float64, ragoperators.Usage, error) {
+			return w.next.Embed(callCtx, model, texts)
+		}
+	}
 	correlation, err := safeDigest(struct {
 		SchemaVersion, Model string
 		InputItems           int
@@ -194,16 +253,13 @@ func (w embeddingDecorator) Embed(ctx context.Context, model string, texts []str
 		usage   ragoperators.Usage
 	}
 	result, err := executeOperation(ctx, w.decorator, EmbedOperation, correlation, counters(counter("input_items", int64(len(texts)))), func(callCtx context.Context) (value, []workflowv3.ExternalOperationCounter, error) {
-		vectors, usage, callErr := w.next.Embed(callCtx, model, texts)
-		if callErr != nil {
-			return value{}, nil, callErr
-		}
+		vectors, usage, callErr := call(callCtx)
 		observed := []workflowv3.ExternalOperationCounter{counter("requests", 1), counter("output_items", int64(len(vectors)))}
 		if usage.EmbeddingTokens > 0 {
 			observed = append(observed, counter("embedding_tokens", usage.EmbeddingTokens))
 		}
 		sortCounters(observed)
-		return value{vectors, usage}, observed, nil
+		return value{vectors, usage}, observed, callErr
 	})
 	return result.vectors, result.usage, err
 }
@@ -214,6 +270,18 @@ type rerankDecorator struct {
 }
 
 func (w rerankDecorator) Rerank(ctx context.Context, request ragoperators.RerankRequest) (ragoperators.RerankResult, error) {
+	var call func(context.Context) (ragoperators.RerankResult, error)
+	if preparer, ok := w.next.(RerankPreparer); ok {
+		prepared, err := preparer.PrepareRerank(request)
+		if err != nil {
+			return ragoperators.RerankResult{}, err
+		}
+		call = prepared.Execute
+	} else {
+		call = func(callCtx context.Context) (ragoperators.RerankResult, error) {
+			return w.next.Rerank(callCtx, request)
+		}
+	}
 	correlation, err := safeDigest(struct {
 		SchemaVersion, Model string
 		InputItems           int
@@ -222,10 +290,7 @@ func (w rerankDecorator) Rerank(ctx context.Context, request ragoperators.Rerank
 		return ragoperators.RerankResult{}, err
 	}
 	return executeOperation(ctx, w.decorator, RerankOperation, correlation, counters(counter("input_items", int64(len(request.Candidates)))), func(callCtx context.Context) (ragoperators.RerankResult, []workflowv3.ExternalOperationCounter, error) {
-		result, callErr := w.next.Rerank(callCtx, request)
-		if callErr != nil {
-			return ragoperators.RerankResult{}, nil, callErr
-		}
+		result, callErr := call(callCtx)
 		observed := []workflowv3.ExternalOperationCounter{counter("output_items", int64(len(result.Scores))), counter("requests", 1)}
 		if result.InputTokens > 0 {
 			observed = append(observed, counter("input_tokens", result.InputTokens))
@@ -233,12 +298,12 @@ func (w rerankDecorator) Rerank(ctx context.Context, request ragoperators.Rerank
 		if result.Cost != nil {
 			units, costErr := costMicrounits(*result.Cost)
 			if costErr != nil {
-				return result, observed, ProviderSucceededWithInvalidResult(costErr)
+				return result, observed, ProviderSucceededWithInvalidResult("RAG_PROVIDER_COST_INVALID")
 			}
 			observed = append(observed, counter("cost_microunits", units))
 		}
 		sortCounters(observed)
-		return result, observed, nil
+		return result, observed, callErr
 	})
 }
 
@@ -287,7 +352,10 @@ func completionFor(err error, started, finished time.Time, counters []workflowv3
 		completion.AccountingMode = workflowv3.ExternalOperationAccountingNone
 	}
 	class, code, outcome := "transport", "PROVIDER_TRANSPORT", workflowv3.ExternalOperationOutcomeFailed
-	if errors.Is(err, context.Canceled) {
+	var classified *ProviderCallError
+	if errors.As(err, &classified) {
+		class, code, outcome = classified.Class, classified.Code, classified.Outcome
+	} else if errors.Is(err, context.Canceled) {
 		class, code, outcome = "canceled", "PROVIDER_CANCELED", workflowv3.ExternalOperationOutcomeCanceled
 	} else if errors.Is(err, context.DeadlineExceeded) {
 		class, code, outcome = "timeout", "PROVIDER_TIMEOUT", workflowv3.ExternalOperationOutcomeTimedOut

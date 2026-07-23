@@ -2,6 +2,7 @@ package geppetto
 
 import (
 	"context"
+	"errors"
 	"math"
 	"strings"
 	"testing"
@@ -155,8 +156,8 @@ func TestRerankerValidatesRequestAndPreservesCancellation(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, err = a.Rerank(ctx, ragoperators.RerankRequest{Model: "bge-exact", Candidates: rerankCandidates()})
-	if err == nil || !strings.Contains(err.Error(), "context canceled") {
-		t.Fatalf("error=%v want cancellation", err)
+	if !errors.Is(err, context.Canceled) || err.Error() != "PROVIDER_CANCELED" {
+		t.Fatalf("error=%v want classified cancellation", err)
 	}
 }
 
