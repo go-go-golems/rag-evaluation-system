@@ -213,22 +213,32 @@ type rerankDecorator struct {
 	next      ragoperators.Reranker
 }
 
-func (w rerankDecorator) Rerank(ctx context.Context, request ragoperators.RerankRequest) ([]ragoperators.RerankScore, error) {
+func (w rerankDecorator) Rerank(ctx context.Context, request ragoperators.RerankRequest) (ragoperators.RerankResult, error) {
 	correlation, err := safeDigest(struct {
 		SchemaVersion, Model string
 		InputItems           int
 	}{"rag-provider-rerank-correlation/v1", request.Model, len(request.Candidates)})
 	if err != nil {
-		return nil, err
+		return ragoperators.RerankResult{}, err
 	}
-	return executeOperation(ctx, w.decorator, RerankOperation, correlation, counters(counter("input_items", int64(len(request.Candidates)))), func(callCtx context.Context) ([]ragoperators.RerankScore, []workflowv3.ExternalOperationCounter, error) {
-		scores, callErr := w.next.Rerank(callCtx, request)
+	return executeOperation(ctx, w.decorator, RerankOperation, correlation, counters(counter("input_items", int64(len(request.Candidates)))), func(callCtx context.Context) (ragoperators.RerankResult, []workflowv3.ExternalOperationCounter, error) {
+		result, callErr := w.next.Rerank(callCtx, request)
 		if callErr != nil {
-			return nil, nil, callErr
+			return ragoperators.RerankResult{}, nil, callErr
 		}
-		observed := []workflowv3.ExternalOperationCounter{counter("output_items", int64(len(scores))), counter("requests", 1)}
+		observed := []workflowv3.ExternalOperationCounter{counter("output_items", int64(len(result.Scores))), counter("requests", 1)}
+		if result.InputTokens > 0 {
+			observed = append(observed, counter("input_tokens", result.InputTokens))
+		}
+		if result.Cost != nil {
+			units, costErr := costMicrounits(*result.Cost)
+			if costErr != nil {
+				return result, observed, ProviderSucceededWithInvalidResult(costErr)
+			}
+			observed = append(observed, counter("cost_microunits", units))
+		}
 		sortCounters(observed)
-		return scores, observed, nil
+		return result, observed, nil
 	})
 }
 

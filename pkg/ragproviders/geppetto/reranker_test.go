@@ -43,6 +43,8 @@ func TestRerankerForcesCompleteCoverageAndMapsChunkIDs(t *testing.T) {
 		response: geppettorerank.Response{
 			Provider: "llama.cpp",
 			Model:    "bge-exact",
+			Usage:    &geppettorerank.Usage{InputTokens: 41, TotalTokens: 41},
+			Cost:     floatPointer(0.0002),
 			Results: []geppettorerank.Result{
 				{DocumentID: "chunk-2", Index: 1, Score: -2.5, Rank: 1},
 				{DocumentID: "chunk-1", Index: 0, Score: -3.5, Rank: 2},
@@ -54,7 +56,7 @@ func TestRerankerForcesCompleteCoverageAndMapsChunkIDs(t *testing.T) {
 		t.Fatalf("NewReranker() error = %v", err)
 	}
 
-	scores, err := adapter.Rerank(context.Background(), ragoperators.RerankRequest{
+	result, err := adapter.Rerank(context.Background(), ragoperators.RerankRequest{
 		Model:   "bge-exact",
 		Query:   "How are payroll adjustments handled?",
 		Results: 1,
@@ -72,14 +74,17 @@ func TestRerankerForcesCompleteCoverageAndMapsChunkIDs(t *testing.T) {
 	if got, want := provider.request.Documents[0].ID, "chunk-1"; got != want {
 		t.Errorf("first provider document ID = %q, want %q", got, want)
 	}
-	if got, want := len(scores), 2; got != want {
+	if got, want := len(result.Scores), 2; got != want {
 		t.Fatalf("score count = %d, want %d", got, want)
 	}
-	if scores[0] != (ragoperators.RerankScore{ChunkID: "chunk-2", Score: -2.5}) {
-		t.Errorf("first score = %#v, want chunk-2's raw negative score", scores[0])
+	if result.Scores[0] != (ragoperators.RerankScore{ChunkID: "chunk-2", Score: -2.5}) {
+		t.Errorf("first score = %#v, want chunk-2's raw negative score", result.Scores[0])
 	}
-	if scores[1] != (ragoperators.RerankScore{ChunkID: "chunk-1", Score: -3.5}) {
-		t.Errorf("second score = %#v, want chunk-1's raw negative score", scores[1])
+	if result.Scores[1] != (ragoperators.RerankScore{ChunkID: "chunk-1", Score: -3.5}) {
+		t.Errorf("second score = %#v, want chunk-1's raw negative score", result.Scores[1])
+	}
+	if result.InputTokens != 41 || result.Cost == nil || *result.Cost != 0.0002 {
+		t.Errorf("usage result = %#v", result)
 	}
 }
 
@@ -154,3 +159,5 @@ func TestRerankerValidatesRequestAndPreservesCancellation(t *testing.T) {
 		t.Fatalf("error=%v want cancellation", err)
 	}
 }
+
+func floatPointer(value float64) *float64 { return &value }

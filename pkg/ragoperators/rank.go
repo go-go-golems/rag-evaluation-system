@@ -278,12 +278,19 @@ func (rerankOperator) Execute(ctx context.Context, node ragcontract.Node, inputs
 		ctx, cancel = context.WithTimeout(ctx, time.Duration(config.TimeoutMilliseconds)*time.Millisecond)
 		defer cancel()
 	}
-	scores, err := env.Reranker.Rerank(ctx, RerankRequest{Model: modelManifest.ModelID, InputTemplate: config.InputTemplate, Truncation: config.Truncation, Tokenization: config.Tokenization, Query: query, Candidates: evidence, Results: config.Results})
+	reranked, err := env.Reranker.Rerank(ctx, RerankRequest{Model: modelManifest.ModelID, InputTemplate: config.InputTemplate, Truncation: config.Truncation, Tokenization: config.Tokenization, Query: query, Candidates: evidence, Results: config.Results})
 	if err != nil {
 		return nil, fmt.Errorf("RAG_RERANK_FAILED: %w", err)
 	}
+	env.Usage.InputTokens += reranked.InputTokens
+	if reranked.Cost != nil {
+		if env.Usage.Cost == nil {
+			env.Usage.Cost = map[string]float64{}
+		}
+		env.Usage.Cost[config.Model] += *reranked.Cost
+	}
 	byID := map[string]float64{}
-	for _, score := range scores {
+	for _, score := range reranked.Scores {
 		if _, duplicate := byID[score.ChunkID]; duplicate {
 			return nil, fmt.Errorf("RAG_RERANK_DUPLICATE: %s", score.ChunkID)
 		}

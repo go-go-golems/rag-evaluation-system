@@ -89,12 +89,12 @@ func newLimitedReranker(inner ragoperators.Reranker, limit int) (ragoperators.Re
 	return &limitedReranker{inner: inner, slots: make(chan struct{}, limit)}, nil
 }
 
-func (r *limitedReranker) Rerank(ctx context.Context, request ragoperators.RerankRequest) ([]ragoperators.RerankScore, error) {
+func (r *limitedReranker) Rerank(ctx context.Context, request ragoperators.RerankRequest) (ragoperators.RerankResult, error) {
 	select {
 	case r.slots <- struct{}{}:
 		defer func() { <-r.slots }()
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return ragoperators.RerankResult{}, ctx.Err()
 	}
 	return r.inner.Rerank(ctx, request)
 }

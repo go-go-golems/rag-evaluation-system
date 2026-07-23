@@ -69,12 +69,12 @@ func (f fakeEmbedder) Embed(context.Context, string, []string) ([][]float64, rag
 }
 
 type fakeReranker struct {
-	scores []ragoperators.RerankScore
+	result ragoperators.RerankResult
 	err    error
 }
 
-func (f fakeReranker) Rerank(context.Context, ragoperators.RerankRequest) ([]ragoperators.RerankScore, error) {
-	return f.scores, f.err
+func (f fakeReranker) Rerank(context.Context, ragoperators.RerankRequest) (ragoperators.RerankResult, error) {
+	return f.result, f.err
 }
 
 func newTestDecorator(t *testing.T, recorder *fakeRecorder, reservations map[string][]workflowv3.ExternalOperationCounter) *Decorator {
@@ -156,6 +156,17 @@ func TestProviderSuccessWithInvalidDomainObservationRemainsSucceeded(t *testing.
 	require.Equal(t, []workflowv3.ExternalOperationCounter{{Name: "requests", Units: 1}}, recorder.completions[0].Counters)
 }
 
+func TestRerankOperationRecordsProviderUsageAndCost(t *testing.T) {
+	recorder := &fakeRecorder{}
+	decorator := newTestDecorator(t, recorder, nil)
+	cost := 0.000003
+	wrapped, err := decorator.Reranker(fakeReranker{result: ragoperators.RerankResult{Scores: []ragoperators.RerankScore{{ChunkID: "a", Score: 1}}, InputTokens: 5, Cost: &cost}})
+	require.NoError(t, err)
+	_, err = wrapped.Rerank(context.Background(), ragoperators.RerankRequest{Model: "rerank-v1", Query: "SECRET-Q", Candidates: []ragoperators.Evidence{{}}})
+	require.NoError(t, err)
+	require.Equal(t, []workflowv3.ExternalOperationCounter{{Name: "cost_microunits", Units: 3}, {Name: "input_tokens", Units: 5}, {Name: "output_items", Units: 1}, {Name: "requests", Units: 1}}, recorder.completions[0].Counters)
+}
+
 func TestEmbeddingAndRerankDescriptorsPreserveCardinalityWithoutPayloads(t *testing.T) {
 	for _, test := range []struct {
 		name          string
@@ -172,7 +183,7 @@ func TestEmbeddingAndRerankDescriptorsPreserveCardinalityWithoutPayloads(t *test
 			return err
 		}, EmbedOperation, 2, 2},
 		{"rerank", func(d *Decorator) error {
-			wrapped, err := d.Reranker(fakeReranker{scores: []ragoperators.RerankScore{{ChunkID: "a", Score: 1}}})
+			wrapped, err := d.Reranker(fakeReranker{result: ragoperators.RerankResult{Scores: []ragoperators.RerankScore{{ChunkID: "a", Score: 1}}}})
 			if err != nil {
 				return err
 			}

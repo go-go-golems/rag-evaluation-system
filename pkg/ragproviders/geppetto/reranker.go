@@ -35,15 +35,15 @@ func NewReranker(provider geppettorerank.Provider) (*Reranker, error) {
 // Rerank submits one document per hydrated source-evidence chunk. It always
 // requests every candidate score: req.Results is the RAG display/final limit
 // and is deliberately applied later by the native rerank operator.
-func (r *Reranker) Rerank(ctx context.Context, req ragoperators.RerankRequest) ([]ragoperators.RerankScore, error) {
+func (r *Reranker) Rerank(ctx context.Context, req ragoperators.RerankRequest) (ragoperators.RerankResult, error) {
 	if r == nil || r.provider == nil {
-		return nil, fmt.Errorf("RAG_GEPPETTO_RERANKER_UNAVAILABLE")
+		return ragoperators.RerankResult{}, fmt.Errorf("RAG_GEPPETTO_RERANKER_UNAVAILABLE")
 	}
 	if req.Model == "" {
-		return nil, fmt.Errorf("RAG_GEPPETTO_RERANK_MODEL_REQUIRED")
+		return ragoperators.RerankResult{}, fmt.Errorf("RAG_GEPPETTO_RERANK_MODEL_REQUIRED")
 	}
 	if len(req.Candidates) == 0 {
-		return nil, fmt.Errorf("RAG_GEPPETTO_RERANK_CANDIDATES_REQUIRED")
+		return ragoperators.RerankResult{}, fmt.Errorf("RAG_GEPPETTO_RERANK_CANDIDATES_REQUIRED")
 	}
 
 	documents := make([]geppettorerank.Document, len(req.Candidates))
@@ -51,10 +51,10 @@ func (r *Reranker) Rerank(ctx context.Context, req ragoperators.RerankRequest) (
 	for i, candidate := range req.Candidates {
 		id := candidate.Chunk.Record.ID
 		if id == "" {
-			return nil, fmt.Errorf("RAG_GEPPETTO_RERANK_CHUNK_ID_REQUIRED")
+			return ragoperators.RerankResult{}, fmt.Errorf("RAG_GEPPETTO_RERANK_CHUNK_ID_REQUIRED")
 		}
 		if _, duplicate := expected[id]; duplicate {
-			return nil, fmt.Errorf("RAG_GEPPETTO_RERANK_DUPLICATE_CHUNK_ID")
+			return ragoperators.RerankResult{}, fmt.Errorf("RAG_GEPPETTO_RERANK_DUPLICATE_CHUNK_ID")
 		}
 		expected[id] = struct{}{}
 		documents[i] = geppettorerank.Document{ID: id, Text: candidate.Chunk.Text}
@@ -67,29 +67,33 @@ func (r *Reranker) Rerank(ctx context.Context, req ragoperators.RerankRequest) (
 		TopN:      len(documents),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("RAG_GEPPETTO_RERANK: %w", err)
+		return ragoperators.RerankResult{}, fmt.Errorf("RAG_GEPPETTO_RERANK: %w", err)
 	}
 	if response.Model != req.Model {
-		return nil, fmt.Errorf("RAG_GEPPETTO_RERANK_MODEL_MISMATCH")
+		return ragoperators.RerankResult{}, fmt.Errorf("RAG_GEPPETTO_RERANK_MODEL_MISMATCH")
 	}
 	if len(response.Results) != len(documents) {
-		return nil, fmt.Errorf("RAG_GEPPETTO_RERANK_INCOMPLETE")
+		return ragoperators.RerankResult{}, fmt.Errorf("RAG_GEPPETTO_RERANK_INCOMPLETE")
 	}
 
 	scores := make([]ragoperators.RerankScore, 0, len(response.Results))
 	seen := make(map[string]struct{}, len(response.Results))
 	for _, result := range response.Results {
 		if _, ok := expected[result.DocumentID]; !ok {
-			return nil, fmt.Errorf("RAG_GEPPETTO_RERANK_UNKNOWN_CHUNK_ID")
+			return ragoperators.RerankResult{}, fmt.Errorf("RAG_GEPPETTO_RERANK_UNKNOWN_CHUNK_ID")
 		}
 		if _, duplicate := seen[result.DocumentID]; duplicate {
-			return nil, fmt.Errorf("RAG_GEPPETTO_RERANK_DUPLICATE_CHUNK_ID")
+			return ragoperators.RerankResult{}, fmt.Errorf("RAG_GEPPETTO_RERANK_DUPLICATE_CHUNK_ID")
 		}
 		if math.IsNaN(result.Score) || math.IsInf(result.Score, 0) {
-			return nil, fmt.Errorf("RAG_GEPPETTO_RERANK_NONFINITE_SCORE")
+			return ragoperators.RerankResult{}, fmt.Errorf("RAG_GEPPETTO_RERANK_NONFINITE_SCORE")
 		}
 		seen[result.DocumentID] = struct{}{}
 		scores = append(scores, ragoperators.RerankScore{ChunkID: result.DocumentID, Score: result.Score})
 	}
-	return scores, nil
+	result := ragoperators.RerankResult{Scores: scores, Cost: response.Cost}
+	if response.Usage != nil {
+		result.InputTokens = int64(response.Usage.InputTokens)
+	}
+	return result, nil
 }

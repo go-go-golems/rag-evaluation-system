@@ -108,9 +108,13 @@ func (e fakeEmbedder) Embed(_ context.Context, _ string, texts []string) ([][]fl
 	return out, Usage{EmbeddingTokens: int64(len(texts))}, nil
 }
 
-type fakeReranker struct{ incomplete bool }
+type fakeReranker struct {
+	incomplete  bool
+	inputTokens int64
+	cost        *float64
+}
 
-func (r fakeReranker) Rerank(_ context.Context, request RerankRequest) ([]RerankScore, error) {
+func (r fakeReranker) Rerank(_ context.Context, request RerankRequest) (RerankResult, error) {
 	out := []RerankScore{}
 	for i, e := range request.Candidates {
 		if r.incomplete && i == 0 {
@@ -118,7 +122,7 @@ func (r fakeReranker) Rerank(_ context.Context, request RerankRequest) ([]Rerank
 		}
 		out = append(out, RerankScore{ChunkID: e.Chunk.Record.ID, Score: float64(len(request.Candidates) - i)})
 	}
-	return out, nil
+	return RerankResult{Scores: out, InputTokens: r.inputTokens, Cost: r.cost}, nil
 }
 
 func TestGenerationUsageKeepsUnknownCostAbsent(t *testing.T) {
@@ -636,13 +640,18 @@ func TestRerankAndAnswerNeverFallback(t *testing.T) {
 	}
 	// Empty truncation/tokenization must default from the resolved model manifest.
 	defaultedNode := ragcontract.Node{Config: json.RawMessage(`{"model":"m","candidateCount":1,"results":1}`)}
-	out, err := (rerankOperator{}).Execute(context.Background(), defaultedNode, map[string]any{"evidence": evidence}, &Environment{Manifests: fixtureResolver(), Reranker: fakeReranker{}})
+	rerankCost := 0.0002
+	rerankEnv := &Environment{Manifests: fixtureResolver(), Reranker: fakeReranker{inputTokens: 41, cost: &rerankCost}}
+	out, err := (rerankOperator{}).Execute(context.Background(), defaultedNode, map[string]any{"evidence": evidence}, rerankEnv)
 	if err != nil {
 		t.Fatalf("defaulted rerank failed: %v", err)
 	}
 	result := out["evidence"].([]Evidence)[0]
 	if result.RerankerScore == nil {
 		t.Fatalf("reranker score not set")
+	}
+	if rerankEnv.Usage.InputTokens != 41 || rerankEnv.Usage.Cost["m"] != rerankCost {
+		t.Fatalf("rerank usage = %#v", rerankEnv.Usage)
 	}
 	answerNode := ragcontract.Node{Config: json.RawMessage(`{"model":"m","prompt":"p","citations":"required"}`)}
 	generator := &fakeGenerator{}
