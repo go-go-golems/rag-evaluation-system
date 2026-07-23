@@ -133,3 +133,56 @@ The documentation was checked against the ticket workspace conventions, then ren
 Ticket bundle destination:
 /ai/2026/07/22/RAGEVAL-DATATABLE-MULTISELECT-2026-07-22
 ```
+
+## Step 3: Record accepted product decisions and implement shared multi-selection
+
+The product owner accepted every recommended interaction default and selected Archive and Tag as the first consumer actions. The reusable implementation now adds controlled multi-selection to the React molecule, a single toolbar above the table, Widget IR/action-context wiring, and a typed v3 `table.multiSelect` lowering surface.
+
+This changes the shared system only. A product consumer must still provide its deliberate enter/exit bulk-mode control and server-side Archive/Tag handlers; the shared package dispatches selected keys but never performs a domain mutation itself.
+
+### Prompt Context
+
+**User prompt (verbatim):** "6. exclusive. Record decisions, the implement"
+
+**Assistant interpretation:** Accept exclusive bulk/detail modes, record the confirmed product decisions, and implement the shared feature.
+
+**Inferred user intent:** Move from design to a reusable, predictable multi-select foundation for future Archive and Tag workflows.
+
+### What I did
+- Added controlled `multiSelection`, checkbox/range interaction, keyboard toggling, and a bulk toolbar to `DataTable`.
+- Added serializable Widget IR props and adapter contexts containing `selectedRowKeys`, count, reason, and bulk action ID.
+- Added `TableSpec.MultiSelection`, lowering, `table.multiSelect`, generated TypeScript declaration text, descriptor documentation, and lowering coverage.
+
+### Why
+- The React-first package guidelines require stable component behavior before Widget IR and DSL authoring are made available.
+
+### What worked
+- `pnpm --dir packages/rag-evaluation-site typecheck` passed.
+- `go test ./pkg/widgetdsl/...` passed after updating the generated Widget DSL API reference.
+
+### What didn't work
+- `go test ./pkg/widgetdsl/...` initially failed with `embedded API help descriptor reference is stale; regenerate ../xgoja/providers/widgetsite/doc/05-widget-dsl-v3-api-reference.md from WidgetV3APIReferenceMarkdown`. Updating that generated reference for `TableBuilder.multiSelect` resolved the failure.
+
+### What I learned
+- The shared table can provide Archive/Tag-ready key context without importing any product backend, preserving the design-system API-free boundary.
+
+### What was tricky to build
+- Shift state is available from a click event rather than React's checkbox change event. The checkbox click handler owns range/toggle selection while the controlled change handler remains intentionally inert, preventing a duplicate selection transition.
+
+### What warrants a second pair of eyes
+- Review the public builder signature and whether an actual product requires selection persistence across pagination; this v1 intentionally normalizes selection to visible rows.
+
+### What should be done in the future
+- Publish a compatible `@go-go-golems/rag-evaluation-site` release and wire Upwork Triage’s explicit bulk mode plus Archive/Tag server handlers against it.
+
+### Code review instructions
+- Begin with `DataTable.tsx` for interaction semantics, then `DataTable.widget.tsx`, `props.ts`, and `pkg/widgetdsl/spec/lower.go`.
+- Run package typecheck and `go test ./pkg/widgetdsl/...`.
+
+### Technical details
+
+```js
+collection.table((table) => table.multiSelect(["job-a"], {
+  actions: [{ id: "archive", label: "Archive", action: act.server("archive-jobs") }],
+}));
+```

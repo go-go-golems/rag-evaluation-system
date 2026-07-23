@@ -11,21 +11,30 @@ Intent: long-term
 Owners: []
 RelatedFiles:
     - Path: repo://packages/rag-evaluation-site/src/components/molecules/DataTable/DataTable.tsx
-      Note: Reusable React table selection, focus, commands, and markup baseline
+      Note: |-
+        Reusable React table selection, focus, commands, and markup baseline
+        Implemented controlled checkbox/range/keyboard multi-selection and toolbar
     - Path: repo://packages/rag-evaluation-site/src/components/molecules/DataTable/DataTable.widget.tsx
-      Note: Widget IR-to-React adapter and action context boundary
+      Note: |-
+        Widget IR-to-React adapter and action context boundary
+        Implemented Widget action dispatch for selected key context
     - Path: repo://packages/rag-evaluation-site/src/widgets/ir/props.ts
       Note: JSON-compatible DataTable Widget IR contract
     - Path: repo://pkg/widgetdsl/spec/lower.go
       Note: Typed collection lowering from selection/table spec to Widget IR
+    - Path: repo://pkg/widgetdsl/spec/types.go
+      Note: Typed multi-selection and bulk-action model
     - Path: repo://pkg/widgetdsl/v3.go
-      Note: Existing generic multi-selection serialization behavior
+      Note: |-
+        Existing generic multi-selection serialization behavior
+        Implemented table.multiSelect builder
 ExternalSources: []
 Summary: Intern-facing design for accessible multi-row DataTable selection, bulk actions, Widget IR, and widget.dsl lowering.
 LastUpdated: 2026-07-22T16:51:51.344584385-04:00
 WhatFor: Plan and implement reusable DataTable multi-selection without conflating focus, selection, or application-side bulk effects.
 WhenToUse: Use before adding checkbox or range selection to a Widget DSL table, or before a product introduces bulk table actions.
 ---
+
 
 
 # DataTable multi-selection architecture and implementation guide
@@ -305,6 +314,26 @@ product server action validates IDs and executes domain operation
 - **Rationale:** It prevents JSON DSL design from encoding an untested DOM interaction model.
 - **Consequences:** The feature lands in phases and Widget DSL support follows a stable component API.
 - **Status:** proposed.
+
+## Confirmed product decisions (2026-07-22)
+
+The product owner confirmed the recommended defaults. These are now accepted constraints for the implementation:
+
+- Shift ranges **union** with independently checked rows.
+- The aggregate bulk-action bar appears **above** the table.
+- Row content does not toggle selection; explicit checkboxes and Space do.
+- Selection is limited to the **currently visible** filtered/page rows.
+- The first consumer actions are **Archive** and **Tag**.
+- Bulk selection and master-detail navigation are **exclusive modes**. A table is either in normal single-row/detail mode or in bulk-select mode; it does not make one click mean both “open” and “toggle.”
+
+### Decision: exclusive detail and bulk modes
+
+- **Context:** A single-row master-detail callback and a checked row set assign incompatible meanings to ordinary row interaction.
+- **Options considered:** combine detail opening and checked-set mutation in one mode; use explicit bulk mode and preserve normal detail mode.
+- **Decision:** Use explicit, mutually exclusive modes.
+- **Rationale:** It keeps row click, Enter, focus, Space, and bulk actions unambiguous for pointer and keyboard users.
+- **Consequences:** A consumer needs a deliberate “Select” entry/exit affordance; it gains predictable Archive/Tag action context.
+- **Status:** accepted.
 
 ## Implementation plan
 

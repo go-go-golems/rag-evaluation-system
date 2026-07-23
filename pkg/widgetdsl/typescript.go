@@ -225,6 +225,7 @@ func widgetV3TypeScriptLines() []string {
 		"export interface TableBuilder extends ComposableBuilder<TableBuilder> {",
 		"className(className: string): this;",
 		"rowSelect(action: ActionSpec): this;",
+		"multiSelect(selectedKeys: string[], options?: { onChange?: ActionSpec; actions?: Array<{ id: string; label: string; danger?: boolean; disabled?: boolean; action: ActionSpec }> }): this;",
 		"actionColumn(id: string, header: string, label: string, action: ActionSpec, options?: { maxWidth?: string }): this;",
 		"sortable(field: string, action: ActionSpec, options?: { direction?: 'ascending' | 'descending' }): this;",
 		"keyboard(configure?: Fragment<TableKeyboardBuilder>): this;",

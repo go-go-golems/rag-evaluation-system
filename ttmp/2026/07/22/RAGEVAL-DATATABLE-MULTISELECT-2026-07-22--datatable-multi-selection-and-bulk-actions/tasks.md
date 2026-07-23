@@ -10,6 +10,7 @@
 
 ## Implementation follow-up (not started)
 
-- [ ] Resolve product decisions on bulk-action placement, range union/replacement semantics, and cross-page selection before freezing the public API.
-- [ ] Implement and story-cover the React-first controlled DataTable multi-selection API.
-- [ ] Add Widget IR/adapter action context and then typed `widget.dsl`/spec/lowering support with regression tests.
+- [x] Resolve product decisions: union ranges, toolbar above, explicit checkboxes, visible-row scope, Archive/Tag first actions, and exclusive detail/bulk modes.
+- [x] Implement the React-first controlled DataTable multi-selection API.
+- [x] Add Widget IR/adapter action context and typed `widget.dsl`/spec/lowering support with regression tests.
+- [ ] Add Storybook interaction states and publish a compatible package release before wiring Upwork Triage Archive/Tag as the first consumer.

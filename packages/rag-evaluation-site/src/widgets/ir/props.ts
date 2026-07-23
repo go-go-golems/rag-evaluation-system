@@ -463,6 +463,18 @@ export interface DataTableWidgetProps extends BaseWidgetProps {
 	getRowKey: RowKeySpec;
 	selectedKey?: string | null;
 	onRowSelect?: ActionSpec;
+	multiSelection?: {
+		mode: "multi";
+		selectedKeys: string[];
+		onChange?: ActionSpec;
+	};
+	bulkActions?: Array<{
+		id: string;
+		label: RenderableValue;
+		danger?: boolean;
+		disabled?: boolean;
+		action: ActionSpec;
+	}>;
 	keyboard?: {
 		mode?: "rows";
 		selection?: "manual" | "followFocus";
