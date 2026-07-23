@@ -30,6 +30,7 @@ type Lowerer struct {
 	bundle              func() (*workflowv3.Bundle, error)
 	allowProviders      bool
 	preparationIdentity string
+	providerPackage     *ProviderPackage
 }
 
 func NewLowerer() *Lowerer {
@@ -43,7 +44,7 @@ func NewProviderLowerer(providerPackage *ProviderPackage) (*Lowerer, error) {
 	if _, err := providerPackage.Bundle(); err != nil {
 		return nil, err
 	}
-	return &Lowerer{definitions: ragcompiler.BuiltinRegistry(), lowerings: NewOperatorRegistry(), bundle: providerPackage.Bundle, allowProviders: true, preparationIdentity: providerPackage.authority.Digest}, nil
+	return &Lowerer{definitions: ragcompiler.BuiltinRegistry(), lowerings: NewOperatorRegistry(), bundle: providerPackage.Bundle, allowProviders: true, preparationIdentity: providerPackage.authority.Digest, providerPackage: providerPackage}, nil
 }
 
 func (l *Lowerer) Lower(_ context.Context, execution ragcontract.PipelineExecution) (LoweredExecution, error) {
@@ -160,6 +161,11 @@ func (l *Lowerer) Lower(_ context.Context, execution ragcontract.PipelineExecuti
 		},
 	})
 	ir.Outputs = []workflowv3.IROutput{{Name: "result", Value: workflowv3.ValueRef{Source: "node-output", NodeKey: publishKey, Port: "result", Schema: ResultSchema}}}
+	if l.providerPackage != nil {
+		if err := l.providerPackage.applyBudgets(&ir); err != nil {
+			return LoweredExecution{}, err
+		}
+	}
 	plan, err := workflowv3.Compile(ir, catalog)
 	if err != nil {
 		return LoweredExecution{}, fmt.Errorf("RAG_WORKFLOW_COMPILE: %w", err)

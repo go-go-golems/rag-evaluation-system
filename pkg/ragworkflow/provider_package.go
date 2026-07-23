@@ -3,6 +3,7 @@ package ragworkflow
 import (
 	"encoding/hex"
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 	"time"
@@ -166,6 +167,13 @@ func NewProviderPackage(services ProviderServices, policy ragworkflowops.Policy)
 		return nil, err
 	}
 	policy.AuthorityDigest = authority.Digest
+	if policy.Reservations == nil {
+		policy.Reservations = map[string][]workflowv3.ExternalOperationCounter{
+			ragworkflowops.GenerateOperation: {{Name: "requests", Units: 1}},
+			ragworkflowops.EmbedOperation:    {{Name: "requests", Units: 1}},
+			ragworkflowops.RerankOperation:   {{Name: "requests", Units: 1}},
+		}
+	}
 	if policy.MaxPerAttempt < 1 {
 		policy.MaxPerAttempt = 10_000
 	}
@@ -192,7 +200,11 @@ func (p *ProviderPackage) Bundle() (*workflowv3.Bundle, error) {
 	if err != nil {
 		return nil, err
 	}
-	return bundleFor(ProviderPackageName, ProviderPackageVersion, map[string][]byte{"task.cjs": taskSource, "provider-authority.json": authority})
+	maximums, err := p.taskBudgetMaximums()
+	if err != nil {
+		return nil, err
+	}
+	return bundleFor(ProviderPackageName, ProviderPackageVersion, map[string][]byte{"task.cjs": taskSource, "provider-authority.json": authority}, maximums)
 }
 func (p *ProviderPackage) TaskModuleFactories() []workflowv3runtime.TaskModuleFactory {
 	return []workflowv3runtime.TaskModuleFactory{newTaskModuleFactory(ModuleAlias, p.descriptors, p.authority.Digest, p.environment)}
@@ -205,6 +217,104 @@ func (p *ProviderPackage) Authority() ProviderAuthority {
 	ret.Providers = append([]WorkflowProviderIdentity(nil), p.authority.Providers...)
 	return ret
 }
+func (p *ProviderPackage) taskBudgetMaximums() (map[workflowv3.TaskKey]*workflowv3.BudgetClaim, error) {
+	represent, err := p.operationBudgetClaim(map[string]int{ragworkflowops.GenerateOperation: p.policy.MaxPerAttempt})
+	if err != nil {
+		return nil, err
+	}
+	embed, err := p.operationBudgetClaim(map[string]int{ragworkflowops.EmbedOperation: p.policy.MaxPerAttempt})
+	if err != nil {
+		return nil, err
+	}
+	query, err := p.operationBudgetClaim(map[string]int{ragworkflowops.GenerateOperation: 1, ragworkflowops.EmbedOperation: 1, ragworkflowops.RerankOperation: 1})
+	if err != nil {
+		return nil, err
+	}
+	return map[workflowv3.TaskKey]*workflowv3.BudgetClaim{TaskRepresent: represent, TaskEmbed: embed, TaskQuery: query}, nil
+}
+
+func (p *ProviderPackage) operationBudgetClaim(operationCounts map[string]int) (*workflowv3.BudgetClaim, error) {
+	amounts := map[string]int64{}
+	for operation, count := range operationCounts {
+		if count <= 0 {
+			return nil, fmt.Errorf("RAG_WORKFLOW_PROVIDER_BUDGET_COUNT")
+		}
+		for _, reservation := range p.policy.Reservations[operation] {
+			if reservation.Units > math.MaxInt64/int64(count) || amounts[reservation.Name] > math.MaxInt64-reservation.Units*int64(count) {
+				return nil, fmt.Errorf("RAG_WORKFLOW_PROVIDER_BUDGET_OVERFLOW")
+			}
+			amounts[reservation.Name] += reservation.Units * int64(count)
+		}
+	}
+	if len(amounts) == 0 {
+		return nil, nil
+	}
+	dimensions := make([]string, 0, len(amounts))
+	for dimension := range amounts {
+		dimensions = append(dimensions, dimension)
+	}
+	sort.Strings(dimensions)
+	reserve := make([]workflowv3.BudgetAmount, 0, len(dimensions))
+	for _, dimension := range dimensions {
+		reserve = append(reserve, workflowv3.BudgetAmount{Dimension: dimension, Units: amounts[dimension]})
+	}
+	return &workflowv3.BudgetClaim{Account: "provider", Reserve: reserve, OnExhausted: workflowv3.BudgetExhaustFailRun}, nil
+}
+
+func (p *ProviderPackage) applyBudgets(ir *workflowv3.WorkflowIR) error {
+	if ir == nil {
+		return fmt.Errorf("RAG_WORKFLOW_PROVIDER_BUDGET_IR")
+	}
+	maximums, err := p.taskBudgetMaximums()
+	if err != nil {
+		return err
+	}
+	totals := map[string]int64{}
+	add := func(claim *workflowv3.BudgetClaim, multiplier int) error {
+		if claim == nil {
+			return nil
+		}
+		if multiplier <= 0 {
+			return fmt.Errorf("RAG_WORKFLOW_PROVIDER_BUDGET_COUNT")
+		}
+		for _, amount := range claim.Reserve {
+			if amount.Units > math.MaxInt64/int64(multiplier) || totals[amount.Dimension] > math.MaxInt64-amount.Units*int64(multiplier) {
+				return fmt.Errorf("RAG_WORKFLOW_PROVIDER_BUDGET_OVERFLOW")
+			}
+			totals[amount.Dimension] += amount.Units * int64(multiplier)
+		}
+		return nil
+	}
+	for index := range ir.Nodes {
+		claim := maximums[ir.Nodes[index].Task]
+		ir.Nodes[index].Budget = cloneBudgetClaim(claim)
+		if err := add(claim, 1); err != nil {
+			return err
+		}
+	}
+	for index := range ir.Maps {
+		claim := maximums[ir.Maps[index].ItemTask]
+		ir.Maps[index].Budget = cloneBudgetClaim(claim)
+		if err := add(claim, ir.Maps[index].Policy.MaxItems); err != nil {
+			return err
+		}
+	}
+	if len(totals) == 0 {
+		return nil
+	}
+	dimensions := make([]string, 0, len(totals))
+	for dimension := range totals {
+		dimensions = append(dimensions, dimension)
+	}
+	sort.Strings(dimensions)
+	limits := make([]workflowv3.BudgetAmount, 0, len(dimensions))
+	for _, dimension := range dimensions {
+		limits = append(limits, workflowv3.BudgetAmount{Dimension: dimension, Units: totals[dimension]})
+	}
+	ir.Budgets = []workflowv3.BudgetAccount{{Account: "provider", Limits: limits, PolicyDigest: p.authority.Digest}}
+	return nil
+}
+
 func (p *ProviderPackage) environment(moduleContext workflowv3runtime.TaskModuleContext, _ ragcontract.PipelineExecution) (*ragoperators.Environment, error) {
 	decorator, err := ragworkflowops.NewDecorator(moduleContext.ExternalOperations, p.policy, nil)
 	if err != nil {

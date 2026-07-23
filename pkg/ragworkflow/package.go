@@ -27,20 +27,20 @@ func (Package) DescriptorModules() []workflowmodule.DescriptorModule {
 }
 
 func Bundle() (*workflowv3.Bundle, error) {
-	return bundleFor(PackageName, PackageVersion, map[string][]byte{"task.cjs": taskSource})
+	return bundleFor(PackageName, PackageVersion, map[string][]byte{"task.cjs": taskSource}, nil)
 }
 
-func bundleFor(name, version string, files map[string][]byte) (*workflowv3.Bundle, error) {
+func bundleFor(name, version string, files map[string][]byte, budgetMaximums map[workflowv3.TaskKey]*workflowv3.BudgetClaim) (*workflowv3.Bundle, error) {
 	stageInputs := map[string]string{"execution": ragcontractExecutionSchema(), "corpus": CorpusSchema, "prepared": PreparedSchema}
 	stage := func(key workflowv3.TaskKey) workflowv3.BundleTask {
-		return workflowv3.BundleTask{TaskKey: key, Entrypoint: "task.cjs#prepare", Inputs: cloneSchemas(stageInputs), Outputs: map[string]string{"prepared": PreparedSchema}, Modules: []string{ModuleAlias}, ResourceClass: "cpu.rag.prepare", Retry: workflowv3.RetryPolicy{MaxAttempts: 2, BackoffMillis: 10}}
+		return workflowv3.BundleTask{TaskKey: key, Entrypoint: "task.cjs#prepare", Inputs: cloneSchemas(stageInputs), Outputs: map[string]string{"prepared": PreparedSchema}, Modules: []string{ModuleAlias}, ResourceClass: "cpu.rag.prepare", Retry: workflowv3.RetryPolicy{MaxAttempts: 2, BackoffMillis: 10}, BudgetMaximum: cloneBudgetClaim(budgetMaximums[key])}
 	}
 	return workflowv3.NewBundle(workflowv3.BundleManifest{
 		Name: name, Version: version, ABI: workflowv3.TaskABI,
 		Tasks: []workflowv3.BundleTask{
 			{TaskKey: TaskCorpusLoad, Entrypoint: "task.cjs#loadCorpus", Inputs: map[string]string{"execution": ragcontractExecutionSchema(), "corpus": CorpusSchema}, Outputs: map[string]string{"prepared": PreparedSchema}, Modules: []string{ModuleAlias}, ResourceClass: "cpu.rag.prepare", Retry: workflowv3.RetryPolicy{MaxAttempts: 2, BackoffMillis: 10}},
 			stage(TaskUnits), stage(TaskChunks), stage(TaskRepresent), stage(TaskEmbed), stage(TaskIndex),
-			{TaskKey: TaskQuery, Entrypoint: "task.cjs#query", Inputs: map[string]string{"execution": ragcontractExecutionSchema(), "corpus": CorpusSchema, "prepared": PreparedSchema, "query": QuerySchema}, Outputs: map[string]string{"result": ResultPartitionSchema}, Modules: []string{ModuleAlias}, ResourceClass: "cpu.rag.query", Retry: workflowv3.RetryPolicy{MaxAttempts: 2, BackoffMillis: 10}},
+			{TaskKey: TaskQuery, Entrypoint: "task.cjs#query", Inputs: map[string]string{"execution": ragcontractExecutionSchema(), "corpus": CorpusSchema, "prepared": PreparedSchema, "query": QuerySchema}, Outputs: map[string]string{"result": ResultPartitionSchema}, Modules: []string{ModuleAlias}, ResourceClass: "cpu.rag.query", Retry: workflowv3.RetryPolicy{MaxAttempts: 2, BackoffMillis: 10}, BudgetMaximum: cloneBudgetClaim(budgetMaximums[TaskQuery])},
 			{TaskKey: TaskMerge, Entrypoint: "task.cjs#merge", Inputs: map[string]string{"partition": workflowv3.ReductionPartitionSchemaV1}, Outputs: map[string]string{"result": ResultPartitionSchema}, Modules: []string{ModuleAlias}, ResourceClass: "cpu.rag.reduce", Retry: workflowv3.RetryPolicy{MaxAttempts: 2, BackoffMillis: 10}},
 			{TaskKey: TaskPublish, Entrypoint: "task.cjs#publish", Inputs: map[string]string{"execution": ragcontractExecutionSchema(), "results": ResultPartitionSchema}, Outputs: map[string]string{"result": ResultSchema}, Modules: []string{ModuleAlias}, ResourceClass: "cpu.rag.reduce", Retry: workflowv3.RetryPolicy{MaxAttempts: 2, BackoffMillis: 10}},
 		},
@@ -53,6 +53,15 @@ func DescriptorModule() workflowmodule.DescriptorModule {
 		"representRaw": TaskRepresent, "embedFixture": TaskEmbed, "buildIndex": TaskIndex,
 		"evaluateQuery": TaskQuery, "mergeResults": TaskMerge, "publishResults": TaskPublish,
 	}}
+}
+
+func cloneBudgetClaim(claim *workflowv3.BudgetClaim) *workflowv3.BudgetClaim {
+	if claim == nil {
+		return nil
+	}
+	ret := *claim
+	ret.Reserve = append([]workflowv3.BudgetAmount(nil), claim.Reserve...)
+	return &ret
 }
 
 func cloneSchemas(input map[string]string) map[string]string {
