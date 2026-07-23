@@ -137,3 +137,53 @@ The audit also discovered a repository-wide test failure unrelated to production
 ### Technical details
 - Baseline result: production packages passed; overall `go test ./...` failed only in historical ticket scripts.
 - Setup commit: `500cd0924f08df57724f9ca7e51405a2e362e971`.
+
+## Step 3: Validate, commit, and stop before deletion
+
+The inventory document, detailed task state, related-file evidence, and cross-ticket navigation were validated and committed. This is the requested stopping point: disposition is complete, but no removal tranche has been executed.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 1)
+
+**Assistant interpretation:** Stop after classification and leave destructive tasks open for review.
+
+**Inferred user intent:** Make deletion a deliberate reviewed follow-up rather than an uninterrupted audit-and-delete operation.
+
+**Commit (code):** `292756d310af021656ec5bbfbea4652d0129521e` — cleanup inventory and classification documentation.
+
+### What I did
+- Checked the first seven inventory/classification tasks.
+- Left review, immediate deletion, and deferred hard-cut tasks open.
+- Ran docmgr doctor successfully.
+- Cross-linked the cleanup report to key source files, the umbrella, sibling cleanup tickets, and replacement tickets.
+
+### Why
+- The remove-now list needs review before destructive edits.
+
+### What worked
+- Docmgr validation passed.
+- Baseline test result: production packages passed; overall suite failed only because historical ticket scripts redeclare main.
+
+### What didn't work
+- No additional failure beyond those recorded in Step 2.
+
+### What I learned
+- Repository-local classifications can share one common umbrella without hiding different readiness levels.
+
+### What was tricky to build
+- The stopping point had to preserve enough evidence for a later agent to execute cleanup without rerunning the entire investigation. File references, deletion gates, exact commands, and open tasks provide that continuation state.
+
+### What warrants a second pair of eyes
+- Approve the remove-now table and any stated assumption about external users or disposable state.
+
+### What should be done in the future
+- After review, check the review task, execute only the immediate tranche, run validation, and commit it separately. Deferred paths remain until their named replacement tickets pass.
+
+### Code review instructions
+- Read the report's executive summary, immediate removal section, deferred removal section, and review checklist.
+- Confirm tasks 8–10 remain open.
+
+### Technical details
+- Ticket: `RAG-EVAL-LEGACY-CLEANUP`.
+- Stop condition reached: classification complete; deletion not started.

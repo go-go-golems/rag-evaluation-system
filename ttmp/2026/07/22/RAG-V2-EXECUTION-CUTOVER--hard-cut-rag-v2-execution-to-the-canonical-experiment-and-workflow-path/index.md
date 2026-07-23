@@ -39,6 +39,9 @@ The umbrella is **EXPERIMENT-PLATFORM-CONVERGENCE**. Every program ticket is lis
 - **RESEARCHCTL-EXPERIMENT-ANALYSIS** (researchctl) — Reproducible JS analysis, statistics, charts, and reports
 - **RAG-V2-EXECUTION-CUTOVER** (rag-eval) — Hard-cut to the sole canonical RAG execution path
 - **TTC-SCRIPTED-EXPERIMENT-ACCEPTANCE** (rag-eval) — Thin scripted TTC final acceptance workload
+- **RESEARCHCTL-LEGACY-CLEANUP** (researchctl) — Sibling control-plane cleanup inventory
+- **SCRAPER-LEGACY-CLEANUP** (scraper) — Sibling workflow-engine cleanup inventory
+- **RAG-EVAL-LEGACY-CLEANUP** (rag-eval) — Required cleanup inventory and deletion gates for this cutover
 
 ## Key links
 
