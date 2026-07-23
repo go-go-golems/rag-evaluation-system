@@ -23,7 +23,7 @@ RelatedFiles:
       Note: Authoring source for the validated one-cell Umans Flash combined-preparation specification
     - Path: repo://pkg/ragproviders/provider_set.go
       Note: Profile-backed provider construction and default Pinocchio registry resolution
-    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/scripts/08-build-operation-custody-export.go
+    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/scripts/08-build-operation-custody-export.go.txt
       Note: Post-hoc compact custody export without provider/runtime access
     - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-attempt-003/evidence.json
       Note: Aggregate real qualification evidence

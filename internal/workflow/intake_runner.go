@@ -19,6 +19,12 @@ type ProviderResolver func(ctx context.Context, input IntakeOpInput) (*embedding
 type DocumentProcessorResolver func(ctx context.Context, input IntakeOpInput) (documentprocessing.Provider, error)
 type ChunkEnricherResolver func(ctx context.Context, input IntakeOpInput) (chunkenrichment.Provider, error)
 
+type IntakeOutput struct {
+	Operation  string `json:"operation"`
+	WorkflowID string `json:"workflow_id"`
+	OpID       string `json:"op_id"`
+}
+
 // IntakeRunner dispatches durable scraper ops into rag-eval intake services.
 type IntakeRunner struct {
 	ResolveProvider          ProviderResolver
@@ -40,7 +46,7 @@ func (r *IntakeRunner) Run(ctx context.Context, runCtx runner.RunContext) (*mode
 
 	switch input.Operation {
 	case OperationEcho:
-		data, err := json.Marshal(EchoOutput{
+		data, err := json.Marshal(IntakeOutput{
 			Operation:  input.Operation,
 			WorkflowID: string(runCtx.Workflow.ID),
 			OpID:       string(runCtx.Op.ID),
