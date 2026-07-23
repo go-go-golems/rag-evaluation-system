@@ -9,6 +9,6 @@
 - [x] Classify files that can be removed immediately with evidence <!-- t:dxld -->
 - [x] Classify deferred removals and name their replacement and deletion gate <!-- t:uajw -->
 - [x] Cross-link cleanup findings to the convergence umbrella and sibling cleanup tickets <!-- t:3d4t -->
-- [ ] Review and accept the cleanup disposition table <!-- t:0gkn -->
-- [ ] Execute and validate the immediate safe-deletion tranche <!-- t:uuvb -->
+- [x] Review and accept the cleanup disposition table <!-- t:0gkn -->
+- [x] Execute and validate the immediate safe-deletion tranche <!-- t:uuvb -->
 - [ ] Execute deferred hard cuts after replacement acceptance <!-- t:rzde -->

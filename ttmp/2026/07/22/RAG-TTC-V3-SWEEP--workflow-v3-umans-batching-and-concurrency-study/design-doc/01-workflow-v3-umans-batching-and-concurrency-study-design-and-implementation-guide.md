@@ -11,14 +11,6 @@ DocType: design-doc
 Intent: long-term
 Owners: []
 RelatedFiles:
-    - Path: repo://cmd/rag-ttc-v3-sweep/main.go
-      Note: Executable fixture study and canonical exporter
-    - Path: repo://internal/workflowv3ttc/provider.go
-      Note: Precise batch provider adapter and checked usage
-    - Path: repo://internal/workflowv3ttc/sweep.go
-      Note: Exact matrix planner and batch materialization
-    - Path: repo://internal/workflowv3ttc/sweep_workflow.js
-      Note: Workflow V3 sweep graph and budget
     - Path: repo://pkg/ragoperators/combined_batch.go
       Note: Existing deterministic domain batching and provider-call authority
     - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/scripts/01-render-sweep.py
@@ -33,6 +25,7 @@ LastUpdated: 2026-07-22T10:15:00-04:00
 WhatFor: Implement, operate, review, and reproduce the Umans batching and concurrency sweep without leaking provider authority or confusing queue time with provider time.
 WhenToUse: Before changing TTC generation batch size or concurrency, running a paid sample, interpreting its graphs, or reproducing the study.
 ---
+
 
 
 

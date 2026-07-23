@@ -187,3 +187,26 @@ The inventory document, detailed task state, related-file evidence, and cross-ti
 ### Technical details
 - Ticket: `RAG-EVAL-LEGACY-CLEANUP`.
 - Stop condition reached: classification complete; deletion not started.
+
+## Step 4: Execute the approved RAG-eval removal tranche
+
+The approved immediate tranche removed completed TTC execution machinery and obsolete compatibility code while preserving historical evidence and active intake behavior.
+
+### What I did
+- Deleted `cmd/rag-ttc-v3-sweep` and `internal/workflowv3ttc`.
+- Deleted TTC-only operation custody code/tests.
+- Deleted `EchoRunner` and its tests.
+- Removed the old chunks-schema upgrade and its upgrade test.
+- Renamed four historical standalone scripts from `.go` to `.go.txt`.
+- Preserved the active echo operation response as `IntakeOutput` and moved the shared test JSON helper into `intake_runner_test.go`.
+- Committed as `8a33a613a0661c62b91eb98177efd3e2958a280d`.
+
+### Validation and failure trace
+- The first focused test exposed that `EchoOutput` and `mustJSON` were shared by active intake code/tests. Rather than restore the compatibility runner, I moved those two live semantics to the intake files; focused tests then passed.
+- Full `GOWORK=off go test ./... -count=1` passed, including ticket directories.
+- `make build` and sequential `make lint` passed. The first parallel lint attempt encountered the shared golangci-lint lock; sequential retry passed.
+- The commit's pre-commit hook independently passed lint and tests.
+- TTC analysis reproduced 8 cells and 192 operations. CSV and normalized JSON matched; all PNGs were byte-identical. SVG metadata timestamps and generated clip-path IDs differed, so raw SVG byte comparison is not a valid semantic check.
+
+### Review guidance
+Inspect the deletion commit and the small `EchoOutput` to `IntakeOutput` relocation. Verify that immutable TTC source evidence and the audit script remain present.

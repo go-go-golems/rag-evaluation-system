@@ -12,24 +12,26 @@ DocType: design-doc
 Intent: long-term
 Owners: []
 RelatedFiles:
-    - Path: repo://cmd/rag-ttc-v3-sweep/main.go
-      Note: Immediately removable standalone TTC orchestration
     - Path: repo://cmd/rag-worker/main.go
-      Note: Deferred direct RAG execution path and parity oracle
-    - Path: repo://internal/db/migrations.go
-      Note: Old disposable-database compatibility upgrade
-    - Path: repo://internal/workflow/echo_runner.go
-      Note: Test-only Phase 0 compatibility runner
-    - Path: repo://internal/workflowv3ttc/module.go
-      Note: Immediately removable TTC-specific Workflow V3 task package
-    - Path: repo://pkg/researchctladapter/operation_custody.go
-      Note: TTC-only post-hoc custody adapter
+      Note: |-
+        Deferred direct RAG execution path and parity oracle
+        Deferred direct RAG execution path retained as parity oracle
+    - Path: repo://internal/db/db.go
+      Note: Fresh-schema-only migration path after compatibility upgrade removal
+    - Path: repo://internal/workflow/intake_runner.go
+      Note: Active intake behavior retained; live output DTO relocated from deleted EchoRunner file
+    - Path: repo://ttmp/2026/07/22/RAG-PIPELINE-CONSOLIDATION-AUDIT--assess-improve-and-consolidate-the-rag-evaluation-pipeline/scripts/01-analyze-ttc-real-run.py
+      Note: Reproduces preserved retry-aware TTC evidence after runner deletion
+    - Path: repo://ttmp/2026/07/22/RAG-PIPELINE-CONSOLIDATION-AUDIT--assess-improve-and-consolidate-the-rag-evaluation-pipeline/sources/derived-real-attempt-003/summary.json
+      Note: Preserved derived regression summary for 8 cells and 192 operations
 ExternalSources: []
 Summary: Evidence-backed disposition of TTC-specific execution, old workflow intake, direct RAG execution, compatibility migrations, and canonical RAG v2 packages.
 LastUpdated: 2026-07-22T23:45:00-04:00
 WhatFor: Approve immediate RAG cleanup and gate deferred execution cutovers on Workflow V3 replacement work.
 WhenToUse: Read before removing TTC code or beginning RAG-V2-WORKFLOW-LOWERING.
 ---
+
+
 
 
 # RAG evaluation legacy cleanup inventory and disposition plan
@@ -42,7 +44,7 @@ The immediate cleanup tranche should remove the standalone `rag-ttc-v3-sweep` bi
 
 Deferred cleanup should preserve `pkg/ragengine` as a semantic oracle until RAG Workflow V3 parity passes, preserve `rag-worker` until the generic Scraper runner executes lowered RAG plans, preserve `internal/preparationworkflow` until RAG tasks replace it, and preserve the old intake workflow until product intake has an accepted V3 replacement.
 
-This report stops at classification. No production or historical evidence files have been deleted.
+The approved immediate tranche was implemented in commit `8a33a613a0661c62b91eb98177efd3e2958a280d`; historical TTC evidence remains preserved and deferred active paths remain protected by replacement gates.
 
 ## Program navigation
 
@@ -92,7 +94,7 @@ Retain:
 
 Retain `pkg/ragengine` temporarily as a semantic parity oracle, not as the final production scheduler.
 
-## Immediate removal tranche
+## Immediate removal tranche completed
 
 ### 1. TTC-specific sweep binary and Workflow V3 package
 
@@ -178,7 +180,7 @@ Keep `pkg/researchctladapter/adapter.go`, `run.go`, `progress.go`, and `ttc.go` 
 | intake workflow | later | V3 product/task packages | product/API cutover passes |
 | study run loop | later | Researchctl experiment plans | plan scheduling/resume passes |
 
-## Proposed immediate deletion validation
+## Completed immediate deletion validation
 
 ```bash
 GOWORK=off go test ./... -count=1
@@ -201,6 +203,22 @@ Expected result: no active source references to removed symbols; complete test s
 8. Delete direct worker, old preparation/intake workflow, and obsolete adapter lifecycle.
 9. Add cutover guards for removed commands/packages.
 10. Implement TTC only as a script and input/report package.
+
+## Implementation result: immediate tranche completed
+
+Commit `8a33a613a0661c62b91eb98177efd3e2958a280d` completed the approved immediate tranche. It deleted the standalone TTC sweep, TTC-specific Workflow V3 package, TTC-only custody adapter, and test-only `EchoRunner`; removed the old development-database upgrade; and archived four historical one-off Go scripts as `.go.txt` so they remain readable evidence without entering the module package graph.
+
+`EchoOutput` was not dead: the active `IntakeRunner` used that DTO, and intake tests used a helper located in the deleted echo test. The implementation preserved behavior by renaming the live DTO to `IntakeOutput` and moving `mustJSON` into the active intake test. This was verified by focused and full tests.
+
+Fresh verification:
+
+- `GOWORK=off go test ./... -count=1` now passes, including the formerly failing ticket tree.
+- `make build` and `make lint` pass; the pre-commit hook independently reran lint and tests successfully.
+- searches find no active Go references to the removed TTC package/command, custody builder, EchoRunner, or compatibility migration.
+- `go mod tidy` produced no module-file change.
+- the preserved real-attempt evidence was reprocessed with `01-analyze-ttc-real-run.py`: 8 cells, 192 operations, all derived CSV and normalized JSON content matched, and all five PNG graphs matched byte-for-byte. SVG IDs/timestamps are renderer nondeterminism, not data differences.
+
+Direct RAG execution, preparation, and intake remain under the replacement gates already recorded in this report.
 
 ## Risks
 

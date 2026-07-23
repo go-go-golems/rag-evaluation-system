@@ -11,10 +11,6 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
-    - Path: repo://cmd/rag-ttc-v3-sweep/main.go
-      Note: Real execution authority and original custody-export contract
-    - Path: repo://cmd/rag-ttc-v3-sweep/profile.go
-      Note: Real profile identity and verified corpus loading gates
     - Path: repo://experiments/real-provider-v2/inputs.json
       Note: Catalog input bindings resolved during canonical compilation
     - Path: repo://experiments/real-provider-v2/provider-config.umans-flash.example.yaml
@@ -31,7 +27,7 @@ RelatedFiles:
       Note: Verified downstream researchctl custody export
     - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/compile-result.json
       Note: Compiler result recording the resolved specification
-    - Path: "repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/sha256:53a4934fba2135e2515e2f8b30d7108d3e21d4e349f867f5b7bf369be1ffb9b1.json"
+    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/sha256:53a4934fba2135e2515e2f8b30d7108d3e21d4e349f867f5b7bf369be1ffb9b1.json
       Note: Canonical current real-qualification specification with immutable input references
 ExternalSources: []
 Summary: Chronological implementation and execution evidence for the Workflow V3 Umans batching and concurrency study.
@@ -39,6 +35,7 @@ LastUpdated: 2026-07-22T10:15:00-04:00
 WhatFor: Preserve commands, decisions, failures, results, and review instructions for reproducing the study.
 WhenToUse: When implementing, operating, reviewing, or resuming RAG-TTC-V3-SWEEP.
 ---
+
 
 
 
