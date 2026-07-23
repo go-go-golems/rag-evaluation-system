@@ -41,6 +41,7 @@ type WorkflowProviderIdentity struct {
 type ProviderAuthority struct {
 	SchemaVersion         string                     `json:"schemaVersion"`
 	ProfileID             string                     `json:"profileId"`
+	FixtureProviders      bool                       `json:"fixtureProviders"`
 	Capabilities          []string                   `json:"capabilities"`
 	ModelManifestDigests  []string                   `json:"modelManifestDigests"`
 	PromptManifestDigests []string                   `json:"promptManifestDigests"`
@@ -53,7 +54,7 @@ func ProviderAuthorityFromSet(set *ragproviders.ProviderSet) (ProviderAuthority,
 		return ProviderAuthority{}, fmt.Errorf("RAG_WORKFLOW_PROVIDER_SET")
 	}
 	capabilities := set.CapabilityDescriptor()
-	authority := ProviderAuthority{SchemaVersion: ProviderAuthoritySchema, ProfileID: capabilities.ProfileID, Capabilities: append([]string(nil), capabilities.Capabilities...), ModelManifestDigests: append([]string(nil), capabilities.ModelManifestDigests...), PromptManifestDigests: append([]string(nil), capabilities.PromptManifestDigests...)}
+	authority := ProviderAuthority{SchemaVersion: ProviderAuthoritySchema, ProfileID: capabilities.ProfileID, FixtureProviders: capabilities.FixtureProviders, Capabilities: append([]string(nil), capabilities.Capabilities...), ModelManifestDigests: append([]string(nil), capabilities.ModelManifestDigests...), PromptManifestDigests: append([]string(nil), capabilities.PromptManifestDigests...)}
 	for _, identity := range capabilities.EffectiveProviderIdentities {
 		authority.Providers = append(authority.Providers, WorkflowProviderIdentity{Role: identity.Role, ProfileSlug: identity.ProfileSlug, ModelManifestDigest: identity.ModelManifestDigest, ModelID: identity.ModelID, SettingsFingerprint: identity.SettingsFingerprint, ConcurrencyLimit: identity.ConcurrencyLimit, MaxResponseTokens: identity.MaxResponseTokens, PricingConfigured: identity.PricingConfigured, InputCostMicrounitsPerMillion: identity.InputCostMicrounitsPerMillion, OutputCostMicrounitsPerMillion: identity.OutputCostMicrounitsPerMillion, CacheReadCostMicrounitsPerMillion: identity.CacheReadCostMicrounitsPerMillion, CacheWriteCostMicrounitsPerMillion: identity.CacheWriteCostMicrounitsPerMillion})
 	}
