@@ -8,6 +8,13 @@ export const dataTableWidget = defineWidget<DataTableWidgetProps>({
 	module: "widget.dsl",
 	render: (props, _children, ctx) => {
 		const rowSelectAction = props.onRowSelect;
+		const multiSelection = props.multiSelection;
+		const selectionContext = (selectedRowKeys: string[], selectionReason: string) => ({
+			selectedRowKeys,
+			selectedCount: selectedRowKeys.length,
+			selectionReason,
+			componentType: "DataTable",
+		});
 		return (
 			<DataTable<JsonObject>
 				className={props.className}
@@ -40,6 +47,32 @@ export const dataTableWidget = defineWidget<DataTableWidgetProps>({
 				})}
 				getRowKey={(row) => rowKey(row, props.getRowKey)}
 				selectedKey={props.selectedKey == null ? props.selectedKey : String(props.selectedKey)}
+				multiSelection={
+					multiSelection
+						? {
+								mode: "multi",
+								selectedKeys: multiSelection.selectedKeys,
+								onSelectionChange: (selectedRowKeys, selectionReason) => {
+									if (multiSelection.onChange)
+										ctx.dispatchAction(
+											multiSelection.onChange,
+											selectionContext(selectedRowKeys, selectionReason),
+										);
+								},
+								bulkActions: props.bulkActions?.map((bulkAction) => ({
+									id: bulkAction.id,
+									label: ctx.renderValue(bulkAction.label),
+									danger: bulkAction.danger,
+									disabled: bulkAction.disabled,
+									onInvoke: (selectedRowKeys) =>
+										ctx.dispatchAction(bulkAction.action, {
+											...selectionContext([...selectedRowKeys], "bulkAction"),
+											bulkActionId: bulkAction.id,
+										}),
+								})),
+							}
+						: undefined
+				}
 				keyboard={props.keyboard}
 				commands={props.commands}
 				onCommand={(command, row) => {
