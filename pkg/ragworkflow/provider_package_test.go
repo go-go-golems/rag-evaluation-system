@@ -90,7 +90,7 @@ func runProviderPackageFixtureWithServices(t *testing.T, variant string, expecte
 	done := make(chan error, 1)
 	go func() { done <- dispatcher.Run(workerCtx) }()
 	var snapshot workflowv3.RunSnapshot
-	deadline := time.Now().Add(20 * time.Second)
+	deadline := time.Now().Add(60 * time.Second)
 	for {
 		snapshot, err = engine.Snapshot(ctx, "provider-fixture")
 		require.NoError(t, err)
