@@ -23,6 +23,10 @@ func TestWorkflowExecutionMatchesRAGEngineAndSurvivesRestart(t *testing.T) {
 	ctx := context.Background()
 	fixture, err := NewProviderFreeFixture(true)
 	require.NoError(t, err)
+	fixture.Execution.Factors = []ragcontract.FactorSelection{{FactorID: "retrieval-profile", ValueID: "hybrid", Value: json.RawMessage(`{"channels":2}`)}}
+	fixture.Execution.CellID = ""
+	fixture.Execution.CellID, err = ragcontract.Digest(fixture.Execution)
+	require.NoError(t, err)
 	execution, corpus, dataset := fixture.Execution, fixture.Corpus, fixture.Dataset
 	lowered, err := NewLowerer().Lower(ctx, execution)
 	require.NoError(t, err)
@@ -89,6 +93,7 @@ func TestWorkflowExecutionMatchesRAGEngineAndSurvivesRestart(t *testing.T) {
 	require.Equal(t, ResultSchema, workflowResult.SchemaVersion)
 	require.Len(t, workflowResult.Results, 2)
 	require.Equal(t, lowered.PreparationFingerprint, workflowResult.PreparationFingerprint)
+	require.Equal(t, execution.Factors, workflowResult.Factors)
 	projection, err := (DomainProjector{}).Project(ctx, researchrunner.DomainProjectionInput{Outputs: map[string]researchrunner.DomainOutput{"result": {Name: "result", SchemaVersion: ResultSchema, Data: resultBody}}})
 	require.NoError(t, err)
 	require.Len(t, projection.Metrics, 2)
