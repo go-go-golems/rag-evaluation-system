@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragproviders"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragworkflow"
@@ -28,6 +29,7 @@ func main() {
 	var capacities capacityFlag
 	var providerConfig string
 	var providerFixture bool
+	var providerFixtureDelay time.Duration
 	var maxProviderOperations int
 	flag.StringVar(&config.StateRoot, "state-root", config.StateRoot, "durable RAG Workflow V3 runner state root")
 	flag.StringVar(&config.ArtifactRoot, "artifact-root", config.ArtifactRoot, "RAG Workflow V3 execution artifact root")
@@ -39,6 +41,7 @@ func main() {
 	flag.Int64Var(&config.MaxExportBytes, "max-export-bytes", config.MaxExportBytes, "maximum bytes for each exported artifact")
 	flag.StringVar(&providerConfig, "provider-config", "", "host-only RAG provider configuration; enables rag-v2-geppetto")
 	flag.BoolVar(&providerFixture, "provider-fixture", false, "enable deterministic provider fixture operations (tests and smoke only)")
+	flag.DurationVar(&providerFixtureDelay, "provider-fixture-delay", 0, "deterministic delay per fixture provider contact (crash-window tests only)")
 	flag.IntVar(&maxProviderOperations, "max-provider-operations-per-attempt", 10_000, "maximum admitted calls of each provider operation kind per Workflow attempt")
 	flag.Parse()
 	if flag.NArg() != 0 {
@@ -50,6 +53,10 @@ func main() {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	if providerFixtureDelay != 0 && !providerFixture {
+		fmt.Fprintln(os.Stderr, "provider-fixture-delay requires provider-fixture")
+		os.Exit(2)
+	}
 	if providerConfig != "" && providerFixture {
 		fmt.Fprintln(os.Stderr, "provider-config and provider-fixture are mutually exclusive")
 		os.Exit(2)
@@ -62,7 +69,11 @@ func main() {
 		var services ragworkflow.ProviderServices
 		if providerFixture {
 			var err error
-			services, err = ragworkflow.NewDeterministicProviderServices()
+			if providerFixtureDelay == 0 {
+				services, err = ragworkflow.NewDeterministicProviderServices()
+			} else {
+				services, err = ragworkflow.NewDeterministicProviderServicesWithDelay(providerFixtureDelay)
+			}
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "RAG provider fixture failed")
 				os.Exit(1)

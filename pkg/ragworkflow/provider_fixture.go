@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcompiler"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
@@ -162,6 +163,53 @@ func NewRealProviderSmokeFixture() (Fixture, error) {
 		return Fixture{}, err
 	}
 	return fixture, nil
+}
+
+type delayedProviderFixture struct {
+	services ProviderServices
+	delay    time.Duration
+}
+
+func (p delayedProviderFixture) wait(ctx context.Context) error {
+	timer := time.NewTimer(p.delay)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
+}
+func (p delayedProviderFixture) Generate(ctx context.Context, request ragoperators.GenerationRequest) (ragoperators.GenerationResult, error) {
+	if err := p.wait(ctx); err != nil {
+		return ragoperators.GenerationResult{}, err
+	}
+	return p.services.Generator.Generate(ctx, request)
+}
+func (p delayedProviderFixture) Embed(ctx context.Context, model string, texts []string) ([][]float64, ragoperators.Usage, error) {
+	if err := p.wait(ctx); err != nil {
+		return nil, ragoperators.Usage{}, err
+	}
+	return p.services.Embedder.Embed(ctx, model, texts)
+}
+func (p delayedProviderFixture) Rerank(ctx context.Context, request ragoperators.RerankRequest) (ragoperators.RerankResult, error) {
+	if err := p.wait(ctx); err != nil {
+		return ragoperators.RerankResult{}, err
+	}
+	return p.services.Reranker.Rerank(ctx, request)
+}
+
+func NewDeterministicProviderServicesWithDelay(delay time.Duration) (ProviderServices, error) {
+	if delay <= 0 || delay > 10*time.Second {
+		return ProviderServices{}, fmt.Errorf("RAG_PROVIDER_FIXTURE_DELAY")
+	}
+	services, err := NewDeterministicProviderServices()
+	if err != nil {
+		return ProviderServices{}, err
+	}
+	delayed := delayedProviderFixture{services: services, delay: delay}
+	services.Generator, services.Embedder, services.Reranker = delayed, delayed, delayed
+	return services, nil
 }
 
 func NewDeterministicProviderServices() (ProviderServices, error) {

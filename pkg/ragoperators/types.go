@@ -176,6 +176,7 @@ type Environment struct {
 	Usage                         Usage
 	GenerationConcurrency         int
 	GenerationSettingsFingerprint string
+	ProviderBudgetUsage           func() map[string]int64
 	EmitEvent                     func(context.Context, Event) error
 }
 type Cache interface {

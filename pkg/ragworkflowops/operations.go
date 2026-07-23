@@ -9,6 +9,8 @@ import (
 	"math"
 	"regexp"
 	"sort"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
@@ -71,6 +73,9 @@ type Decorator struct {
 	descriptors map[string]workflowv3.ExternalOperationDescriptor
 	policy      Policy
 	clock       Clock
+	requests    atomic.Int64
+	usageMu     sync.Mutex
+	usage       map[string]int64
 }
 
 func NewDecorator(recorder workflowv3.ExternalOperationRecorder, policy Policy, clock Clock) (*Decorator, error) {
@@ -97,7 +102,24 @@ func NewDecorator(recorder workflowv3.ExternalOperationRecorder, policy Policy, 
 			return nil, fmt.Errorf("RAG_PROVIDER_OPERATION_RESERVATION: %w", err)
 		}
 	}
-	return &Decorator{recorder: recorder, descriptors: byName, policy: policy, clock: clock}, nil
+	usage := map[string]int64{}
+	for _, counters := range policy.Reservations {
+		for _, counter := range counters {
+			usage[counter.Name] = 0
+		}
+	}
+	return &Decorator{recorder: recorder, descriptors: byName, policy: policy, clock: clock, usage: usage}, nil
+}
+
+func (d *Decorator) RequestCount() int64 { return d.requests.Load() }
+func (d *Decorator) BudgetUsage() map[string]int64 {
+	d.usageMu.Lock()
+	defer d.usageMu.Unlock()
+	ret := make(map[string]int64, len(d.usage))
+	for name, units := range d.usage {
+		ret[name] = units
+	}
+	return ret
 }
 
 func NewDescriptors(authorityDigest string, maxPerAttempt int) ([]workflowv3.ExternalOperationDescriptor, error) {
@@ -317,19 +339,46 @@ func executeOperation[T any](ctx context.Context, d *Decorator, name, correlatio
 	if err != nil {
 		return zero, fmt.Errorf("RAG_PROVIDER_OPERATION_ADMISSION")
 	}
+	d.requests.Add(1)
 	started := d.clock.Now()
 	value, observed, callErr := call(ctx)
 	finished := d.clock.Now()
+	if callErr == nil {
+		observed = includeReservedZeros(observed, d.policy.Reservations[name])
+	}
 	completion := completionFor(callErr, started, finished, observed, len(d.policy.Reservations[name]) > 0)
 	finishCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), d.policy.FinishTimeout)
 	defer cancel()
 	if finishErr := d.recorder.FinishExternalOperation(finishCtx, ticket, completion); finishErr != nil {
 		return zero, fmt.Errorf("RAG_PROVIDER_OPERATION_FINISH")
 	}
+	d.usageMu.Lock()
+	for _, counter := range completion.Counters {
+		if _, reserved := d.usage[counter.Name]; reserved {
+			d.usage[counter.Name] += counter.Units
+		}
+	}
+	d.usageMu.Unlock()
 	if callErr != nil {
 		return zero, callErr
 	}
 	return value, nil
+}
+
+func includeReservedZeros(observed, reservation []workflowv3.ExternalOperationCounter) []workflowv3.ExternalOperationCounter {
+	values := make(map[string]int64, len(observed)+len(reservation))
+	for _, counter := range reservation {
+		values[counter.Name] = 0
+	}
+	for _, counter := range observed {
+		values[counter.Name] = counter.Units
+	}
+	ret := make([]workflowv3.ExternalOperationCounter, 0, len(values))
+	for name, units := range values {
+		ret = append(ret, workflowv3.ExternalOperationCounter{Name: name, Units: units})
+	}
+	sortCounters(ret)
+	return ret
 }
 
 func completionFor(err error, started, finished time.Time, counters []workflowv3.ExternalOperationCounter, reserved bool) workflowv3.ExternalOperationCompletion {

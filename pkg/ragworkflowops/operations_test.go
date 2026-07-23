@@ -139,6 +139,8 @@ func TestCanceledCallFinishesWithDetachedContextAndConservativeReservation(t *te
 	require.Equal(t, workflowv3.ExternalOperationAccountingConservative, completion.AccountingMode)
 	require.Equal(t, &workflowv3.ExternalOperationFailure{Class: "canceled", Code: "PROVIDER_CANCELED"}, completion.Failure)
 	require.NoError(t, recorder.finishContextErrors[0])
+	require.Equal(t, map[string]int64{"requests": 0}, decorator.BudgetUsage())
+	require.Equal(t, int64(1), decorator.RequestCount())
 }
 
 func TestClassifiedProviderFailureRecordsSafeTaxonomyOnly(t *testing.T) {

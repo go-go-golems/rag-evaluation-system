@@ -39,17 +39,22 @@ func newTaskModuleFactory(alias string, operations []workflowv3.ExternalOperatio
 			if factory == nil || preparationIdentity == "" {
 				return nil, fmt.Errorf("RAG_WORKFLOW_ENVIRONMENT_FACTORY")
 			}
-			runtime := &taskRuntime{context: moduleContext, environmentFactory: factory, preparationIdentity: preparationIdentity}
+			runtime := &taskRuntime{context: moduleContext, environmentFactory: factory, preparationIdentity: preparationIdentity, providerBudget: moduleContext.Request.Task.Spec.BudgetMaximum != nil}
 			loader := func(vm *goja.Runtime, moduleObject *goja.Object) {
 				exports := moduleObject.Get("exports").ToObject(vm)
 				for name, operation := range map[string]func() (any, error){"prepare": runtime.prepare, "query": runtime.query, "merge": runtime.merge, "publish": runtime.publish} {
 					operation := operation
 					if err := exports.Set(name, func(goja.FunctionCall) goja.Value {
+						runtime.providerUsage = nil
 						value, operationErr := operation()
-						if operationErr != nil {
-							return vm.ToValue(map[string]any{"ok": false, "failure": workflowTaskFailure(operationErr)})
+						result := map[string]any{"ok": operationErr == nil, "value": value}
+						if runtime.providerUsage != nil {
+							result["providerUsage"] = runtime.providerUsage
 						}
-						return vm.ToValue(map[string]any{"ok": true, "value": value})
+						if operationErr != nil {
+							result["failure"] = workflowTaskFailure(operationErr)
+						}
+						return vm.ToValue(result)
 					}); err != nil {
 						panic(vm.NewGoError(err))
 					}
@@ -83,6 +88,8 @@ type taskRuntime struct {
 	context             workflowv3runtime.TaskModuleContext
 	environmentFactory  environmentFactory
 	preparationIdentity string
+	providerUsage       map[string]int64
+	providerBudget      bool
 }
 
 func (r *taskRuntime) prepare() (any, error) {
@@ -143,6 +150,7 @@ func (r *taskRuntime) prepare() (any, error) {
 		return nil, err
 	}
 	outputs, err := operator.Execute(r.context.Context, node, inputs, environment)
+	r.captureProviderUsage(environment)
 	if err != nil {
 		return nil, err
 	}
@@ -201,6 +209,7 @@ func (r *taskRuntime) query() (any, error) {
 	}
 	defer func() { _ = prepared.Close() }()
 	result, err := engine.Execute(r.context.Context, execution, corpus, ragoperators.EvaluationDataset{SchemaVersion: "rag-evaluation-data/v1", Queries: []ragoperators.Query{query}}, nil, ragengine.Options{Prepared: prepared, Manifests: environment.Manifests, Schemas: environment.Schemas, Generator: environment.Generator, Embedder: environment.Embedder, Reranker: environment.Reranker, Cache: environment.Cache, GenerationConcurrency: environment.GenerationConcurrency, GenerationSettingsFingerprint: environment.GenerationSettingsFingerprint, GeneratorFingerprint: r.preparationIdentity, RerankerFingerprint: r.preparationIdentity, EmbeddingFingerprint: r.preparationIdentity})
+	r.captureProviderUsage(environment)
 	if err != nil {
 		return nil, err
 	}
@@ -219,6 +228,12 @@ func (r *taskRuntime) query() (any, error) {
 		return nil, err
 	}
 	return partition, nil
+}
+
+func (r *taskRuntime) captureProviderUsage(environment *ragoperators.Environment) {
+	if r.providerBudget && environment != nil && environment.ProviderBudgetUsage != nil {
+		r.providerUsage = environment.ProviderBudgetUsage()
+	}
 }
 
 func (r *taskRuntime) merge() (any, error) {

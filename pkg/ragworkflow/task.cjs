@@ -4,6 +4,11 @@ const rag = require("rag:workflow");
 async function run(ctx, operation, port, schema) {
   ctx.checkpoint();
   const result = rag[operation]();
+  if (result.ok && result.providerUsage) {
+    for (const dimension of Object.keys(result.providerUsage).sort()) {
+      ctx.usage.report(dimension, result.providerUsage[dimension]);
+    }
+  }
   if (!result.ok) {
     ctx.checkpoint();
     throw task.failure(result.failure);

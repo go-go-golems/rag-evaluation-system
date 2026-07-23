@@ -333,5 +333,5 @@ func (p *ProviderPackage) environment(moduleContext workflowv3runtime.TaskModule
 	if err != nil {
 		return nil, err
 	}
-	return &ragoperators.Environment{Manifests: p.services.Manifests, Schemas: p.services.Schemas, Generator: generator, Embedder: embedder, Reranker: reranker, Cache: p.services.Cache, Usage: ragoperators.Usage{Cost: map[string]float64{}}, GenerationConcurrency: p.services.GenerationConcurrency, GenerationSettingsFingerprint: p.authority.Digest}, nil
+	return &ragoperators.Environment{Manifests: p.services.Manifests, Schemas: p.services.Schemas, Generator: generator, Embedder: embedder, Reranker: reranker, Cache: p.services.Cache, Usage: ragoperators.Usage{Cost: map[string]float64{}}, GenerationConcurrency: p.services.GenerationConcurrency, GenerationSettingsFingerprint: p.authority.Digest, ProviderBudgetUsage: decorator.BudgetUsage}, nil
 }

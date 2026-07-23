@@ -61,8 +61,12 @@ func runProviderPackageFixtureWithServices(t *testing.T, variant string, expecte
 	expectedFingerprint, err := preparationFingerprint(fixture.Execution, providerPackage.authority.Digest)
 	require.NoError(t, err)
 	require.Equal(t, expectedFingerprint, lowered.PreparationFingerprint)
-	require.Equal(t, []workflowv3.BudgetAccount{{Account: "provider", Limits: []workflowv3.BudgetAmount{{Dimension: "requests", Units: expectedBudgetUnits}}, PolicyDigest: providerPackage.authority.Digest}}, lowered.IR.Budgets)
-	require.Equal(t, []workflowv3.BudgetAmount{{Dimension: "requests", Units: 3}}, lowered.IR.Maps[0].Budget.Reserve)
+	require.Len(t, lowered.IR.Budgets, 1)
+	require.Equal(t, "provider", lowered.IR.Budgets[0].Account)
+	require.Equal(t, providerPackage.authority.Digest, lowered.IR.Budgets[0].PolicyDigest)
+	accountLimits := budgetAmountsByDimension(lowered.IR.Budgets[0].Limits)
+	require.Equal(t, expectedBudgetUnits, accountLimits["requests"])
+	require.Equal(t, map[string]int64{"requests": 3}, budgetAmountsByDimension(lowered.IR.Maps[0].Budget.Reserve))
 	bundle, err := providerPackage.Bundle()
 	require.NoError(t, err)
 	builder := workflowv3.NewRegistryBuilder()
@@ -102,6 +106,13 @@ func runProviderPackageFixtureWithServices(t *testing.T, variant string, expecte
 	require.NoError(t, err)
 	operations, operationErr := store.ExternalOperations(ctx, "provider-fixture")
 	require.NoError(t, operationErr)
+	if snapshot.Status != "succeeded" {
+		for _, attempt := range snapshot.Attempts {
+			if attempt.Failure != nil {
+				t.Logf("failure %s/%d: %#v", attempt.NodeKey, attempt.Number, *attempt.Failure)
+			}
+		}
+	}
 	require.Equal(t, "succeeded", snapshot.Status, "attempts=%#v operations=%#v", snapshot.Attempts, operations)
 	require.NotEmpty(t, operations)
 	kinds := map[string]int{}
@@ -114,7 +125,7 @@ func runProviderPackageFixtureWithServices(t *testing.T, variant string, expecte
 			require.Equal(t, workflowv3.ExternalOperationOutcomeSucceeded, operation.Completion.Outcome)
 		}
 		require.Equal(t, providerPackage.authority.Digest, operation.AuthorityDigest)
-		require.Equal(t, []workflowv3.ExternalOperationCounter{{Name: "requests", Units: 1}}, operation.Reservation)
+		require.Equal(t, int64(1), operationCountersByName(operation.Reservation)["requests"])
 		kinds[operation.Kind.Name]++
 	}
 	require.Equal(t, expectedFailedOperations, failedOperations)
@@ -129,6 +140,21 @@ func runProviderPackageFixtureWithServices(t *testing.T, variant string, expecte
 	require.Equal(t, directResult.Answers[0], workflowResult.Results[0].Answers[0])
 }
 
+func budgetAmountsByDimension(amounts []workflowv3.BudgetAmount) map[string]int64 {
+	ret := map[string]int64{}
+	for _, amount := range amounts {
+		ret[amount.Dimension] = amount.Units
+	}
+	return ret
+}
+func operationCountersByName(counters []workflowv3.ExternalOperationCounter) map[string]int64 {
+	ret := map[string]int64{}
+	for _, counter := range counters {
+		ret[counter.Name] = counter.Units
+	}
+	return ret
+}
+
 type failOnceGenerator struct {
 	inner ragoperators.TextGenerator
 	calls atomic.Int64
@@ -139,6 +165,16 @@ func (g *failOnceGenerator) Generate(ctx context.Context, request ragoperators.G
 		return ragoperators.GenerationResult{}, ragworkflowops.NewProviderCallError(errors.New("SECRET_PROVIDER_BODY_CANARY"), "transport", "PROVIDER_TRANSPORT", workflowv3.ExternalOperationOutcomeFailed)
 	}
 	return g.inner.Generate(ctx, request)
+}
+
+func TestProviderWorkflowCacheHitsDoNotCreateProviderOperations(t *testing.T) {
+	services, err := NewDeterministicProviderServices()
+	require.NoError(t, err)
+	services.Cache = ragoperators.NewMemoryCache()
+	runProviderPackageFixtureWithServices(t, "structured", 5, 30_200, services, 0)
+	// Structured preparation is now cache-resident. Query answers remain live
+	// contacts, while cache hits create no durable provider operation.
+	runProviderPackageFixtureWithServices(t, "structured", 2, 30_200, services, 0)
 }
 
 func TestProviderWorkflowRetriesFailedContactAsDistinctOperation(t *testing.T) {
