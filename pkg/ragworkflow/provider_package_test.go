@@ -3,6 +3,7 @@ package ragworkflow
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -19,25 +20,38 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type fixtureReranker struct{}
+type completeFixtureProviders struct{ ragoperators.FixtureProviders }
 
-func (fixtureReranker) Rerank(_ context.Context, request ragoperators.RerankRequest) (ragoperators.RerankResult, error) {
+func (p completeFixtureProviders) Generate(ctx context.Context, request ragoperators.GenerationRequest) (ragoperators.GenerationResult, error) {
+	if request.Kind != "generate.answer" {
+		return p.FixtureProviders.Generate(ctx, request)
+	}
+	if len(request.Evidence) == 0 {
+		return ragoperators.GenerationResult{}, fmt.Errorf("fixture answer evidence required")
+	}
+	cost := 0.000004
+	return ragoperators.GenerationResult{Text: "fixture grounded answer", CitationChunkIDs: []string{request.Evidence[0].Chunk.Record.ID}, InputTokens: 11, OutputTokens: 4, Cost: &cost, FinishReason: "fixture"}, nil
+}
+func (completeFixtureProviders) Rerank(_ context.Context, request ragoperators.RerankRequest) (ragoperators.RerankResult, error) {
 	scores := make([]ragoperators.RerankScore, len(request.Candidates))
 	for index, candidate := range request.Candidates {
 		scores[index] = ragoperators.RerankScore{ChunkID: candidate.Chunk.Record.ID, Score: float64(len(scores) - index)}
 	}
-	return ragoperators.RerankResult{Scores: scores}, nil
+	cost := 0.000002
+	return ragoperators.RerankResult{Scores: scores, InputTokens: 7, Cost: &cost}, nil
 }
 
-func fixtureProviderPackage(t *testing.T) (*ProviderPackage, ragoperators.FixtureProviders) {
+func fixtureProviderPackage(t *testing.T) (*ProviderPackage, completeFixtureProviders) {
 	t.Helper()
-	providers := ragoperators.NewFixtureProviders()
-	authority := ProviderAuthority{SchemaVersion: ProviderAuthoritySchema, ProfileID: "fixture-geppetto-v1", Capabilities: []string{"embedder", "generator", "reranker", "schema-validator"}, ModelManifestDigests: []string{"sha256:" + strings.Repeat("1", 64), "sha256:" + strings.Repeat("2", 64), "sha256:" + strings.Repeat("3", 64)}, PromptManifestDigests: []string{"sha256:" + strings.Repeat("4", 64), "sha256:" + strings.Repeat("5", 64)}, Providers: []WorkflowProviderIdentity{{Role: "embedding-primary", ProfileSlug: "fixture-embedding", ModelManifestDigest: "sha256:" + strings.Repeat("3", 64), ModelID: ragoperators.FixtureEmbeddingModel, SettingsFingerprint: "sha256:" + strings.Repeat("a", 64), ConcurrencyLimit: 1}, {Role: "generator-primary", ProfileSlug: "fixture-generation", ModelManifestDigest: "sha256:" + strings.Repeat("1", 64), ModelID: ragoperators.FixtureSummaryModel, SettingsFingerprint: "sha256:" + strings.Repeat("b", 64), ConcurrencyLimit: 1}, {Role: "reranker-primary", ProfileSlug: "fixture-rerank", ModelManifestDigest: "sha256:" + strings.Repeat("3", 64), ModelID: "fixture-rerank-v1", SettingsFingerprint: "sha256:" + strings.Repeat("c", 64), ConcurrencyLimit: 1}}}
+	providers := completeFixtureProviders{FixtureProviders: ragoperators.NewFixtureProviders()}
+	providers.Resolver.Models["fixture-rerank-v1"] = ragcontract.ModelManifest{ManifestBase: ragcontract.ManifestBase{SchemaVersion: ragcontract.ModelManifestSchema, Digest: "sha256:" + strings.Repeat("6", 64)}, ModelID: "fixture-rerank-v1", ModelDigest: "sha256:" + strings.Repeat("6", 64), Tokenization: "fixture-utf16", Truncation: "none", Normalization: "none", ImplementationVersion: "fixture/v1", RequestParameters: json.RawMessage(`{}`)}
+	providers.Resolver.Prompts["fixture-answer-v1"] = ragcontract.PromptManifest{ManifestBase: ragcontract.ManifestBase{SchemaVersion: ragcontract.PromptManifestSchema, Digest: "sha256:" + strings.Repeat("7", 64)}, PromptID: "fixture-answer-v1", TemplateDigest: "sha256:" + strings.Repeat("7", 64), InputSchema: "text/plain", OutputSchema: "fixture-answer/v1"}
+	authority := ProviderAuthority{SchemaVersion: ProviderAuthoritySchema, ProfileID: "fixture-geppetto-v1", Capabilities: []string{"embedder", "generator", "reranker", "schema-validator"}, ModelManifestDigests: []string{"sha256:" + strings.Repeat("1", 64), "sha256:" + strings.Repeat("2", 64), "sha256:" + strings.Repeat("3", 64), "sha256:" + strings.Repeat("6", 64)}, PromptManifestDigests: []string{"sha256:" + strings.Repeat("4", 64), "sha256:" + strings.Repeat("5", 64), "sha256:" + strings.Repeat("7", 64)}, Providers: []WorkflowProviderIdentity{{Role: "embedding-primary", ProfileSlug: "fixture-embedding", ModelManifestDigest: "sha256:" + strings.Repeat("3", 64), ModelID: ragoperators.FixtureEmbeddingModel, SettingsFingerprint: "sha256:" + strings.Repeat("a", 64), ConcurrencyLimit: 1}, {Role: "generator-primary", ProfileSlug: "fixture-generation", ModelManifestDigest: "sha256:" + strings.Repeat("1", 64), ModelID: ragoperators.FixtureSummaryModel, SettingsFingerprint: "sha256:" + strings.Repeat("b", 64), ConcurrencyLimit: 1}, {Role: "reranker-primary", ProfileSlug: "fixture-rerank", ModelManifestDigest: "sha256:" + strings.Repeat("6", 64), ModelID: "fixture-rerank-v1", SettingsFingerprint: "sha256:" + strings.Repeat("c", 64), ConcurrencyLimit: 1}}}
 	canonicalizeAuthority(&authority)
 	digest, err := providerAuthorityDigest(authority)
 	require.NoError(t, err)
 	authority.Digest = digest
-	providerPackage, err := NewProviderPackage(ProviderServices{Authority: authority, Manifests: providers.Resolver, Schemas: providers, Generator: providers, Embedder: providers, Reranker: fixtureReranker{}, GenerationConcurrency: 1}, ragworkflowops.Policy{MaxPerAttempt: 100, FinishTimeout: time.Second})
+	providerPackage, err := NewProviderPackage(ProviderServices{Authority: authority, Manifests: providers.Resolver, Schemas: providers, Generator: providers, Embedder: providers, Reranker: providers, GenerationConcurrency: 1}, ragworkflowops.Policy{MaxPerAttempt: 100, FinishTimeout: time.Second})
 	require.NoError(t, err)
 	return providerPackage, providers
 }
@@ -53,8 +67,22 @@ func providerExecution(t *testing.T) Fixture {
 			fixture.Execution.Pipeline.Nodes[index].Config = json.RawMessage(`{"name":"summary","model":"fixture-summary-v1","prompt":"fixture-transcript-summary-v1","outputSchema":"transcript-rag-summary/v1"}`)
 		case "embed.model":
 			fixture.Execution.Pipeline.Nodes[index].Config = json.RawMessage(`{"model":"fixture-hash-32-v1","dimensions":32,"distance":"cosine","normalize":"l2","batchSize":8}`)
+		case "retrieve.bm25", "retrieve.vector":
+			fixture.Execution.Pipeline.Nodes[index].Config = json.RawMessage(`{"index":"representations","representation":"summary","topK":10,"filter":{}}`)
 		}
 	}
+	hydrationID := ""
+	for _, node := range fixture.Execution.Pipeline.Nodes {
+		if node.Operator.Kind == "hydrate.source-evidence" {
+			hydrationID = node.ID
+		}
+	}
+	require.NotEmpty(t, hydrationID)
+	fixture.Execution.Pipeline.Nodes = append(fixture.Execution.Pipeline.Nodes,
+		ragcontract.Node{ID: "fixture-rerank", Operator: ragcontract.OperatorRef{Kind: "rerank.cross-encoder", Version: "v1"}, Inputs: []ragcontract.InputBinding{{Port: "evidence", From: ragcontract.PortRef{NodeID: hydrationID, Port: "evidence"}}}, Config: json.RawMessage(`{"model":"fixture-rerank-v1","candidateCount":20,"results":5,"inputTemplate":"query-document","truncation":"none","tokenization":"fixture-utf16","timeoutMilliseconds":5000}`)},
+		ragcontract.Node{ID: "fixture-answer", Operator: ragcontract.OperatorRef{Kind: "generate.answer", Version: "v1"}, Inputs: []ragcontract.InputBinding{{Port: "evidence", From: ragcontract.PortRef{NodeID: "fixture-rerank", Port: "evidence"}}}, Config: json.RawMessage(`{"model":"fixture-summary-v1","prompt":"fixture-answer-v1","citations":"required","citationFailurePolicy":"abstain","contextBudgetTokens":2048}`)},
+	)
+	fixture.Execution.Pipeline.Outputs[0].From = ragcontract.PortRef{NodeID: "fixture-rerank", Port: "evidence"}
 	fixture.Execution.Pipeline, err = ragcompiler.Normalize(fixture.Execution.Pipeline, nil)
 	require.NoError(t, err)
 	fixture.Execution.CellID = ""
@@ -67,6 +95,9 @@ func TestProviderPackageBindsAuthorityAndExecutesDurableOperations(t *testing.T)
 	ctx := context.Background()
 	providerPackage, providers := fixtureProviderPackage(t)
 	fixture := providerExecution(t)
+	directEnvironment := &ragoperators.Environment{Manifests: providers.Resolver, Schemas: providers, Generator: providers, Embedder: providers, Reranker: providers, GenerationConcurrency: 1, Usage: ragoperators.Usage{Cost: map[string]float64{}}}
+	directResult, directErr := ragengine.New(nil).Execute(ctx, fixture.Execution, fixture.Corpus, fixture.Dataset, nil, ragengine.Options{Manifests: directEnvironment.Manifests, Schemas: directEnvironment.Schemas, Generator: directEnvironment.Generator, Embedder: directEnvironment.Embedder, Reranker: directEnvironment.Reranker, GenerationConcurrency: 1, GenerationSettingsFingerprint: providerPackage.authority.Digest, EmbeddingFingerprint: providerPackage.authority.Digest})
+	require.NoError(t, directErr)
 	_, err := NewLowerer().Lower(ctx, fixture.Execution)
 	require.ErrorContains(t, err, "RAG_WORKFLOW_PROVIDER_REQUIRED")
 	lowerer, err := NewProviderLowerer(providerPackage)
@@ -115,9 +146,9 @@ func TestProviderPackageBindsAuthorityAndExecutesDurableOperations(t *testing.T)
 	require.ErrorIs(t, <-done, context.Canceled)
 	snapshot, err = engine.Snapshot(ctx, "provider-fixture")
 	require.NoError(t, err)
-	require.Equal(t, "succeeded", snapshot.Status)
-	operations, err := store.ExternalOperations(ctx, "provider-fixture")
-	require.NoError(t, err)
+	operations, operationErr := store.ExternalOperations(ctx, "provider-fixture")
+	require.NoError(t, operationErr)
+	require.Equal(t, "succeeded", snapshot.Status, "attempts=%#v operations=%#v", snapshot.Attempts, operations)
 	require.NotEmpty(t, operations)
 	kinds := map[string]int{}
 	for _, operation := range operations {
@@ -127,15 +158,13 @@ func TestProviderPackageBindsAuthorityAndExecutesDurableOperations(t *testing.T)
 		require.Equal(t, []workflowv3.ExternalOperationCounter{{Name: "requests", Units: 1}}, operation.Reservation)
 		kinds[operation.Kind.Name]++
 	}
-	require.Positive(t, kinds[ragworkflowops.GenerateOperation])
-	require.Positive(t, kinds[ragworkflowops.EmbedOperation])
-	require.Zero(t, kinds[ragworkflowops.RerankOperation])
+	require.Equal(t, 5, kinds[ragworkflowops.GenerateOperation])
+	require.Equal(t, 3, kinds[ragworkflowops.EmbedOperation])
+	require.Equal(t, 2, kinds[ragworkflowops.RerankOperation])
 	resultBody, err := workflowv3.ReadArtifact(ctx, artifacts, snapshot.Outputs["result"])
 	require.NoError(t, err)
 	workflowResult, err := DecodeResult(resultBody)
 	require.NoError(t, err)
-	environment := &ragoperators.Environment{Manifests: providers.Resolver, Schemas: providers, Generator: providers, Embedder: providers, Reranker: fixtureReranker{}, GenerationConcurrency: 1, Usage: ragoperators.Usage{Cost: map[string]float64{}}}
-	baseline, err := ragengine.New(nil).Execute(ctx, fixture.Execution, fixture.Corpus, fixture.Dataset, nil, ragengine.Options{Manifests: environment.Manifests, Schemas: environment.Schemas, Generator: environment.Generator, Embedder: environment.Embedder, Reranker: environment.Reranker, GenerationConcurrency: 1, GenerationSettingsFingerprint: providerPackage.authority.Digest, EmbeddingFingerprint: providerPackage.authority.Digest})
-	require.NoError(t, err)
-	require.Equal(t, baseline.Traces[0].Results, workflowResult.Results[0].Trace.Results)
+	require.Equal(t, directResult.Traces[0].Results, workflowResult.Results[0].Trace.Results)
+	require.Equal(t, directResult.Answers[0], workflowResult.Results[0].Answers[0])
 }

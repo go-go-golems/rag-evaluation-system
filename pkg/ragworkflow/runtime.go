@@ -179,7 +179,7 @@ func (r *taskRuntime) query() (any, error) {
 		return nil, err
 	}
 	defer func() { _ = prepared.Close() }()
-	result, err := engine.Execute(r.context.Context, execution, corpus, ragoperators.EvaluationDataset{SchemaVersion: "rag-evaluation-data/v1", Queries: []ragoperators.Query{query}}, nil, ragengine.Options{Prepared: prepared, Manifests: environment.Manifests, Embedder: environment.Embedder, EmbeddingFingerprint: "fixture-embedding/v1"})
+	result, err := engine.Execute(r.context.Context, execution, corpus, ragoperators.EvaluationDataset{SchemaVersion: "rag-evaluation-data/v1", Queries: []ragoperators.Query{query}}, nil, ragengine.Options{Prepared: prepared, Manifests: environment.Manifests, Schemas: environment.Schemas, Generator: environment.Generator, Embedder: environment.Embedder, Reranker: environment.Reranker, Cache: environment.Cache, GenerationConcurrency: environment.GenerationConcurrency, GenerationSettingsFingerprint: environment.GenerationSettingsFingerprint, GeneratorFingerprint: r.preparationIdentity, RerankerFingerprint: r.preparationIdentity, EmbeddingFingerprint: r.preparationIdentity})
 	if err != nil {
 		return nil, err
 	}
