@@ -26,3 +26,8 @@ Implemented and accepted versioned Geppetto-backed Workflow V3 operations, deter
 
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/ragworkflow/provider_package.go — Provider package
 - /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/ragworkflowops/operations.go — Operation decorators
+
+## 2026-07-23
+
+Ticket closed
+

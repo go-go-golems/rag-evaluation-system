@@ -1,7 +1,7 @@
 ---
 Title: Execute Geppetto generation embedding and reranking as durable workflow operations
 Ticket: RAG-GEPPETTO-WORKFLOW-OPERATIONS
-Status: active
+Status: complete
 Topics:
     - rag
     - rag-eval
@@ -15,10 +15,11 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2026-07-22T19:25:04.618500178-04:00
+LastUpdated: 2026-07-23T18:15:59.02155225-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 # Execute Geppetto generation embedding and reranking as durable workflow operations
 

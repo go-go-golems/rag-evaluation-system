@@ -739,3 +739,31 @@ Run the opt-in script only with reviewed endpoints and cost authority. Confirm `
 
 ### Review
 Inspect the crash wrapper in `scripts/01-smoke-provider-workflow.sh`; it must kill only after admission and before completion. Confirm the abandoned database has one operation without a completion row and selected successful runs each export ten completed operations.
+
+## Step 15: Final validation, documentation, and closure
+
+### Final commits
+- RAG `d4a957c` — replay, cache, crash custody, and delayed fixtures.
+- RAG `0bd34d8` — generated logging metadata and race-safe acceptance deadline.
+- RAG `b9415b2` — help, report, scripts, evidence, diary, and task completion.
+- Scraper `981d0a0` — fenced renewable leases (published and pinned).
+
+### Validation
+- `GOWORK=off go test ./... -count=1` passed in RAG-eval.
+- Focused RAG provider race suites passed after increasing only the test polling deadline from 20s to 60s; production timeouts were unchanged.
+- `make lint`, Glazed lint, `make web-build`, `make logcopter-check`, module tidiness, all provider command builds, runner/fixture help, and embedded help lookup passed.
+- Full Researchctl tests and lint passed.
+- Full Scraper tests passed except one concurrent occurrence of the previously documented map timing test; focused and two sequential package reruns passed. Full Scraper lint passed.
+- Geppetto event, observability, embedding, rerank, factory, and llama.cpp suites passed; Geppetto remained clean.
+- Deterministic matrix smoke, authorized real-provider acceptance, fixture regeneration, and boundary/privacy guards passed from permanent ticket scripts.
+- `docmgr validate frontmatter` passed. Initial `docmgr doctor` warned that new report topics `experiments` and `workflow-v3` were outside repository vocabulary; replaced them with existing `research` and `workflow`. Doctor then passed.
+- All four ticket tasks are checked. Ticket closed with `docmgr ticket close`; final doctor passed.
+
+### Final failure provenance
+- Running Scraper and Researchctl `golangci-lint` concurrently produced `parallel golangci-lint is running` for Researchctl. Reran sequentially; both passed.
+- The initial RAG provider race suite exceeded a 20-second test polling deadline in the synthetic variant. Increased the test-only deadline to 60 seconds; the race suite passed in 11.38 seconds on rerun.
+- The first build/help smoke grepped for GNU-style `--provider-config`, while Go `flag` renders `-provider-config`; corrected the smoke assertion. The command itself was correct.
+- `make logcopter-check` found missing generated package metadata for the two new packages. Ran `make logcopter-generate`, reviewed the two generated files, and reran the check successfully.
+
+### Requirement audit
+The acceptance report maps every goal clause to fresh source, ledger, test, command, or cross-repository evidence. There are no deferred implementation requirements. Request counts are enforced Workflow budgets; token/cost values are exact bounded operation evidence and are not misrepresented as an aggregate currency ceiling.
