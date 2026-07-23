@@ -216,6 +216,13 @@ func (s *FilePreparedCorpusStore) Open(ctx context.Context, engine *Engine, pipe
 	return prepared, true, nil
 }
 
+// SerializePreparedValues encodes only durable query-independent RAG values.
+// Live indexes and provider clients are intentionally excluded and rebuilt from
+// canonical representations and embeddings by the consumer.
+func SerializePreparedValues(values map[string]any) ([]PreparedValue, error) {
+	return serializePreparedValues(values)
+}
+
 func serializePreparedValues(values map[string]any) ([]PreparedValue, error) {
 	out := make([]PreparedValue, 0, len(values))
 	for key, value := range values {
@@ -240,6 +247,11 @@ func serializePreparedValues(values map[string]any) ([]PreparedValue, error) {
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Key < out[j].Key })
 	return out, nil
+}
+
+// DeserializePreparedValues decodes the closed durable prepared-value union.
+func DeserializePreparedValues(values []PreparedValue) (map[string]any, error) {
+	return deserializePreparedValues(values)
 }
 
 func deserializePreparedValues(values []PreparedValue) (map[string]any, error) {
