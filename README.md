@@ -156,7 +156,7 @@ See also [`pkg/ragcontract/README.md`](pkg/ragcontract/README.md), `examples/rag
 
 ### Provider-free Workflow V3 lowering
 
-`pkg/ragworkflow` is the production backend that deterministically lowers an exact `rag-pipeline-execution/v2` into a generic Scraper Workflow V3 plan. The closed `rag-v2-provider-free@1.0.0` task package covers corpus loading, unit preparation, chunking, raw representations, deterministic fixture embeddings, lexical/vector indexes, retrieval, ranking/fusion, evaluation, and publication. Unknown/provider-backed variants fail closed; real providers remain outside this package.
+`pkg/ragworkflow` is the production backend that deterministically lowers an exact `rag-pipeline-execution/v2` into a generic Scraper Workflow V3 plan. The closed `rag-v2-provider-free@1.0.0` task package covers corpus loading, unit preparation, chunking, raw representations, deterministic fixture embeddings, lexical/vector indexes, retrieval, ranking/fusion, evaluation, and publication. Unknown and provider-backed variants fail closed in this provider-free catalog.
 
 The RAG-owned `rag-workflow-runner` links that package into Scraper's generic `scraper-workflow-execution/v2` process runner. Researchctl remains responsible for cases, replicates, process attempts, resume, and laboratory custody. Scraper remains responsible for Workflow runs, node attempts, leases, retries, cancellation, artifacts, and `scraper-workflow-observations/v1`.
 
@@ -170,6 +170,20 @@ bash ttmp/2026/07/22/RAG-V2-WORKFLOW-LOWERING--*/scripts/02-smoke-rag-workflow-l
 ```
 
 See `examples/rag-workflow`, the embedded `rag-workflow-v3-lowering` help page, and the ticket design/acceptance documentation for schemas, limits, privacy rules, preparation reuse, and built-binary examples.
+
+### Durable Geppetto provider operations
+
+Provider-backed executions use the distinct `rag-v2-geppetto@1.0.0` package. Structured, synthetic, and combined generation, provider embeddings, cross-encoder reranking, and grounded answers execute through thin RAG-owned Geppetto adapters under Scraper's durable external-operation custody. Exact provider authority, request budgets, retries, cache-hit behavior, safe usage/cost counters, cancellation, and failure taxonomy are preserved without placing RAG semantics in Scraper.
+
+```bash
+# Deterministic two-case fixtures and parity evidence
+go run ./cmd/rag-workflow-provider-fixture --output /tmp/rag-workflow-provider
+
+# Host-authorized production runner
+go run ./cmd/rag-workflow-runner --provider-config experiments/real-provider-v2/provider-config.yaml
+```
+
+Use `rag-eval help rag-geppetto-workflow-operations` for the full operation contract, crash/replay semantics, fixture workflow, and opt-in real-provider acceptance command.
 
 ## Widget IR frontend
 

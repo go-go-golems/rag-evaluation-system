@@ -1,0 +1,4 @@
+=== RUN   TestAuthorizedRealProviderWorkflowAcceptance
+--- PASS: TestAuthorizedRealProviderWorkflowAcceptance (27.40s)
+PASS
+ok  	github.com/go-go-golems/rag-evaluation-system/pkg/ragworkflow	27.418s
