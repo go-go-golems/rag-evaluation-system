@@ -77,6 +77,7 @@ Fresh smoke summary: `sources/smoke/01-summary.json`.
 | Independent durability | 5 subordinate Workflow SQLite databases after one injected runner crash |
 | Research retries | selected attempt counts `[1,1,1,2]` |
 | Provider-free parity | 2 cases × 2 queries; exact result ordering/traces and `rag.mrr` values matched `ragengine` |
+| Factor identity | focused restart/parity test supplies a non-empty canonical factor selection and proves exact publication in `rag-workflow-result/v1` |
 | Canonical observations | 24 metrics and 5 traces per selected run |
 | Artifact custody | 4 verified artifacts per selected run |
 | Provider custody | 0 external-operation records and verified empty operation artifact/manifest |
@@ -142,6 +143,7 @@ The first command/help smoke redirected only stdout, while Go's standard `flag` 
 - `f7cd54a` — `feat: lower RAG v2 into Workflow V3`
 - `33bcffa` — `test: add RAG Workflow cross-repository acceptance`
 - `698928c` — `fix: preserve canonical generated fixture bytes`
+- `2cb0c9e` — `test: preserve RAG factor identity through publication`
 
 ## Review route
 

@@ -30,3 +30,11 @@ Implemented and accepted deterministic provider-free RAG v2 lowering through Scr
 ## 2026-07-23
 
 Ticket closed
+
+## 2026-07-23
+
+Added explicit non-empty canonical factor identity publication evidence (commit 2cb0c9e)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/ragworkflow/runtime_test.go — Factor selection crosses lowering restart and result publication unchanged

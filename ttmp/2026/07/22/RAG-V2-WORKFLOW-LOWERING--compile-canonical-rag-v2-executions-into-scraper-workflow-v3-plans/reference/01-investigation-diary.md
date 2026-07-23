@@ -494,3 +494,57 @@ The documentation commit captures the complete review route and known validation
 - Documentation commit: `189c1466bde629964df6d19890261bd6b326fede`.
 - Ticket state: complete.
 - Doctor state: all checks passed.
+
+## Step 7: Audit and prove non-empty factor identity preservation
+
+The final requirement audit noticed that factor preservation was implemented by copying canonical execution factors into the result, but the provider-free fixture used an empty factor list. This step added explicit evidence rather than relying on code inspection.
+
+The restart/parity test now injects a non-empty factor selection, recomputes the canonical execution `CellID`, executes the complete preparation/restart/query/publication flow, and asserts exact factor equality in the terminal result.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same active-goal continuation as Steps 4–6)
+
+**Assistant interpretation:** Audit every explicit requirement against concrete test evidence before marking the durable goal complete.
+
+**Inferred user intent:** Prevent a superficially complete implementation from omitting identity fields that happen to be empty in fixtures.
+
+**Commit (code):** `2cb0c9e` — "test: preserve RAG factor identity through publication"
+
+### What I did
+- Added a `retrieval-profile=hybrid` canonical factor with structured value to the runtime parity test.
+- Recomputed `CellID` after factor insertion.
+- Asserted `execution.Factors == workflowResult.Factors` after preparation-boundary restart and publication.
+- Reran focused tests, race tests, lint, and the repository pre-commit suite.
+- Updated the acceptance audit with the factor evidence and commit.
+
+### Why
+- The goal explicitly requires exact factor identities; empty-slice fixtures cannot prove non-empty preservation.
+
+### What worked
+- Focused package tests, `-race`, and lint passed.
+- The pre-commit package/internal test and lint suites passed.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- Final requirement mapping should distinguish “field exists in code” from “non-empty value crosses the entire execution boundary under test.”
+
+### What was tricky to build
+- Changing factors changes canonical execution identity. The test must clear and recompute `CellID`; otherwise the lowerer correctly rejects the stale execution before the factor assertion is reached.
+
+### What warrants a second pair of eyes
+- Confirm future factor values remain canonical JSON and continue participating in `CellID` and result digest.
+
+### What should be done in the future
+- N/A.
+
+### Code review instructions
+- Review the setup and terminal assertions in `TestWorkflowExecutionMatchesRAGEngineAndSurvivesRestart`.
+- Run `GOWORK=off go test -race ./pkg/ragworkflow -count=1`.
+
+### Technical details
+- Factor ID: `retrieval-profile`.
+- Value ID: `hybrid`.
+- Structured value: `{"channels":2}`.
