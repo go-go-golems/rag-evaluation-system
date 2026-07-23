@@ -48,7 +48,7 @@ func executeDurablePreparation(ctx context.Context, encoder *json.Encoder, state
 	if err != nil {
 		return err
 	}
-	defer runtime.Close()
+	defer func() { _ = runtime.Close() }()
 	resolve := func(context.Context, preparationworkflow.Identity) (*ragoperators.Environment, error) {
 		return &ragoperators.Environment{Manifests: options.Manifests, Schemas: options.Schemas, Generator: options.Generator, Embedder: options.Embedder, Cache: options.Cache, GenerationConcurrency: options.GenerationConcurrency, GenerationSettingsFingerprint: options.GenerationSettingsFingerprint}, nil
 	}
@@ -82,6 +82,8 @@ func executeDurablePreparation(ctx context.Context, encoder *json.Encoder, state
 			return nil
 		case model.WorkflowStatusFailed, model.WorkflowStatusCanceled:
 			return fmt.Errorf("RAG_WORKER_PREPARATION_TERMINAL: %s", snapshot.Workflow.Status)
+		case model.WorkflowStatusPending, model.WorkflowStatusRunning:
+			// Continue advancing the durable preparation runtime below.
 		}
 		if _, err := runtime.RunOnce(ctx); err != nil {
 			return err

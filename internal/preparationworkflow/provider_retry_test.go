@@ -17,7 +17,7 @@ func TestProviderFailureRetriesWithoutManualIntervention(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer runtime.Close()
+	defer func() { _ = runtime.Close() }()
 	if err := Register(runtime, func(context.Context, Identity) (*ragoperators.Environment, error) {
 		return &ragoperators.Environment{Manifests: testResolver(), Generator: generator, Cache: ragoperators.NewMemoryCache()}, nil
 	}); err != nil {
@@ -55,7 +55,7 @@ func TestInvalidProviderResponseRetriesWithoutPersistence(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer runtime.Close()
+	defer func() { _ = runtime.Close() }()
 	if err := Register(runtime, func(context.Context, Identity) (*ragoperators.Environment, error) {
 		return &ragoperators.Environment{Manifests: testResolver(), Generator: generator, Cache: ragoperators.NewMemoryCache()}, nil
 	}); err != nil {

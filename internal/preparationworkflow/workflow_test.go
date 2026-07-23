@@ -22,7 +22,7 @@ func TestEnsureRunRejectsPublicationIdentityMismatch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer runtime.Close()
+	defer func() { _ = runtime.Close() }()
 	if err := RegisterWithPublication(runtime, func(context.Context, Identity) (*ragoperators.Environment, error) { return nil, nil }, func(context.Context, Identity, PublicationSpec) (PublicationTarget, error) {
 		return PublicationTarget{}, nil
 	}); err != nil {
@@ -48,7 +48,7 @@ func TestEnsureRunBuildsOneOperationPerCombinedBatch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer runtime.Close()
+	defer func() { _ = runtime.Close() }()
 	if err := Register(runtime, func(context.Context, Identity) (*ragoperators.Environment, error) { return nil, nil }); err != nil {
 		t.Fatal(err)
 	}

@@ -103,7 +103,7 @@ func TestFailedBatchDoesNotStopSiblingAndRetryFinalizesAfterRestart(t *testing.T
 	}
 
 	runtime = open()
-	defer runtime.Close()
+	defer func() { _ = runtime.Close() }()
 	snapshot, err := runtime.Snapshot(ctx, handle.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -140,7 +140,7 @@ func TestEmbeddingStepsFollowCombinedSteps(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer runtime.Close()
+	defer func() { _ = runtime.Close() }()
 	generator := &batchGenerator{calls: map[string]int{}}
 	if err := Register(runtime, func(context.Context, Identity) (*ragoperators.Environment, error) {
 		return &ragoperators.Environment{Manifests: testResolver(), Generator: generator, Embedder: fixtureEmbedder{}}, nil

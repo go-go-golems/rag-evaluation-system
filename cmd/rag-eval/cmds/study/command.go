@@ -154,7 +154,7 @@ func (c *studyCommand) RunIntoWriter(ctx context.Context, v *values.Values, w io
 				if e != nil {
 					return e
 				}
-				for i := 0; i < max(1, cell.Replicates); i++ {
+				for i := 0; i < maxInt(1, cell.Replicates); i++ {
 					r, e := researchctladapter.ExecuteSpecification(ctx, spec, researchctladapter.RunOptions{ResearchctlCommand: s.Researchctl, Project: s.Project, Database: s.Database, ExperimentID: s.Experiment, Worker: researchctladapter.WorkerCommand{Executable: s.Worker, Args: s.WorkerArgs}, MaxAttempts: s.MaxAttempts, Timeout: d, SecretEnvironment: s.Secrets, OutputDirectory: s.SpecOutputDir})
 					if e != nil {
 						return e
@@ -174,7 +174,7 @@ func (c *studyCommand) RunIntoWriter(ctx context.Context, v *values.Values, w io
 	}
 	return json.NewEncoder(w).Encode(out)
 }
-func max(a, b int) int {
+func maxInt(a, b int) int {
 	if a > b {
 		return a
 	}
