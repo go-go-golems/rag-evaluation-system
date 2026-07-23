@@ -76,3 +76,64 @@ commit at appropriat eintervals."
 ### Technical details
 - Umbrella: `EXPERIMENT-PLATFORM-CONVERGENCE`.
 - Siblings: `RESEARCHCTL-LEGACY-CLEANUP`, `SCRAPER-LEGACY-CLEANUP`, `RAG-EVAL-LEGACY-CLEANUP`.
+
+## Step 2: Classify RAG execution generations and immediate removals
+
+This step traced the canonical RAG v2 core and three execution generations: old intake workflow, direct rag-worker/ragengine, and TTC-specific Workflow V3 sweep. Unlike Scraper, RAG has a meaningful immediate deletion tranche because the TTC runner is isolated and its experiment evidence is already published.
+
+The audit also discovered a repository-wide test failure unrelated to production semantics: several historical ticket scripts share one Go package and each declare `main`. This should be fixed as immediate cleanup while preserving the scripts as evidence.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 1)
+
+**Assistant interpretation:** Identify immediate and deferred RAG cleanup, preserve semantic oracles, document test failures, and stop before deleting.
+
+**Inferred user intent:** Remove completed one-off experiment machinery early without losing the current behavior needed to build the clean replacement.
+
+### What I did
+- Mapped all `rag-eval` commands and imports of `workflowv3ttc`, `preparationworkflow`, old `workflow`, `ragengine`, and `researchctladapter`.
+- Verified TTC non-test references are isolated to the standalone command and package.
+- Traced `OperationCustody` symbols to the TTC sweep only.
+- Confirmed `EchoRunner` is test-only while production registers `IntakeRunner`.
+- Read the old chunks-schema compatibility migration and its call from `db.go`.
+- Ran `GOWORK=off go test ./... -count=1`.
+
+### Why
+- RAG has both removable experiment scaffolding and active semantic/runtime code; they require different disposition.
+
+### What worked
+- All active production packages, including the TTC runner and current RAG worker, passed their package tests.
+- Search produced clear immediate deletion boundaries.
+
+### What didn't work
+- The full test command failed because ticket-local scripts are discovered as one Go package:
+  - `06-refresh-model-manifest-digests.go:18:6: main redeclared in this block`
+  - `07-refresh-prompt-manifest-digests.go:18:6: main redeclared in this block`
+  - `08-build-operation-custody-export.go:37:6: main redeclared in this block`
+  - each conflicts with `02-build-researchctl-custody-spec.go:11:6`.
+- The first documentation staging check also failed on prompt trailing whitespace and a blank changelog EOF; normalization fixed the second attempt.
+
+### What I learned
+- The TTC binary/package and post-hoc custody adapter can be removed immediately after extracting small regression fixtures.
+- `ragengine`, `rag-worker`, preparation, and intake must remain until their named Workflow V3 replacements pass.
+- Compatibility migration code contradicts the documented disposable-database hard cut and can be removed now.
+
+### What was tricky to build
+- `pkg/researchctladapter` mixes generic current behavior with TTC-specific custody. Classification had to occur file-by-file rather than deleting the package.
+
+### What warrants a second pair of eyes
+- Approve the ticket-script archival convention (`.go.txt` versus one directory per executable script).
+- Confirm old developer databases may be discarded without exception.
+- Select exact TTC ledger fixtures to preserve before code deletion.
+
+### What should be done in the future
+- Review the five-item immediate tranche, then execute it as a focused cleanup commit and run the full suite.
+
+### Code review instructions
+- Begin with the immediate removal table in the cleanup report.
+- Inspect `cmd/rag-ttc-v3-sweep`, `internal/workflowv3ttc`, `operation_custody.go`, `echo_runner.go`, and `internal/db/migrations.go`.
+
+### Technical details
+- Baseline result: production packages passed; overall `go test ./...` failed only in historical ticket scripts.
+- Setup commit: `500cd0924f08df57724f9ca7e51405a2e362e971`.
