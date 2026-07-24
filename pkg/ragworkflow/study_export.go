@@ -260,7 +260,7 @@ module.exports = research.experimentPlan(%s, plan => {
   for (const item of cases) {
     current = current.case(item.id, value => value.specification(specification(item)).factors(item.factors).replicates(item.replicates));
   }
-  return current.ordering({strategy: "blocked"}).execution({maxConcurrent: 1, failFast: false});
+  return current;
 });
 `, caseBody, nameBody, nameBody, experimentBody)
 	return []byte(body), nil
