@@ -210,17 +210,30 @@ func writeStudyFile(root, directory, name, schema string, value any) (FixtureFil
 }
 
 func writeImmutableStudyFile(path string, body []byte) error {
-	existing, err := os.ReadFile(path) // #nosec G304 -- path is constructed below the validated output boundary.
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644) // #nosec G304 -- path is constructed below the validated output boundary.
 	if err == nil {
-		if !bytes.Equal(existing, body) {
-			return fmt.Errorf("RAG_WORKFLOW_STUDY_CONFLICT: %s", filepath.Base(path))
+		if _, writeErr := file.Write(body); writeErr != nil {
+			_ = file.Close()
+			_ = os.Remove(path)
+			return writeErr
+		}
+		if closeErr := file.Close(); closeErr != nil {
+			_ = os.Remove(path)
+			return closeErr
 		}
 		return nil
 	}
-	if !os.IsNotExist(err) {
+	if !os.IsExist(err) {
 		return err
 	}
-	return os.WriteFile(path, body, 0o644) // #nosec G703 -- path is constructed below the validated output boundary.
+	existing, readErr := os.ReadFile(path) // #nosec G304 -- path is constructed below the validated output boundary.
+	if readErr != nil {
+		return readErr
+	}
+	if !bytes.Equal(existing, body) {
+		return fmt.Errorf("RAG_WORKFLOW_STUDY_CONFLICT: %s", filepath.Base(path))
+	}
+	return nil
 }
 
 func fileIdentity(path, schema string, body []byte) FixtureFile {
