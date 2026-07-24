@@ -17,3 +17,18 @@ Created and expanded the cross-linked textbook-style intern design and implement
 ## 2026-07-22
 
 Published the expanded intern guide in the Scriptable Experiment Platform Intern Guides reMarkable bundle at /ai/2026/07/22/EXPERIMENT-PLATFORM-CONVERGENCE
+
+## 2026-07-23
+
+Added workload-only TTC JS project/pipeline/study/analysis, bounded canonical SQLite materialization, six-run execute/resume acceptance, deterministic Researchctl publication, and architecture deletion guards.
+
+### Related Files
+
+- experiments/ttc-scripted/analysis.js — Replicate-aware quality and operation analysis
+- experiments/ttc-scripted/study.js — Thin two-case three-replicate RAG study
+- ttmp/2026/07/22/TTC-SCRIPTED-EXPERIMENT-ACCEPTANCE--prove-the-platform-with-a-thin-fully-scripted-ttc-experiment/scripts/01-run-fixture-ttc-study.sh — Complete cross-repository run and resume acceptance
+
+
+## 2026-07-23
+
+Closed after six-run TTC execute/resume, deterministic analysis, deletion guards, and predecessor real-provider evidence.

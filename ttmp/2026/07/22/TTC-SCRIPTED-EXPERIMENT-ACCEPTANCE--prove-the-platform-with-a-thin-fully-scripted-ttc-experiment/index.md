@@ -1,7 +1,7 @@
 ---
 Title: Prove the platform with a thin fully scripted TTC experiment
 Ticket: TTC-SCRIPTED-EXPERIMENT-ACCEPTANCE
-Status: active
+Status: complete
 Topics:
     - ttc
     - rag
@@ -15,10 +15,11 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2026-07-22T19:25:04.849436455-04:00
+LastUpdated: 2026-07-23T22:26:25.361264048-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 # Prove the platform with a thin fully scripted TTC experiment
 

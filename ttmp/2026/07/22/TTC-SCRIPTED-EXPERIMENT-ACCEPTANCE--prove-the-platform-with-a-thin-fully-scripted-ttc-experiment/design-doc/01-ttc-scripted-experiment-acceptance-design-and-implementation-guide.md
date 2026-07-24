@@ -13,12 +13,12 @@ DocType: design-doc
 Intent: long-term
 Owners: []
 RelatedFiles:
-    - Path: repo://cmd/rag-ttc-v3-sweep/main.go
-      Note: Superseded TTC runner baseline
     - Path: repo://experiments/real-provider-v2/study-flash-combined-speed.js
       Note: Existing scripted RAG experiment reference
-    - Path: repo://internal/workflowv3ttc/sweep.go
-      Note: Superseded matrix implementation
+    - Path: repo://experiments/ttc-scripted/analysis.js
+      Note: Maintained Researchctl analysis replacing ticket-local Python
+    - Path: repo://experiments/ttc-scripted/study.js
+      Note: Canonical workload-only study replacing the deleted custom sweep
     - Path: repo://ttmp/2026/07/22/RAG-PIPELINE-CONSOLIDATION-AUDIT--assess-improve-and-consolidate-the-rag-evaluation-pipeline/analysis/01-ttc-real-run-performance-audit-and-pipeline-consolidation-assessment.md
       Note: Retry-aware acceptance evidence
 ExternalSources: []
@@ -27,6 +27,8 @@ LastUpdated: 2026-07-22T23:15:00-04:00
 WhatFor: Provide an end-to-end goal and executable acceptance contract for every framework ticket.
 WhenToUse: Use when reviewing whether the convergence program is actually complete; implement only after predecessor tickets pass.
 ---
+
+
 
 
 # TTC scripted experiment acceptance design and implementation guide

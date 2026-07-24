@@ -176,3 +176,58 @@ The ticket passed docmgr validation and its guide was included in the ordered te
 
 ### Technical details
 - Remote destination: `/ai/2026/07/22/EXPERIMENT-PLATFORM-CONVERGENCE`.
+
+## Step 4: Implement and execute the thin scripted TTC acceptance
+
+### Prompt Context
+
+**User prompt (verbatim):** "Continue working toward the active thread goal."
+
+**Active objective interpreted:** Finish the convergence prerequisites and prove TTC through the canonical JS → Researchctl → Workflow V3 → RAG → Researchctl-analysis path before legacy deletion.
+
+### What I implemented
+
+Added `experiments/ttc-scripted/` with only workload sources:
+- `project.js`: Researchctl project/experiment identity;
+- `pipeline.js`: reusable RAG pipeline/query composition;
+- `study.js`: two cases and three replicates;
+- `analysis.js`: replicate-aware quality and operation evidence;
+- `inputs.json`: compile-only placeholder replaced by immutable runtime resolution;
+- `README.md`: one-command runbook and claim limits.
+
+The ticket script builds clean binaries, derives a bounded three-document/three-query corpus from the canonical TTC SQLite source, compiles `rag-workflow-study-bundle/v1`, validates the generated Researchctl plan, executes six runs through `rag-workflow-runner`, resumes all six without duplication, runs checked-in Researchctl analysis twice, and compares canonical command output byte-for-byte.
+
+### Exact failures and fixes
+
+1. Input generation first failed:
+```text
+no required module provides package modernc.org/sqlite
+```
+RAG-eval uses `github.com/mattn/go-sqlite3`; the ticket-local generator now uses the repository's existing driver and `sqlite3` driver name.
+
+2. All six Workflow runs succeeded, but Researchctl attempts failed with:
+```text
+external runner RUNNER_DOMAIN_PROJECTION: runner rejected execution
+```
+The generated query IDs embedded TTC document IDs such as `wp:10001`, while the privacy-safe RAG projector accepts only bounded `[A-Za-z0-9_-]` scopes. The generator now emits deterministic `query-01`..`query-03`; raw TTC identities remain inside classified artifacts, not metric scope names.
+
+3. Analysis then failed closed:
+```text
+reducer mrr: run ... has ambiguous metric rag.mrr
+```
+Each run has one MRR per query. Researchctl was extended with explicit `scopePrefix` and `withinRun` reduction. TTC computes one mean MRR per run across `rag.query.*`, then the cross-run confidence summary uses the three scientific replicates. Query observations are not miscounted as replicates.
+
+### Evidence
+
+```text
+PASS: 2 TTC cases x 3 replicates executed, resumed, and regenerated deterministic quality analysis
+```
+
+The acceptance uses the authorized TTC source, fixture providers, zero external operations, six immutable Researchctl runs, distinct Workflow V3 custody, RAG domain metrics, and checked-in analysis. It makes no provider-performance claim. The already-closed `RAG-GEPPETTO-WORKFLOW-OPERATIONS` predecessor separately proves bounded real Geppetto/Ollama/llama.cpp operations against TTC with failure-inclusive custody.
+
+### Review instructions
+
+1. Read `experiments/ttc-scripted/README.md`, then the five source files.
+2. Run `scripts/01-run-fixture-ttc-study.sh` with `KEEP_TTC_SCRIPTED_WORK=1`.
+3. Inspect the generated bundle, six Researchctl exports, Workflow stores, `table.json`, `chart-mrr.svg`, and `report.md`.
+4. Confirm no `cmd/rag-ttc-v3-sweep`, `internal/workflowv3ttc`, custom importer, or Python analysis exists in production source.
