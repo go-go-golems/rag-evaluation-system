@@ -1,33 +1,30 @@
 ---
-Title: Measure RAG preparation indexing embedding and query parallelization before full-corpus execution
-Ticket: TTC-RAG-PARALLELIZATION-STUDY
-Status: on-hold
+Title: Hard-cut operator worker pools in favor of Workflow V3 batch concurrency
+Ticket: RAG-WORKFLOW-CONCURRENCY-HARD-CUT
+Status: active
 Topics:
-    - ttc
     - rag
-    - evaluation
-    - research
     - workflow
+    - evaluation
     - embeddings
-    - chunking
-    - intern-guide
+    - go
+    - security
 DocType: index
 Intent: long-term
 Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2026-07-24T15:01:12.024772687-04:00
+LastUpdated: 2026-07-24T14:58:29.943891316-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
 
-
-# Measure RAG preparation indexing embedding and query parallelization before full-corpus execution
+# Hard-cut operator worker pools in favor of Workflow V3 batch concurrency
 
 ## Overview
 
-This broader TTC scaling study is **on hold**. Complete `RAG-WORKFLOW-CONCURRENCY-HARD-CUT` first to remove `GenerationConcurrency`, operator worker pools, duplicate progress machinery, and superseded coarse generation/embedding execution paths. Review and reduce this study scope after the simpler runtime is accepted.
+This ticket performs the minimal concurrency cleanup before broader TTC scaling work resumes. Workflow V3 becomes the normal scheduler for generation and embedding batches; direct engine preparation becomes serial; `GenerationConcurrency`, operator worker pools, hidden worker defaults, duplicate progress machinery, and superseded coarse provider-task paths are hard-cut without compatibility modes.
 
 ## Key Links
 
@@ -36,18 +33,16 @@ This broader TTC scaling study is **on hold**. Complete `RAG-WORKFLOW-CONCURRENC
 
 ## Status
 
-Current status: **on-hold**
+Current status: **active**
 
 ## Topics
 
-- ttc
 - rag
-- evaluation
-- research
 - workflow
+- evaluation
 - embeddings
-- chunking
-- intern-guide
+- go
+- security
 
 ## Tasks
 

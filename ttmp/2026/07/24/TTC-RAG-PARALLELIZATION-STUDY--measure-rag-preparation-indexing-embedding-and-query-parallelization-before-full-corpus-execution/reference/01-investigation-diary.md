@@ -1,7 +1,7 @@
 ---
 Title: Investigation diary
 Ticket: TTC-RAG-PARALLELIZATION-STUDY
-Status: active
+Status: on-hold
 Topics:
     - ttc
     - rag
@@ -25,10 +25,11 @@ RelatedFiles:
       Note: Primary evidence for current preparation granularity
 ExternalSources: []
 Summary: Chronological investigation record for the TTC RAG preparation, indexing, embedding, and query parallelization study.
-LastUpdated: 2026-07-24T16:10:00-04:00
+LastUpdated: 2026-07-24T15:01:12.200075188-04:00
 WhatFor: Preserve evidence, decisions, failures, commands, and review guidance for the medium-corpus scaling study.
 WhenToUse: Read before resuming implementation, changing concurrency contracts, selecting study cells, or admitting provider budget.
 ---
+
 
 
 # Investigation diary
@@ -201,3 +202,66 @@ The bundle contains several Mermaid diagrams and dense technical tables. The dry
 Remote document:
 
 `/ai/2026/07/24/TTC-RAG-PARALLELIZATION-STUDY/TTC RAG Parallelization Study Guide.pdf`
+
+## Step 3: Put the broad scaling study on hold
+
+This step paused the broad parallelization study before implementation. A narrower prerequisite ticket, `RAG-WORKFLOW-CONCURRENCY-HARD-CUT`, now owns removal of duplicate scheduling and configuration paths.
+
+The original tasks remain visible for future review, but each is marked on hold or superseded. This preserves the study design without implying that its additional runtime controls should be implemented now.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Create a new design ticket for the minimal cleanup scope, and mark th eprevious document as "on hold for now".
+
+Update the tasks accordingly too.."
+
+**Assistant interpretation:** Pause the broad scaling design, move the minimal simplifying cutover into a separate design ticket, and make task status explicit.
+
+**Inferred user intent:** Simplify concurrency ownership before adding experimental capacity and telemetry features.
+
+### What I did
+
+- Changed the ticket index, design guide, and diary status to `on-hold`.
+- Added an explicit hold notice at the top of the design guide.
+- Marked every task as on hold or superseded with the prerequisite named.
+- Created and linked the focused hard-cut design ticket.
+
+### Why
+
+- The broader document contains useful future research design but also machinery that should not precede cleanup.
+- Explicit hold markers prevent implementation from starting from stale scope.
+
+### What worked
+
+- Docmgr now recognizes the explicit `on-hold` status.
+- Stable task IDs were preserved while descriptions were updated.
+
+### What didn't work
+
+- N/A.
+
+### What I learned
+
+- The scaling design remains useful as a future measurement plan, but its runtime architecture must be reviewed after the hard cut because several proposed controls may no longer be necessary.
+
+### What was tricky to build
+
+The task list had to preserve deferred work without presenting it as immediately actionable. Stable task IDs were retained, while descriptions now state the exact prerequisite or superseding ticket.
+
+### What warrants a second pair of eyes
+
+- Whether any broader scaling task should be deleted rather than resumed after the hard cut.
+- Whether index/query scaling should eventually move to separate tickets.
+
+### What should be done in the future
+
+- Resume only after `RAG-WORKFLOW-CONCURRENCY-HARD-CUT` passes acceptance and the broader design is reviewed.
+
+### Code review instructions
+
+- Confirm the design guide begins with the on-hold notice.
+- Run `docmgr task list --ticket TTC-RAG-PARALLELIZATION-STUDY` and verify every task is explicitly paused or superseded.
+
+### Technical details
+
+Prerequisite ticket: `RAG-WORKFLOW-CONCURRENCY-HARD-CUT`.

@@ -1,7 +1,7 @@
 ---
 Title: TTC RAG parallelization study architecture and implementation guide
 Ticket: TTC-RAG-PARALLELIZATION-STUDY
-Status: active
+Status: on-hold
 Topics:
     - ttc
     - rag
@@ -29,15 +29,22 @@ RelatedFiles:
       Note: Current sequential preparation chain and bounded query map lowering
     - Path: repo://pkg/ragworkflow/package.go
       Note: Current RAG task identities retries and resource classes
+    - Path: repo://ttmp/2026/07/24/RAG-WORKFLOW-CONCURRENCY-HARD-CUT--hard-cut-operator-worker-pools-in-favor-of-workflow-v3-batch-concurrency/design-doc/01-minimal-workflow-v3-concurrency-cleanup-design.md
+      Note: Prerequisite minimal cleanup design that must complete before this study resumes
 ExternalSources: []
 Summary: Intern-oriented architecture and experimental design for measuring bounded preparation, representation generation, embedding, indexing, and query parallelization on a medium TTC dataset before full-corpus execution.
-LastUpdated: 2026-07-24T16:10:00-04:00
+LastUpdated: 2026-07-24T15:01:12.114109103-04:00
 WhatFor: Implement and execute a controlled scaling study that identifies useful concurrency, batching, saturation, and product defaults without spending full-corpus provider budget.
 WhenToUse: Read before changing RAG preparation lowering, Workflow V3 capacities, provider batching, indexing, query scheduling, or running TTC performance experiments.
 ---
 
 
+
+
 # TTC RAG parallelization study architecture and implementation guide
+
+> [!IMPORTANT]
+> **On hold as of 2026-07-24.** Do not implement this broader scaling design yet. First complete `RAG-WORKFLOW-CONCURRENCY-HARD-CUT`, which removes operator-local worker pools and makes Workflow V3 the normal generation and embedding scheduler. After that hard cut, review this document and retain only measurement machinery still required by the simpler runtime.
 
 ## Executive summary
 
