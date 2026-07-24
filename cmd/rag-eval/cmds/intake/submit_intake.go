@@ -4,106 +4,113 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"time"
+
 	"github.com/go-go-golems/glazed/pkg/cli"
 	"github.com/go-go-golems/glazed/pkg/cmds"
 	"github.com/go-go-golems/glazed/pkg/cmds/fields"
 	"github.com/go-go-golems/glazed/pkg/cmds/schema"
 	"github.com/go-go-golems/glazed/pkg/cmds/values"
-	workflowservice "github.com/go-go-golems/rag-evaluation-system/internal/workflow"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragintakeworkflow"
+	"github.com/go-go-golems/scraper/pkg/workflowv3"
 	"github.com/spf13/cobra"
-	"io"
-	"reflect"
 )
 
 type submitIntakeCommand struct{ *cmds.CommandDescription }
 
 var _ cmds.WriterCommand = (*submitIntakeCommand)(nil)
 
-type submitField struct {
-	name, target string
-	typ          fields.Type
-	def          any
-	help         string
+type submitSettings struct {
+	DB                      string   `glazed:"db"`
+	WorkflowDB              string   `glazed:"workflow-db"`
+	ArtifactRoot            string   `glazed:"artifact-root"`
+	IndexRoot               string   `glazed:"index-root"`
+	RunID                   string   `glazed:"run-id"`
+	DocumentIDs             []string `glazed:"document-ids"`
+	SourceIDs               []string `glazed:"source-ids"`
+	DocumentLimit           int      `glazed:"document-limit"`
+	Strategy                string   `glazed:"strategy"`
+	ChunkSize               int      `glazed:"chunk-size"`
+	Overlap                 int      `glazed:"overlap"`
+	ProfileRegistries       []string `glazed:"profile-registries"`
+	Profile                 string   `glazed:"profile"`
+	BaseProfile             string   `glazed:"base-profile"`
+	EmbeddingType           string   `glazed:"embeddings-type"`
+	EmbeddingEngine         string   `glazed:"embeddings-engine"`
+	Dimensions              int      `glazed:"embeddings-dimensions"`
+	CacheType               string   `glazed:"cache-type"`
+	ProviderAuthorityDigest string   `glazed:"provider-authority-digest"`
+	BatchSize               int      `glazed:"batch-size"`
+	EmbeddingLimit          int      `glazed:"embedding-limit"`
+	ForceEmbeddings         bool     `glazed:"force-embeddings"`
+	SkipEmbeddings          bool     `glazed:"skip-embeddings"`
+	IndexID                 string   `glazed:"index-id"`
+	IndexLimit              int      `glazed:"index-limit"`
+	ForceIndex              bool     `glazed:"force-index"`
+	SkipBM25                bool     `glazed:"skip-bm25"`
+	SkipPreprocessing       bool     `glazed:"skip-preprocessing"`
+	PreprocessArtifactType  string   `glazed:"preprocess-artifact-type"`
+	PreprocessPromptVersion string   `glazed:"preprocess-prompt-version"`
+	PreprocessProvider      string   `glazed:"preprocess-provider"`
+	PreprocessModel         string   `glazed:"preprocess-model"`
+	ForcePreprocessing      bool     `glazed:"force-preprocessing"`
+	SkipChunkEnrichment     bool     `glazed:"skip-chunk-enrichment"`
+	ChunksPerDocument       int      `glazed:"chunks-per-document-to-enrich"`
+	ChunkEnrichmentPrompt   string   `glazed:"chunk-enrichment-prompt"`
+	ChunkEnrichmentProvider string   `glazed:"chunk-enrichment-provider"`
+	ChunkEnrichmentModel    string   `glazed:"chunk-enrichment-model"`
+	ForceChunkEnrichment    bool     `glazed:"force-chunk-enrichment"`
 }
-
-var submitFields = []submitField{
-	{"db", "DBPath", fields.TypeString, "data/rag-eval.db", "Path to the rag-eval SQLite database"},
-	{"workflow-id", "WorkflowID", fields.TypeString, "", "Workflow ID; defaults to intake timestamp"},
-	{"name", "Name", fields.TypeString, "rag-eval intake workflow", "Workflow display name"},
-	{"document-ids", "DocumentIDs", fields.TypeStringList, []string{}, "Document IDs to chunk, comma-separated or repeated"},
-	{"source-ids", "SourceIDs", fields.TypeStringList, []string{}, "Source IDs used for document selection and downstream filtering"},
-	{"document-limit", "DocumentLimit", fields.TypeInteger, 0, "Maximum documents to select when --document-ids is omitted"},
-	{"strategy", "Strategy", fields.TypeString, "fixed", "Chunking strategy"},
-	{"chunk-size", "ChunkSize", fields.TypeInteger, 1200, "Chunk size"},
-	{"overlap", "Overlap", fields.TypeInteger, 150, "Chunk overlap"},
-	{"profile-registries", "ProfileRegistries", fields.TypeStringList, []string{}, "Profile registry sources for embedding provider resolution"},
-	{"profile", "Profile", fields.TypeString, "", "Embedding-capable profile to resolve"},
-	{"base-profile", "BaseProfile", fields.TypeString, "", "Base profile to overlay direct embedding flags onto"},
-	{"embeddings-type", "EmbeddingType", fields.TypeString, "ollama", "Embedding provider type: ollama or openai"},
-	{"embeddings-engine", "EmbeddingEngine", fields.TypeString, "nomic-embed-text", "Embedding model/engine"},
-	{"embeddings-dimensions", "Dimensions", fields.TypeInteger, 768, "Embedding dimensions"},
-	{"api-key", "APIKey", fields.TypeString, "", "Provider API key"},
-	{"base-url", "BaseURL", fields.TypeString, "", "Provider base URL"},
-	{"cache-type", "CacheType", fields.TypeString, "none", "Embedding cache type: none, memory, or file"},
-	{"cache-directory", "CacheDirectory", fields.TypeString, "state/embedding-cache", "Embedding cache directory"},
-	{"batch-size", "BatchSize", fields.TypeInteger, 16, "Embedding batch size"},
-	{"embedding-limit", "EmbeddingLimit", fields.TypeInteger, 0, "Maximum chunks to consider for embeddings"},
-	{"force-embeddings", "ForceEmbeddings", fields.TypeBool, false, "Recompute embeddings even when fresh"},
-	{"skip-embeddings", "SkipEmbeddings", fields.TypeBool, false, "Submit only chunking/BM25 ops without embedding op"},
-	{"index-root", "IndexRoot", fields.TypeString, "data/indexes", "BM25 index root"},
-	{"index-id", "IndexID", fields.TypeString, "", "BM25 index ID; defaults to bm25-<workflow-id>"},
-	{"index-limit", "IndexLimit", fields.TypeInteger, 0, "Maximum chunks to index"},
-	{"force-index", "ForceIndex", fields.TypeBool, false, "Replace an existing BM25 index"},
-	{"skip-bm25", "SkipBM25", fields.TypeBool, false, "Submit only chunking/embedding ops without BM25 op"},
-	{"skip-preprocessing", "SkipPreprocessing", fields.TypeBool, true, "Skip document preprocessing artifact ops; set false to include fake preprocessing ops"},
-	{"preprocess-artifact-type", "PreprocessArtifactType", fields.TypeString, "clean_text", "Document preprocessing artifact type"},
-	{"preprocess-prompt-version", "PreprocessPromptVersion", fields.TypeString, "v1", "Document preprocessing prompt version"},
-	{"preprocess-provider", "PreprocessDocumentProvider", fields.TypeString, "fake", "Document preprocessing provider; currently only fake"},
-	{"preprocess-model", "PreprocessDocumentModel", fields.TypeString, "fake-document-processor", "Document preprocessing model identity"},
-	{"force-preprocessing", "ForcePreprocessing", fields.TypeBool, false, "Recompute document preprocessing artifacts even when fresh"},
-	{"skip-chunk-enrichment", "SkipChunkEnrichment", fields.TypeBool, true, "Skip chunk enrichment ops; set false to enrich existing first chunks per selected document"},
-	{"chunks-per-document-to-enrich", "ChunksPerDocumentToEnrich", fields.TypeInteger, 1, "Maximum existing chunks per selected document to enrich"},
-	{"chunk-enrichment-prompt", "ChunkEnrichmentPrompt", fields.TypeString, "v1", "Chunk enrichment prompt version"},
-	{"chunk-enrichment-provider", "ChunkEnrichmentProvider", fields.TypeString, "fake", "Chunk enrichment provider; currently only fake"},
-	{"chunk-enrichment-model", "ChunkEnrichmentModel", fields.TypeString, "fake-chunk-enricher", "Chunk enrichment model identity"},
-	{"force-chunk-enrichment", "ForceChunkEnrichment", fields.TypeBool, false, "Recompute chunk enrichments even when fresh"}}
 
 func newSubmitIntakeCommand() *cobra.Command {
-	c, e := newSubmitIntakeGlazeCommand()
-	cobra.CheckErr(e)
-	r, e := cli.BuildCobraCommandFromCommand(c, cli.WithParserConfig(cli.CobraParserConfig{AppName: "rag-eval", ShortHelpSections: []string{schema.DefaultSlug}}))
-	cobra.CheckErr(e)
-	return r
+	command, err := newSubmitIntakeGlazeCommand()
+	cobra.CheckErr(err)
+	result, err := cli.BuildCobraCommandFromCommand(command, cli.WithParserConfig(cli.CobraParserConfig{AppName: "rag-eval", ShortHelpSections: []string{schema.DefaultSlug}}))
+	cobra.CheckErr(err)
+	return result
 }
 func newSubmitIntakeGlazeCommand() (*submitIntakeCommand, error) {
-	f := make([]*fields.Definition, 0, len(submitFields)+1)
-	f = append(f, fields.New("engine-db", fields.TypeString, fields.WithDefault("state/rag-eval-workflows.db"), fields.WithHelp("Path to the scraper workflow engine SQLite database")))
-	for _, x := range submitFields {
-		f = append(f, fields.New(x.name, x.typ, fields.WithDefault(x.def), fields.WithHelp(x.help)))
+	f := []*fields.Definition{
+		fields.New("db", fields.TypeString, fields.WithDefault("data/rag-eval.db"), fields.WithHelp("RAG domain SQLite database")), fields.New("workflow-db", fields.TypeString, fields.WithDefault("state/rag-eval-intake-v3.db"), fields.WithHelp("Workflow V3 SQLite database")), fields.New("artifact-root", fields.TypeString, fields.WithDefault("state/rag-eval-intake-v3-artifacts"), fields.WithHelp("Workflow V3 artifact root")), fields.New("index-root", fields.TypeString, fields.WithDefault("data/indexes"), fields.WithHelp("Host BM25 index root")), fields.New("run-id", fields.TypeString, fields.WithHelp("Immutable Workflow V3 run ID")),
+		fields.New("document-ids", fields.TypeStringList, fields.WithDefault([]string{}), fields.WithHelp("Document IDs")), fields.New("source-ids", fields.TypeStringList, fields.WithDefault([]string{}), fields.WithHelp("Source IDs used for selection")), fields.New("document-limit", fields.TypeInteger, fields.WithDefault(0), fields.WithHelp("Selection limit")),
+		fields.New("strategy", fields.TypeString, fields.WithDefault("fixed"), fields.WithHelp("Chunk strategy")), fields.New("chunk-size", fields.TypeInteger, fields.WithDefault(1200), fields.WithHelp("Chunk size")), fields.New("overlap", fields.TypeInteger, fields.WithDefault(150), fields.WithHelp("Chunk overlap")),
+		fields.New("profile-registries", fields.TypeStringList, fields.WithDefault([]string{}), fields.WithHelp("Provider profile registries")), fields.New("profile", fields.TypeString, fields.WithHelp("Embedding profile")), fields.New("base-profile", fields.TypeString, fields.WithHelp("Embedding base profile")), fields.New("embeddings-type", fields.TypeString, fields.WithDefault("ollama"), fields.WithHelp("Embedding provider type")), fields.New("embeddings-engine", fields.TypeString, fields.WithDefault("nomic-embed-text"), fields.WithHelp("Embedding model")), fields.New("embeddings-dimensions", fields.TypeInteger, fields.WithDefault(768), fields.WithHelp("Embedding dimensions")), fields.New("cache-type", fields.TypeString, fields.WithDefault("none"), fields.WithHelp("Cache identity")), fields.New("provider-authority-digest", fields.TypeString, fields.WithHelp("Exact host provider authority digest")), fields.New("batch-size", fields.TypeInteger, fields.WithDefault(16), fields.WithHelp("Embedding batch size")), fields.New("embedding-limit", fields.TypeInteger, fields.WithDefault(0), fields.WithHelp("Embedding limit")), fields.New("force-embeddings", fields.TypeBool, fields.WithDefault(false), fields.WithHelp("Recompute embeddings")), fields.New("skip-embeddings", fields.TypeBool, fields.WithDefault(false), fields.WithHelp("Skip embeddings")),
+		fields.New("index-id", fields.TypeString, fields.WithHelp("BM25 index ID")), fields.New("index-limit", fields.TypeInteger, fields.WithDefault(0), fields.WithHelp("Index limit")), fields.New("force-index", fields.TypeBool, fields.WithDefault(false), fields.WithHelp("Replace index")), fields.New("skip-bm25", fields.TypeBool, fields.WithDefault(false), fields.WithHelp("Skip BM25")),
+		fields.New("skip-preprocessing", fields.TypeBool, fields.WithDefault(true), fields.WithHelp("Skip preprocessing")), fields.New("preprocess-artifact-type", fields.TypeString, fields.WithDefault("clean_text"), fields.WithHelp("Preprocess artifact")), fields.New("preprocess-prompt-version", fields.TypeString, fields.WithDefault("v1"), fields.WithHelp("Preprocess prompt")), fields.New("preprocess-provider", fields.TypeString, fields.WithDefault("fake"), fields.WithHelp("Preprocess provider identity")), fields.New("preprocess-model", fields.TypeString, fields.WithDefault("fake-document-processor"), fields.WithHelp("Preprocess model")), fields.New("force-preprocessing", fields.TypeBool, fields.WithDefault(false), fields.WithHelp("Recompute preprocessing")),
+		fields.New("skip-chunk-enrichment", fields.TypeBool, fields.WithDefault(true), fields.WithHelp("Skip enrichment")), fields.New("chunks-per-document-to-enrich", fields.TypeInteger, fields.WithDefault(1), fields.WithHelp("Existing chunks per document")), fields.New("chunk-enrichment-prompt", fields.TypeString, fields.WithDefault("v1"), fields.WithHelp("Enrichment prompt")), fields.New("chunk-enrichment-provider", fields.TypeString, fields.WithDefault("fake"), fields.WithHelp("Enrichment provider")), fields.New("chunk-enrichment-model", fields.TypeString, fields.WithDefault("fake-chunk-enricher"), fields.WithHelp("Enrichment model")), fields.New("force-chunk-enrichment", fields.TypeBool, fields.WithDefault(false), fields.WithHelp("Recompute enrichment")),
 	}
-	return &submitIntakeCommand{CommandDescription: cmds.NewCommandDescription("submit-intake", cmds.WithShort("Submit a durable chunk/embed/BM25 intake workflow"), cmds.WithFlags(f...))}, nil
+	return &submitIntakeCommand{CommandDescription: cmds.NewCommandDescription("submit", cmds.WithShort("Submit a Workflow V3 document intake run"), cmds.WithFlags(f...))}, nil
 }
 func (c *submitIntakeCommand) RunIntoWriter(ctx context.Context, v *values.Values, w io.Writer) error {
-	data := v.GetDataMap()
-	req := workflowservice.SubmitIntakeRequest{}
-	rv := reflect.ValueOf(&req).Elem()
-	for _, x := range submitFields {
-		value, ok := data[x.name]
-		if !ok {
-			continue
-		}
-		field := rv.FieldByName(x.target)
-		if !field.IsValid() {
-			return fmt.Errorf("unknown submit request field %s", x.target)
-		}
-		field.Set(reflect.ValueOf(value))
+	s := &submitSettings{}
+	if err := v.DecodeSectionInto(schema.DefaultSlug, s); err != nil {
+		return err
 	}
-	if value, ok := data["engine-db"].(string); ok {
-		req.EngineDB = value
+	if s.RunID == "" {
+		s.RunID = "intake-" + time.Now().UTC().Format("20060102T150405.000000000")
 	}
-	result, e := workflowservice.SubmitIntakeWorkflow(ctx, req)
-	if e != nil {
-		return e
+	if s.IndexID == "" {
+		s.IndexID = "bm25-" + s.RunID
 	}
-	return json.NewEncoder(w).Encode(result)
+	config := ragintakeworkflow.DefaultConfig(s.DB)
+	config.WorkflowDatabase = s.WorkflowDB
+	config.ArtifactRoot = s.ArtifactRoot
+	config.Runtime.IndexRoot = s.IndexRoot
+	config.Runtime.ProviderAuthorityDigest = s.ProviderAuthorityDigest
+	request := ragintakeworkflow.Request{Strategy: s.Strategy, ChunkSize: s.ChunkSize, Overlap: s.Overlap, SkipPreprocessing: s.SkipPreprocessing, ForcePreprocessing: s.ForcePreprocessing, PreprocessArtifactType: s.PreprocessArtifactType, PreprocessPromptVersion: s.PreprocessPromptVersion, PreprocessProvider: s.PreprocessProvider, PreprocessModel: s.PreprocessModel, SkipChunkEnrichment: s.SkipChunkEnrichment, ForceChunkEnrichment: s.ForceChunkEnrichment, ChunkEnrichmentPrompt: s.ChunkEnrichmentPrompt, ChunkEnrichmentProvider: s.ChunkEnrichmentProvider, ChunkEnrichmentModel: s.ChunkEnrichmentModel, SkipEmbeddings: s.SkipEmbeddings, ForceEmbeddings: s.ForceEmbeddings, ProfileRegistries: s.ProfileRegistries, Profile: s.Profile, BaseProfile: s.BaseProfile, EmbeddingType: s.EmbeddingType, EmbeddingEngine: s.EmbeddingEngine, Dimensions: s.Dimensions, CacheType: s.CacheType, BatchSize: s.BatchSize, EmbeddingLimit: s.EmbeddingLimit, SkipBM25: s.SkipBM25, ForceBM25: s.ForceIndex, IndexID: s.IndexID, IndexLimit: s.IndexLimit}
+	request, err := ragintakeworkflow.PrepareRequest(ctx, config.Runtime, request, ragintakeworkflow.Selection{DocumentIDs: s.DocumentIDs, SourceIDs: s.SourceIDs, DocumentLimit: s.DocumentLimit, ChunksPerDocumentToEnrich: s.ChunksPerDocument})
+	if err != nil {
+		return err
+	}
+	app, err := ragintakeworkflow.Open(ctx, config)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = app.Close() }()
+	submission, err := app.SubmitRequest(ctx, request, workflowv3.RunID(s.RunID))
+	if err != nil {
+		return err
+	}
+	return json.NewEncoder(w).Encode(map[string]any{"submission": submission, "documentIds": request.DocumentIDs, "strategyId": fmt.Sprintf("%s-%d-%d", s.Strategy, s.ChunkSize, s.Overlap)})
 }

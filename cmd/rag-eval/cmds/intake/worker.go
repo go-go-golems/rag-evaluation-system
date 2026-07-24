@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"time"
+
 	"github.com/go-go-golems/glazed/pkg/cli"
 	"github.com/go-go-golems/glazed/pkg/cmds"
 	"github.com/go-go-golems/glazed/pkg/cmds/fields"
 	"github.com/go-go-golems/glazed/pkg/cmds/schema"
 	"github.com/go-go-golems/glazed/pkg/cmds/values"
-	workflowservice "github.com/go-go-golems/rag-evaluation-system/internal/workflow"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragintakeworkflow"
 	"github.com/spf13/cobra"
-	"io"
-	"time"
 )
 
 type WorkerCommand struct {
@@ -23,71 +24,86 @@ type WorkerCommand struct {
 var _ cmds.WriterCommand = (*WorkerCommand)(nil)
 
 type WorkerSettings struct {
-	EngineDB      string `glazed:"engine-db"`
-	WorkerID      string `glazed:"worker-id"`
-	MaxWorkers    int    `glazed:"max-workers"`
-	PollInterval  string `glazed:"poll-interval"`
-	LeaseDuration string `glazed:"lease-duration"`
-	Cycles        int    `glazed:"cycles"`
+	DB                      string `glazed:"db"`
+	WorkflowDB              string `glazed:"workflow-db"`
+	ArtifactRoot            string `glazed:"artifact-root"`
+	IndexRoot               string `glazed:"index-root"`
+	PollInterval            string `glazed:"poll-interval"`
+	LeaseDuration           string `glazed:"lease-duration"`
+	Cycles                  int    `glazed:"cycles"`
+	BaseURL                 string `glazed:"base-url"`
+	APIKey                  string `glazed:"api-key"`
+	CacheDirectory          string `glazed:"cache-directory"`
+	ProviderAuthorityDigest string `glazed:"provider-authority-digest"`
 }
 
 func workerFields(includeCycles bool) []*fields.Definition {
-	f := []*fields.Definition{fields.New("engine-db", fields.TypeString, fields.WithDefault("state/rag-eval-workflows.db"), fields.WithHelp("Path to the scraper workflow engine SQLite database")), fields.New("worker-id", fields.TypeString, fields.WithDefault("rag-eval-worker"), fields.WithHelp("Worker ID for scraper leases")), fields.New("max-workers", fields.TypeInteger, fields.WithDefault(1), fields.WithHelp("Maximum ops to process per cycle")), fields.New("poll-interval", fields.TypeString, fields.WithDefault("100ms"), fields.WithHelp("Worker poll interval")), fields.New("lease-duration", fields.TypeString, fields.WithDefault("1m"), fields.WithHelp("Op lease duration"))}
+	f := []*fields.Definition{fields.New("db", fields.TypeString, fields.WithDefault("data/rag-eval.db"), fields.WithHelp("RAG domain database")), fields.New("workflow-db", fields.TypeString, fields.WithDefault("state/rag-eval-intake-v3.db"), fields.WithHelp("Workflow V3 database")), fields.New("artifact-root", fields.TypeString, fields.WithDefault("state/rag-eval-intake-v3-artifacts"), fields.WithHelp("Workflow artifact root")), fields.New("index-root", fields.TypeString, fields.WithDefault("data/indexes"), fields.WithHelp("Host BM25 index root")), fields.New("poll-interval", fields.TypeString, fields.WithDefault("100ms"), fields.WithHelp("Dispatch poll interval")), fields.New("lease-duration", fields.TypeString, fields.WithDefault("30s"), fields.WithHelp("Workflow lease duration")), fields.New("base-url", fields.TypeString, fields.WithHelp("Host-only embedding endpoint")), fields.New("api-key", fields.TypeString, fields.WithHelp("Host-only embedding API key")), fields.New("cache-directory", fields.TypeString, fields.WithDefault("state/embedding-cache"), fields.WithHelp("Host embedding cache directory")), fields.New("provider-authority-digest", fields.TypeString, fields.WithHelp("Exact host provider authority digest"))}
 	if includeCycles {
-		f = append(f, fields.New("cycles", fields.TypeInteger, fields.WithDefault(0), fields.WithHelp("Finite cycles; 0 runs until interrupted")))
+		f = append(f, fields.New("cycles", fields.TypeInteger, fields.WithDefault(0), fields.WithHelp("Finite dispatch cycles; zero runs until canceled")))
 	}
 	return f
 }
 func newRunOnceCommand() *cobra.Command   { return buildWorkerCobra("run-once", true) }
 func newRunWorkerCommand() *cobra.Command { return buildWorkerCobra("run-worker", false) }
 func buildWorkerCobra(name string, once bool) *cobra.Command {
-	c, e := NewWorkerCommand(name, once)
-	cobra.CheckErr(e)
-	r, e := cli.BuildCobraCommandFromCommand(c, cli.WithParserConfig(cli.CobraParserConfig{AppName: "rag-eval", ShortHelpSections: []string{schema.DefaultSlug}}))
-	cobra.CheckErr(e)
-	return r
+	command, err := NewWorkerCommand(name, once)
+	cobra.CheckErr(err)
+	result, err := cli.BuildCobraCommandFromCommand(command, cli.WithParserConfig(cli.CobraParserConfig{AppName: "rag-eval", ShortHelpSections: []string{schema.DefaultSlug}}))
+	cobra.CheckErr(err)
+	return result
 }
 func NewWorkerCommand(name string, once bool) (*WorkerCommand, error) {
-	return &WorkerCommand{CommandDescription: cmds.NewCommandDescription(name, cmds.WithShort("Run local scraper scheduler worker"), cmds.WithFlags(workerFields(!once)...)), runOnce: once}, nil
+	return &WorkerCommand{CommandDescription: cmds.NewCommandDescription(name, cmds.WithShort("Run the local Workflow V3 intake dispatcher"), cmds.WithFlags(workerFields(!once)...)), runOnce: once}, nil
 }
 func (c *WorkerCommand) RunIntoWriter(ctx context.Context, v *values.Values, w io.Writer) error {
 	s := &WorkerSettings{}
-	if e := v.DecodeSectionInto(schema.DefaultSlug, s); e != nil {
-		return e
+	if err := v.DecodeSectionInto(schema.DefaultSlug, s); err != nil {
+		return err
 	}
-	poll, e := time.ParseDuration(s.PollInterval)
-	if e != nil {
-		return e
+	poll, err := time.ParseDuration(s.PollInterval)
+	if err != nil {
+		return err
 	}
-	lease, e := time.ParseDuration(s.LeaseDuration)
-	if e != nil {
-		return e
+	lease, err := time.ParseDuration(s.LeaseDuration)
+	if err != nil {
+		return err
 	}
-	cfg := workflowservice.WorkerConfig{EngineDB: s.EngineDB, WorkerID: s.WorkerID, MaxWorkers: s.MaxWorkers, PollInterval: poll, LeaseDuration: lease}
-	store, sched, e := workflowservice.NewIntakeScheduler(ctx, cfg)
-	if e != nil {
-		return e
+	config := ragintakeworkflow.DefaultConfig(s.DB)
+	config.WorkflowDatabase = s.WorkflowDB
+	config.ArtifactRoot = s.ArtifactRoot
+	config.Runtime.IndexRoot = s.IndexRoot
+	config.Runtime.APIKey = s.APIKey
+	config.Runtime.BaseURL = s.BaseURL
+	config.Runtime.CacheDirectory = s.CacheDirectory
+	config.Runtime.ProviderAuthorityDigest = s.ProviderAuthorityDigest
+	config.PollInterval = poll
+	config.LeaseDuration = lease
+	app, err := ragintakeworkflow.Open(ctx, config)
+	if err != nil {
+		return err
 	}
-	defer func() { _ = store.Close() }()
+	defer func() { _ = app.Close() }()
 	cycles := s.Cycles
 	if c.runOnce && cycles == 0 {
 		cycles = 1
 	}
 	if cycles > 0 {
+		encoder := json.NewEncoder(w)
 		for i := 1; i <= cycles; i++ {
-			r, e := sched.RunOnce(ctx)
-			if e != nil {
-				return e
+			lease, dispatchErr := app.Dispatcher.DispatchOnce(ctx)
+			if dispatchErr != nil {
+				return dispatchErr
 			}
-			if e = json.NewEncoder(w).Encode(workflowservice.WorkerCycle{Cycle: i, Result: r}); e != nil {
-				return e
+			if err := encoder.Encode(map[string]any{"cycle": i, "lease": lease}); err != nil {
+				return err
 			}
 		}
 		return nil
 	}
-	e = sched.Run(ctx)
-	if errors.Is(e, context.Canceled) || errors.Is(e, context.DeadlineExceeded) {
+	err = app.RunWorker(ctx)
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return nil
 	}
-	return e
+	return err
 }

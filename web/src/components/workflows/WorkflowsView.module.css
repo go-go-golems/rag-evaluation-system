@@ -1,42 +1,61 @@
-.modalOverlay {
-	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.5);
-	z-index: 100;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.modalPanel {
-	width: 560px;
-	max-height: 90vh;
-	overflow-y: auto;
-}
-
-.formSection {
-	border: 1px solid var(--mac-border);
-	padding: 6px 8px;
-	margin-bottom: 6px;
-}
-
-.formSection legend {
-	font-family: var(--font-mono);
-	font-size: 11px;
-	text-transform: uppercase;
-	letter-spacing: 0.5px;
-	padding: 0 4px;
-	color: var(--mac-text-dim);
-}
-
-.workflowMessage {
-	display: block;
+.layout {
+	display: grid;
+	grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+	gap: 1rem;
+	align-items: start;
 }
 
 .fullInput {
+	box-sizing: border-box;
+	display: block;
 	width: 100%;
+	margin-top: 0.25rem;
 }
 
-.shortInput {
-	width: 80px;
+.runList {
+	display: grid;
+	gap: 0.35rem;
+	margin-top: 0.75rem;
+}
+
+.run,
+.selectedRun {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 0.25rem 0.75rem;
+	padding: 0.55rem;
+	text-align: left;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-bg);
+	color: inherit;
+}
+
+.selectedRun {
+	border-color: var(--mac-accent);
+	background: var(--mac-bg-raised);
+}
+
+.run caption,
+.selectedRun caption {
+	grid-column: 1 / -1;
+}
+
+.attempts {
+	width: 100%;
+	border-collapse: collapse;
+	font-family: var(--font-mono);
+	font-size: 0.8rem;
+}
+
+.attempts th,
+.attempts td {
+	padding: 0.35rem;
+	border-bottom: 1px solid var(--mac-border);
+	text-align: left;
+}
+
+@media (max-width: 900px) {
+	.layout {
+		grid-template-columns: 1fr;
+	}
 }

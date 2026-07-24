@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func runHTTPServer(cmd *cobra.Command, address, dbPath, engineDB, logLevel string) error {
+func runHTTPServer(cmd *cobra.Command, address, dbPath, workflowDB, workflowArtifacts, indexRoot, logLevel string) error {
 	// Configure logging
 	zerolog.SetGlobalLevel(parseLogLevel(logLevel))
 	zerolog_log.Logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
@@ -34,7 +34,7 @@ func runHTTPServer(cmd *cobra.Command, address, dbPath, engineDB, logLevel strin
 
 	// Wire HTTP handlers
 	mux := http.NewServeMux()
-	api.RegisterHandlersWithOptions(mux, database, api.Options{EngineDB: engineDB})
+	api.RegisterHandlersWithOptions(mux, database, api.Options{DatabasePath: dbPath, WorkflowDB: workflowDB, WorkflowArtifactRoot: workflowArtifacts, IndexRoot: indexRoot})
 	mux.Handle("/", web.SPAHandler())
 
 	server := &http.Server{

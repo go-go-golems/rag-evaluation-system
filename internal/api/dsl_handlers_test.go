@@ -52,7 +52,8 @@ func TestDslDemoPageEndpointRejectsUnknownPage(t *testing.T) {
 
 func newTestAPIHandler(t *testing.T) http.Handler {
 	t.Helper()
-	database, err := db.OpenDB(filepath.Join(t.TempDir(), "app.db"))
+	path := filepath.Join(t.TempDir(), "app.db")
+	database, err := db.OpenDB(path)
 	if err != nil {
 		t.Fatalf("open db: %v", err)
 	}
@@ -62,7 +63,7 @@ func newTestAPIHandler(t *testing.T) http.Handler {
 	}
 
 	mux := http.NewServeMux()
-	RegisterHandlersWithOptions(mux, database, Options{EngineDB: filepath.Join(t.TempDir(), "engine.db")})
+	RegisterHandlersWithOptions(mux, database, Options{DatabasePath: path, WorkflowDB: filepath.Join(t.TempDir(), "workflow.db"), WorkflowArtifactRoot: filepath.Join(t.TempDir(), "artifacts")})
 	return mux
 }
 

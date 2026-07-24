@@ -18,10 +18,12 @@ type ServeCommand struct {
 var _ cmds.GlazeCommand = (*ServeCommand)(nil)
 
 type ServeSettings struct {
-	Address  string `glazed:"address"`
-	DB       string `glazed:"db"`
-	EngineDB string `glazed:"engine-db"`
-	LogLevel string `glazed:"log-level"`
+	Address           string `glazed:"address"`
+	DB                string `glazed:"db"`
+	WorkflowDB        string `glazed:"workflow-db"`
+	WorkflowArtifacts string `glazed:"workflow-artifact-root"`
+	IndexRoot         string `glazed:"index-root"`
+	LogLevel          string `glazed:"log-level"`
 }
 
 func NewCommand() *cobra.Command {
@@ -53,7 +55,7 @@ The server provides:
 Examples:
   rag-eval serve
   rag-eval serve --address 0.0.0.0:8772
-  rag-eval serve --db /path/to/db --engine-db /path/to/workflows.db --log-level debug
+  rag-eval serve --db /path/to/db --workflow-db /path/to/intake-v3.db --log-level debug
 `),
 			cmds.WithFlags(
 				fields.New(
@@ -68,12 +70,9 @@ Examples:
 					fields.WithDefault("data/rag-eval.db"),
 					fields.WithHelp("Path to the SQLite database"),
 				),
-				fields.New(
-					"engine-db",
-					fields.TypeString,
-					fields.WithDefault("state/rag-eval-workflows.db"),
-					fields.WithHelp("Path to the scraper workflow engine SQLite database"),
-				),
+				fields.New("workflow-db", fields.TypeString, fields.WithDefault("state/rag-eval-intake-v3.db"), fields.WithHelp("Path to the Workflow V3 intake SQLite database")),
+				fields.New("workflow-artifact-root", fields.TypeString, fields.WithDefault("state/rag-eval-intake-v3-artifacts"), fields.WithHelp("Workflow V3 intake artifact root")),
+				fields.New("index-root", fields.TypeString, fields.WithDefault("data/indexes"), fields.WithHelp("Host BM25 index root")),
 				fields.New(
 					"log-level",
 					fields.TypeString,
@@ -97,8 +96,10 @@ func (c *ServeCommand) RunIntoGlazeProcessor(
 func runServer(cmd *cobra.Command, args []string) error {
 	address, _ := cmd.Flags().GetString("address")
 	dbPath, _ := cmd.Flags().GetString("db")
-	engineDB, _ := cmd.Flags().GetString("engine-db")
+	workflowDB, _ := cmd.Flags().GetString("workflow-db")
+	workflowArtifacts, _ := cmd.Flags().GetString("workflow-artifact-root")
+	indexRoot, _ := cmd.Flags().GetString("index-root")
 	logLevel, _ := cmd.Flags().GetString("log-level")
 
-	return runHTTPServer(cmd, address, dbPath, engineDB, logLevel)
+	return runHTTPServer(cmd, address, dbPath, workflowDB, workflowArtifacts, indexRoot, logLevel)
 }
