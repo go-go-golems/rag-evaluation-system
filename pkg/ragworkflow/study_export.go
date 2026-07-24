@@ -1,6 +1,7 @@
 package ragworkflow
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -177,7 +178,7 @@ func WriteStudyBundle(ctx context.Context, artifactRoot, outputDirectory, name, 
 		return StudyBundle{}, err
 	}
 	planPath := filepath.Join(output, "researchctl-plan.js")
-	if err := os.WriteFile(planPath, planBody, 0o644); err != nil {
+	if err := writeImmutableStudyFile(planPath, planBody); err != nil {
 		return StudyBundle{}, err
 	}
 	bundle.Plan = fileIdentity(filepath.ToSlash(filepath.Join(relativeOutput, "researchctl-plan.js")), "researchctl-experiment-plan-js/v1", planBody)
@@ -185,7 +186,7 @@ func WriteStudyBundle(ctx context.Context, artifactRoot, outputDirectory, name, 
 	if err != nil {
 		return StudyBundle{}, err
 	}
-	if err := os.WriteFile(filepath.Join(output, "manifest.json"), append(manifestBody, '\n'), 0o644); err != nil {
+	if err := writeImmutableStudyFile(filepath.Join(output, "manifest.json"), append(manifestBody, '\n')); err != nil {
 		return StudyBundle{}, err
 	}
 	return bundle, nil
@@ -198,7 +199,7 @@ func writeStudyFile(root, directory, name, schema string, value any) (FixtureFil
 	}
 	body = append(body, '\n')
 	path := filepath.Join(directory, name)
-	if err := os.WriteFile(path, body, 0o644); err != nil {
+	if err := writeImmutableStudyFile(path, body); err != nil {
 		return FixtureFile{}, nil, err
 	}
 	relative, err := filepath.Rel(root, path)
@@ -206,6 +207,20 @@ func writeStudyFile(root, directory, name, schema string, value any) (FixtureFil
 		return FixtureFile{}, nil, err
 	}
 	return fileIdentity(filepath.ToSlash(relative), schema, body), body, nil
+}
+
+func writeImmutableStudyFile(path string, body []byte) error {
+	existing, err := os.ReadFile(path) // #nosec G304 -- path is constructed below the validated output boundary.
+	if err == nil {
+		if !bytes.Equal(existing, body) {
+			return fmt.Errorf("RAG_WORKFLOW_STUDY_CONFLICT: %s", filepath.Base(path))
+		}
+		return nil
+	}
+	if !os.IsNotExist(err) {
+		return err
+	}
+	return os.WriteFile(path, body, 0o644) // #nosec G703 -- path is constructed below the validated output boundary.
 }
 
 func fileIdentity(path, schema string, body []byte) FixtureFile {

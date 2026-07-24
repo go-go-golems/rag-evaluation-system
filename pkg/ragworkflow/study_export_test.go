@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,6 +35,13 @@ func TestWriteStudyBundleIsStableAndWorkflowNative(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, plan, secondPlan)
 	require.Equal(t, first.Plan.Digest, second.Plan.Digest)
+	_, err = WriteStudyBundle(context.Background(), root, filepath.Join(root, "inputs", "study"), "fixture study", "EXP-FIXTURE", cases, nil)
+	require.NoError(t, err, "identical compilation must be idempotent")
+	changed := append([]StudyWorkflowCase(nil), cases...)
+	changed[0].Corpus.Records = append([]ragoperators.SourceRecord(nil), changed[0].Corpus.Records...)
+	changed[0].Corpus.Records[0].Text += " changed"
+	_, err = WriteStudyBundle(context.Background(), root, filepath.Join(root, "inputs", "study"), "fixture study", "EXP-FIXTURE", changed, nil)
+	require.ErrorContains(t, err, "RAG_WORKFLOW_STUDY_CONFLICT")
 	for index := range first.Cases {
 		require.Equal(t, first.Cases[index].DomainConfig.Digest, second.Cases[index].DomainConfig.Digest)
 	}
