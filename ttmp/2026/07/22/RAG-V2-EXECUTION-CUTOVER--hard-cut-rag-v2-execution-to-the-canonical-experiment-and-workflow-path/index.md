@@ -1,7 +1,7 @@
 ---
 Title: Hard cut RAG v2 execution to the canonical experiment and workflow path
 Ticket: RAG-V2-EXECUTION-CUTOVER
-Status: active
+Status: complete
 Topics:
     - rag
     - rag-eval
@@ -14,10 +14,11 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2026-07-22T19:25:04.739623571-04:00
+LastUpdated: 2026-07-23T20:38:42.56073675-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 # Hard cut RAG v2 execution to the canonical experiment and workflow path
 

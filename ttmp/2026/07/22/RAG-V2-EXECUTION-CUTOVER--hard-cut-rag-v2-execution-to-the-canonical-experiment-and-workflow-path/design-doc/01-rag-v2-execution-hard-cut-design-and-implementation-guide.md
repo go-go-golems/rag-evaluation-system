@@ -14,18 +14,13 @@ Owners: []
 RelatedFiles:
     - Path: repo://cmd/rag-eval/cmds/study/command.go
       Note: Current domain-owned experiment loop
-    - Path: repo://cmd/rag-ttc-v3-sweep/main.go
-      Note: TTC-specific orchestration to delete
-    - Path: repo://cmd/rag-worker/main.go
-      Note: Current direct RAG runner candidate for cutover
-    - Path: repo://internal/workflowv3ttc/module.go
-      Note: TTC-specific Workflow V3 task package to replace
 ExternalSources: []
 Summary: Deletion-oriented guide for making the Researchctl-to-Workflow-V3 RAG path authoritative and removing competing runners and schemas.
 LastUpdated: 2026-07-22T23:15:00-04:00
 WhatFor: Prevent permanent dual execution paths after RAG workflow lowering reaches parity.
 WhenToUse: Use only after deterministic and provider-backed Workflow V3 RAG slices pass their acceptance tests.
 ---
+
 
 
 # RAG v2 execution hard-cut design and implementation guide
@@ -228,10 +223,11 @@ Create a table for every retained operator family:
 
 | Capability | Direct fixture | Workflow fixture | Domain artifacts equal | Metrics equal | Failure semantics reviewed |
 |---|---|---|---|---|---|
-| raw chunking | yes | yes | pending | pending | n/a |
-| embeddings | yes | yes | pending | pending | pending |
-| hybrid retrieval | yes | yes | pending | pending | n/a |
-| generation | yes | yes | pending | pending | pending |
+| raw chunking | yes | yes | yes | yes | reviewed |
+| embeddings | yes | yes | yes | yes | reviewed: success, cache, malformed, retry, timeout, cancellation |
+| hybrid retrieval | yes | yes | yes | yes | reviewed |
+| generation | yes | yes | yes | yes | reviewed: success, cache, malformed, retry, timeout, cancellation |
+| reranking | yes | yes | yes | yes | reviewed: success, malformed, retry, timeout, cancellation |
 
 A passing happy-path output is insufficient for provider operators. Compare cancellation, timeout, malformed response, retry, usage, and cache behavior.
 
