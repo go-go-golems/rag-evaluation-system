@@ -13,24 +13,26 @@ export function EvaluationPage() {
 			<Panel title="Canonical RAG studies">
 				<Stack gap="md">
 					<Text>
-						RAG authoring, compilation, artifact resolution, and worker semantics belong to
-						rag-eval. Researchctl provides only the domain-neutral run lifecycle.
+						RAG authoring, compilation, artifact resolution, and task semantics belong to rag-eval.
+						Researchctl owns experiment lifecycle; Scraper Workflow V3 owns durable execution.
 					</Text>
 					<Caption>
-						Validate and explain a study before submitting its canonical cells through the RAG-owned
-						adapter.
+						Compile canonical cells into a Researchctl plan, then execute them through the RAG
+						Workflow runner.
 					</Caption>
-					<pre>{`rag-eval study validate experiments/rag-sol2/study.js \\
-  --inputs experiments/rag-sol2/inputs.json \\
-  --ttc-database /path/to/rag-eval.db
-
-rag-eval study run experiments/rag-sol2/study.js \\
-  --project project.yaml \\
-  --experiment-id EXP-RAG \\
+					<pre>{`artifact_root="$PWD/laboratory/artifacts"
+rag-eval study compile experiments/rag-sol2/study.js \\
   --inputs experiments/rag-sol2/inputs.json \\
   --ttc-database /path/to/rag-eval.db \\
-  --researchctl-command researchctl \\
-  --worker-command rag-worker`}</pre>
+  --artifact-root "$artifact_root" \\
+  --output-dir "$artifact_root/inputs/rag-study" \\
+  --experiment-id EXP-RAG
+
+researchctl experiment run-plan "$artifact_root/inputs/rag-study/researchctl-plan.js" \\
+  --project project.js \\
+  --runner-command rag-workflow-runner \\
+  --runner-name scraper-workflow-runner \\
+  --runner-version v1`}</pre>
 				</Stack>
 			</Panel>
 

@@ -7,7 +7,9 @@ Topics:
 - architecture
 - cutover
 Commands:
-- rag-eval study run
+- rag-eval study compile
+- researchctl experiment run-plan
+- rag-workflow-runner
 - rag-product-server
 Flags: []
 IsTopLevel: false
@@ -16,7 +18,7 @@ ShowPerDefault: true
 SectionType: GeneralTopic
 ---
 
-RAG v2 replaced disposable prototypes without compatibility readers, aliases, dual runners, old database lifecycle, or dormant archived packages. Researchctl owns generic scientific lifecycle; rag-evaluation-system owns RAG semantics; product execution owns online lifecycle.
+RAG v2 replaced disposable prototypes without compatibility readers, aliases, dual runners, old database lifecycle, or dormant archived packages. Researchctl owns generic scientific lifecycle; Scraper Workflow V3 owns durable production execution; rag-evaluation-system owns RAG semantics and task packages; product execution owns online lifecycle. The removed `rag-worker`, `study run`, and preview command must not return.
 
 ## Preserve the boundary
 
@@ -30,7 +32,7 @@ RAG v2 replaced disposable prototypes without compatibility readers, aliases, du
 ## Verify absence
 
 ```bash
-scripts/09-phase8-acceptance.sh
+ttmp/2026/07/22/RAG-V2-EXECUTION-CUTOVER--hard-cut-rag-v2-execution-to-the-canonical-experiment-and-workflow-path/scripts/02-cutover-guards.sh
 ```
 
 The gate checks package/dependency trees, commands, routes, database objects, generated declarations, frontend text, tests, race, fuzz, security and canonical reconstruction.

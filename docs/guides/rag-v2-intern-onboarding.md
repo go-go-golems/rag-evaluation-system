@@ -34,7 +34,8 @@ Start at `examples/rag-v2/06-raw-study.js`, then follow:
 - retrieval/collapse/fusion/hydration in `rank.go`;
 - evaluation in `evaluate.go`;
 - orchestration in `pkg/ragengine/engine.go`;
-- worker envelopes in `cmd/rag-worker` and `pkg/researchctladapter`.
+- immutable input resolution in `pkg/researchctladapter` and Workflow bundle compilation in `pkg/ragworkflow/study_export.go`;
+- production runner composition in `cmd/rag-workflow-runner`.
 
 Run:
 

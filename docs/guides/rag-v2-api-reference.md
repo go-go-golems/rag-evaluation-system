@@ -77,7 +77,8 @@ No configurator, JavaScript function, runtime object, secret, or database handle
 `pkg/researchctladapter` resolves catalog aliases to verified RAG envelopes, wraps opaque canonical domain config in public `researchctl/pkg/lab` contracts, checks worker capabilities, and invokes the generic process runner. The worker advertises only:
 
 - protocol `researchctl-runner-stdio/v1`;
-- runner `rag-worker/v2`;
+- production runner `scraper-workflow-runner/v1` through `cmd/rag-workflow-runner`;
+- compiled study bundle `rag-workflow-study-bundle/v1`;
 - domain `rag-pipeline/v2`;
 - trace `rag-query-trace/v2`.
 

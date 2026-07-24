@@ -66,7 +66,7 @@ rag-eval search hybrid --query "search text" --index-id bm25-my-index \
 Submit a complete intake pipeline (chunk → embed → BM25):
 
 ```bash
-rag-eval workflow submit-intake \
+rag-eval intake submit-intake \
   --document-ids doc-1,doc-2 \
   --strategy fixed --chunk-size 1200 --overlap 150 \
   --embeddings-type openai --profile openai-embedding-small
@@ -75,8 +75,8 @@ rag-eval workflow submit-intake \
 Run the local scheduler:
 
 ```bash
-rag-eval workflow run-worker
-rag-eval workflow status
+rag-eval intake run-worker
+rag-eval intake status
 ```
 
 ### HTTP server
@@ -102,7 +102,7 @@ cmd/rag-eval/         Glazed Cobra CLI commands
   cmds/embedding/     Embedding generation
   cmds/search/        BM25, vector, hybrid search
   cmds/serve/         HTTP server + embedded SPA
-  cmds/workflow/      Scraper-backed durable workflows
+  cmds/intake/        Product-local document intake (separate from RAG studies)
   cmds/source/        Source document management
 
 internal/services/    Business logic
@@ -126,20 +126,25 @@ packages/rag-evaluation-site/  React component library
 
 ## Researchctl laboratory integration
 
-The authoritative path compiles pure JavaScript authoring to `rag-pipeline-execution/v2`, adapts it to researchctl's generic laboratory, and executes it with `cmd/rag-worker`. Researchctl owns runs, attempts, retries, timestamps, terminal state, SQLite, generic artifact custody, import, and export. This repository owns RAG compilation, operators, manifests, lineage, retrieval, fusion, reranking, evaluation, and `rag-query-trace/v2`.
+The authoritative path compiles pure JavaScript authoring to `rag-pipeline-execution/v2`, lowers each cell to `scraper-workflow-execution/v2`, and writes a pure Researchctl experiment plan. Researchctl owns cases, replicates, process attempts, resume, timestamps, terminal state, SQLite, and generic artifact custody. Scraper Workflow V3 owns node attempts, leases, retries, cancellation, external operations, and execution artifacts. This repository owns RAG compilation, operators, manifests, lineage, task packages, retrieval, fusion, reranking, evaluation, and `rag-query-trace/v2`.
 
 ```bash
-# Validate and explain a lifecycle-free five-variant study.
-go run ./cmd/rag-eval study validate experiments/rag-sol2/study.js \
-  --inputs experiments/rag-sol2/inputs.json --ttc-database data/rag-eval.db
-go run ./cmd/rag-eval study explain experiments/rag-sol2/study.js \
-  --inputs experiments/rag-sol2/inputs.json --ttc-database data/rag-eval.db
+artifact_root="$PWD/laboratory/artifacts"
 
-# Build the strict generic NDJSON worker used by the RAG-owned adapter.
-go build -o .bin/rag-worker ./cmd/rag-worker
+go run ./cmd/rag-eval study validate examples/rag-v2/06-raw-study.js --inputs inputs.json
+go run ./cmd/rag-eval study explain examples/rag-v2/06-raw-study.js --inputs inputs.json
+go run ./cmd/rag-eval study compile examples/rag-v2/06-raw-study.js \
+  --inputs inputs.json \
+  --artifact-root "$artifact_root" \
+  --output-dir "$artifact_root/inputs/my-study" \
+  --experiment-id EXP-RAG
+
+researchctl experiment run-plan "$artifact_root/inputs/my-study/researchctl-plan.js" \
+  --project project.js --runner-command rag-workflow-runner \
+  --runner-name scraper-workflow-runner --runner-version v1
 ```
 
-The worker speaks `researchctl-runner-stdio/v1`, advertises only `rag-pipeline/v2`, writes protocol frames only to stdout, and sends diagnostics to stderr. Both adapter and worker validate canonical configuration and RAG-owned manifest lineage. Missing providers, unsafe paths, unsupported operations, invalid traces, and malformed lineage fail explicitly.
+The former direct `rag-worker`, `rag-eval study run`, and preview execution paths have been removed. Missing provider authority, unsafe output paths, unsupported operations, invalid traces, and malformed lineage fail explicitly before execution.
 
 Online execution uses `pkg/ragproduct` and `cmd/rag-product-server`; those dependency graphs contain no researchctl package. Product qualification freezes exact deployment manifests into the same normalized pipeline under a study target.
 

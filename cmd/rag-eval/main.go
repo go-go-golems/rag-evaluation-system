@@ -9,13 +9,12 @@ import (
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/corpus"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/document"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/embedding"
-	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/preview"
+	intakecmd "github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/intake"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/providers"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/search"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/serve"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/source"
 	"github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/study"
-	workflowcmd "github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/cmds/workflow"
 	ragdoc "github.com/go-go-golems/rag-evaluation-system/cmd/rag-eval/doc"
 	"github.com/spf13/cobra"
 )
@@ -51,10 +50,9 @@ func main() {
 	rootCmd.AddCommand(document.NewCommand())
 	rootCmd.AddCommand(embedding.NewCommand())
 	rootCmd.AddCommand(search.NewCommand())
-	rootCmd.AddCommand(workflowcmd.NewCommand())
+	rootCmd.AddCommand(intakecmd.NewCommand())
 	rootCmd.AddCommand(serve.NewCommand())
 	rootCmd.AddCommand(study.NewCommand())
-	rootCmd.AddCommand(preview.NewCommand())
 	providerCommands, err := providers.NewCommand()
 	cobra.CheckErr(err)
 	rootCmd.AddCommand(providerCommands)

@@ -18,33 +18,40 @@ Open `http://127.0.0.1:8772` and select **Evaluation**. The page reports immutab
 
 ## Execute through researchctl
 
-Build the canonical RAG worker and RAG-owned CLI:
+Build the RAG-owned compiler and Workflow runner:
 
 ```bash
-go build -o .bin/rag-worker ./cmd/rag-worker
 go build -o .bin/rag-eval ./cmd/rag-eval
+go build -o .bin/rag-workflow-runner ./cmd/rag-workflow-runner
 ```
 
-Execute a pure `rag-study/v2` program with explicit input references:
+Compile a pure `rag-study/v2` program with explicit TTC input references, then execute the generated Researchctl plan:
 
 ```bash
-rag-eval study validate experiments/rag-sol2/study.js \
-  --inputs experiments/rag-sol2/inputs.json \
-  --ttc-database data/rag-eval.db
+artifact_root="$PWD/laboratory/artifacts"
 
-rag-eval study run experiments/rag-sol2/study.js \
-  --project project.yaml \
-  --experiment-id EXP-RAG \
+rag-eval study compile experiments/rag-sol2/study.js \
   --inputs experiments/rag-sol2/inputs.json \
   --ttc-database data/rag-eval.db \
-  --researchctl-command researchctl \
-  --worker-command .bin/rag-worker
+  --artifact-root "$artifact_root" \
+  --output-dir "$artifact_root/inputs/ttc-study" \
+  --experiment-id EXP-RAG \
+  --provider-config experiments/real-provider-v2/provider-config.yaml
 
-researchctl lab runs list --project project.yaml --output json
-researchctl lab runs show RUN_ID --project project.yaml --output json
+researchctl experiment run-plan \
+  "$artifact_root/inputs/ttc-study/researchctl-plan.js" \
+  --project project.js \
+  --runner-command .bin/rag-workflow-runner \
+  --runner-name scraper-workflow-runner \
+  --runner-version v1 \
+  --runner-arg=--provider-config \
+  --runner-arg=experiments/real-provider-v2/provider-config.yaml
+
+researchctl lab runs list --project project.js --output json
+researchctl lab runs show RUN_ID --project project.js --output json
 ```
 
-The adapter reads the source catalog with WAL-aware `mode=ro` and query-only access, stages verified artifacts, and delegates lifecycle to researchctl. The worker speaks generic `researchctl-runner-stdio/v1`, advertises only `rag-pipeline/v2`, emits `rag-query-trace/v2`, and has no researchctl database handle.
+The adapter reads the source catalog with WAL-aware `mode=ro` and query-only access and stages verified artifacts. Researchctl owns the experiment lifecycle; the Workflow runner executes `scraper-workflow-execution/v2`, emits canonical RAG metrics/traces and Scraper observations, and has no Researchctl database handle.
 
 ## Frozen domain identities
 
