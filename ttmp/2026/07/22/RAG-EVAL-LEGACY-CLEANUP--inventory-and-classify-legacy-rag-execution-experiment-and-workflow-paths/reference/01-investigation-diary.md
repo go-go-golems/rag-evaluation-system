@@ -210,3 +210,11 @@ The approved immediate tranche removed completed TTC execution machinery and obs
 
 ### Review guidance
 Inspect the deletion commit and the small `EchoOutput` to `IntakeOutput` relocation. Verify that immutable TTC source evidence and the audit script remain present.
+
+## Step 5: Execute and audit every deferred RAG hard cut
+
+The named replacement gates are now complete. RAG lowering and provider operations moved execution to registered Workflow V3 task packages; Researchctl plans replaced study scheduling; immutable study bundles replaced direct worker inputs; the dedicated intake ticket migrated command/API/frontend behavior; and scripted TTC acceptance replaced the old sweep.
+
+The actual deletions occurred in focused predecessor commits, most notably `8925004` for study execution and `a6bf3a8`/`88b61ae` for intake and acceptance. I re-audited the current tree rather than closing from ticket claims: `cmd/rag-worker`, `internal/preparationworkflow`, `internal/workflow`, old intake commands, direct adapter lifecycle files, and TTC sweep packages are absent. Active searches find only intentional documentation and negative tests mentioning removed names.
+
+`analysis/02-deferred-hard-cut-closure-audit.md` maps every original deferred row to its replacement and deletion evidence. The final task may now close without deleting `pkg/ragengine`, because that package is retained RAG-owned semantic logic/oracle and no longer owns scheduling, custody, retry, or command execution.

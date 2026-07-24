@@ -12,14 +12,14 @@ DocType: design-doc
 Intent: long-term
 Owners: []
 RelatedFiles:
-    - Path: repo://cmd/rag-worker/main.go
-      Note: |-
-        Deferred direct RAG execution path and parity oracle
-        Deferred direct RAG execution path retained as parity oracle
+    - Path: repo://experiments/ttc-scripted/study.js
+      Note: Workload-only TTC replacement
     - Path: repo://internal/db/db.go
       Note: Fresh-schema-only migration path after compatibility upgrade removal
-    - Path: repo://internal/workflow/intake_runner.go
-      Note: Active intake behavior retained; live output DTO relocated from deleted EchoRunner file
+    - Path: repo://pkg/ragintakeworkflow/application.go
+      Note: Canonical Workflow V3 intake replacement
+    - Path: repo://pkg/ragworkflow/study_export.go
+      Note: Canonical immutable study compilation replacing direct execution
     - Path: repo://ttmp/2026/07/22/RAG-PIPELINE-CONSOLIDATION-AUDIT--assess-improve-and-consolidate-the-rag-evaluation-pipeline/scripts/01-analyze-ttc-real-run.py
       Note: Reproduces preserved retry-aware TTC evidence after runner deletion
     - Path: repo://ttmp/2026/07/22/RAG-PIPELINE-CONSOLIDATION-AUDIT--assess-improve-and-consolidate-the-rag-evaluation-pipeline/sources/derived-real-attempt-003/summary.json
@@ -30,6 +30,8 @@ LastUpdated: 2026-07-22T23:45:00-04:00
 WhatFor: Approve immediate RAG cleanup and gate deferred execution cutovers on Workflow V3 replacement work.
 WhenToUse: Read before removing TTC code or beginning RAG-V2-WORKFLOW-LOWERING.
 ---
+
+
 
 
 

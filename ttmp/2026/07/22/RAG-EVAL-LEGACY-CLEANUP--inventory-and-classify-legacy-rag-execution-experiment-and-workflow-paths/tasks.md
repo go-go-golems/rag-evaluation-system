@@ -11,4 +11,4 @@
 - [x] Cross-link cleanup findings to the convergence umbrella and sibling cleanup tickets <!-- t:3d4t -->
 - [x] Review and accept the cleanup disposition table <!-- t:0gkn -->
 - [x] Execute and validate the immediate safe-deletion tranche <!-- t:uuvb -->
-- [ ] Execute deferred hard cuts after replacement acceptance <!-- t:rzde -->
+- [x] Execute deferred hard cuts after replacement acceptance <!-- t:rzde -->

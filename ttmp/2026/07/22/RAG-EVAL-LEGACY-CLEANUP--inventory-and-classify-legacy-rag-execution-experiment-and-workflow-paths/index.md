@@ -1,7 +1,7 @@
 ---
 Title: Inventory and classify legacy RAG execution experiment and workflow paths
 Ticket: RAG-EVAL-LEGACY-CLEANUP
-Status: active
+Status: complete
 Topics:
     - rag
     - rag-eval
@@ -14,10 +14,11 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2026-07-22T21:37:41.688059149-04:00
+LastUpdated: 2026-07-23T22:31:47.234676267-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 # Inventory and classify legacy RAG execution experiment and workflow paths
 
