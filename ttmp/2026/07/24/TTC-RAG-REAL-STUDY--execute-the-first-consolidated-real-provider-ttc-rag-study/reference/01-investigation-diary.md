@@ -257,3 +257,88 @@ The upload bundle includes a 58 KB design guide with multiple Mermaid diagrams, 
 Remote destination:
 
 `/ai/2026/07/24/TTC-RAG-REAL-STUDY/TTC RAG Real Study Intern Guide.pdf`
+
+## Step 4: Resolve the three Researchctl plan review findings
+
+This step removed the first hard prerequisite for real-study execution. Researchctl now preserves a durable plan link in every executed attempt, retains domain-compiled factors when a JavaScript case does not override them, and rejects an explicitly invalid zero concurrency policy.
+
+The implementation uses the existing immutable canonical plan artifact and attempt-environment custody rather than creating another plan database lifecycle. Exported runs therefore carry the plan ID, digest, artifact path, and provenance schema on every attempt while preserving the caller's existing environment fields.
+
+### Prompt Context
+
+**User prompt (verbatim):** "ok, implement and test 1. 2. 3."
+
+**Assistant interpretation:** Implement and test all three outstanding PR #3 findings: durable plan provenance, factor preservation, and explicit-zero concurrency rejection.
+
+**Inferred user intent:** Clear the Researchctl correctness gate before implementing or executing the real TTC study.
+
+**Commit (code):** `1699779` — "fix: preserve experiment plan provenance"
+
+### What I did
+
+- Removed silent zero-to-one normalization from raw experiment plans.
+- Changed the JavaScript execution builder to distinguish an omitted `maxConcurrent` field from explicit zero.
+- Changed case construction to leave factors unset until a specification or explicit `.factors()` call supplies them.
+- Copied compiled specification factors into case factors when `.factors()` is omitted.
+- Added reserved `researchctlExperimentPlan` provenance to every attempt environment before laboratory execution.
+- Persisted plan schema, ID, digest, and canonical artifact path while preserving caller environment fields.
+- Added unit tests for zero concurrency and factor preservation.
+- Added service and SQLite integration tests proving provenance survives run export, including retries.
+
+### Why
+
+- CLI output is transient and cannot serve as durable run provenance.
+- Overwriting compiled factors silently changes scientific identity.
+- Silently accepting zero concurrency converts malformed intent into executable behavior.
+
+### What worked
+
+- Targeted package tests passed.
+- Targeted race tests passed.
+- `GOWORK=off go test ./... -count=1 -p=1` passed.
+- `make lint` passed with zero issues.
+- The pre-commit hook independently reran the full tests and linter successfully.
+
+### What didn't work
+
+- N/A. No implementation failure occurred.
+
+### What I learned
+
+- Attempt environment is already immutable, exported laboratory custody and can carry plan provenance without changing run identity or introducing a schema migration.
+- The JavaScript builder needed an internal pointer field to distinguish omission from explicit zero while keeping the authored default of one.
+
+### What was tricky to build
+
+The factor builder had to distinguish three states: no factors supplied yet, factors inherited from a compiled specification, and an explicit `.factors()` override. Initializing every case to `{}` erased that distinction. Leaving the field nil until specification binding preserves the source identity, while explicit `.factors()` still updates both the case and canonical identity.
+
+Plan provenance could not be inserted into canonical specification identity because that would change specification IDs and prevent correct cross-plan resume. It is stored in attempt environment instead, preserving execution identity while making each attempt's producing plan recoverable from exports.
+
+### What warrants a second pair of eyes
+
+- Confirm that `researchctlExperimentPlan` is the preferred reserved environment key and provenance schema name.
+- Confirm that attempt-level provenance is sufficient for all UI/report projections or whether a read-only convenience projection should later expose it at run level.
+
+### What should be done in the future
+
+- Update PR #3 and merge the code commit.
+- Consider adding plan provenance to `lab runs show` presentation without creating a second persistence authority.
+
+### Code review instructions
+
+- Start at `pkg/experimentservice/service.go:withPlanProvenance` and its call before scheduling.
+- Review `pkg/gojamodules/researchctl/experiment_plan.go` for omitted-versus-explicit policy and factor state handling.
+- Review `internal/labsqlite/experiment_plan_test.go` for durable exported provenance across attempts.
+- Validate with `GOWORK=off go test ./... -count=1 -p=1`, targeted race tests, and `make lint`.
+
+### Technical details
+
+Commands:
+
+```text
+GOWORK=off go test ./pkg/experimentplan ./pkg/gojamodules/researchctl ./pkg/experimentservice -count=1
+GOWORK=off go test ./internal/labsqlite ./pkg/experimentplan ./pkg/gojamodules/researchctl ./pkg/experimentservice -count=1
+GOWORK=off go test -race ./pkg/experimentplan ./pkg/gojamodules/researchctl ./pkg/experimentservice ./internal/labsqlite -count=1
+GOWORK=off go test ./... -count=1 -p=1
+make lint
+```

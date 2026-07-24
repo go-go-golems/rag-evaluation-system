@@ -15,6 +15,12 @@ Owners: []
 RelatedFiles:
     - Path: abs:///home/manuel/code/wesen/go-go-golems/go-go-parc/Projects/2026/07/24/ARTICLE - RAG Experiment JavaScript - Language API and End-to-End Execution.md
       Note: Complete external language and execution onboarding source
+    - Path: abs:///home/manuel/workspaces/2026-06-30/benchmark-cpu-inference/researchctl/internal/labsqlite/experiment_plan_test.go
+      Note: Integration proof that exported attempts retain plan provenance
+    - Path: abs:///home/manuel/workspaces/2026-06-30/benchmark-cpu-inference/researchctl/pkg/experimentservice/service.go
+      Note: Durably associates each executed attempt with its canonical experiment plan
+    - Path: abs:///home/manuel/workspaces/2026-06-30/benchmark-cpu-inference/researchctl/pkg/gojamodules/researchctl/experiment_plan.go
+      Note: Preserves specification factors and distinguishes omitted from explicit concurrency
     - Path: repo://experiments/real-provider-v2/base.js
       Note: Current human-authored preparation indexing and retrieval semantics
     - Path: repo://experiments/real-provider-v2/study-full.js
@@ -30,10 +36,11 @@ RelatedFiles:
 ExternalSources:
     - /home/manuel/code/wesen/go-go-golems/go-go-parc/Projects/2026/07/24/ARTICLE - RAG Experiment JavaScript - Language API and End-to-End Execution.md
 Summary: Intern-oriented architecture, scientific design, and phased implementation plan for the first consolidated real-provider TTC RAG study.
-LastUpdated: 2026-07-24T07:20:00-04:00
+LastUpdated: 2026-07-24T08:45:00-04:00
 WhatFor: Understand, implement, review, execute, and interpret the first real-provider TTC RAG study without introducing duplicate lifecycle ownership or invalid scientific claims.
 WhenToUse: Read before changing experiments/real-provider-v2, creating experiments/ttc-real, binding provider manifests, compiling the study, spending provider budget, or interpreting study results.
 ---
+
 
 
 
@@ -789,15 +796,15 @@ The distinction is exact:
 - a Researchctl attempt retry is not a replicate;
 - only separately allocated Researchctl runs under distinct replicate indices increase scientific sample count.
 
-### 13.1 PR #3 prerequisite
+### 13.1 PR #3 prerequisite — completed
 
-The real study is blocked until these review findings are addressed:
+Commit `1699779` (`fix: preserve experiment plan provenance`) addressed all three review findings:
 
-1. persist the plan digest and plan artifact identity with every run;
-2. preserve compiled specification factors when `.factors()` is omitted;
-3. reject explicit `execution.maxConcurrent: 0` rather than silently defaulting it.
+1. every executed Researchctl attempt now durably records the plan schema, ID, digest, and canonical plan artifact in reserved `researchctlExperimentPlan` environment provenance;
+2. the JavaScript case builder preserves factors already present in a compiled specification when `.factors()` is omitted;
+3. raw plans and JavaScript builders reject explicit `execution.maxConcurrent: 0` with `EXPERIMENT_PLAN_CONCURRENCY`, while an omitted JavaScript field retains the default of one.
 
-The review is intentionally deferred to separate work, but the real study may not proceed without it because all three findings affect scientific provenance or plan validity.
+Unit, integration, race, full-suite, and lint tests passed. This prerequisite is no longer a blocker. Existing pre-fix laboratory runs are not retroactively rewritten; new study runs receive the durable provenance.
 
 ### 13.2 Ordering and concurrency
 
@@ -1138,8 +1145,8 @@ The verifier checks counts, digests, privacy, operations, resume, analysis bytes
 
 ### Phase 0: prerequisites
 
-- Address Researchctl PR #3 provenance/factor/concurrency findings.
-- Add tests that prove durable plan-to-run association.
+- Completed in Researchctl commit `1699779`: plan provenance, specification-factor preservation, and explicit-zero concurrency rejection.
+- Tests prove durable plan-to-attempt association through exported laboratory records.
 - Decide and implement manifest-backed generated execution loading or clearly scoped generated JavaScript custody.
 - Re-run Researchctl full/race/lint/build/module/generation checks.
 
@@ -1387,7 +1394,7 @@ Before editing code:
 - [ ] Validate/explain `real-provider-v2` without provider calls.
 - [ ] Inspect one generated bundle manifest and one case domain config.
 - [ ] Trace one run through Researchctl, runner, Workflow V3, RAG output, and analysis.
-- [ ] Confirm PR #3 prerequisites are merged.
+- [x] Confirm PR #3 prerequisites are implemented and tested (`1699779`).
 
 Before P0 provider calls:
 

@@ -2,7 +2,7 @@
 
 ## TODO
 
-- [ ] Fix Researchctl experiment-plan provenance and validation review findings before scientific execution <!-- t:ousq -->
+- [x] Fix Researchctl experiment-plan provenance and validation review findings before scientific execution <!-- t:ousq -->
 - [ ] Separate human-authored study sources from generated plans executions manifests and custody artifacts <!-- t:80s4 -->
 - [ ] Freeze and verify immutable TTC corpus evaluation and public provider identity manifests <!-- t:92uw -->
 - [ ] Consolidate readable preparation retrieval study product and analysis sources under experiments/ttc-real <!-- t:nhai -->
