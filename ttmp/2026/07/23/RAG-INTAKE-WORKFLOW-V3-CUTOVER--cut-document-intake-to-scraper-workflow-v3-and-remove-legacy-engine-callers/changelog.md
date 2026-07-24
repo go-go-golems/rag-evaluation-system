@@ -25,3 +25,8 @@ Hard-cut RAG intake CLI, API, frontend, provider operations, and persistence to 
 - pkg/ragintakeworkflow/application.go — Canonical intake Workflow V3 product application
 - web/src/components/workflows/WorkflowsView.tsx — Rendered Workflow V3 intake UI
 
+
+## 2026-07-23
+
+Closed after downstream Researchctl and Scraper cleanup completion; post-hard-cut built-binary smoke, deletion guard, and fresh full RAG suite passed.
+

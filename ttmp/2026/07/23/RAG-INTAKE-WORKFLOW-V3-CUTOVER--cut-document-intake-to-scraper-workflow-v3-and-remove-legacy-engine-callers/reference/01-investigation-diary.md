@@ -179,3 +179,7 @@ Final focused validation passed full sequential Go tests, affected race tests, c
 logcopter-gen: generated file is not current: .../pkg/ragintakeworkflow/logcopter.go
 ```
 `GOWORK=off go generate ./...` produced the required generated area catalog; the subsequent check passed. `GOWORK=off go mod tidy` produced no module diff.
+
+## Final dependency-chain closure
+
+Researchctl legacy cleanup and Scraper Workflow V3, external-operation, and legacy-cleanup tickets are now complete. Scraper commit `b3df00e` deleted the old engine/workflow/site/API/frontend stack after its guard found zero RAG downstream imports. I reran the built RAG intake binary smoke and deletion guard after that hard cut: the three-node chunk/BM25/publish run succeeded with no fake-provider operation, and no legacy lifecycle/route/flag/manual retry/UI path remained. A fresh full sequential RAG suite also passed, including `pkg/ragintakeworkflow` and `pkg/ragworkflow`. This satisfies the final prerequisite task and proves intake no longer blocks Scraper deletion.

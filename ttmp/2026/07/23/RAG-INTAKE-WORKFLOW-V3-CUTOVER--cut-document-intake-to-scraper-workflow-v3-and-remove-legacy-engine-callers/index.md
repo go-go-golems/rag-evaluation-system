@@ -1,7 +1,7 @@
 ---
 Title: Cut document intake to Scraper Workflow V3 and remove legacy engine callers
 Ticket: RAG-INTAKE-WORKFLOW-V3-CUTOVER
-Status: active
+Status: complete
 Topics:
     - rag
     - rag-eval
@@ -14,10 +14,11 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2026-07-23T20:47:51.264559988-04:00
+LastUpdated: 2026-07-23T23:13:06.044289859-04:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 # Cut document intake to Scraper Workflow V3 and remove legacy engine callers
 
