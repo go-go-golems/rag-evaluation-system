@@ -507,8 +507,13 @@ export const ragApi = createApi({
 			ChunkEnrichmentList,
 			{ chunkId: string; strategyId?: string; promptVersion?: string }
 		>({
-			query: (args) =>
-				`chunks/${args.chunkId}/enrichments${args.strategyId ? "?strategy_id=" + args.strategyId : ""}${args.promptVersion ? "&prompt_version=" + args.promptVersion : ""}`,
+			query: (args) => {
+				const params = new URLSearchParams();
+				if (args.strategyId) params.set("strategy_id", args.strategyId);
+				if (args.promptVersion) params.set("prompt_version", args.promptVersion);
+				const query = params.toString();
+				return `chunks/${args.chunkId}/enrichments${query ? `?${query}` : ""}`;
+			},
 			providesTags: ["Artifacts"],
 		}),
 

@@ -10,6 +10,11 @@
 	display: block;
 	width: 100%;
 	margin-top: 0.25rem;
+	padding: 0.45rem 0.55rem;
+	border: 1px solid var(--mac-border);
+	background: var(--mac-bg);
+	color: inherit;
+	font: inherit;
 }
 
 .runList {

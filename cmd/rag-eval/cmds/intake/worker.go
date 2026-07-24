@@ -95,7 +95,16 @@ func (c *WorkerCommand) RunIntoWriter(ctx context.Context, v *values.Values, w i
 			if dispatchErr != nil {
 				return dispatchErr
 			}
-			if err := encoder.Encode(map[string]any{"cycle": i, "lease": lease}); err != nil {
+			output := map[string]any{"cycle": i, "dispatched": lease != nil}
+			if lease != nil {
+				output["runId"] = lease.RunID
+				output["nodeKey"] = lease.NodeKey
+				output["attempt"] = lease.Attempt
+				if err := app.Engine.ExecuteLease(ctx, *lease); err != nil {
+					return err
+				}
+			}
+			if err := encoder.Encode(output); err != nil {
 				return err
 			}
 		}

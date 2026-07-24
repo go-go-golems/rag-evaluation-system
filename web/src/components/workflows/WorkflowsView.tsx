@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
 import { Button, Caption, Panel, Stack, Text } from "@go-go-golems/rag-evaluation-site";
+import type React from "react";
+import { useEffect, useState } from "react";
 import {
-	SubmitIntakeRequest,
+	type SubmitIntakeRequest,
 	useCancelIntakeRunMutation,
 	useGetIntakeObservationsQuery,
 	useGetIntakeRunQuery,
@@ -61,7 +62,7 @@ const SubmitIntake: React.FC<{ onSubmitted: (id: string) => void }> = ({ onSubmi
 					/>{" "}
 					Skip embeddings
 				</label>
-				<Button onClick={run} disabled={state.isLoading}>
+				<Button onClick={run} disabled={state.isLoading || (!documents.trim() && !sources.trim())}>
 					Submit intake
 				</Button>
 				{state.error && (
@@ -77,8 +78,9 @@ export const WorkflowsView: React.FC = () => {
 	const [selected, setSelected] = useState<string | null>(null);
 	const runs = useListIntakeRunsQuery({ status, limit: 50 }, { pollingInterval: 3000 });
 	const run = useGetIntakeRunQuery(selected ?? "", { skip: !selected, pollingInterval: 2000 });
+	const terminal = ["succeeded", "failed", "canceled"].includes(run.data?.snapshot.status ?? "");
 	const observations = useGetIntakeObservationsQuery(selected ?? "", {
-		skip: !selected || run.data?.snapshot.status === "running",
+		skip: !selected || !terminal,
 		pollingInterval: 3000,
 	});
 	const [cancel] = useCancelIntakeRunMutation();
@@ -102,6 +104,9 @@ export const WorkflowsView: React.FC = () => {
 						</select>
 					</label>
 					<div className={styles.runList}>
+						{runs.isLoading && <Text>Loading intake runs…</Text>}
+						{runs.isError && <Text>Unable to load intake runs.</Text>}
+						{runs.data?.length === 0 && <Text>No intake runs match this filter.</Text>}
 						{runs.data?.map((item) => (
 							<button
 								type="button"
@@ -136,7 +141,7 @@ export const WorkflowsView: React.FC = () => {
 								</tr>
 							</thead>
 							<tbody>
-								{run.data.snapshot.attempts.map((attempt) => (
+								{(run.data.snapshot.attempts ?? []).map((attempt) => (
 									<tr key={`${attempt.nodeKey}-${attempt.number}`}>
 										<td>{attempt.nodeKey}</td>
 										<td>{attempt.number}</td>
@@ -155,7 +160,11 @@ export const WorkflowsView: React.FC = () => {
 						)}
 					</Stack>
 				) : (
-					<Text>Select an intake run.</Text>
+					<Text>
+						{runs.data?.length === 0
+							? "Submit an intake run to inspect its Workflow V3 execution."
+							: "Select an intake run."}
+					</Text>
 				)}
 			</Panel>
 		</div>
