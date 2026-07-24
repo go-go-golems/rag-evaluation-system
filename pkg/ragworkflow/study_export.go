@@ -210,7 +210,7 @@ func writeStudyFile(root, directory, name, schema string, value any) (FixtureFil
 }
 
 func writeImmutableStudyFile(path string, body []byte) error {
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644) // #nosec G304 -- path is constructed below the validated output boundary.
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600) // #nosec G304 -- path is constructed below the validated output boundary.
 	if err == nil {
 		if _, writeErr := file.Write(body); writeErr != nil {
 			_ = file.Close()

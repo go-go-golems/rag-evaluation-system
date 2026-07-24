@@ -29,3 +29,11 @@ Completed Researchctl prerequisite: durable plan provenance, compiled-factor pre
 ### Related Files
 
 - /home/manuel/workspaces/2026-06-30/benchmark-cpu-inference/researchctl/pkg/experimentservice/service.go — Plan provenance implementation
+
+## 2026-07-24
+
+Upgraded RAG-eval to Researchctl v0.0.3, passed full Go/race/lint/security/vulnerability/frontend/Storybook/build validation, and hardened immutable study artifacts to mode 0600
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/go.mod — Released Researchctl dependency

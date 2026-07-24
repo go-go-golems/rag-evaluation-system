@@ -19,6 +19,12 @@ RelatedFiles:
       Note: Evidence reviewed during study architecture design
     - Path: repo://experiments/real-provider-v2/study-full.js
       Note: Evidence reviewed for full provider path
+    - Path: repo://go.mod
+      Note: Researchctl v0.0.3 dependency baseline
+    - Path: repo://pkg/ragintakeworkflow/application.go
+      Note: Bound intake source filtering reviewed by GoSec
+    - Path: repo://pkg/ragworkflow/study_export.go
+      Note: Owner-only immutable study artifact publication
 ExternalSources:
     - /home/manuel/code/wesen/go-go-golems/go-go-parc/Projects/2026/07/24/ARTICLE - RAG Experiment JavaScript - Language API and End-to-End Execution.md
 Summary: Chronological planning and research record for the consolidated real-provider TTC RAG study.
@@ -26,6 +32,7 @@ LastUpdated: 2026-07-24T07:20:00-04:00
 WhatFor: Preserve why the study is structured in phases, which evidence shaped it, and how an engineer should continue implementation.
 WhenToUse: Read before resuming TTC-RAG-REAL-STUDY or changing its architecture, inputs, phases, budgets, or claim boundaries.
 ---
+
 
 
 # Investigation diary
@@ -341,4 +348,93 @@ GOWORK=off go test ./internal/labsqlite ./pkg/experimentplan ./pkg/gojamodules/r
 GOWORK=off go test -race ./pkg/experimentplan ./pkg/gojamodules/researchctl ./pkg/experimentservice ./internal/labsqlite -count=1
 GOWORK=off go test ./... -count=1 -p=1
 make lint
+```
+
+## Step 5: Upgrade RAG-eval to Researchctl v0.0.3 and run full validation
+
+This step moved RAG-eval from the pre-review Researchctl v0.0.1 dependency to the published v0.0.3 release containing durable plan provenance, factor preservation, and strict concurrency validation. The full repository validation then exercised Go, race, lint, security, vulnerability, frontend, Storybook, and built-binary paths.
+
+Validation exposed two existing GoSec findings unrelated to the module version. Study custody artifacts were world-readable and intake query construction required an explicit explanation that only placeholder tokens—not values—are concatenated. Both were corrected before the final clean validation.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Ok, let's update rag-eval, and then run the full validation. And then next I guess run some real experiments on the ttc dataset, to actually create a solid benchmark / RAG pipeline for our product?"
+
+**Assistant interpretation:** Upgrade RAG-eval to the released Researchctl version, run all repository validation gates, fix discovered validation defects, and prepare to begin the phased real TTC experiments afterward.
+
+**Inferred user intent:** Establish a clean released dependency baseline before spending provider budget and producing product-relevant RAG benchmark evidence.
+
+### What I did
+
+- Upgraded `github.com/go-go-golems/researchctl` from v0.0.1 to v0.0.3 and tidied modules.
+- Ran the complete Go test suite and targeted race suite.
+- Ran golangci-lint and Glazed lint.
+- Ran GoSec and govulncheck.
+- Typechecked and built the web frontend.
+- Typechecked and built the RAG evaluation Storybook.
+- Built the embedded frontend and `rag-eval` binary and checked built-binary help.
+- Changed immutable generated study artifacts from mode 0644 to 0600 and added a regression test.
+- Documented the safe placeholder-only SQL construction for the intake source filter so GoSec can distinguish it from value interpolation.
+
+### Why
+
+- The real TTC study must consume the released Researchctl behavior rather than a local workspace checkout or v0.0.1.
+- Study bundles contain scientific inputs and execution custody that should default to owner-only access.
+- A full security gate must pass before real corpus/provider execution.
+
+### What worked
+
+- The dependency upgraded cleanly and module tidiness changed only Researchctl checksums.
+- Targeted race tests passed.
+- Lint, frontend typecheck/build, Storybook build, govulncheck, GoSec, and built-binary validation passed.
+- The final full Go suite passed.
+- The retry test passed twenty consecutive focused runs after one initial full-suite failure.
+
+### What didn't work
+
+- The first full suite failed once in `TestProviderWorkflowRetriesFailedContactAsDistinctOperation`: the embedding node failed after the intentionally retried generation node. The targeted race suite passed, twenty consecutive focused reruns passed, and the final full suite passed. This appears to be load-sensitive fixture behavior rather than a Researchctl v0.0.3 regression, but it remains review-worthy.
+- The first GoSec run reported G202 at `pkg/ragintakeworkflow/application.go:135` and G302 at `pkg/ragworkflow/study_export.go:213`. The SQL uses generated `?` placeholders with bound values, so it received a narrowly explained G202 suppression. Study artifacts were changed to 0600 and covered by a permission assertion.
+
+### What I learned
+
+- Parallel full-suite, race, lint, and frontend builds can put enough load on the provider fixture to expose timing sensitivity.
+- Researchctl v0.0.3 requires no RAG adapter changes.
+- Immutable study custody should use the same owner-only default adopted by Researchctl analysis publication.
+
+### What was tricky to build
+
+The initial test failure occurred during simultaneous heavyweight validation. It could not be reproduced in twenty focused runs, under the race detector, or in the final sequential suite. Treating it as conclusively fixed would be inaccurate, but treating the dependency upgrade as broken would also be unsupported. The diary preserves the exact failure class and follow-up evidence.
+
+### What warrants a second pair of eyes
+
+- The provider fixture's embedding stage timeout/failure behavior under host load.
+- Whether all other scientific artifact writers should be audited for 0600 defaults before P0.
+- Whether the G202 annotation remains sufficiently narrow if query construction changes.
+
+### What should be done in the future
+
+- Consolidate authored real-study sources under `experiments/ttc-real` before provider execution.
+- Freeze and verify candidate corpus/evaluation/provider manifests.
+- Execute only bounded P0 after budget review.
+
+### Code review instructions
+
+- Review `go.mod` and `go.sum` for the exact v0.0.3 upgrade.
+- Review `writeImmutableStudyFile` and its permission regression test.
+- Review the intake SQL annotation and verify all source values remain bound arguments.
+- Run the full commands listed below sequentially on constrained machines.
+
+### Technical details
+
+```text
+GOWORK=off go test ./... -count=1 -p=1
+GOWORK=off go test -race ./pkg/ragworkflow ./pkg/ragworkflowops ./pkg/ragproviders/... ./pkg/researchctladapter -count=1 -p=1
+make lint
+make gosec
+make govulncheck
+pnpm --dir web typecheck
+pnpm --dir web build
+pnpm --dir packages/rag-evaluation-site typecheck
+pnpm --dir packages/rag-evaluation-site build-storybook
+make build-full
 ```

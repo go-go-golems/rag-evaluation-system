@@ -132,6 +132,7 @@ func selectDocumentIDs(ctx context.Context, path string, sources []string, limit
 	query := "SELECT id FROM documents"
 	args := []any{}
 	if len(sources) > 0 {
+		// #nosec G202 -- only fixed SQL placeholder tokens are concatenated; source values remain bound arguments.
 		query += " WHERE source_id IN (" + strings.TrimRight(strings.Repeat("?,", len(sources)), ",") + ")"
 		for _, source := range sources {
 			args = append(args, source)

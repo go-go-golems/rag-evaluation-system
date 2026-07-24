@@ -47,6 +47,14 @@ func TestWriteStudyBundleIsStableAndWorkflowNative(t *testing.T) {
 	}
 }
 
+func TestWriteImmutableStudyFileUsesOwnerOnlyPermissions(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "artifact.json")
+	require.NoError(t, writeImmutableStudyFile(path, []byte("{}\n")))
+	info, err := os.Stat(path)
+	require.NoError(t, err)
+	require.Equal(t, os.FileMode(0o600), info.Mode().Perm())
+}
+
 func TestWriteStudyBundleBindsProviderAuthority(t *testing.T) {
 	fixture, err := NewDeterministicProviderFixture()
 	require.NoError(t, err)
