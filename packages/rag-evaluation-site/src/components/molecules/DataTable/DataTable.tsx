@@ -194,7 +194,7 @@ export function DataTable<T>({
 		shouldRestoreFocus.current = true;
 		setFocusedKey(nextKey);
 		if (multi && extend) extendSelection(nextKey, "keyboardRange");
-		else if (!multi && keyboard?.selection === "followFocus") onRowSelect?.(nextRow);
+		else if (keyboard?.selection === "followFocus") onRowSelect?.(nextRow);
 	};
 
 	const handleKeyDown = (event: KeyboardEvent<HTMLTableRowElement>, row: T) => {
@@ -221,7 +221,7 @@ export function DataTable<T>({
 			emitSelection([], "clear");
 			return;
 		}
-		if (!multi && event.key === "Enter" && keyboard.enterSelect !== false) {
+		if (event.key === "Enter" && keyboard.enterSelect !== false) {
 			event.preventDefault();
 			onRowSelect?.(row);
 			return;
@@ -329,7 +329,7 @@ export function DataTable<T>({
 							<tr
 								aria-selected={selected}
 								className={[
-									!multi && onRowSelect ? styles.selectable : "",
+									onRowSelect ? styles.selectable : "",
 									selected ? styles.selected : "",
 									focused ? styles.focused : "",
 									tone ? styles[`tone-${tone}`] : "",
@@ -337,7 +337,7 @@ export function DataTable<T>({
 									.filter(Boolean)
 									.join(" ")}
 								key={key}
-								onClick={!multi && onRowSelect ? () => onRowSelect(row) : undefined}
+								onClick={onRowSelect ? () => onRowSelect(row) : undefined}
 								onFocus={() => setFocusedKey(key)}
 								onKeyDown={(event) => handleKeyDown(event, row)}
 								ref={(element) => {
