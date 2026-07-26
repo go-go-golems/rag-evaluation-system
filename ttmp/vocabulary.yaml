@@ -133,6 +133,10 @@ topics:
       description: Cross-encoder post-retrieval candidate scoring and ordering.
     - slug: ollama
       description: Local model runtime and model-store integration.
+    - slug: architecture
+      description: Software architecture, system boundaries, and structural design
+    - slug: code-quality
+      description: Code maintainability, complexity reduction, cleanup, and review
     - slug: obsidian
       description: Obsidian vault corpus structure, Markdown metadata, and wikilink semantics
     - slug: adjudication
