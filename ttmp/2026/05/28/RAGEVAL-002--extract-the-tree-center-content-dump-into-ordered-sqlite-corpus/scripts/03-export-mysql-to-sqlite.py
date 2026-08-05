@@ -123,7 +123,8 @@ def init_sqlite(path: Path) -> sqlite3.Connection:
           mature_width TEXT,
           sunlight TEXT,
           soil_conditions TEXT,
-          drought_tolerance TEXT
+          drought_tolerance TEXT,
+          image_url TEXT
         );
 
         CREATE INDEX idx_content_items_kind ON content_items(kind);
