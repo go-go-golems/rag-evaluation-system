@@ -10,7 +10,7 @@
 		"paths": {
 			"@go-go-golems/rag-evaluation-site": ["../packages/rag-evaluation-site/src/index.ts"],
 			"@go-go-golems/rag-evaluation-site/app": ["../packages/rag-evaluation-site/src/app/index.ts"],
-			"@go-go-golems/rag-evaluation-site/ir": ["../packages/rag-evaluation-site/src/widgets/ir.ts"]
+			"@go-go-golems/rag-evaluation-site/ir": ["../packages/rag-evaluation-site/src/widgets/ir/index.ts"]
 		},
 		"isolatedModules": true,
 		"moduleDetection": "force",

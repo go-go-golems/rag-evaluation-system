@@ -51,7 +51,7 @@ func TestSubmitIntakeWorkflowAndRunWorkerWithFakeProvider(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new scheduler: %v", err)
 	}
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 	for i := 0; i < 4; i++ {
 		if _, err := sched.RunOnce(ctx); err != nil {
 			t.Fatalf("run cycle %d: %v", i+1, err)

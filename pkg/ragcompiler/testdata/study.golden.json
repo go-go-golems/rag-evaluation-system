@@ -1,0 +1,1940 @@
+{
+	"schemaVersion": "rag-study/v2",
+	"variants": [
+		{
+			"id": "raw",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					}
+				],
+				"nodes": [
+					{
+						"id": "units",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "chunks",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "units",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"size": 800
+						}
+					},
+					{
+						"id": "raw-representations",
+						"operator": {
+							"kind": "representations.raw",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "chunks",
+									"port": "chunks"
+								}
+							}
+						],
+						"config": {
+							"name": "raw"
+						}
+					},
+					{
+						"id": "index",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.raw",
+								"from": {
+									"nodeId": "raw-representations",
+									"port": "representations"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["raw"]
+						}
+					},
+					{
+						"id": "raw.bm25.retrieve",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "raw",
+							"topK": 30
+						}
+					},
+					{
+						"id": "raw.bm25.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "raw.bm25.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "raw.vector.retrieve",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "raw",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "raw.vector.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "raw.vector.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "fusion",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.raw.bm25",
+								"from": {
+									"nodeId": "raw.bm25.collapse",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.vector",
+								"from": {
+									"nodeId": "raw.vector.collapse",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "final",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "fusion",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "hydrate",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "chunks",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "final",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "hydrate",
+							"port": "evidence"
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": "summary",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					},
+					{
+						"id": "summary-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "summary-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004"
+					}
+				],
+				"nodes": [
+					{
+						"id": "units",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "chunks",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "units",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"size": 800
+						}
+					},
+					{
+						"id": "index",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.summary",
+								"from": {
+									"nodeId": "summary-representations",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["summary"]
+						}
+					},
+					{
+						"id": "summary.bm25.retrieve",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "summary",
+							"topK": 30
+						}
+					},
+					{
+						"id": "summary.bm25.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "summary.bm25.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "summary.vector.retrieve",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "summary.vector.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "summary.vector.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "fusion",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.summary.bm25",
+								"from": {
+									"nodeId": "summary.bm25.collapse",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.vector",
+								"from": {
+									"nodeId": "summary.vector.collapse",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "final",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "fusion",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "hydrate",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "chunks",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "final",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "hydrate",
+							"port": "evidence"
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": "raw-summary",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					},
+					{
+						"id": "summary-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "summary-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004"
+					}
+				],
+				"nodes": [
+					{
+						"id": "units",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "chunks",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "units",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"size": 800
+						}
+					},
+					{
+						"id": "raw-representations",
+						"operator": {
+							"kind": "representations.raw",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "chunks",
+									"port": "chunks"
+								}
+							}
+						],
+						"config": {
+							"name": "raw"
+						}
+					},
+					{
+						"id": "index",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.raw",
+								"from": {
+									"nodeId": "raw-representations",
+									"port": "representations"
+								}
+							},
+							{
+								"port": "representations.summary",
+								"from": {
+									"nodeId": "summary-representations",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["raw", "summary"]
+						}
+					},
+					{
+						"id": "raw.bm25.retrieve",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "raw",
+							"topK": 30
+						}
+					},
+					{
+						"id": "raw.bm25.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "raw.bm25.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "raw.vector.retrieve",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "raw",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "raw.vector.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "raw.vector.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "summary.bm25.retrieve",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 2
+					},
+					{
+						"id": "summary.bm25.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "summary.bm25.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						},
+						"order": 2
+					},
+					{
+						"id": "summary.vector.retrieve",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 3
+					},
+					{
+						"id": "summary.vector.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "summary.vector.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						},
+						"order": 3
+					},
+					{
+						"id": "fusion",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.raw.bm25",
+								"from": {
+									"nodeId": "raw.bm25.collapse",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.vector",
+								"from": {
+									"nodeId": "raw.vector.collapse",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.bm25",
+								"from": {
+									"nodeId": "summary.bm25.collapse",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.vector",
+								"from": {
+									"nodeId": "summary.vector.collapse",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "final",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "fusion",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "hydrate",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "chunks",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "final",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "hydrate",
+							"port": "evidence"
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": "raw-question",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					},
+					{
+						"id": "question-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "question-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:09ed9383359901c7e515870884f82490c053e6d511a2f865a57aada9b4a8baa3"
+					}
+				],
+				"nodes": [
+					{
+						"id": "units",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "chunks",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "units",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"size": 800
+						}
+					},
+					{
+						"id": "raw-representations",
+						"operator": {
+							"kind": "representations.raw",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "chunks",
+									"port": "chunks"
+								}
+							}
+						],
+						"config": {
+							"name": "raw"
+						}
+					},
+					{
+						"id": "index",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.question",
+								"from": {
+									"nodeId": "question-representations",
+									"port": "out"
+								}
+							},
+							{
+								"port": "representations.raw",
+								"from": {
+									"nodeId": "raw-representations",
+									"port": "representations"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["raw", "question"]
+						}
+					},
+					{
+						"id": "raw.bm25.retrieve",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "raw",
+							"topK": 30
+						}
+					},
+					{
+						"id": "raw.bm25.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "raw.bm25.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "raw.vector.retrieve",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "raw",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "raw.vector.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "raw.vector.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "question.bm25.retrieve",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "question",
+							"topK": 30
+						},
+						"order": 2
+					},
+					{
+						"id": "question.bm25.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "question.bm25.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						},
+						"order": 2
+					},
+					{
+						"id": "question.vector.retrieve",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "question",
+							"topK": 30
+						},
+						"order": 3
+					},
+					{
+						"id": "question.vector.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "question.vector.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						},
+						"order": 3
+					},
+					{
+						"id": "fusion",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.question.bm25",
+								"from": {
+									"nodeId": "question.bm25.collapse",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.question.vector",
+								"from": {
+									"nodeId": "question.vector.collapse",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.bm25",
+								"from": {
+									"nodeId": "raw.bm25.collapse",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.vector",
+								"from": {
+									"nodeId": "raw.vector.collapse",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "final",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "fusion",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "hydrate",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "chunks",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "final",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "hydrate",
+							"port": "evidence"
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": "all",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					},
+					{
+						"id": "summary-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "summary-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004"
+					},
+					{
+						"id": "question-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "question-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:09ed9383359901c7e515870884f82490c053e6d511a2f865a57aada9b4a8baa3"
+					}
+				],
+				"nodes": [
+					{
+						"id": "units",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "chunks",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "units",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"size": 800
+						}
+					},
+					{
+						"id": "raw-representations",
+						"operator": {
+							"kind": "representations.raw",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "chunks",
+									"port": "chunks"
+								}
+							}
+						],
+						"config": {
+							"name": "raw"
+						}
+					},
+					{
+						"id": "index",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.question",
+								"from": {
+									"nodeId": "question-representations",
+									"port": "out"
+								}
+							},
+							{
+								"port": "representations.raw",
+								"from": {
+									"nodeId": "raw-representations",
+									"port": "representations"
+								}
+							},
+							{
+								"port": "representations.summary",
+								"from": {
+									"nodeId": "summary-representations",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["raw", "summary", "question"]
+						}
+					},
+					{
+						"id": "raw.bm25.retrieve",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "raw",
+							"topK": 30
+						}
+					},
+					{
+						"id": "raw.bm25.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "raw.bm25.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "raw.vector.retrieve",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "raw",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "raw.vector.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "raw.vector.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "summary.bm25.retrieve",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 2
+					},
+					{
+						"id": "summary.bm25.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "summary.bm25.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						},
+						"order": 2
+					},
+					{
+						"id": "summary.vector.retrieve",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 3
+					},
+					{
+						"id": "summary.vector.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "summary.vector.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						},
+						"order": 3
+					},
+					{
+						"id": "question.bm25.retrieve",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "question",
+							"topK": 30
+						},
+						"order": 4
+					},
+					{
+						"id": "question.bm25.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "question.bm25.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						},
+						"order": 4
+					},
+					{
+						"id": "question.vector.retrieve",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "index",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representation": "question",
+							"topK": 30
+						},
+						"order": 5
+					},
+					{
+						"id": "question.vector.collapse",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "question.vector.retrieve",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						},
+						"order": 5
+					},
+					{
+						"id": "fusion",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.question.bm25",
+								"from": {
+									"nodeId": "question.bm25.collapse",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.question.vector",
+								"from": {
+									"nodeId": "question.vector.collapse",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.bm25",
+								"from": {
+									"nodeId": "raw.bm25.collapse",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.vector",
+								"from": {
+									"nodeId": "raw.vector.collapse",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.bm25",
+								"from": {
+									"nodeId": "summary.bm25.collapse",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.vector",
+								"from": {
+									"nodeId": "summary.vector.collapse",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "final",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "fusion",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "hydrate",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "chunks",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "final",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "hydrate",
+							"port": "evidence"
+						}
+					}
+				]
+			}
+		}
+	],
+	"factors": [
+		{
+			"id": "collapse",
+			"values": [
+				{
+					"id": "chunk",
+					"value": "chunk",
+					"overrides": [
+						{
+							"nodeId": "final",
+							"config": {
+								"scope": "chunk"
+							}
+						}
+					]
+				},
+				{
+					"id": "unit",
+					"value": "unit",
+					"overrides": [
+						{
+							"nodeId": "final",
+							"config": {
+								"scope": "unit"
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"bindings": [
+		{
+			"slotId": "corpus",
+			"role": "corpus",
+			"kind": "manifest",
+			"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a",
+			"sizeBytes": 10,
+			"schemaVersion": "rag-corpus-snapshot-manifest/v2"
+		},
+		{
+			"slotId": "summary-representations",
+			"role": "summary-representations",
+			"kind": "manifest",
+			"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004",
+			"sizeBytes": 10,
+			"schemaVersion": "rag-representation-set-manifest/v2"
+		},
+		{
+			"slotId": "question-representations",
+			"role": "question-representations",
+			"kind": "manifest",
+			"digest": "sha256:09ed9383359901c7e515870884f82490c053e6d511a2f865a57aada9b4a8baa3",
+			"sizeBytes": 10,
+			"schemaVersion": "rag-representation-set-manifest/v2"
+		}
+	],
+	"dataset": {
+		"manifestDigest": "sha256:e711122088c7d5a3efd85da265136b0964e17ed8b6ae01f7601296dd1b28f99a",
+		"split": "smoke",
+		"status": "candidate",
+		"relevanceTarget": "unit"
+	},
+	"measures": [
+		{
+			"name": "rag.mrr",
+			"version": "",
+			"valueKind": "number",
+			"required": true,
+			"config": {}
+		}
+	],
+	"replicates": 2,
+	"display": {
+		"name": "sol2 matrix"
+	}
+}

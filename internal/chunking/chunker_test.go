@@ -48,3 +48,23 @@ func TestSentenceChunkerRejectsOverlapAtLeastChunkSize(t *testing.T) {
 		t.Fatal("expected overlap >= chunk size to return an error")
 	}
 }
+
+func TestChunkTextAlwaysEqualsRecordedRuneRange(t *testing.T) {
+	text := "  First sentence.  Second sentence.\n\n# Heading\nThird sentence.  "
+	chunkers := []Chunker{
+		NewFixedSizeChunker(20, 4, "fixed"),
+		NewSentenceChunker(25, 4, "sentence"),
+		NewMarkdownHeadingChunker(25, "markdown"),
+	}
+	for _, chunker := range chunkers {
+		chunks, err := chunker.Chunk("test-doc", text)
+		if err != nil {
+			t.Fatalf("%s chunking failed: %v", chunker.Name(), err)
+		}
+		for _, chunk := range chunks {
+			if actual := string([]rune(text)[chunk.StartOffset:chunk.EndOffset]); actual != chunk.Text {
+				t.Fatalf("%s chunk %#v does not equal source range %q", chunker.Name(), chunk, actual)
+			}
+		}
+	}
+}

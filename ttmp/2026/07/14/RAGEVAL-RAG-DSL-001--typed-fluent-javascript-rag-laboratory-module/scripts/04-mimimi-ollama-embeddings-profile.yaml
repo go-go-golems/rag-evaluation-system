@@ -1,0 +1,17 @@
+# Operational-only profile used by 05-run-rag-lab-js-geppetto.js.
+# It contains no credentials. The loopback URL is provided by the documented
+# rag-ollama-mimimi SSH tunnel and must not be copied into an experiment spec.
+slug: rag-eval-mimimi-embeddings
+profiles:
+  ttc-mimimi-nomic-embed:
+    display_name: TTC mimimi nomic embeddings
+    description: 768-dimensional query embeddings through the local SSH tunnel.
+    inference_settings:
+      api:
+        base_urls:
+          ollama-base-url: http://127.0.0.1:11435
+      embeddings:
+        type: ollama
+        engine: nomic-embed-text
+        dimensions: 768
+        cache_type: none

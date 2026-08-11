@@ -3,6 +3,7 @@ import { Button, Caption, Panel, Text } from "@go-go-golems/rag-evaluation-site"
 import { DashboardGrid, ScrollRegion, Stack } from "@go-go-golems/rag-evaluation-site";
 import {
 	ContextDiagramPanel,
+	contextDefaultStyleSet,
 	type ContextDiagramView,
 	contextWindowSnapshots,
 } from "@go-go-golems/rag-evaluation-site";
@@ -71,6 +72,7 @@ export function ContextVisualizerPage() {
 					snapshot={snapshot}
 					initialView={view}
 					showPartDetails
+					styleSet={contextDefaultStyleSet}
 				/>
 			</ScrollRegion>
 		</DashboardGrid>

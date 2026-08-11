@@ -26,7 +26,9 @@ GO_PACKAGES ?= \
 	./internal/ingest \
 	./internal/services/... \
 	./internal/web
-GLAZED_LINT_DIRS ?= $(GO_PACKAGES)
+# Application commands are a mandatory Glazed-lint scope: direct Cobra/pflag
+# command definitions must fail CI.
+GLAZED_LINT_DIRS ?= $(GO_PACKAGES) ./cmd/rag-eval/...
 
 build:
 	GOWORK=off go generate ./...

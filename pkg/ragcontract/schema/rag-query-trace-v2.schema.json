@@ -1,0 +1,33 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "rag-query-trace/v2",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"schemaVersion",
+		"query",
+		"operators",
+		"channels",
+		"collapses",
+		"results",
+		"timing",
+		"usage",
+		"failures"
+	],
+	"properties": {
+		"schemaVersion": { "const": "rag-query-trace/v2" },
+		"query": { "type": "object" },
+		"operators": { "type": "array" },
+		"channels": { "type": "array" },
+		"collapses": { "type": "array" },
+		"fusion": { "type": "object" },
+		"hydration": { "type": "object" },
+		"reranking": { "type": "object" },
+		"generation": { "type": "object" },
+		"results": { "type": "array" },
+		"relevance": { "type": "object" },
+		"timing": { "type": "object" },
+		"usage": { "type": "object" },
+		"failures": { "type": "array" }
+	}
+}

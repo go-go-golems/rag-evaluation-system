@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "rag-ttc-v3-aborted-real-attempt/v1",
+  "attemptOrdinal": 1,
+  "cell": {
+    "chunksPerRequest": 1,
+    "concurrency": 1,
+    "replicate": 1
+  },
+  "providerProfileDigest": "sha256:cf092e0f1a389169a22e519beb8b81b7f059dd6bb66ec391ea934bf857e46702",
+  "generationModelDigest": "sha256:de4fd2ae4ab9b359e5ce7fee7b7773258f6eb9643cd61a682f54d76b7584a684",
+  "admittedGenerationRequests": 1,
+  "settledGenerationRequests": 0,
+  "attemptStatusAtShutdown": "running",
+  "attemptStartedAt": "2026-07-22T17:25:21.326998785Z",
+  "failureClass": "operator-timeout",
+  "failureCode": "RAG_SWEEP_CELL_TIMEOUT",
+  "configuredCellTimeoutSeconds": 30,
+  "workflowNodeCounts": {
+    "pending": 15,
+    "running": 1
+  },
+  "budgetReservations": {
+    "requests": 1,
+    "inputTokens": 16384,
+    "outputTokens": 8192,
+    "costMicrounits": 10650
+  },
+  "providerResponseObserved": false,
+  "providerUsageObserved": false,
+  "countedConservativelyAgainstFutureAuthority": true,
+  "containsSourceText": false,
+  "containsProviderBody": false,
+  "containsCredentials": false
+}

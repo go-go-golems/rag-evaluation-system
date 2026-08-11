@@ -18,7 +18,7 @@ export default defineConfig({
 			{
 				find: "@go-go-golems/rag-evaluation-site/ir",
 				replacement: fileURLToPath(
-					new URL("../packages/rag-evaluation-site/src/widgets/ir.ts", import.meta.url),
+					new URL("../packages/rag-evaluation-site/src/widgets/ir/index.ts", import.meta.url),
 				),
 			},
 			{

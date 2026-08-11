@@ -96,7 +96,7 @@ func (c *SmokeCommand) RunIntoGlazeProcessor(ctx context.Context, vals *values.V
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 	service := searchservice.NewService(queries, s.IndexRoot)
 	for _, q := range suite.Queries {
 		result, err := service.QueryBM25(ctx, searchservice.QueryRequest{IndexID: s.IndexID, Query: q.Text, Limit: s.Limit, PreviewRunes: s.PreviewRunes})

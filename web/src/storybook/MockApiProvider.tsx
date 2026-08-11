@@ -1,10 +1,10 @@
+import type { WidgetNode } from "@go-go-golems/rag-evaluation-site/ir";
+import { component, text } from "@go-go-golems/rag-evaluation-site/ir";
 import { configureStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
 import { useEffect, useMemo } from "react";
 import { Provider } from "react-redux";
 import { ragApi } from "../services/api";
-import type { WidgetNode } from "@go-go-golems/rag-evaluation-site/ir";
-import { component, text } from "@go-go-golems/rag-evaluation-site/ir";
 
 interface MockApiProviderProps {
 	children: ReactNode;
@@ -279,6 +279,36 @@ function mockPayload(url: URL, method: string): unknown {
 	}
 
 	if (path === "sources") return { items: sources };
+	if (path === "artifacts/rag/catalog")
+		return {
+			snapshots: [{ id: "sha256:corpus-001", document_count: 200, created_at: now }],
+			chunk_sets: [
+				{
+					id: "sha256:chunks-001",
+					corpus_snapshot_id: "sha256:corpus-001",
+					chunk_plan_id: "sha256:plan-001",
+					chunk_count: 2024,
+					created_at: now,
+				},
+			],
+			embedding_sets: [
+				{
+					id: "sha256:embeddings-001",
+					chunk_set_id: "sha256:chunks-001",
+					embedding_plan_id: "sha256:embedding-plan-001",
+					embedding_count: 2024,
+					created_at: now,
+				},
+			],
+			bm25_artifacts: [
+				{
+					id: "sha256:bm25-001",
+					chunk_set_id: "sha256:chunks-001",
+					chunk_count: 2024,
+					created_at: now,
+				},
+			],
+		};
 	if (path === "documents") return { items: documents };
 	if (path.endsWith("/chunks")) return { items: chunks };
 	if (path === "chunking-strategies") return { items: strategies };

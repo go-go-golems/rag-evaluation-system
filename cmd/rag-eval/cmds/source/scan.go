@@ -113,7 +113,7 @@ func (c *ScanCommand) RunIntoGlazeProcessor(
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	service := sourceservice.NewService(queries)
 	result, err := service.Scan(ctx, sourceservice.ScanRequest{SourceID: s.SourceID, Dir: s.Dir})

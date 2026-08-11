@@ -150,11 +150,13 @@ func (c *SentenceChunker) Chunk(documentID, text string) ([]Chunk, error) {
 			// Emit current chunk
 			chunkID := generateChunkID(documentID, c.StrategyID, index)
 			chunks = append(chunks, Chunk{
-				ID:          chunkID,
-				DocumentID:  documentID,
-				StrategyID:  c.StrategyID,
-				ChunkIndex:  index,
-				Text:        strings.TrimSpace(currentText),
+				ID:         chunkID,
+				DocumentID: documentID,
+				StrategyID: c.StrategyID,
+				ChunkIndex: index,
+				// Preserve the exact source slice. Trimming here makes the
+				// recorded rune offsets disagree with chunk text.
+				Text:        currentText,
 				TokenCount:  estimateTokens(currentText),
 				StartOffset: chunkStartOffset,
 				EndOffset:   currentStart,
@@ -187,7 +189,7 @@ func (c *SentenceChunker) Chunk(documentID, text string) ([]Chunk, error) {
 			DocumentID:  documentID,
 			StrategyID:  c.StrategyID,
 			ChunkIndex:  index,
-			Text:        strings.TrimSpace(currentText),
+			Text:        currentText,
 			TokenCount:  estimateTokens(currentText),
 			StartOffset: chunkStartOffset,
 			EndOffset:   currentStart,
@@ -250,7 +252,7 @@ func (c *MarkdownHeadingChunker) Chunk(documentID, text string) ([]Chunk, error)
 				DocumentID:  documentID,
 				StrategyID:  c.StrategyID,
 				ChunkIndex:  index,
-				Text:        strings.TrimSpace(section),
+				Text:        section,
 				TokenCount:  estimateTokens(section),
 				StartOffset: offset,
 				EndOffset:   offset + utf8.RuneCountInString(section),
@@ -297,19 +299,15 @@ func splitSentences(text string) []string {
 	for _, r := range text {
 		current.WriteRune(r)
 		if r == '.' || r == '!' || r == '?' || r == '\n' {
-			s := current.String()
-			if strings.TrimSpace(s) != "" {
-				sentences = append(sentences, s)
-			}
+			// Keep whitespace-only fragments as source material. Dropping them
+			// changes subsequent rune offsets and breaks citation evidence.
+			sentences = append(sentences, current.String())
 			current.Reset()
 		}
 	}
 
 	if current.Len() > 0 {
-		s := current.String()
-		if strings.TrimSpace(s) != "" {
-			sentences = append(sentences, s)
-		}
+		sentences = append(sentences, current.String())
 	}
 
 	return sentences
@@ -320,14 +318,15 @@ func splitMarkdownSections(text string) []string {
 	var sections []string
 	var current strings.Builder
 
-	lines := strings.Split(text, "\n")
+	// SplitAfter preserves whether each line actually ended in a newline.
+	// Reconstructing lines by unconditionally adding one changes source ranges.
+	lines := strings.SplitAfter(text, "\n")
 	for _, line := range lines {
 		if strings.HasPrefix(strings.TrimSpace(line), "#") && current.Len() > 0 {
 			sections = append(sections, current.String())
 			current.Reset()
 		}
 		current.WriteString(line)
-		current.WriteString("\n")
 	}
 
 	if current.Len() > 0 {

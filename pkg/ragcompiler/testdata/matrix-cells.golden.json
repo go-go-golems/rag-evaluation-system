@@ -1,0 +1,4372 @@
+[
+	{
+		"id": "sha256:236e8f2d6fa101841b674023601f56ad3300175dc197a970b4dda77fbe1f375e",
+		"variantId": "all",
+		"factors": [
+			{
+				"factorId": "collapse",
+				"valueId": "chunk",
+				"value": "chunk"
+			}
+		],
+		"replicates": 2,
+		"execution": {
+			"schemaVersion": "rag-pipeline-execution/v2",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					},
+					{
+						"id": "question-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "question-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:09ed9383359901c7e515870884f82490c053e6d511a2f865a57aada9b4a8baa3"
+					},
+					{
+						"id": "summary-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "summary-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004"
+					}
+				],
+				"nodes": [
+					{
+						"id": "n-6761d69ad948a76579b7",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "n-806ee8a8fb83b28f314f",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "n-6761d69ad948a76579b7",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"overlap": 120,
+							"size": 800,
+							"unicodePolicy": "utf8-boundary"
+						}
+					},
+					{
+						"id": "n-feaec7d470a94d9eddcc",
+						"operator": {
+							"kind": "representations.raw",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							}
+						],
+						"config": {
+							"name": "raw"
+						}
+					},
+					{
+						"id": "n-2b1cab72874b310a3bd3",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.question",
+								"from": {
+									"nodeId": "question-representations",
+									"port": "out"
+								}
+							},
+							{
+								"port": "representations.raw",
+								"from": {
+									"nodeId": "n-feaec7d470a94d9eddcc",
+									"port": "representations"
+								}
+							},
+							{
+								"port": "representations.summary",
+								"from": {
+									"nodeId": "summary-representations",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["raw", "summary", "question"]
+						}
+					},
+					{
+						"id": "n-1ac64ae45dfdca561d58",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-2b1cab72874b310a3bd3",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 3
+					},
+					{
+						"id": "n-84767fa25cd970f9c9bc",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-2b1cab72874b310a3bd3",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "n-0e83fd1c9a4253a5e1fa",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-84767fa25cd970f9c9bc",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "n-886216f656f95c1b6bc2",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-2b1cab72874b310a3bd3",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "question",
+							"topK": 30
+						},
+						"order": 4
+					},
+					{
+						"id": "n-137dacdb2918e5d33639",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-886216f656f95c1b6bc2",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 4
+					},
+					{
+						"id": "n-ae0c8a0fde4b1abc82d4",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-2b1cab72874b310a3bd3",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 2
+					},
+					{
+						"id": "n-0c7a5a95d3532262a1b6",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-ae0c8a0fde4b1abc82d4",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 2
+					},
+					{
+						"id": "n-b85961f1c8c376d26133",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-2b1cab72874b310a3bd3",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "question",
+							"topK": 30
+						},
+						"order": 5
+					},
+					{
+						"id": "n-aaec64c597a664043fb2",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-b85961f1c8c376d26133",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 5
+					},
+					{
+						"id": "n-c4bb2124fb0ec2f4d40e",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-2b1cab72874b310a3bd3",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						}
+					},
+					{
+						"id": "n-d34b7652b9e34fedbe16",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-1ac64ae45dfdca561d58",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 3
+					},
+					{
+						"id": "n-dd93eebe451e31c0397d",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-c4bb2124fb0ec2f4d40e",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-17b824f9c3a652916e37",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.question.bm25",
+								"from": {
+									"nodeId": "n-137dacdb2918e5d33639",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.question.vector",
+								"from": {
+									"nodeId": "n-aaec64c597a664043fb2",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.bm25",
+								"from": {
+									"nodeId": "n-dd93eebe451e31c0397d",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.vector",
+								"from": {
+									"nodeId": "n-0e83fd1c9a4253a5e1fa",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.bm25",
+								"from": {
+									"nodeId": "n-0c7a5a95d3532262a1b6",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.vector",
+								"from": {
+									"nodeId": "n-d34b7652b9e34fedbe16",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"rankConstant": 60,
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "n-ce1845bf24dffc4cda2b",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-17b824f9c3a652916e37",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "chunk"
+						}
+					},
+					{
+						"id": "n-07c38fcbafd0a772778e",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-ce1845bf24dffc4cda2b",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "n-07c38fcbafd0a772778e",
+							"port": "evidence"
+						}
+					}
+				]
+			},
+			"bindings": [
+				{
+					"slotId": "corpus",
+					"role": "corpus",
+					"kind": "manifest",
+					"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-corpus-snapshot-manifest/v2"
+				},
+				{
+					"slotId": "question-representations",
+					"role": "question-representations",
+					"kind": "manifest",
+					"digest": "sha256:09ed9383359901c7e515870884f82490c053e6d511a2f865a57aada9b4a8baa3",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-representation-set-manifest/v2"
+				},
+				{
+					"slotId": "summary-representations",
+					"role": "summary-representations",
+					"kind": "manifest",
+					"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-representation-set-manifest/v2"
+				}
+			],
+			"dataset": {
+				"manifestDigest": "sha256:e711122088c7d5a3efd85da265136b0964e17ed8b6ae01f7601296dd1b28f99a",
+				"split": "smoke",
+				"status": "candidate",
+				"relevanceTarget": "unit"
+			},
+			"measures": [
+				{
+					"name": "rag.mrr",
+					"version": "v1",
+					"valueKind": "number",
+					"required": true,
+					"config": {}
+				}
+			],
+			"variantId": "all",
+			"factors": [
+				{
+					"factorId": "collapse",
+					"valueId": "chunk",
+					"value": "chunk"
+				}
+			],
+			"cellId": "sha256:236e8f2d6fa101841b674023601f56ad3300175dc197a970b4dda77fbe1f375e"
+		}
+	},
+	{
+		"id": "sha256:39867dab06cb6cefec3c72032a32a4e892ecb00dea4d2fc1994360e57c6c545d",
+		"variantId": "all",
+		"factors": [
+			{
+				"factorId": "collapse",
+				"valueId": "unit",
+				"value": "unit"
+			}
+		],
+		"replicates": 2,
+		"execution": {
+			"schemaVersion": "rag-pipeline-execution/v2",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					},
+					{
+						"id": "question-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "question-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:09ed9383359901c7e515870884f82490c053e6d511a2f865a57aada9b4a8baa3"
+					},
+					{
+						"id": "summary-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "summary-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004"
+					}
+				],
+				"nodes": [
+					{
+						"id": "n-6761d69ad948a76579b7",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "n-806ee8a8fb83b28f314f",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "n-6761d69ad948a76579b7",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"overlap": 120,
+							"size": 800,
+							"unicodePolicy": "utf8-boundary"
+						}
+					},
+					{
+						"id": "n-feaec7d470a94d9eddcc",
+						"operator": {
+							"kind": "representations.raw",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							}
+						],
+						"config": {
+							"name": "raw"
+						}
+					},
+					{
+						"id": "n-2b1cab72874b310a3bd3",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.question",
+								"from": {
+									"nodeId": "question-representations",
+									"port": "out"
+								}
+							},
+							{
+								"port": "representations.raw",
+								"from": {
+									"nodeId": "n-feaec7d470a94d9eddcc",
+									"port": "representations"
+								}
+							},
+							{
+								"port": "representations.summary",
+								"from": {
+									"nodeId": "summary-representations",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["raw", "summary", "question"]
+						}
+					},
+					{
+						"id": "n-1ac64ae45dfdca561d58",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-2b1cab72874b310a3bd3",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 3
+					},
+					{
+						"id": "n-84767fa25cd970f9c9bc",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-2b1cab72874b310a3bd3",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "n-0e83fd1c9a4253a5e1fa",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-84767fa25cd970f9c9bc",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "n-886216f656f95c1b6bc2",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-2b1cab72874b310a3bd3",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "question",
+							"topK": 30
+						},
+						"order": 4
+					},
+					{
+						"id": "n-137dacdb2918e5d33639",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-886216f656f95c1b6bc2",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 4
+					},
+					{
+						"id": "n-ae0c8a0fde4b1abc82d4",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-2b1cab72874b310a3bd3",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 2
+					},
+					{
+						"id": "n-0c7a5a95d3532262a1b6",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-ae0c8a0fde4b1abc82d4",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 2
+					},
+					{
+						"id": "n-b85961f1c8c376d26133",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-2b1cab72874b310a3bd3",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "question",
+							"topK": 30
+						},
+						"order": 5
+					},
+					{
+						"id": "n-aaec64c597a664043fb2",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-b85961f1c8c376d26133",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 5
+					},
+					{
+						"id": "n-c4bb2124fb0ec2f4d40e",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-2b1cab72874b310a3bd3",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						}
+					},
+					{
+						"id": "n-d34b7652b9e34fedbe16",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-1ac64ae45dfdca561d58",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 3
+					},
+					{
+						"id": "n-dd93eebe451e31c0397d",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-c4bb2124fb0ec2f4d40e",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-17b824f9c3a652916e37",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.question.bm25",
+								"from": {
+									"nodeId": "n-137dacdb2918e5d33639",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.question.vector",
+								"from": {
+									"nodeId": "n-aaec64c597a664043fb2",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.bm25",
+								"from": {
+									"nodeId": "n-dd93eebe451e31c0397d",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.vector",
+								"from": {
+									"nodeId": "n-0e83fd1c9a4253a5e1fa",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.bm25",
+								"from": {
+									"nodeId": "n-0c7a5a95d3532262a1b6",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.vector",
+								"from": {
+									"nodeId": "n-d34b7652b9e34fedbe16",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"rankConstant": 60,
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "n-9c13e05d0c03c4e41835",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-17b824f9c3a652916e37",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-d3bb81c7b80b31ff3f8a",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-9c13e05d0c03c4e41835",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "n-d3bb81c7b80b31ff3f8a",
+							"port": "evidence"
+						}
+					}
+				]
+			},
+			"bindings": [
+				{
+					"slotId": "corpus",
+					"role": "corpus",
+					"kind": "manifest",
+					"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-corpus-snapshot-manifest/v2"
+				},
+				{
+					"slotId": "question-representations",
+					"role": "question-representations",
+					"kind": "manifest",
+					"digest": "sha256:09ed9383359901c7e515870884f82490c053e6d511a2f865a57aada9b4a8baa3",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-representation-set-manifest/v2"
+				},
+				{
+					"slotId": "summary-representations",
+					"role": "summary-representations",
+					"kind": "manifest",
+					"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-representation-set-manifest/v2"
+				}
+			],
+			"dataset": {
+				"manifestDigest": "sha256:e711122088c7d5a3efd85da265136b0964e17ed8b6ae01f7601296dd1b28f99a",
+				"split": "smoke",
+				"status": "candidate",
+				"relevanceTarget": "unit"
+			},
+			"measures": [
+				{
+					"name": "rag.mrr",
+					"version": "v1",
+					"valueKind": "number",
+					"required": true,
+					"config": {}
+				}
+			],
+			"variantId": "all",
+			"factors": [
+				{
+					"factorId": "collapse",
+					"valueId": "unit",
+					"value": "unit"
+				}
+			],
+			"cellId": "sha256:39867dab06cb6cefec3c72032a32a4e892ecb00dea4d2fc1994360e57c6c545d"
+		}
+	},
+	{
+		"id": "sha256:2fff8ce19cc7090313899f349f92dd1a94cf226729844f77f55d6c745faea0fe",
+		"variantId": "raw",
+		"factors": [
+			{
+				"factorId": "collapse",
+				"valueId": "chunk",
+				"value": "chunk"
+			}
+		],
+		"replicates": 2,
+		"execution": {
+			"schemaVersion": "rag-pipeline-execution/v2",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					}
+				],
+				"nodes": [
+					{
+						"id": "n-6761d69ad948a76579b7",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "n-806ee8a8fb83b28f314f",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "n-6761d69ad948a76579b7",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"overlap": 120,
+							"size": 800,
+							"unicodePolicy": "utf8-boundary"
+						}
+					},
+					{
+						"id": "n-feaec7d470a94d9eddcc",
+						"operator": {
+							"kind": "representations.raw",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							}
+						],
+						"config": {
+							"name": "raw"
+						}
+					},
+					{
+						"id": "n-a21498359de622386df7",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.raw",
+								"from": {
+									"nodeId": "n-feaec7d470a94d9eddcc",
+									"port": "representations"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["raw"]
+						}
+					},
+					{
+						"id": "n-0f5268bd5029dcbc8f87",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-a21498359de622386df7",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "n-3603f877924605d4a2b2",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-a21498359de622386df7",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						}
+					},
+					{
+						"id": "n-3f4822fa0eafb0b8e01d",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-0f5268bd5029dcbc8f87",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "n-c4c8a018907e86bd6eb0",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-3603f877924605d4a2b2",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-9424e8c1693db66a1895",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.raw.bm25",
+								"from": {
+									"nodeId": "n-c4c8a018907e86bd6eb0",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.vector",
+								"from": {
+									"nodeId": "n-3f4822fa0eafb0b8e01d",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"rankConstant": 60,
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "n-d7a5de6cb74c32f88464",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-9424e8c1693db66a1895",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "chunk"
+						}
+					},
+					{
+						"id": "n-a1b6878ba9aeef0931f9",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-d7a5de6cb74c32f88464",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "n-a1b6878ba9aeef0931f9",
+							"port": "evidence"
+						}
+					}
+				]
+			},
+			"bindings": [
+				{
+					"slotId": "corpus",
+					"role": "corpus",
+					"kind": "manifest",
+					"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-corpus-snapshot-manifest/v2"
+				}
+			],
+			"dataset": {
+				"manifestDigest": "sha256:e711122088c7d5a3efd85da265136b0964e17ed8b6ae01f7601296dd1b28f99a",
+				"split": "smoke",
+				"status": "candidate",
+				"relevanceTarget": "unit"
+			},
+			"measures": [
+				{
+					"name": "rag.mrr",
+					"version": "v1",
+					"valueKind": "number",
+					"required": true,
+					"config": {}
+				}
+			],
+			"variantId": "raw",
+			"factors": [
+				{
+					"factorId": "collapse",
+					"valueId": "chunk",
+					"value": "chunk"
+				}
+			],
+			"cellId": "sha256:2fff8ce19cc7090313899f349f92dd1a94cf226729844f77f55d6c745faea0fe"
+		}
+	},
+	{
+		"id": "sha256:0e607eb14d5f100c39bd3e80bb025739cfeb7a31c7469899f29701e65533cdab",
+		"variantId": "raw",
+		"factors": [
+			{
+				"factorId": "collapse",
+				"valueId": "unit",
+				"value": "unit"
+			}
+		],
+		"replicates": 2,
+		"execution": {
+			"schemaVersion": "rag-pipeline-execution/v2",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					}
+				],
+				"nodes": [
+					{
+						"id": "n-6761d69ad948a76579b7",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "n-806ee8a8fb83b28f314f",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "n-6761d69ad948a76579b7",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"overlap": 120,
+							"size": 800,
+							"unicodePolicy": "utf8-boundary"
+						}
+					},
+					{
+						"id": "n-feaec7d470a94d9eddcc",
+						"operator": {
+							"kind": "representations.raw",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							}
+						],
+						"config": {
+							"name": "raw"
+						}
+					},
+					{
+						"id": "n-a21498359de622386df7",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.raw",
+								"from": {
+									"nodeId": "n-feaec7d470a94d9eddcc",
+									"port": "representations"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["raw"]
+						}
+					},
+					{
+						"id": "n-0f5268bd5029dcbc8f87",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-a21498359de622386df7",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "n-3603f877924605d4a2b2",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-a21498359de622386df7",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						}
+					},
+					{
+						"id": "n-3f4822fa0eafb0b8e01d",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-0f5268bd5029dcbc8f87",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "n-c4c8a018907e86bd6eb0",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-3603f877924605d4a2b2",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-9424e8c1693db66a1895",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.raw.bm25",
+								"from": {
+									"nodeId": "n-c4c8a018907e86bd6eb0",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.vector",
+								"from": {
+									"nodeId": "n-3f4822fa0eafb0b8e01d",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"rankConstant": 60,
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "n-0f77443e4d5fd86d2b08",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-9424e8c1693db66a1895",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-4833efa7ef7b75e8e46b",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-0f77443e4d5fd86d2b08",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "n-4833efa7ef7b75e8e46b",
+							"port": "evidence"
+						}
+					}
+				]
+			},
+			"bindings": [
+				{
+					"slotId": "corpus",
+					"role": "corpus",
+					"kind": "manifest",
+					"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-corpus-snapshot-manifest/v2"
+				}
+			],
+			"dataset": {
+				"manifestDigest": "sha256:e711122088c7d5a3efd85da265136b0964e17ed8b6ae01f7601296dd1b28f99a",
+				"split": "smoke",
+				"status": "candidate",
+				"relevanceTarget": "unit"
+			},
+			"measures": [
+				{
+					"name": "rag.mrr",
+					"version": "v1",
+					"valueKind": "number",
+					"required": true,
+					"config": {}
+				}
+			],
+			"variantId": "raw",
+			"factors": [
+				{
+					"factorId": "collapse",
+					"valueId": "unit",
+					"value": "unit"
+				}
+			],
+			"cellId": "sha256:0e607eb14d5f100c39bd3e80bb025739cfeb7a31c7469899f29701e65533cdab"
+		}
+	},
+	{
+		"id": "sha256:121d74aa2ea6c4fc6cc85886481c6d9f9ac99ab478de633287985b5e765d2602",
+		"variantId": "raw-question",
+		"factors": [
+			{
+				"factorId": "collapse",
+				"valueId": "chunk",
+				"value": "chunk"
+			}
+		],
+		"replicates": 2,
+		"execution": {
+			"schemaVersion": "rag-pipeline-execution/v2",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					},
+					{
+						"id": "question-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "question-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:09ed9383359901c7e515870884f82490c053e6d511a2f865a57aada9b4a8baa3"
+					}
+				],
+				"nodes": [
+					{
+						"id": "n-6761d69ad948a76579b7",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "n-806ee8a8fb83b28f314f",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "n-6761d69ad948a76579b7",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"overlap": 120,
+							"size": 800,
+							"unicodePolicy": "utf8-boundary"
+						}
+					},
+					{
+						"id": "n-feaec7d470a94d9eddcc",
+						"operator": {
+							"kind": "representations.raw",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							}
+						],
+						"config": {
+							"name": "raw"
+						}
+					},
+					{
+						"id": "n-043b3303a7054a171327",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.question",
+								"from": {
+									"nodeId": "question-representations",
+									"port": "out"
+								}
+							},
+							{
+								"port": "representations.raw",
+								"from": {
+									"nodeId": "n-feaec7d470a94d9eddcc",
+									"port": "representations"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["raw", "question"]
+						}
+					},
+					{
+						"id": "n-15467bfddacae7832f02",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-043b3303a7054a171327",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "n-89199c9948c617ec4f22",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-043b3303a7054a171327",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "question",
+							"topK": 30
+						},
+						"order": 2
+					},
+					{
+						"id": "n-8c51be73d7fc504640c0",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-15467bfddacae7832f02",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "n-8d375ac3f431e4fdee5a",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-043b3303a7054a171327",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						}
+					},
+					{
+						"id": "n-e380f6b0f9562483f068",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-89199c9948c617ec4f22",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 2
+					},
+					{
+						"id": "n-e4c12b67c00e61774970",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-043b3303a7054a171327",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "question",
+							"topK": 30
+						},
+						"order": 3
+					},
+					{
+						"id": "n-c9534d94624c4d756814",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-e4c12b67c00e61774970",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 3
+					},
+					{
+						"id": "n-ec6494475a5fc15b36d0",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-8d375ac3f431e4fdee5a",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-2b860a4d3ca6a200c1ca",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.question.bm25",
+								"from": {
+									"nodeId": "n-e380f6b0f9562483f068",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.question.vector",
+								"from": {
+									"nodeId": "n-c9534d94624c4d756814",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.bm25",
+								"from": {
+									"nodeId": "n-ec6494475a5fc15b36d0",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.vector",
+								"from": {
+									"nodeId": "n-8c51be73d7fc504640c0",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"rankConstant": 60,
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "n-b7e10802b65e7ec19de1",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-2b860a4d3ca6a200c1ca",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "chunk"
+						}
+					},
+					{
+						"id": "n-17e11d4d7616d5639aba",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-b7e10802b65e7ec19de1",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "n-17e11d4d7616d5639aba",
+							"port": "evidence"
+						}
+					}
+				]
+			},
+			"bindings": [
+				{
+					"slotId": "corpus",
+					"role": "corpus",
+					"kind": "manifest",
+					"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-corpus-snapshot-manifest/v2"
+				},
+				{
+					"slotId": "question-representations",
+					"role": "question-representations",
+					"kind": "manifest",
+					"digest": "sha256:09ed9383359901c7e515870884f82490c053e6d511a2f865a57aada9b4a8baa3",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-representation-set-manifest/v2"
+				}
+			],
+			"dataset": {
+				"manifestDigest": "sha256:e711122088c7d5a3efd85da265136b0964e17ed8b6ae01f7601296dd1b28f99a",
+				"split": "smoke",
+				"status": "candidate",
+				"relevanceTarget": "unit"
+			},
+			"measures": [
+				{
+					"name": "rag.mrr",
+					"version": "v1",
+					"valueKind": "number",
+					"required": true,
+					"config": {}
+				}
+			],
+			"variantId": "raw-question",
+			"factors": [
+				{
+					"factorId": "collapse",
+					"valueId": "chunk",
+					"value": "chunk"
+				}
+			],
+			"cellId": "sha256:121d74aa2ea6c4fc6cc85886481c6d9f9ac99ab478de633287985b5e765d2602"
+		}
+	},
+	{
+		"id": "sha256:327885a4f23015f16578524fa65a98817a5be3b868ef4756ab9ae21feb32d52b",
+		"variantId": "raw-question",
+		"factors": [
+			{
+				"factorId": "collapse",
+				"valueId": "unit",
+				"value": "unit"
+			}
+		],
+		"replicates": 2,
+		"execution": {
+			"schemaVersion": "rag-pipeline-execution/v2",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					},
+					{
+						"id": "question-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "question-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:09ed9383359901c7e515870884f82490c053e6d511a2f865a57aada9b4a8baa3"
+					}
+				],
+				"nodes": [
+					{
+						"id": "n-6761d69ad948a76579b7",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "n-806ee8a8fb83b28f314f",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "n-6761d69ad948a76579b7",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"overlap": 120,
+							"size": 800,
+							"unicodePolicy": "utf8-boundary"
+						}
+					},
+					{
+						"id": "n-feaec7d470a94d9eddcc",
+						"operator": {
+							"kind": "representations.raw",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							}
+						],
+						"config": {
+							"name": "raw"
+						}
+					},
+					{
+						"id": "n-043b3303a7054a171327",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.question",
+								"from": {
+									"nodeId": "question-representations",
+									"port": "out"
+								}
+							},
+							{
+								"port": "representations.raw",
+								"from": {
+									"nodeId": "n-feaec7d470a94d9eddcc",
+									"port": "representations"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["raw", "question"]
+						}
+					},
+					{
+						"id": "n-15467bfddacae7832f02",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-043b3303a7054a171327",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "n-89199c9948c617ec4f22",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-043b3303a7054a171327",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "question",
+							"topK": 30
+						},
+						"order": 2
+					},
+					{
+						"id": "n-8c51be73d7fc504640c0",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-15467bfddacae7832f02",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "n-8d375ac3f431e4fdee5a",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-043b3303a7054a171327",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						}
+					},
+					{
+						"id": "n-e380f6b0f9562483f068",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-89199c9948c617ec4f22",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 2
+					},
+					{
+						"id": "n-e4c12b67c00e61774970",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-043b3303a7054a171327",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "question",
+							"topK": 30
+						},
+						"order": 3
+					},
+					{
+						"id": "n-c9534d94624c4d756814",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-e4c12b67c00e61774970",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 3
+					},
+					{
+						"id": "n-ec6494475a5fc15b36d0",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-8d375ac3f431e4fdee5a",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-2b860a4d3ca6a200c1ca",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.question.bm25",
+								"from": {
+									"nodeId": "n-e380f6b0f9562483f068",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.question.vector",
+								"from": {
+									"nodeId": "n-c9534d94624c4d756814",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.bm25",
+								"from": {
+									"nodeId": "n-ec6494475a5fc15b36d0",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.vector",
+								"from": {
+									"nodeId": "n-8c51be73d7fc504640c0",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"rankConstant": 60,
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "n-d32ba7a1c6975a12c3d2",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-2b860a4d3ca6a200c1ca",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-13096f0b4d2dd14d490d",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-d32ba7a1c6975a12c3d2",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "n-13096f0b4d2dd14d490d",
+							"port": "evidence"
+						}
+					}
+				]
+			},
+			"bindings": [
+				{
+					"slotId": "corpus",
+					"role": "corpus",
+					"kind": "manifest",
+					"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-corpus-snapshot-manifest/v2"
+				},
+				{
+					"slotId": "question-representations",
+					"role": "question-representations",
+					"kind": "manifest",
+					"digest": "sha256:09ed9383359901c7e515870884f82490c053e6d511a2f865a57aada9b4a8baa3",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-representation-set-manifest/v2"
+				}
+			],
+			"dataset": {
+				"manifestDigest": "sha256:e711122088c7d5a3efd85da265136b0964e17ed8b6ae01f7601296dd1b28f99a",
+				"split": "smoke",
+				"status": "candidate",
+				"relevanceTarget": "unit"
+			},
+			"measures": [
+				{
+					"name": "rag.mrr",
+					"version": "v1",
+					"valueKind": "number",
+					"required": true,
+					"config": {}
+				}
+			],
+			"variantId": "raw-question",
+			"factors": [
+				{
+					"factorId": "collapse",
+					"valueId": "unit",
+					"value": "unit"
+				}
+			],
+			"cellId": "sha256:327885a4f23015f16578524fa65a98817a5be3b868ef4756ab9ae21feb32d52b"
+		}
+	},
+	{
+		"id": "sha256:d30fb3960e1245e9061a80649ea3f2356984d8feae7192b34e1ed7a7850d0ae4",
+		"variantId": "raw-summary",
+		"factors": [
+			{
+				"factorId": "collapse",
+				"valueId": "chunk",
+				"value": "chunk"
+			}
+		],
+		"replicates": 2,
+		"execution": {
+			"schemaVersion": "rag-pipeline-execution/v2",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					},
+					{
+						"id": "summary-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "summary-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004"
+					}
+				],
+				"nodes": [
+					{
+						"id": "n-6761d69ad948a76579b7",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "n-806ee8a8fb83b28f314f",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "n-6761d69ad948a76579b7",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"overlap": 120,
+							"size": 800,
+							"unicodePolicy": "utf8-boundary"
+						}
+					},
+					{
+						"id": "n-feaec7d470a94d9eddcc",
+						"operator": {
+							"kind": "representations.raw",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							}
+						],
+						"config": {
+							"name": "raw"
+						}
+					},
+					{
+						"id": "n-bbc87415454277e5eb9f",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.raw",
+								"from": {
+									"nodeId": "n-feaec7d470a94d9eddcc",
+									"port": "representations"
+								}
+							},
+							{
+								"port": "representations.summary",
+								"from": {
+									"nodeId": "summary-representations",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["raw", "summary"]
+						}
+					},
+					{
+						"id": "n-5cd05d70918456537d91",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-bbc87415454277e5eb9f",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 2
+					},
+					{
+						"id": "n-90e8c8789ed3c1521ff4",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-bbc87415454277e5eb9f",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 3
+					},
+					{
+						"id": "n-a3644437c45d91f99e40",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-bbc87415454277e5eb9f",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "n-63133dde6d74ad6bebad",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-a3644437c45d91f99e40",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "n-ab17fd3f2a6375ef1986",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-90e8c8789ed3c1521ff4",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 3
+					},
+					{
+						"id": "n-b3da7eb4cff77952cfe3",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-5cd05d70918456537d91",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 2
+					},
+					{
+						"id": "n-e1847f5d6189696ac229",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-bbc87415454277e5eb9f",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						}
+					},
+					{
+						"id": "n-59366288f967a9e59635",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-e1847f5d6189696ac229",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-013346ac209493cd0ad7",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.raw.bm25",
+								"from": {
+									"nodeId": "n-59366288f967a9e59635",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.vector",
+								"from": {
+									"nodeId": "n-63133dde6d74ad6bebad",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.bm25",
+								"from": {
+									"nodeId": "n-b3da7eb4cff77952cfe3",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.vector",
+								"from": {
+									"nodeId": "n-ab17fd3f2a6375ef1986",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"rankConstant": 60,
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "n-ccf25dc719b45e88341e",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-013346ac209493cd0ad7",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "chunk"
+						}
+					},
+					{
+						"id": "n-4011aaf64d5f32af540a",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-ccf25dc719b45e88341e",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "n-4011aaf64d5f32af540a",
+							"port": "evidence"
+						}
+					}
+				]
+			},
+			"bindings": [
+				{
+					"slotId": "corpus",
+					"role": "corpus",
+					"kind": "manifest",
+					"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-corpus-snapshot-manifest/v2"
+				},
+				{
+					"slotId": "summary-representations",
+					"role": "summary-representations",
+					"kind": "manifest",
+					"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-representation-set-manifest/v2"
+				}
+			],
+			"dataset": {
+				"manifestDigest": "sha256:e711122088c7d5a3efd85da265136b0964e17ed8b6ae01f7601296dd1b28f99a",
+				"split": "smoke",
+				"status": "candidate",
+				"relevanceTarget": "unit"
+			},
+			"measures": [
+				{
+					"name": "rag.mrr",
+					"version": "v1",
+					"valueKind": "number",
+					"required": true,
+					"config": {}
+				}
+			],
+			"variantId": "raw-summary",
+			"factors": [
+				{
+					"factorId": "collapse",
+					"valueId": "chunk",
+					"value": "chunk"
+				}
+			],
+			"cellId": "sha256:d30fb3960e1245e9061a80649ea3f2356984d8feae7192b34e1ed7a7850d0ae4"
+		}
+	},
+	{
+		"id": "sha256:fc7b9d3d51613f294bc4c62465e1a518731dfbb0ec2d60febfbb79a2ebf0a1ae",
+		"variantId": "raw-summary",
+		"factors": [
+			{
+				"factorId": "collapse",
+				"valueId": "unit",
+				"value": "unit"
+			}
+		],
+		"replicates": 2,
+		"execution": {
+			"schemaVersion": "rag-pipeline-execution/v2",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					},
+					{
+						"id": "summary-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "summary-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004"
+					}
+				],
+				"nodes": [
+					{
+						"id": "n-6761d69ad948a76579b7",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "n-806ee8a8fb83b28f314f",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "n-6761d69ad948a76579b7",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"overlap": 120,
+							"size": 800,
+							"unicodePolicy": "utf8-boundary"
+						}
+					},
+					{
+						"id": "n-feaec7d470a94d9eddcc",
+						"operator": {
+							"kind": "representations.raw",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							}
+						],
+						"config": {
+							"name": "raw"
+						}
+					},
+					{
+						"id": "n-bbc87415454277e5eb9f",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.raw",
+								"from": {
+									"nodeId": "n-feaec7d470a94d9eddcc",
+									"port": "representations"
+								}
+							},
+							{
+								"port": "representations.summary",
+								"from": {
+									"nodeId": "summary-representations",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["raw", "summary"]
+						}
+					},
+					{
+						"id": "n-5cd05d70918456537d91",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-bbc87415454277e5eb9f",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 2
+					},
+					{
+						"id": "n-90e8c8789ed3c1521ff4",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-bbc87415454277e5eb9f",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 3
+					},
+					{
+						"id": "n-a3644437c45d91f99e40",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-bbc87415454277e5eb9f",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "n-63133dde6d74ad6bebad",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-a3644437c45d91f99e40",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "n-ab17fd3f2a6375ef1986",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-90e8c8789ed3c1521ff4",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 3
+					},
+					{
+						"id": "n-b3da7eb4cff77952cfe3",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-5cd05d70918456537d91",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 2
+					},
+					{
+						"id": "n-e1847f5d6189696ac229",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-bbc87415454277e5eb9f",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "raw",
+							"topK": 30
+						}
+					},
+					{
+						"id": "n-59366288f967a9e59635",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-e1847f5d6189696ac229",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-013346ac209493cd0ad7",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.raw.bm25",
+								"from": {
+									"nodeId": "n-59366288f967a9e59635",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.raw.vector",
+								"from": {
+									"nodeId": "n-63133dde6d74ad6bebad",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.bm25",
+								"from": {
+									"nodeId": "n-b3da7eb4cff77952cfe3",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.vector",
+								"from": {
+									"nodeId": "n-ab17fd3f2a6375ef1986",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"rankConstant": 60,
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "n-932d596426f3c4a35d5c",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-013346ac209493cd0ad7",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-5ccee01b0c70ff855725",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-932d596426f3c4a35d5c",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "n-5ccee01b0c70ff855725",
+							"port": "evidence"
+						}
+					}
+				]
+			},
+			"bindings": [
+				{
+					"slotId": "corpus",
+					"role": "corpus",
+					"kind": "manifest",
+					"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-corpus-snapshot-manifest/v2"
+				},
+				{
+					"slotId": "summary-representations",
+					"role": "summary-representations",
+					"kind": "manifest",
+					"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-representation-set-manifest/v2"
+				}
+			],
+			"dataset": {
+				"manifestDigest": "sha256:e711122088c7d5a3efd85da265136b0964e17ed8b6ae01f7601296dd1b28f99a",
+				"split": "smoke",
+				"status": "candidate",
+				"relevanceTarget": "unit"
+			},
+			"measures": [
+				{
+					"name": "rag.mrr",
+					"version": "v1",
+					"valueKind": "number",
+					"required": true,
+					"config": {}
+				}
+			],
+			"variantId": "raw-summary",
+			"factors": [
+				{
+					"factorId": "collapse",
+					"valueId": "unit",
+					"value": "unit"
+				}
+			],
+			"cellId": "sha256:fc7b9d3d51613f294bc4c62465e1a518731dfbb0ec2d60febfbb79a2ebf0a1ae"
+		}
+	},
+	{
+		"id": "sha256:d5bfcd7fd6a7419df34078b199e03204082be65281058de6946d906cbd0d3ae7",
+		"variantId": "summary",
+		"factors": [
+			{
+				"factorId": "collapse",
+				"valueId": "chunk",
+				"value": "chunk"
+			}
+		],
+		"replicates": 2,
+		"execution": {
+			"schemaVersion": "rag-pipeline-execution/v2",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					},
+					{
+						"id": "summary-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "summary-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004"
+					}
+				],
+				"nodes": [
+					{
+						"id": "n-014a86faf10a3346ba25",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.summary",
+								"from": {
+									"nodeId": "summary-representations",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["summary"]
+						}
+					},
+					{
+						"id": "n-60204855d8bb35c68999",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-014a86faf10a3346ba25",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "summary",
+							"topK": 30
+						}
+					},
+					{
+						"id": "n-2df98b26608073155e90",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-60204855d8bb35c68999",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-6761d69ad948a76579b7",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "n-806ee8a8fb83b28f314f",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "n-6761d69ad948a76579b7",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"overlap": 120,
+							"size": 800,
+							"unicodePolicy": "utf8-boundary"
+						}
+					},
+					{
+						"id": "n-b5b61094f7b572dc6d5a",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-014a86faf10a3346ba25",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "n-445f54fa9c6a852e82c6",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-b5b61094f7b572dc6d5a",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "n-99dc1e8ff68bdf1aa496",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.summary.bm25",
+								"from": {
+									"nodeId": "n-2df98b26608073155e90",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.vector",
+								"from": {
+									"nodeId": "n-445f54fa9c6a852e82c6",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"rankConstant": 60,
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "n-2c360781813e2a448111",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-99dc1e8ff68bdf1aa496",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "chunk"
+						}
+					},
+					{
+						"id": "n-9509d263806570e6053a",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-2c360781813e2a448111",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "n-9509d263806570e6053a",
+							"port": "evidence"
+						}
+					}
+				]
+			},
+			"bindings": [
+				{
+					"slotId": "corpus",
+					"role": "corpus",
+					"kind": "manifest",
+					"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-corpus-snapshot-manifest/v2"
+				},
+				{
+					"slotId": "summary-representations",
+					"role": "summary-representations",
+					"kind": "manifest",
+					"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-representation-set-manifest/v2"
+				}
+			],
+			"dataset": {
+				"manifestDigest": "sha256:e711122088c7d5a3efd85da265136b0964e17ed8b6ae01f7601296dd1b28f99a",
+				"split": "smoke",
+				"status": "candidate",
+				"relevanceTarget": "unit"
+			},
+			"measures": [
+				{
+					"name": "rag.mrr",
+					"version": "v1",
+					"valueKind": "number",
+					"required": true,
+					"config": {}
+				}
+			],
+			"variantId": "summary",
+			"factors": [
+				{
+					"factorId": "collapse",
+					"valueId": "chunk",
+					"value": "chunk"
+				}
+			],
+			"cellId": "sha256:d5bfcd7fd6a7419df34078b199e03204082be65281058de6946d906cbd0d3ae7"
+		}
+	},
+	{
+		"id": "sha256:01576954c5aef1204c8131dba9c284260ee9b7499b2afcbed449cf9ab08a35e5",
+		"variantId": "summary",
+		"factors": [
+			{
+				"factorId": "collapse",
+				"valueId": "unit",
+				"value": "unit"
+			}
+		],
+		"replicates": 2,
+		"execution": {
+			"schemaVersion": "rag-pipeline-execution/v2",
+			"pipeline": {
+				"schemaVersion": "rag-pipeline-ir/v2",
+				"inputs": [
+					{
+						"id": "corpus",
+						"kind": "corpus",
+						"bindingMode": "artifact",
+						"artifactRole": "corpus",
+						"manifestSchema": "rag-corpus-snapshot-manifest/v2",
+						"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a"
+					},
+					{
+						"id": "query",
+						"kind": "query",
+						"bindingMode": "dataset"
+					},
+					{
+						"id": "summary-representations",
+						"kind": "representations",
+						"bindingMode": "artifact",
+						"artifactRole": "summary-representations",
+						"manifestSchema": "rag-representation-set-manifest/v2",
+						"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004"
+					}
+				],
+				"nodes": [
+					{
+						"id": "n-014a86faf10a3346ba25",
+						"operator": {
+							"kind": "index.bleve-multi",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "representations.summary",
+								"from": {
+									"nodeId": "summary-representations",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"representationKinds": ["summary"]
+						}
+					},
+					{
+						"id": "n-60204855d8bb35c68999",
+						"operator": {
+							"kind": "retrieve.bm25",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-014a86faf10a3346ba25",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "summary",
+							"topK": 30
+						}
+					},
+					{
+						"id": "n-2df98b26608073155e90",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-60204855d8bb35c68999",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-6761d69ad948a76579b7",
+						"operator": {
+							"kind": "units.identity",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "corpus",
+								"from": {
+									"nodeId": "corpus",
+									"port": "out"
+								}
+							}
+						],
+						"config": {}
+					},
+					{
+						"id": "n-806ee8a8fb83b28f314f",
+						"operator": {
+							"kind": "chunks.recursive",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "units",
+								"from": {
+									"nodeId": "n-6761d69ad948a76579b7",
+									"port": "units"
+								}
+							}
+						],
+						"config": {
+							"overlap": 120,
+							"size": 800,
+							"unicodePolicy": "utf8-boundary"
+						}
+					},
+					{
+						"id": "n-b5b61094f7b572dc6d5a",
+						"operator": {
+							"kind": "retrieve.vector",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "index",
+								"from": {
+									"nodeId": "n-014a86faf10a3346ba25",
+									"port": "index"
+								}
+							},
+							{
+								"port": "query",
+								"from": {
+									"nodeId": "query",
+									"port": "out"
+								}
+							}
+						],
+						"config": {
+							"filter": {},
+							"representation": "summary",
+							"topK": 30
+						},
+						"order": 1
+					},
+					{
+						"id": "n-445f54fa9c6a852e82c6",
+						"operator": {
+							"kind": "collapse.parent",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "hits",
+								"from": {
+									"nodeId": "n-b5b61094f7b572dc6d5a",
+									"port": "hits"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						},
+						"order": 1
+					},
+					{
+						"id": "n-99dc1e8ff68bdf1aa496",
+						"operator": {
+							"kind": "fusion.weighted-rrf",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "channel.summary.bm25",
+								"from": {
+									"nodeId": "n-2df98b26608073155e90",
+									"port": "parents"
+								}
+							},
+							{
+								"port": "channel.summary.vector",
+								"from": {
+									"nodeId": "n-445f54fa9c6a852e82c6",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"rankConstant": 60,
+							"weights": {
+								"raw.vector": 2
+							}
+						}
+					},
+					{
+						"id": "n-851d8270165a84e65dea",
+						"operator": {
+							"kind": "collapse.final",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-99dc1e8ff68bdf1aa496",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"representative": "scoreThenRepresentationId",
+							"scope": "unit"
+						}
+					},
+					{
+						"id": "n-2701e4033513daae9c4a",
+						"operator": {
+							"kind": "hydrate.source-evidence",
+							"version": "v1"
+						},
+						"inputs": [
+							{
+								"port": "chunks",
+								"from": {
+									"nodeId": "n-806ee8a8fb83b28f314f",
+									"port": "chunks"
+								}
+							},
+							{
+								"port": "parents",
+								"from": {
+									"nodeId": "n-851d8270165a84e65dea",
+									"port": "parents"
+								}
+							}
+						],
+						"config": {
+							"policy": "best-contribution-then-id"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"name": "evidence",
+						"kind": "evidence",
+						"from": {
+							"nodeId": "n-2701e4033513daae9c4a",
+							"port": "evidence"
+						}
+					}
+				]
+			},
+			"bindings": [
+				{
+					"slotId": "corpus",
+					"role": "corpus",
+					"kind": "manifest",
+					"digest": "sha256:b7cdc954aeb8a695e9d9b2b80f7e62031901ef7dca739bad9979ba87b46a591a",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-corpus-snapshot-manifest/v2"
+				},
+				{
+					"slotId": "summary-representations",
+					"role": "summary-representations",
+					"kind": "manifest",
+					"digest": "sha256:615a6fe6c8e4d4cb406e738e0b1ef522a5d55d4eed029a371ee9d613a76fc004",
+					"sizeBytes": 10,
+					"schemaVersion": "rag-representation-set-manifest/v2"
+				}
+			],
+			"dataset": {
+				"manifestDigest": "sha256:e711122088c7d5a3efd85da265136b0964e17ed8b6ae01f7601296dd1b28f99a",
+				"split": "smoke",
+				"status": "candidate",
+				"relevanceTarget": "unit"
+			},
+			"measures": [
+				{
+					"name": "rag.mrr",
+					"version": "v1",
+					"valueKind": "number",
+					"required": true,
+					"config": {}
+				}
+			],
+			"variantId": "summary",
+			"factors": [
+				{
+					"factorId": "collapse",
+					"valueId": "unit",
+					"value": "unit"
+				}
+			],
+			"cellId": "sha256:01576954c5aef1204c8131dba9c284260ee9b7499b2afcbed449cf9ab08a35e5"
+		}
+	}
+]

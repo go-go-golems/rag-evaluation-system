@@ -2,18 +2,22 @@ __package__({ name: "capabilities", short: "xgoja module capability probes" });
 
 function moduleProbe() {
 	const checks = [];
-	for (const name of [
-		"fs",
-		"yaml",
-		"db",
-		"markdown",
-		"sanitize",
-		"extract",
-		"express",
-		"geppetto",
-	]) {
+	// Keep require targets literal. xgoja/v2 validates a closed dependency graph
+	// when it embeds jsverbs, so require(name) is deliberately not supported.
+	const modules = [
+		["fs", () => require("fs")],
+		["yaml", () => require("yaml")],
+		["db", () => require("db")],
+		["markdown", () => require("markdown")],
+		["sanitize", () => require("sanitize")],
+		["extract", () => require("extract")],
+		["express", () => require("express")],
+		["geppetto", () => require("geppetto")],
+		["rag", () => require("rag")],
+	];
+	for (const [name, load] of modules) {
 		try {
-			const mod = require(name);
+			const mod = load();
 			checks.push({ name, ok: true, keys: Object.keys(mod).sort().slice(0, 20) });
 		} catch (err) {
 			checks.push({ name, ok: false, error: String(err && err.message ? err.message : err) });

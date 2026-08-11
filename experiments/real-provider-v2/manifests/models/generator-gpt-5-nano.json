@@ -1,0 +1,16 @@
+{
+	"schemaVersion": "rag-model-manifest/v1",
+	"digest": "sha256:a1463c09bcb4c4774ee52bcede845bf63699006e926e7855bc9dcbe731ba4e97",
+	"parents": [],
+	"providerAdapterVersion": "geppetto-generation/v1",
+	"modelId": "gpt-5-nano",
+	"modelDigest": "sha256:e378a67dd33a3fa15753ca915953cec883d5659ba966748ea0a8848b38839fe7",
+	"tokenization": "manifest-exact/v1",
+	"truncation": "none",
+	"normalization": "none",
+	"implementationVersion": "openai-responses/v1",
+	"requestParameters": {
+		"temperature": 0,
+		"reasoningEffort": "low"
+	}
+}

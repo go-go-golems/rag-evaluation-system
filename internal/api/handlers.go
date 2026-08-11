@@ -87,6 +87,9 @@ func RegisterHandlersWithOptions(mux *http.ServeMux, database *sql.DB, opts Opti
 	mux.HandleFunc("GET /api/v1/corpus/sources", h.handleCorpusSources)
 	mux.HandleFunc("GET /api/v1/corpus/documents", h.handleCorpusDocuments)
 	mux.HandleFunc("GET /api/v1/corpus/documents/{id}", h.handleCorpusDocumentDetail)
+
+	// Immutable RAG domain artifacts (read-only; no experiment lifecycle)
+	mux.HandleFunc("GET /api/v1/artifacts/rag/catalog", h.handleRAGArtifactCatalog)
 }
 
 type handler struct {
@@ -486,7 +489,7 @@ func (h *handler) handleListChunkingStrategies(w http.ResponseWriter, r *http.Re
 		writeError(w, http.StatusInternalServerError, "query_failed", err.Error())
 		return
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	type strategy struct {
 		ID          string `json:"id"`
@@ -811,13 +814,13 @@ func minInt(a, b int) int {
 func writeJSON(w http.ResponseWriter, status int, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
 
 func writeError(w http.ResponseWriter, status int, code, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"error":   code,
 		"message": message,
 	})

@@ -1,0 +1,86 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "rag-product-plan/v2",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"schemaVersion",
+		"pipeline",
+		"bindings",
+		"citations",
+		"request",
+		"response",
+		"runtime"
+	],
+	"properties": {
+		"schemaVersion": { "const": "rag-product-plan/v2" },
+		"pipeline": { "$ref": "rag-pipeline-ir-v2.schema.json" },
+		"bindings": { "type": "array", "items": { "type": "object" } },
+		"models": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["reference", "manifest", "digest"],
+				"properties": {
+					"reference": { "type": "string", "minLength": 1 },
+					"manifest": { "type": "string", "minLength": 1 },
+					"digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+				}
+			}
+		},
+		"citations": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["mode", "requireSourceText"],
+			"properties": {
+				"mode": { "enum": ["required", "source", "none"] },
+				"requireSourceText": { "type": "boolean" }
+			}
+		},
+		"request": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["fields"],
+			"properties": {
+				"fields": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["name", "type", "required"],
+						"properties": {
+							"name": { "type": "string", "minLength": 1 },
+							"type": { "enum": ["string", "number", "boolean", "object", "array"] },
+							"required": { "type": "boolean" },
+							"maxLength": { "type": "integer", "minimum": 0 }
+						}
+					}
+				}
+			}
+		},
+		"response": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["answerFormat", "citationMode", "includeTraceId"],
+			"properties": {
+				"answerFormat": { "enum": ["text", "markdown", "json"] },
+				"citationMode": { "enum": ["required", "source", "none"] },
+				"includeTraceId": { "type": "boolean" }
+			}
+		},
+		"runtime": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["maxResults", "maxConcurrent", "tracePolicy", "failurePolicy"],
+			"properties": {
+				"timeoutMilliseconds": { "type": "integer", "minimum": 0 },
+				"maxResults": { "type": "integer", "minimum": 1, "maximum": 1000 },
+				"maxConcurrent": { "type": "integer", "minimum": 1, "maximum": 1024 },
+				"tracePolicy": { "enum": ["authoritative", "metadata-only", "artifact-backed", "none"] },
+				"failurePolicy": { "enum": ["fail", "abstain", "retrieval-only"] }
+			}
+		},
+		"display": { "type": "object" }
+	}
+}

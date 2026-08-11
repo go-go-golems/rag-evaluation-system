@@ -1,0 +1,22 @@
+{
+	"schemaVersion": "rag-query-trace/v2",
+	"query": {
+		"id": "q-1",
+		"textDigest": "sha256:4c4f28a0fc9a4f2950029d5207744506cb1a6c2a836be46bdd126cf6ff507309",
+		"datasetSplit": "smoke"
+	},
+	"operators": [],
+	"channels": [],
+	"collapses": [],
+	"results": [],
+	"timing": {
+		"totalMilliseconds": 0,
+		"byOperator": {}
+	},
+	"usage": {
+		"inputTokens": 0,
+		"outputTokens": 0,
+		"embeddingTokens": 0
+	},
+	"failures": []
+}

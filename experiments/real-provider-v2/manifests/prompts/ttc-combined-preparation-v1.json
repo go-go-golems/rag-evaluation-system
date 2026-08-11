@@ -1,0 +1,9 @@
+{
+	"schemaVersion": "rag-prompt-manifest/v1",
+	"digest": "sha256:254f47900b1849c09ce902002c36d79cc157f867dd713e3a5d400f075e98f9a3",
+	"parents": [],
+	"promptId": "ttc-combined-preparation-v1",
+	"templateDigest": "sha256:56cd348d665eed7c6de93153fd508bed9663c35418d5eeb6bd363450f61b9b8f",
+	"inputSchema": "rag-combined-chunks/v1",
+	"outputSchema": "rag-combined-preparation/v1"
+}

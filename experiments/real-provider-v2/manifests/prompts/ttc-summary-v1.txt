@@ -1,0 +1,1 @@
+Return JSON only. Summarize the supplied source text accurately and concisely.

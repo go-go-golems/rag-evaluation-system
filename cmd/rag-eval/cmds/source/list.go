@@ -86,7 +86,7 @@ func (c *ListCommand) RunIntoGlazeProcessor(
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	sources, err := queries.ListSources()
 	if err != nil {

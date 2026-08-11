@@ -1,0 +1,16 @@
+{
+	"schemaVersion": "rag-model-manifest/v1",
+	"digest": "sha256:b163ef4d5e47093dcbf2bfa3bfedd1a6c79e2da20c238678625e02d4e58f077f",
+	"parents": [],
+	"providerAdapterVersion": "geppetto-embedding/v1",
+	"modelId": "nomic-embed-text:latest",
+	"modelDigest": "sha256:0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f",
+	"dimensions": 768,
+	"tokenization": "manifest-exact/v1",
+	"truncation": "none",
+	"normalization": "l2",
+	"implementationVersion": "ollama/v0.6.6",
+	"requestParameters": {
+		"normalize": "l2"
+	}
+}

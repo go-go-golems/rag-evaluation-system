@@ -51,6 +51,15 @@ func Migrate(db *sql.DB) error {
 		migrationV1EvalQueries,
 		migrationV1EvalRuns,
 		migrationV1EvalResults,
+		migrationV2SourceArtifacts,
+		migrationV2DocumentRevisions,
+		migrationV2CorpusSnapshots,
+		migrationV2ChunkPlans,
+		migrationV2ChunkSets,
+		migrationV2EmbeddingPlans,
+		migrationV2EmbeddingSets,
+		migrationV2RetrievalArtifacts,
+		migrationV3EvaluationArtifacts,
 	}
 
 	for i, m := range migrations {
@@ -239,4 +248,181 @@ CREATE TABLE IF NOT EXISTS eval_results (
     latency_ms INTEGER DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+`
+
+// Immutable corpus objects deliberately live alongside the earlier mutable
+// operational tables. New experiment code must use these tables directly;
+// they are not a cache or an adapter over documents/sources.
+const migrationV2SourceArtifacts = `
+CREATE TABLE IF NOT EXISTS source_artifacts (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    checksum_sha256 TEXT NOT NULL,
+    byte_size INTEGER NOT NULL,
+    manifest_json TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(kind, checksum_sha256)
+);
+`
+
+const migrationV2DocumentRevisions = `
+CREATE TABLE IF NOT EXISTS document_revisions (
+    id TEXT PRIMARY KEY,
+    stable_document_id TEXT NOT NULL,
+    source_artifact_id TEXT NOT NULL REFERENCES source_artifacts(id),
+    kind TEXT NOT NULL,
+    title TEXT NOT NULL,
+    url TEXT NOT NULL,
+    content_text TEXT NOT NULL,
+    content_markdown TEXT NOT NULL,
+    search_text TEXT NOT NULL,
+    search_markdown TEXT NOT NULL,
+    metadata_json TEXT NOT NULL,
+    content_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_document_revisions_stable_document
+    ON document_revisions(stable_document_id);
+`
+
+const migrationV2CorpusSnapshots = `
+CREATE TABLE IF NOT EXISTS corpus_snapshots (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    source_artifact_id TEXT NOT NULL REFERENCES source_artifacts(id),
+    selection_json TEXT NOT NULL,
+    manifest_json TEXT NOT NULL,
+    document_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS corpus_snapshot_documents (
+    snapshot_id TEXT NOT NULL REFERENCES corpus_snapshots(id),
+    ordinal INTEGER NOT NULL,
+    document_revision_id TEXT NOT NULL REFERENCES document_revisions(id),
+    PRIMARY KEY (snapshot_id, ordinal),
+    UNIQUE (snapshot_id, document_revision_id)
+);
+`
+
+const migrationV2ChunkPlans = `
+CREATE TABLE IF NOT EXISTS chunk_plans (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    strategy TEXT NOT NULL,
+    input_variant TEXT NOT NULL,
+    config_json TEXT NOT NULL,
+    implementation_version TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`
+
+const migrationV2ChunkSets = `
+CREATE TABLE IF NOT EXISTS chunk_sets (
+    id TEXT PRIMARY KEY,
+    corpus_snapshot_id TEXT NOT NULL REFERENCES corpus_snapshots(id),
+    chunk_plan_id TEXT NOT NULL REFERENCES chunk_plans(id),
+    manifest_json TEXT NOT NULL,
+    chunk_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(corpus_snapshot_id, chunk_plan_id)
+);
+
+CREATE TABLE IF NOT EXISTS immutable_chunks (
+    id TEXT PRIMARY KEY,
+    chunk_set_id TEXT NOT NULL REFERENCES chunk_sets(id),
+    document_revision_id TEXT NOT NULL REFERENCES document_revisions(id),
+    chunk_index INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    token_count INTEGER NOT NULL,
+    source_start_runes INTEGER NOT NULL,
+    source_end_runes INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(chunk_set_id, document_revision_id, chunk_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_immutable_chunks_set_document
+    ON immutable_chunks(chunk_set_id, document_revision_id, chunk_index);
+`
+
+const migrationV2EmbeddingPlans = `
+CREATE TABLE IF NOT EXISTS embedding_plans (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    provider_type TEXT NOT NULL,
+    model TEXT NOT NULL,
+    dimensions INTEGER NOT NULL,
+    normalization TEXT NOT NULL,
+    implementation_version TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`
+
+const migrationV2EmbeddingSets = `
+CREATE TABLE IF NOT EXISTS embedding_sets (
+    id TEXT PRIMARY KEY,
+    chunk_set_id TEXT NOT NULL REFERENCES chunk_sets(id),
+    embedding_plan_id TEXT NOT NULL REFERENCES embedding_plans(id),
+    manifest_json TEXT NOT NULL,
+    embedding_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(chunk_set_id, embedding_plan_id)
+);
+
+CREATE TABLE IF NOT EXISTS immutable_embeddings (
+    embedding_set_id TEXT NOT NULL REFERENCES embedding_sets(id),
+    chunk_id TEXT NOT NULL REFERENCES immutable_chunks(id),
+    vector BLOB NOT NULL,
+    PRIMARY KEY (embedding_set_id, chunk_id)
+);
+`
+
+const migrationV2RetrievalArtifacts = `
+CREATE TABLE IF NOT EXISTS retrieval_artifacts (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    chunk_set_id TEXT NOT NULL REFERENCES chunk_sets(id),
+    embedding_set_id TEXT REFERENCES embedding_sets(id),
+    config_json TEXT NOT NULL,
+    manifest_json TEXT NOT NULL,
+    artifact_path TEXT NOT NULL,
+    chunk_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`
+
+// Evaluation datasets and representation sets are immutable domain artifacts.
+// Scientific run lifecycle and evidence are owned exclusively by researchctl.
+const migrationV3EvaluationArtifacts = `
+CREATE TABLE IF NOT EXISTS evaluation_datasets (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    corpus_snapshot_id TEXT NOT NULL REFERENCES corpus_snapshots(id),
+    status TEXT NOT NULL CHECK (status IN ('candidate', 'frozen')),
+    manifest_json TEXT NOT NULL,
+    query_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS representation_sets (
+    id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    kind TEXT NOT NULL CHECK (kind IN ('summary', 'question')),
+    chunk_set_id TEXT NOT NULL REFERENCES chunk_sets(id),
+    manifest_json TEXT NOT NULL,
+    item_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TRIGGER IF NOT EXISTS evaluation_datasets_no_update
+BEFORE UPDATE ON evaluation_datasets BEGIN SELECT RAISE(ABORT, 'evaluation datasets are immutable'); END;
+CREATE TRIGGER IF NOT EXISTS evaluation_datasets_no_delete
+BEFORE DELETE ON evaluation_datasets BEGIN SELECT RAISE(ABORT, 'evaluation datasets are immutable'); END;
+CREATE TRIGGER IF NOT EXISTS representation_sets_no_update
+BEFORE UPDATE ON representation_sets BEGIN SELECT RAISE(ABORT, 'representation sets are immutable'); END;
+CREATE TRIGGER IF NOT EXISTS representation_sets_no_delete
+BEFORE DELETE ON representation_sets BEGIN SELECT RAISE(ABORT, 'representation sets are immutable'); END;
 `

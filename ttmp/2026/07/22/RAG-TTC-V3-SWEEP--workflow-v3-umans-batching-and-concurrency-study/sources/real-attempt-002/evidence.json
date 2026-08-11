@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "rag-ttc-v3-aborted-real-attempt/v1",
+  "attemptOrdinal": 2,
+  "authorizedCumulativeGenerationRequests": 61,
+  "priorGenerationRequests": 1,
+  "admittedCumulativeGenerationRequests": 61,
+  "newGenerationRequestsAdmitted": 60,
+  "completedCellsBeforeFailure": 7,
+  "failedCell": {
+    "ordinal": 7,
+    "chunksPerRequest": 1,
+    "concurrency": 4,
+    "replicate": 1
+  },
+  "failedCellGenerationNodes": {
+    "succeeded": 12,
+    "runningAtCancellation": 3,
+    "failed": 1
+  },
+  "failedCellEmbeddingNodes": {
+    "succeeded": 9,
+    "runningAtCancellation": 3
+  },
+  "failedCellSettledUsage": {
+    "generationRequests": 13,
+    "inputTokens": 16384,
+    "outputTokens": 8192,
+    "costMicrounits": 10650,
+    "embeddingRequests": 9,
+    "embeddingTokens": 0
+  },
+  "failureClass": "budget",
+  "failureCode": "RAG_TTC_GENERATION_REQUEST_CEILING",
+  "failureRetryable": false,
+  "inferredPriorCellRetries": 1,
+  "completeCellEvidenceAvailable": false,
+  "reasonCompleteCellEvidenceUnavailable": "completed cell runtimes were deleted after in-memory aggregation and the process exited before aggregate publication",
+  "countedConservativelyAgainstFutureAuthority": true,
+  "containsSourceText": false,
+  "containsProviderBody": false,
+  "containsCredentials": false
+}

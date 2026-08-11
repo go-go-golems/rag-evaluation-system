@@ -153,7 +153,7 @@ func (c *ApplyCommand) RunIntoGlazeProcessor(
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	service := chunkservice.NewService(queries)
 	result, err := service.Apply(ctx, chunkservice.ApplyRequest{

@@ -1,0 +1,65 @@
+{
+	"schemaVersion": "rag-v2-final-measurements/v1",
+	"status": "engineering-smoke",
+	"benchmarkClaim": false,
+	"environment": {
+		"os": "linux",
+		"arch": "amd64",
+		"cpu": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz"
+	},
+	"productFixture": {
+		"corpusRecords": 2,
+		"queriesProfiled": 200,
+		"preparedStartupMilliseconds": 4.229276,
+		"latencyMicroseconds": {
+			"p50": 486.412,
+			"p95": 1006.751,
+			"p99": 1454.103
+		},
+		"meanTraceBytes": 3842,
+		"benchmark": {
+			"nanosecondsPerOperation": 433694,
+			"bytesAllocatedPerOperation": 184900,
+			"allocationsPerOperation": 2926
+		},
+		"providerCost": 0,
+		"providers": "none; raw BM25 fixture"
+	},
+	"studyFixture": {
+		"corpusRecords": 1,
+		"queries": 1,
+		"artifactCount": 7,
+		"artifactBytes": 9594,
+		"traceBytes": 4592,
+		"metricValueAndMetadataBytes": 3,
+		"providerCost": 0,
+		"executionBoundary": "researchctl-runner-stdio/v1 process integration"
+	},
+	"fuzzSmoke": {
+		"secondsPerTarget": 3,
+		"executions": {
+			"decodePipeline": 253473,
+			"canonicalRawIdempotency": 197981,
+			"manifestValidation": 71765,
+			"graphNormalization": 21,
+			"utf8ChunkRanges": 35075
+		},
+		"failures": 0
+	},
+	"candidateMatrix": {
+		"dataset": "candidate:ttc-expansion-v1",
+		"queries": 148,
+		"cells": 10,
+		"queryCellExecutions": 1480,
+		"elapsedSeconds": 169.28,
+		"maximumResidentSetKilobytes": 1621732,
+		"researchctlStorageApproximateMiB": 869,
+		"fixtureProviders": true,
+		"providerCost": 0
+	},
+	"notes": [
+		"Values are single-machine engineering smoke measurements, not production SLOs.",
+		"The candidate matrix is not an adjudicated benchmark and is not comparable to real-provider TTC baselines.",
+		"Artifact bytes include worker-emitted pipeline, materialization, index, and trace artifacts for the one-query process fixture."
+	]
+}

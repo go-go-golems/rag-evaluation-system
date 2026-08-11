@@ -308,7 +308,7 @@ func SubmitIntakeWorkflow(ctx context.Context, req SubmitIntakeRequest) (*Submit
 	if err != nil {
 		return nil, err
 	}
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 	if err := store.CreateWorkflow(ctx, storecontract.CreateWorkflowParams{Workflow: workflow, Initial: ops}); err != nil {
 		return nil, err
 	}
@@ -325,7 +325,7 @@ func selectChunksForDocuments(ctx context.Context, dbPath, strategyID string, do
 	if err != nil {
 		return nil, err
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 	if err := db.Migrate(database); err != nil {
 		return nil, err
 	}
@@ -337,7 +337,7 @@ func selectDocumentIDs(ctx context.Context, dbPath string, sourceIDs []string, l
 	if err != nil {
 		return nil, err
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 	if err := db.Migrate(database); err != nil {
 		return nil, err
 	}
@@ -359,7 +359,7 @@ func selectDocumentIDs(ctx context.Context, dbPath string, sourceIDs []string, l
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	ids := []string{}
 	for rows.Next() {
 		var id string

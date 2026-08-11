@@ -1,0 +1,17 @@
+{
+	"inputs": {
+		"corpus": {
+			"role": "corpus",
+			"kind": "manifest-envelope",
+			"catalog": {
+				"namespace": "rag-eval-ttc",
+				"id": "sha256:be434a1422487d33e324b5f3833067dcc530efab2df0fea2f7e7bfa9ca86f409"
+			}
+		},
+		"evaluation-dataset": {
+			"role": "evaluation-dataset",
+			"kind": "manifest-envelope",
+			"catalog": { "namespace": "rag-eval-ttc", "id": "candidate:ttc-expansion-v1" }
+		}
+	}
+}

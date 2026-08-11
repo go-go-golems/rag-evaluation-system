@@ -1,0 +1,30 @@
+schema: xgoja/v2
+name: rag-v2-authoring
+
+go:
+  module: xgoja.generated/rag-v2-authoring
+  version: "1.26"
+
+providers:
+  - id: rag-evaluation-system
+    import: github.com/go-go-golems/rag-evaluation-system/pkg/xgoja/providers/rag
+    register: Register
+
+runtime:
+  modules:
+    - provider: rag-evaluation-system
+      name: rag
+      as: rag
+
+commands:
+  - id: run
+    type: builtin.run
+    name: run
+  - id: repl
+    type: builtin.repl
+    name: repl
+
+artifacts:
+  - id: binary
+    type: binary
+    output: dist/rag-v2-authoring

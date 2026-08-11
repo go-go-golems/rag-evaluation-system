@@ -53,10 +53,10 @@ func (h *handler) handleWorkflowOps(w http.ResponseWriter, r *http.Request) {
 	}
 	// Summarize: group by operation+status, return sample + counts
 	type opGroup struct {
-		Operation string `json:"operation"`
-		Queue     string `json:"queue"`
-		Status    string `json:"status"`
-		Count     int    `json:"count"`
+		Operation string                 `json:"operation"`
+		Queue     string                 `json:"queue"`
+		Status    string                 `json:"status"`
+		Count     int                    `json:"count"`
 		Sample    *engineview.WorkflowOp `json:"sample,omitempty"`
 	}
 	groups := map[string]*opGroup{}

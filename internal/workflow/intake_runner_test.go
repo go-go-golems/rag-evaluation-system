@@ -25,7 +25,7 @@ func TestIntakeRunnerChunkDocumentWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open engine store: %v", err)
 	}
-	defer engineStore.Close()
+	defer func() { _ = engineStore.Close() }()
 
 	registry := runner.NewRegistry()
 	if err := registry.Register(&IntakeRunner{}); err != nil {
@@ -75,7 +75,7 @@ func TestIntakeRunnerChunkDocumentWorkflow(t *testing.T) {
 	}
 
 	queries := openAppQueries(t, appDB)
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 	chunks, err := queries.ListChunks("doc-1")
 	if err != nil {
 		t.Fatalf("list chunks: %v", err)
@@ -123,7 +123,7 @@ func TestIntakeRunnerPreprocessDocumentWorkflow(t *testing.T) {
 		t.Fatalf("unexpected output: %+v", output)
 	}
 	queries := openAppQueries(t, appDB)
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 	artifact, ok, err := queries.GetDocumentProcessingArtifact("doc-1", "clean_text", "v1", "fake", "fake-document-processor")
 	if err != nil {
 		t.Fatalf("get artifact: %v", err)
@@ -146,11 +146,11 @@ func TestIntakeRunnerEnrichChunkWorkflow(t *testing.T) {
 	appDB := seedWorkflowTestDocument(t)
 	queries := openAppQueries(t, appDB)
 	if _, err := chunkservice.NewService(queries).Apply(ctx, chunkservice.ApplyRequest{DocumentID: "doc-1", Strategy: "fixed", ChunkSize: 20, Overlap: 5}); err != nil {
-		queries.Close()
+		_ = queries.Close()
 		t.Fatalf("seed chunks: %v", err)
 	}
 	chunks, err := queries.ListChunks("doc-1")
-	queries.Close()
+	_ = queries.Close()
 	if err != nil {
 		t.Fatalf("list chunks: %v", err)
 	}
@@ -192,7 +192,7 @@ func TestIntakeRunnerEnrichChunkWorkflow(t *testing.T) {
 		t.Fatalf("unexpected output: %+v", output)
 	}
 	queries = openAppQueries(t, appDB)
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 	enrichment, ok, err := queries.GetChunkEnrichment(chunks[0].ID, "fixed-20-5", "v1")
 	if err != nil {
 		t.Fatalf("get enrichment: %v", err)
@@ -289,7 +289,7 @@ func TestIntakeRunnerChunkToEmbeddingWorkflow(t *testing.T) {
 	}
 
 	queries := openAppQueries(t, appDB)
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 	var stored int
 	if err := queries.DB().QueryRow(`SELECT COUNT(*) FROM chunk_embeddings WHERE strategy_id = ? AND provider = ?`, "fixed-20-5", "fake").Scan(&stored); err != nil {
 		t.Fatalf("count embeddings: %v", err)
@@ -351,7 +351,7 @@ func TestIntakeRunnerBuildBM25Workflow(t *testing.T) {
 		t.Fatalf("unexpected bm25 output: %+v", output)
 	}
 	queries := openAppQueries(t, appDB)
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 	idx, ok, err := queries.GetSearchIndex("bm25-workflow-test")
 	if err != nil {
 		t.Fatalf("get search index: %v", err)
@@ -468,7 +468,7 @@ func seedWorkflowTestDocument(t *testing.T) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "rag-eval.db")
 	queries := openAppQueries(t, path)
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 	if err := queries.InsertSource("test-source", "Test Source", "test", "{}"); err != nil {
 		t.Fatalf("insert source: %v", err)
 	}

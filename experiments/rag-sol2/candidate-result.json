@@ -1,0 +1,118 @@
+{
+	"schemaVersion": "rag-sol2-candidate-matrix-result/v1",
+	"status": "candidate",
+	"benchmarkClaim": false,
+	"fixtureProviders": true,
+	"cells": [
+		{
+			"variant": "all",
+			"collapse": "chunk",
+			"queryCount": 148,
+			"mrr": 0.3682378807378807,
+			"recallAt10": 0.634009009009009,
+			"ndcgAt10": 0.40158206693941184,
+			"hitRateAt10": 0.7972972972972973,
+			"precisionAt10": 0.11949002574002575,
+			"specificationId": "sha256:1f03c8c3ff872491840b5fb73a8ccb6e534481bffb4876a8519aa5bc94e92ef2"
+		},
+		{
+			"variant": "all",
+			"collapse": "unit",
+			"queryCount": 148,
+			"mrr": 0.15366527241527242,
+			"recallAt10": 0.2623873873873874,
+			"ndcgAt10": 0.1587419486316665,
+			"hitRateAt10": 0.3310810810810811,
+			"precisionAt10": 0.041891891891891894,
+			"specificationId": "sha256:845018cbf7a3e4ee27413872ddea76338f8f31bf8e0e42ca30179efd2ff97e71"
+		},
+		{
+			"variant": "raw",
+			"collapse": "chunk",
+			"queryCount": 148,
+			"mrr": 0.1114006864006864,
+			"recallAt10": 0.10923423423423421,
+			"ndcgAt10": 0.09678822205892755,
+			"hitRateAt10": 0.16216216216216217,
+			"precisionAt10": 0.020916452166452167,
+			"specificationId": "sha256:3595013061b9a6a6f92d9d1b765b873c083d7f6e338a88513b5d29a324ce1c95"
+		},
+		{
+			"variant": "raw",
+			"collapse": "unit",
+			"queryCount": 148,
+			"mrr": 0.15957207207207208,
+			"recallAt10": 0.1463963963963964,
+			"ndcgAt10": 0.13416358869411688,
+			"hitRateAt10": 0.20270270270270271,
+			"precisionAt10": 0.025,
+			"specificationId": "sha256:2066dcc2df1d606340221574f022185bd9161c731e56a6f7d471b96c7a7397eb"
+		},
+		{
+			"variant": "raw-question",
+			"collapse": "chunk",
+			"queryCount": 148,
+			"mrr": 0.10527402402402403,
+			"recallAt10": 0.115990990990991,
+			"ndcgAt10": 0.09392456086544229,
+			"hitRateAt10": 0.17567567567567569,
+			"precisionAt10": 0.022324109824109824,
+			"specificationId": "sha256:6eed2b4a8e7f16d5f8b05247970379c29071de8c0af75e5caea39ee50fd81ed4"
+		},
+		{
+			"variant": "raw-question",
+			"collapse": "unit",
+			"queryCount": 148,
+			"mrr": 0.13521021021021024,
+			"recallAt10": 0.16328828828828829,
+			"ndcgAt10": 0.11981943328593382,
+			"hitRateAt10": 0.22297297297297297,
+			"precisionAt10": 0.027702702702702708,
+			"specificationId": "sha256:cc599a4ae27c5c39be486b49f06d1648d914f994a5736ad8ca625204d1a361ae"
+		},
+		{
+			"variant": "raw-summary",
+			"collapse": "chunk",
+			"queryCount": 148,
+			"mrr": 0.3742009867009867,
+			"recallAt10": 0.6283783783783784,
+			"ndcgAt10": 0.40555934340972444,
+			"hitRateAt10": 0.7972972972972973,
+			"precisionAt10": 0.1181949806949807,
+			"specificationId": "sha256:210cbce4cc8b924a8b73a408bdba125034d5c65111ee5a1c30088966699bf876"
+		},
+		{
+			"variant": "raw-summary",
+			"collapse": "unit",
+			"queryCount": 148,
+			"mrr": 0.18628539253539253,
+			"recallAt10": 0.3316441441441441,
+			"ndcgAt10": 0.19788534601208108,
+			"hitRateAt10": 0.40540540540540543,
+			"precisionAt10": 0.05202702702702703,
+			"specificationId": "sha256:f06ba2273d2cf3fd72ef88339541e07030d0e7c60313b5e09c34a7502a739014"
+		},
+		{
+			"variant": "summary",
+			"collapse": "chunk",
+			"queryCount": 148,
+			"mrr": 0.5030941655941656,
+			"recallAt10": 0.6615990990990991,
+			"ndcgAt10": 0.49099379056318976,
+			"hitRateAt10": 0.8108108108108109,
+			"precisionAt10": 0.135261154011154,
+			"specificationId": "sha256:96a00bf7eeaf38db77a79443278a4b352f4c9b5156aa6694158925324ee082a2"
+		},
+		{
+			"variant": "summary",
+			"collapse": "unit",
+			"queryCount": 148,
+			"mrr": 0.2563358000858001,
+			"recallAt10": 0.6914414414414414,
+			"ndcgAt10": 0.341447431142832,
+			"hitRateAt10": 0.831081081081081,
+			"precisionAt10": 0.10743243243243243,
+			"specificationId": "sha256:b6eeecdea19f357b041cc644edc4583b4cee66c626019a2716f30cf40f4c8629"
+		}
+	]
+}

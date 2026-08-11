@@ -1,0 +1,18 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "rag-study/v2",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["schemaVersion", "variants", "bindings", "dataset", "measures", "replicates"],
+	"properties": {
+		"schemaVersion": { "const": "rag-study/v2" },
+		"variants": { "type": "array", "minItems": 1 },
+		"factors": { "type": "array" },
+		"bindings": { "type": "array" },
+		"dataset": { "type": "object" },
+		"measures": { "type": "array" },
+		"replicates": { "type": "integer", "minimum": 1 },
+		"acceptance": {},
+		"display": { "type": "object" }
+	}
+}

@@ -73,7 +73,7 @@ func (c *QueryCommand) RunIntoGlazeProcessor(ctx context.Context, vals *values.V
 	if err != nil {
 		return err
 	}
-	defer queries.Close()
+	defer func() { _ = queries.Close() }()
 
 	service := searchservice.NewService(queries, s.IndexRoot)
 	result, err := service.QueryBM25(ctx, searchservice.QueryRequest{

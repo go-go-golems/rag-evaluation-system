@@ -11,7 +11,7 @@ func OpenDBAtPath(path string) (*db.Queries, error) {
 		return nil, err
 	}
 	if err := db.Migrate(database); err != nil {
-		database.Close()
+		_ = database.Close()
 		return nil, err
 	}
 	return db.NewQueries(database), nil

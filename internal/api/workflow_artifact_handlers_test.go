@@ -20,7 +20,7 @@ func TestWorkflowAndArtifactVisibilityEndpoints(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open db: %v", err)
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 	if err := db.Migrate(database); err != nil {
 		t.Fatalf("migrate db: %v", err)
 	}
