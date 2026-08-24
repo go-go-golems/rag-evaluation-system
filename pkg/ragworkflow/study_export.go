@@ -262,10 +262,22 @@ func renderStudyPlan(name, experimentID string, cases []planCase) ([]byte, error
 	if err != nil {
 		return nil, err
 	}
-	nameBody, _ := json.Marshal(name)
-	experimentBody, _ := json.Marshal(experimentID)
+	// Embed the free-form study identity as a JSON object literal (mirroring
+	// caseBody) and reference it via property accesses, instead of interpolating
+	// json.Marshal string output directly into the generated JavaScript. This
+	// keeps user-supplied name/experimentID values safely quoted inside a JSON
+	// literal so a double quote or line separator cannot break out of the
+	// surrounding code.
+	identity, err := ragcontract.CanonicalJSON(struct {
+		Name         string `json:"name"`
+		ExperimentID string `json:"experimentId"`
+	}{Name: name, ExperimentID: experimentID})
+	if err != nil {
+		return nil, err
+	}
 	body := fmt.Sprintf(`const research = require("researchctl");
 const cases = %s;
+const study = %s;
 function specification(item) {
   return {
     canonicalIdentity: {
@@ -278,18 +290,18 @@ function specification(item) {
       requestedMeasures: item.measures,
       factors: item.factors
     },
-    displayName: %s + " / " + item.id,
+    displayName: study.name + " / " + item.id,
     provenance: {authoring: "rag-eval study compile"},
     labels: {path: "rag-v2-workflow-v3"}
   };
 }
-module.exports = research.experimentPlan(%s, plan => {
-  let current = plan.experiment(%s);
+module.exports = research.experimentPlan(study.name, plan => {
+  let current = plan.experiment(study.experimentId);
   for (const item of cases) {
     current = current.case(item.id, value => value.specification(specification(item)).factors(item.factors).replicates(item.replicates));
   }
   return current;
 });
-`, caseBody, nameBody, nameBody, experimentBody)
+`, caseBody, identity)
 	return []byte(body), nil
 }
