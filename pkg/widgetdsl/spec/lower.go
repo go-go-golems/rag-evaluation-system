@@ -245,6 +245,20 @@ func (s CollectionSpec) tableNode(keyField string) NodeSpec {
 	if s.Table.Keyboard.Enabled {
 		props["keyboard"] = JSONObject{"mode": valueOrDefault(s.Table.Keyboard.Mode, "rows"), "selection": valueOrDefault(s.Table.Keyboard.Selection, "manual"), "vimAliases": s.Table.Keyboard.VimAliases, "enterSelect": s.Table.Keyboard.EnterSelect}
 	}
+	if s.Table.MultiSelection != nil {
+		selection := JSONObject{"mode": "multi", "selectedKeys": s.Table.MultiSelection.SelectedKeys}
+		if s.Table.MultiSelection.OnChange != nil {
+			selection["onChange"] = s.Table.MultiSelection.OnChange.ToWidgetAction()
+		}
+		props["multiSelection"] = selection
+		if len(s.Table.MultiSelection.BulkActions) > 0 {
+			actions := make([]JSONValue, 0, len(s.Table.MultiSelection.BulkActions))
+			for _, action := range s.Table.MultiSelection.BulkActions {
+				actions = append(actions, JSONObject{"id": action.ID, "label": action.Label, "danger": action.Danger, "disabled": action.Disabled, "action": action.Action.ToWidgetAction()})
+			}
+			props["bulkActions"] = actions
+		}
+	}
 	if len(s.Table.Commands) > 0 {
 		commands := make([]JSONValue, 0, len(s.Table.Commands))
 		for _, command := range s.Table.Commands {

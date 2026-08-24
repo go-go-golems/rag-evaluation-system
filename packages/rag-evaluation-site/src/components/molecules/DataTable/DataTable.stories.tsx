@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { DataTable } from "./DataTable";
 
 const meta = {
@@ -19,17 +20,46 @@ const rows: Row[] = [
 	{ id: "b", rank: 2, title: "Arborvitae Spacing", score: 0.0321 },
 ];
 
+const columns = [
+	{ id: "rank", header: "#", align: "end" as const, cell: (row: Row) => row.rank },
+	{ id: "title", header: "Title", cell: (row: Row) => row.title },
+	{ id: "score", header: "Score", align: "end" as const, cell: (row: Row) => row.score.toFixed(4) },
+];
+
 export const RetrievalRows: Story = {
 	render: () => (
+		<DataTable rows={rows} getRowKey={(row) => row.id} selectedKey="a" columns={columns} />
+	),
+};
+
+function MultiSelectionExample() {
+	const [activeKey, setActiveKey] = useState("a");
+	const [selectedKeys, setSelectedKeys] = useState<string[]>(["b"]);
+	return (
 		<DataTable
 			rows={rows}
-			getRowKey={(r) => r.id}
-			selectedKey="a"
-			columns={[
-				{ id: "rank", header: "#", align: "end", cell: (r) => r.rank },
-				{ id: "title", header: "Title", cell: (r) => r.title },
-				{ id: "score", header: "Score", align: "end", cell: (r) => r.score.toFixed(4) },
-			]}
+			getRowKey={(row) => row.id}
+			selectedKey={activeKey}
+			onRowSelect={(row) => setActiveKey(row.id)}
+			multiSelection={{
+				mode: "multi",
+				selectedKeys,
+				onSelectionChange: setSelectedKeys,
+				bulkActions: [
+					{
+						id: "archive",
+						label: "Archive selected",
+						danger: true,
+						onInvoke: () => setSelectedKeys([]),
+					},
+				],
+			}}
+			keyboard={{ mode: "rows", selection: "followFocus", vimAliases: true }}
+			columns={columns}
 		/>
-	),
+	);
+}
+
+export const MultiSelectionWithActiveRow: Story = {
+	render: () => <MultiSelectionExample />,
 };

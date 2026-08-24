@@ -1442,6 +1442,28 @@ func (r *runtime) v3TableBuilder(collection *widgetspec.CollectionSpec) *goja.Ob
 		collection.Table.SortColumns = append(collection.Table.SortColumns, sortColumn)
 		return obj
 	})
+	setExport(obj, "multiSelect", func(selectedValue goja.Value, options ...goja.Value) *goja.Object {
+		selectedKeys := []string{}
+		for _, value := range anySlice(selectedValue.Export()) {
+			selectedKeys = append(selectedKeys, fmt.Sprint(value))
+		}
+		selection := &widgetspec.MultiSelectionSpec{SelectedKeys: selectedKeys}
+		opts := exportOptions(options)
+		if actionValue, ok := opts["onChange"]; ok {
+			action := v3ActionFromAny(actionValue)
+			selection.OnChange = &action
+		}
+		for _, raw := range anySlice(opts["actions"]) {
+			actionOptions, ok := raw.(map[string]any)
+			if !ok {
+				continue
+			}
+			action := v3ActionFromAny(actionOptions["action"])
+			selection.BulkActions = append(selection.BulkActions, widgetspec.BulkActionSpec{ID: stringFromMap(actionOptions, "id", ""), Label: stringFromMap(actionOptions, "label", ""), Danger: boolFromMap(actionOptions, "danger", false), Disabled: boolFromMap(actionOptions, "disabled", false), Action: action})
+		}
+		collection.Table.MultiSelection = selection
+		return obj
+	})
 	setExport(obj, "keyboard", func(cb ...goja.Value) *goja.Object {
 		collection.Table.Keyboard = widgetspec.TableKeyboardSpec{Enabled: true, Mode: "rows", Selection: "manual", EnterSelect: true}
 		if len(cb) > 0 && !goja.IsUndefined(cb[0]) && !goja.IsNull(cb[0]) {

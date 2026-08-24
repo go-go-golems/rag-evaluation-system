@@ -289,13 +289,28 @@ type PaginationSpec struct {
 }
 
 type TableSpec struct {
-	ActionColumns []TableActionColumnSpec
-	SortColumns   []TableSortColumnSpec
-	RowSelect     *ActionSpec
-	ClassName     string
-	Keyboard      TableKeyboardSpec
-	Commands      []RowCommandSpec
-	StyleRules    []SemanticStyleRule
+	ActionColumns  []TableActionColumnSpec
+	SortColumns    []TableSortColumnSpec
+	RowSelect      *ActionSpec
+	ClassName      string
+	Keyboard       TableKeyboardSpec
+	Commands       []RowCommandSpec
+	StyleRules     []SemanticStyleRule
+	MultiSelection *MultiSelectionSpec
+}
+
+type MultiSelectionSpec struct {
+	SelectedKeys []string
+	OnChange     *ActionSpec
+	BulkActions  []BulkActionSpec
+}
+
+type BulkActionSpec struct {
+	ID       string
+	Label    string
+	Danger   bool
+	Disabled bool
+	Action   ActionSpec
 }
 
 type TableSortColumnSpec struct {
