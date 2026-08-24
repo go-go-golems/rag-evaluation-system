@@ -304,12 +304,12 @@ for line in sys.stdin:
                             "name": "backend",
                             "command": [
                                 "bash", "--noprofile", "--norc", "-lc",
-                                f"mkdir -p state && exec ./rag-eval serve --address 127.0.0.1:{backend_port} --db state/rag-eval.db --engine-db state/rag-eval-workflows.db --log-level debug",
+                                f"mkdir -p state && exec ./rag-eval serve --address 127.0.0.1:{backend_port} --db state/rag-eval.db --workflow-db state/rag-eval-intake-v3.db --workflow-artifact-root state/rag-eval-intake-v3-artifacts --log-level debug",
                             ],
                             "env": {
                                 "RAG_EVAL_ADDRESS": f"127.0.0.1:{backend_port}",
                                 "RAG_EVAL_DB": "state/rag-eval.db",
-                                "RAG_EVAL_ENGINE_DB": "state/rag-eval-workflows.db",
+                                "RAG_EVAL_WORKFLOW_DB": "state/rag-eval-intake-v3.db",
                             },
                             "health": {
                                 "type": "http",

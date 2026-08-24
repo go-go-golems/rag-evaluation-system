@@ -10,13 +10,35 @@ Topics:
 DocType: reference
 Intent: long-term
 Owners: []
-RelatedFiles: []
+RelatedFiles:
+    - Path: repo://experiments/real-provider-v2/inputs.json
+      Note: Catalog input bindings resolved during canonical compilation
+    - Path: repo://experiments/real-provider-v2/provider-config.umans-flash.example.yaml
+      Note: Non-secret host policy split between Umans profile and local service endpoints
+    - Path: repo://experiments/real-provider-v2/study-flash-combined-speed.js
+      Note: Authoring source for the validated one-cell Umans Flash combined-preparation specification
+    - Path: repo://pkg/ragproviders/provider_set.go
+      Note: Profile-backed provider construction and default Pinocchio registry resolution
+    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/scripts/08-build-operation-custody-export.go.txt
+      Note: Post-hoc compact custody export without provider/runtime access
+    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-attempt-003/evidence.json
+      Note: Aggregate real qualification evidence
+    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-attempt-003/researchctl-run-export.json
+      Note: Verified downstream researchctl custody export
+    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/compile-result.json
+      Note: Compiler result recording the resolved specification
+    - Path: repo://ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/sha256:53a4934fba2135e2515e2f8b30d7108d3e21d4e349f867f5b7bf369be1ffb9b1.json
+      Note: Canonical current real-qualification specification with immutable input references
 ExternalSources: []
 Summary: Chronological implementation and execution evidence for the Workflow V3 Umans batching and concurrency study.
 LastUpdated: 2026-07-22T10:15:00-04:00
 WhatFor: Preserve commands, decisions, failures, results, and review instructions for reproducing the study.
 WhenToUse: When implementing, operating, reviewing, or resuming RAG-TTC-V3-SWEEP.
 ---
+
+
+
+
 
 # Diary
 
@@ -1056,3 +1078,304 @@ Error: load real provider host: RAG_PROVIDER_ENV_MISSING
 ### Technical details
 - Preview observed three stale prompt-manifest pairs: `ttc-grounded-answer-v1`, `ttc-questions-v1`, and `ttc-summary-v1`.
 - The final validation failure is `RAG_PROVIDER_ENV_MISSING`, which occurs before any network inference request or Workflow V3 admission.
+
+## Step 20: Recover profile-backed Mac provider infrastructure without submitting inference
+
+The apparent missing-environment block was an incomplete operational diagnosis. The shared Pinocchio registry already contains the Umans credentials and API configuration; the remaining provider roles need private loopback endpoints, not additional paid-provider credentials. I recovered the documented Mac SSH tunnels, materialized the non-secret host YAML from its checked-in Umans Flash example, and validated construction of all three provider roles.
+
+This advances the real qualification to the canonical-specification boundary only. The validation command constructed provider clients but did not invoke generation, embedding, or reranking; the sweep did not admit an operation or submit a provider request. A historical specification remains invalid because it pinned stale model identity, so a current immutable specification must still be compiled before even the non-submitting preflight can be trusted.
+
+### Prompt Context
+
+**User prompt (verbatim):** "then write your diary (see skillf or the format)"
+
+**Assistant interpretation:** Record the current host-profile and tunnel recovery work in the ticket diary using the required structured format before continuing qualification.
+
+**Inferred user intent:** Preserve the exact operational evidence, security boundaries, successes, and remaining reproducibility gate so the real run can be reviewed and resumed safely.
+
+**Commit (code):** pending — diary/changelog bookkeeping only; no source-code behavior changed.
+
+### What I did
+- Re-read the diary format and inspected prior RAG diary steps, the TTC tunnel operator playbook, the reranker diary, and relevant vault project reports.
+- Verified `~/.config/pinocchio/profiles.yaml` is readable and contains Umans profiles, including `umans-flash` and `umans-glm-5.2`, without printing configuration values.
+- Confirmed the profile-backed Umans settings contain API/chat configuration; they do not contain embedding or reranker settings.
+- Recovered the documented private topology: Mac Ollama at remote loopback `127.0.0.1:11434` forwarded to local `127.0.0.1:11435`, and Mac llama.cpp reranker at remote loopback `127.0.0.1:8012` forwarded to local `127.0.0.1:18012`.
+- Verified both local ports were free and both remote services passed non-submitting health checks through `mimimi-2.local`.
+- Started `tmux` sessions `rag-ollama-mimimi` and `rag-reranker-mimimi` with loopback-only SSH forwards and verified both local health endpoints.
+- Created the ignored, non-secret operational file `experiments/real-provider-v2/provider-config.yaml` from `provider-config.umans-flash.example.yaml`; it selects `umans-flash` for generation and obtains only embedding/reranker base URLs from command-local environment values.
+- Ran provider construction with command-local tunnel bindings:
+
+```text
+RAG_EMBEDDING_BASE_URL='http://127.0.0.1:11435' \\
+RAG_RERANKER_BASE_URL='http://127.0.0.1:18012' \\
+GOWORK=off go run ./cmd/rag-eval providers validate --provider-config experiments/real-provider-v2/provider-config.yaml
+```
+
+- Received the non-secret result:
+
+```json
+{"embedding":true,"generation":true,"profile_id":"ttc-umans-flash-local-embedding-v1","reranker":true}
+```
+
+- Started locating the replacement canonical TTC specification and artifact root. Confirmed the available real-provider study sources contain intentionally placeholder input identities, while `data/artifacts` contains custody files and the prior diary explicitly records that the previous canonical specification was stale.
+
+### Why
+- The sweep must use the existing Pinocchio profile credential boundary rather than duplicate Umans credentials in environment variables or ticket files.
+- The embedding and reranker services are separate local Mac capabilities; their SSH forwarding endpoints must be supplied only at runtime and must never become immutable experiment identity.
+- A provider host that validates does not make a source artifact, model/prompt identity, and execution pipeline combination canonical. Recompiling the specification against the repaired profile prevents a real run from being associated with stale identity.
+
+### What worked
+- The shared Pinocchio profile registry and both Mac services were available.
+- The documented SSH alias `mimimi-2.local`, remote health checks, local ports, and tmux tunnel names all matched the operator playbooks.
+- The host loader successfully constructed the embedding, generation, and reranker providers. This proves the prior `RAG_PROVIDER_ENV_MISSING` failure was resolved without exposing credentials or endpoint values in source control.
+- The validator printed only booleans and profile ID. No prompt text, corpus text, provider response, authorization header, credential, or operation ticket was emitted.
+
+### What didn't work
+- The first artifact/specification discovery command had a shell grouping error:
+
+```text
+find: you have too many ')'
+```
+
+  I corrected the discovery approach and continued with `rg --files`/targeted metadata inspection; no provider call was involved.
+- No suitable current canonical specification was found as a ready-to-use file. `experiments/real-provider-v2/study*.js` and `inputs.json` intentionally contain placeholder input digests, so they cannot be silently promoted to a real run specification.
+
+### What I learned
+- Pinocchio profiles solve the Umans credential/configuration requirement, but a chat profile is not an embedding or reranker profile. The host configuration must combine the profile-backed generator with explicit private service endpoints for those separate roles.
+- The correct endpoint values are operational capabilities supplied to the host process, not canonical study fields or secrets.
+- `rag-eval providers validate` is a useful zero-submission readiness check: it fully constructs the provider set but does not traverse the sweep, admit a Workflow V3 operation, or issue inference.
+
+### What was tricky to build
+- The previous failure code, `RAG_PROVIDER_ENV_MISSING`, did not identify whether the absent value was an Umans credential, an endpoint, or a separate service dependency. The safe resolution required following the documented profile and tunnel architecture rather than printing or searching profile values. The resulting configuration uses the pre-existing `umans-flash` profile for generation and passes the two loopback tunnel URLs only in the validation command environment.
+- The available candidate study files are deliberately non-runnable for a real measurement: their input digests are placeholders. The prior diary also establishes that an older canonical specification mismatched repaired host model identity. I therefore did not substitute digests, mutate a study source, or start preflight with an unverifiable artifact binding.
+
+### What warrants a second pair of eyes
+- Confirm the operational `provider-config.yaml` remains untracked and is not accidentally staged; it is a host-local configuration even though it contains no credential values.
+- Review the compiler inputs used for the replacement specification against the validated Umans Flash generation model, repaired prompt manifests, corpus artifact digest/size, and intended 16-chunk selection before any preflight result is accepted.
+- Confirm the tmux tunnels bind only to loopback and that the Mac services retain their documented private bindings.
+
+### What should be done in the future
+- Compile a replacement canonical TTC specification from verified, non-placeholder source bindings and the repaired host profile.
+- Run `scripts/05-real-preflight.sh` using the validated host YAML, tunnel endpoints, canonical specification, and artifact root. It must complete without provider submission.
+- Obtain fresh explicit authority before any `--execute-real` invocation, then repeat the privacy/export/import/graph audit against real evidence.
+
+### Code review instructions
+- Start with `pkg/ragproviders/provider_set.go:resolveProfileSettings` and `profileRegistry` to verify the default Pinocchio registry and profile resolution path.
+- Review `experiments/real-provider-v2/provider-config.umans-flash.example.yaml` to confirm the intended split between profile-backed generation and endpoint-backed local embedding/reranking.
+- Review `cmd/rag-ttc-v3-sweep/profile.go:loadProviderAuthority` and `loadRealChunks` to verify that provider validation, canonical identity, and verified corpus materialization remain separate gates.
+- Validate provider construction without inference using the command under **What I did**, with endpoints supplied from the local tunnels. Inspect `tmux capture-pane -pt rag-ollama-mimimi:0.0 -S -80` and the equivalent reranker session if a local health check fails.
+
+### Technical details
+- Tunnel evidence: the historical operator playbook records `rag-ollama-mimimi` forwarding local `11435` to Mac loopback Ollama `11434`; the reranker diary records `rag-reranker-mimimi` forwarding local `18012` to Mac loopback llama.cpp `8012`.
+- Host validation result: embedding, generation, and reranker were all `true` for profile `ttc-umans-flash-local-embedding-v1`.
+- The current repository contains source-bearing corpus/evaluation custody artifacts under `data/artifacts`; only their digest and byte-size metadata were inspected during this step. No source body was printed or copied.
+- The next gate is canonical compilation, not provider configuration or tunnels. The explicit no-submit wrapper requires `REAL_PROVIDER_CONFIG`, `REAL_SPECIFICATION`, and `REAL_ARTIFACT_ROOT`.
+
+## Step 21: Compile a current TTC specification and pass non-submitting real preflight
+
+I compiled the exact Umans Flash combined-preparation speed study against the custody-verified TTC catalog and artifact root. The compiler resolved the real corpus/evaluation inputs, overwrote the authoring file's deliberate placeholder bindings with immutable artifact references, and emitted one canonical specification under the ticket. The resulting specification passed the real sweep's full no-submit authority and frozen-chunk preflight.
+
+This is a qualification result, not a paid measurement. The successful preflight constructed the validated provider host, checked profile/model authority and the corpus artifact's digest/size, deterministically materialized the first 16 chunks, and calculated the requested envelope. It did not set `--execute-real`, admit a Workflow V3 operation, call Umans, invoke the embedding service, or invoke the reranker.
+
+### Prompt Context
+
+**User prompt (verbatim):** "do it"
+
+**Assistant interpretation:** Continue from validated provider infrastructure by compiling the replacement canonical TTC specification and running the non-submitting real qualification preflight.
+
+**Inferred user intent:** Remove the stale-specification block with an auditable immutable binding while preserving the explicit authority gate before any paid provider work.
+
+**Commit (code):** pending — canonical specification, compile record, diary, and changelog will be committed together; no runtime source code changed.
+
+### What I did
+- Inspected the real-provider study and input binding sources. `study-flash-combined-speed.js` declares the intended 16-chunk-compatible combined-preparation workflow using `generator-umans-flash`, `ttc-combined-preparation-v2`, `embedding-primary`, and `reranker-primary`.
+- Confirmed the authoring file's all-`a`/all-`b` input digests are intentional placeholders and that `rag-eval study compile` replaces them through `experiments/real-provider-v2/inputs.json`, `data/rag-eval.db`, and the catalog resolver.
+- Verified only corpus/evaluation artifact digest and byte-size metadata in `data/artifacts`; no source-bearing artifact body was printed or copied.
+- Created `sources/real-qualification/specifications/` in the ticket and ran validation:
+
+```text
+GOWORK=off go run ./cmd/rag-eval study validate experiments/real-provider-v2/study-flash-combined-speed.js \\
+  --inputs experiments/real-provider-v2/inputs.json \\
+  --ttc-database data/rag-eval.db \\
+  --artifact-root data/artifacts
+```
+
+- Validation returned:
+
+```json
+{"cells":1,"schemaVersion":"rag-study/v2","valid":true,"variants":1}
+```
+
+- Compiled the canonical specification to the ticket with the same immutable input sources and recorded `compile-result.json`.
+- Ran the ticket's no-submit wrapper with the profile-backed host YAML, local Mac tunnel endpoint bindings, compiled specification, and `data/artifacts` root:
+
+```text
+RAG_EMBEDDING_BASE_URL='http://127.0.0.1:11435' \\
+RAG_RERANKER_BASE_URL='http://127.0.0.1:18012' \\
+REAL_PROVIDER_CONFIG="$PWD/experiments/real-provider-v2/provider-config.yaml" \\
+REAL_SPECIFICATION="$SPEC" \\
+REAL_ARTIFACT_ROOT="$PWD/data/artifacts" \\
+  bash ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/scripts/05-real-preflight.sh
+```
+
+### Why
+- The old canonical specification could not be reused after host model/prompt identity repair. A fresh canonical specification binds the actual study pipeline and verified immutable inputs to the current profile policy.
+- Compilation must occur through the established adapter and catalog resolver, rather than manually replacing placeholder digests in JavaScript. That preserves canonical encoding, envelope identity, input staging, and reproducibility.
+- The preflight is intentionally separate from execution: it gives an operator exact request/token/cost ceilings and verifies the frozen source selection before any provider admission.
+
+### What worked
+- Study validation passed with one variant and one expanded cell.
+- Compilation produced exactly one specification: `sha256:53a4934fba2135e2515e2f8b30d7108d3e21d4e349f867f5b7bf369be1ffb9b1.json`.
+- The real preflight passed and reported:
+
+```text
+profile_digest=sha256:cf092e0f1a389169a22e519beb8b81b7f059dd6bb66ec391ea934bf857e46702
+model_digest=sha256:de4fd2ae4ab9b359e5ce7fee7b7773258f6eb9643cd61a682f54d76b7584a684
+frozen_chunks=16
+planned_generation_requests=60
+prior_generation_requests=61
+maximum_generation_retries=8
+required_cumulative_generation_requests=129
+planned_embedding_requests=128
+required_maximum_cost_microunits=1373850
+required_input_tokens=2113536
+required_output_tokens=1056768
+required_embedding_tokens=3932160
+```
+
+- The command reached and passed frozen-chunk materialization, which verifies the referenced corpus file's byte length and SHA-256 before the pipeline produces the deterministic 16-chunk slice.
+
+### What didn't work
+- The first compile attempt included the obsolete documented `--output json` flag and failed before study loading:
+
+```text
+Error: unknown flag: --output
+exit status 1
+```
+
+  The installed Glazed command does not expose that generic output flag. I removed it and reran the exact command successfully; no provider call was possible in either compile invocation.
+
+### What I learned
+- Placeholder input identities in study authoring code are not a defect when the compile path has an explicit immutable catalog-binding phase. The compiled specification, not the JavaScript placeholder, is the real run identity.
+- `loadRealChunks` has a stronger boundary than a path lookup: it verifies file byte size and SHA-256 against the canonical artifact reference before decoding the corpus and materializing chunks.
+- A passing preflight means configuration, profile policy, canonical execution, and source custody agree. It is not monetary authorization and it does not consume the durable generation-request authority.
+
+### What was tricky to build
+- There are two different identity layers: the catalog artifact's file digest/size and the RAG manifest digest bound into the execution. Manually substituting the digest in `study-flash-combined-speed.js` would risk conflating them. The safe solution was to keep the source file unchanged and let `rag-eval study compile` resolve inputs, stage their bytes under `data/artifacts`, derive the artifact references, and construct the researchctl canonical identity.
+- The preflight requires host endpoints only for provider construction, while the compiled specification must remain independent of those operational locations. I supplied the two loopback URLs only as command environment values and retained no endpoint configuration in the ticket specification.
+
+### What warrants a second pair of eyes
+- Review the generated canonical specification and `compile-result.json` to confirm their only corpus/evaluation references are relative artifact URIs, digests, sizes, and schema identities—never source text or host endpoints.
+- Verify the reported model digest and profile digest match the repaired intended Umans Flash policy before giving any spend authority.
+- Recheck the cumulative envelope includes the 61 prior admissions and eight retry admissions; the next real command must not silently reset those counters.
+
+### What should be done in the future
+- Obtain explicit affirmative authority for exactly the reported cumulative limits before adding `--execute-real` and all required authority flags.
+- Run one bounded real qualification only, then preserve per-cell operation custody before runtime cleanup and perform post-run privacy scans, fresh researchctl import, graph inspection, diary/changelog/task updates, and a completion audit.
+- Do not re-run a failed whole matrix automatically; retries must remain within the eight explicit admissions and cumulative 129-request ceiling.
+
+### Code review instructions
+- Review `cmd/rag-eval/cmds/study/command.go:resolve` and `pkg/researchctladapter/adapter.go:ResolveInputs`/`WrapExecution` to trace immutable input resolution and canonical specification construction.
+- Review `cmd/rag-ttc-v3-sweep/profile.go:loadProviderAuthority` and `loadRealChunks` to verify real provider policy and artifact verification precede all potential provider effects.
+- Re-run the validate, compile, and preflight commands above. Confirm preflight output reports `frozen_chunks=16` and the exact stated limits, while tmux tunnel logs show no inference payload activity.
+
+### Technical details
+- Canonical output directory: `sources/real-qualification/specifications/`.
+- Artifact root: `data/artifacts` (custody root; source bodies were not copied into the ticket).
+- Host profile: `ttc-umans-flash-local-embedding-v1`; generation resolves through the local Pinocchio `umans-flash` profile and embedding/reranking through the loopback SSH tunnels.
+- The output cost ceiling is 1,373,850 microunits, i.e. USD $1.37385 under the profile's pinned tariff. This is a ceiling requiring explicit approval, not a charge incurred by preflight.
+
+## Step 22: Execute the authorized real qualification and verify custody import
+
+After the user gave affirmative authority immediately after the exact preflight ceiling, I ran one bounded real TTC qualification in a dedicated tmux session. The run completed all eight cells (batch sizes 1/2/4/8 and concurrency 1/2), wrote durable per-cell operation custody before runtime cleanup, and stopped with 125 cumulative admissions—61 prior plus 64 newly admitted calls—under the authorized ceiling of 129.
+
+I then scanned the compact retained evidence for prohibited operational material and built a post-hoc researchctl custody export because the real invocation had not been given import identity flags. A fresh researchctl laboratory imported the export, verifying 25 artifacts and four scalar metrics. The temporary import bundle included source artifacts only outside the ticket to satisfy researchctl's input-verification contract and was deleted immediately afterward.
+
+### Prompt Context
+
+**User prompt (verbatim):** "affirmative"
+
+**Assistant interpretation:** Provide affirmative authority for the exact cumulative real-run envelope stated in the preceding preflight, permitting one bounded `--execute-real` qualification.
+
+**Inferred user intent:** Obtain real provider evidence now that all preflight gates passed, while retaining the explicit cost/request limit and downstream custody checks.
+
+**Commit (code):** pending — real evidence, custody-export script, diary, and changelog bookkeeping will be committed after remaining review artifacts are finalized.
+
+### What I did
+- Read the sweep CLI flags and used the exact preflight envelope: 16 chunks; concurrency 1,2; 60 planned generation requests; 61 prior admissions; eight retry admissions; cumulative generation maximum 129; embedding maximum 128; maximum cost 1,373,850 microunits; input/output maxima 2,113,536/1,056,768; embedding-token maximum 3,932,160.
+- Started `rag-ttc-real-qualification` in tmux with `--execute-real`, the validated host config, current canonical specification, verified artifact root, and loopback-only Mac tunnel bindings.
+- The first launch exited before work because I had pre-created the real output directory. The CLI correctly rejected this with `RAG_SWEEP_REAL_OUTPUT_EXISTS`; the directory contained no authority record or runtime state, so no provider request had been admitted. I removed the empty directory and launched once more.
+- Monitored durable `generation-authority.json` and per-cell custody rather than inferring progress from a terminal. Admission advanced from 61 to 67, 80, 95, 124, then final 125.
+- Confirmed final compact evidence: eight cell checkpoints, eight JSONL operation ledgers, eight operation manifests, `evidence.json`, `cells.csv`, and `measurements.jsonl`; the source-bearing runtime directory was empty after cleanup.
+- Performed a retained-evidence scan for source canary, provider-body field, authorization/bearer, URL, key, private-key, and vector patterns. It found no match.
+- Added `scripts/08-build-operation-custody-export.go`, a post-hoc builder that reads only compact sweep evidence and operation paths, writes an explicit researchctl export, and never reads the corpus, provider configuration, runtime SQLite, or provider payload.
+- The first export-builder run used invalid human-readable IDs and failed validation. I corrected this to required 26-character Crockford IDs and generated `researchctl-run-export.json`.
+- Built researchctl and imported the real custody export into a fresh lab. The initial import surfaced two custody mechanics: the canonical specification's referenced input artifacts must be present in the temporary bundle, and a stale `/tmp/artifacts` laboratory root caused a content-addressed collision. I rebuilt a fresh temporary bundle with the verified input artifacts, reset the fresh lab root, and imported successfully. The temporary bundle/artifact root was deleted.
+
+### Why
+- `--execute-real` is permitted only after exact authority. The command's immutable numeric flags prevent a generic confirmation from turning into unbounded spend.
+- Per-cell JSONL/manifests and the durable admission file are the call-time evidence; they remain inspectable even if a terminal session fails.
+- Researchctl import verifies digest-based downstream custody independently of the live Workflow/RAG run path.
+
+### What worked
+- The qualification completed: `profile=real cells=8 planned_requests=60`.
+- Final authority state was `maximumGenerationRequests=129`, `priorGenerationRequests=61`, `admittedGenerationRequests=125`; the run remained four admissions below its ceiling.
+- Real custody contains 25 imported artifacts: eight cell records, eight operation JSONL files, eight manifests, and aggregate evidence, plus the canonical specification's two verified input artifacts.
+- Fresh researchctl import recorded one run, one attempt, 25 artifacts, and four metrics. The scalar operation metrics were eight cells, 60 generation requests, 128 embedding requests, and 875,199,023 total cell-makespan microseconds.
+- The retained-evidence scan was clean and no runtime SQLite/WAL file remained under the real output root.
+
+### What didn't work
+- First execution setup failed closed before provider admission:
+
+```text
+RAG_SWEEP_REAL_OUTPUT_EXISTS
+```
+
+- First post-hoc export attempt failed because researchctl requires canonical identifier shape:
+
+```text
+panic: validate operation custody run export: run.id: invalid run ID "run_20260722_ttc_real_003"
+```
+
+- First and second fresh import attempts failed respectively because the temporary bundle lacked canonical specification inputs and because stale `/tmp/artifacts` contained same-URI fixture artifacts with different bytes:
+
+```text
+stage run export artifacts: artifact specification/1: resolve artifact path "inputs/corpus/...json": .../inputs: no such file or directory
+```
+
+```text
+content-addressed staging conflict at cells/cell-00-b1-c1.json: destination exists with different content
+```
+
+  Both were custody staging errors after the real run, not provider execution errors. The successful import used a new temporary bundle with verified input artifacts and a reset laboratory artifact root.
+
+### What I learned
+- A real sweep refuses a pre-existing output directory before it initializes durable admission; this prevents accidental overwriting or reusing a real authority ledger.
+- Real providers may omit usage fields. The evidence records actual request counts and explicit zero/unavailable token/cost counters instead of inventing usage; only two cells reported nonzero generation usage/cost in their existing bounded fields.
+- Researchctl imports the canonical specification's inputs as verified artifacts in addition to the operation-custody artifacts. Temporary staging must therefore contain both the compact output bundle and the referenced immutable inputs.
+
+### What was tricky to build
+- The real invocation had no `--researchctl-custody-*` IDs, so it correctly did not write a custody export during run completion. Re-running the sweep merely to attach IDs would have violated the one-run authority. The post-hoc script reconstructs the same export artifact list from retained compact evidence, uses explicit IDs/timestamp, and preserves the original canonical specification. It does not reopen a provider or a runtime database.
+- Researchctl's content-addressed staging root is derived from the temporary laboratory database directory (`/tmp/artifacts`), not the temporary project file's `.researchctl` directory. Deleting only the latter left stale fixture files; resetting the actual root fixed the collision.
+
+### What warrants a second pair of eyes
+- Review the post-hoc custody script against `cmd/rag-ttc-v3-sweep/main.go:writeResearchctlCustodyExport` to ensure the artifact roles, schemas, metrics, and relative URIs remain aligned.
+- Review the two cells reporting bounded nonzero generation usage alongside the explicit missing usage in the other cells; provider accounting availability is an observation, not evidence that unreported use was free.
+- Inspect the rendered real graphs before publishing a performance conclusion. The current renderer has fixture-specific title text and must not label real-provider figures as fixture control.
+
+### What should be done in the future
+- Render and visually inspect real-provider graphs using labels that accurately identify the real qualification.
+- Produce the analysis/report and reMarkable bundle, then complete the ticket's publication task. No second real matrix is authorized by this run.
+- Keep the completed real output and imported export immutable; do not edit operation JSONL, manifests, aggregate evidence, or authority state.
+
+### Code review instructions
+- Review `sources/real-attempt-003/generation-authority.json`, `evidence.json`, `cells/`, and `operations/` for durable run/call evidence and confirm `runtime/` is absent/empty.
+- Run the post-hoc builder against a copy of the output and confirm `researchctl-run-export.json` validates with relative artifact URIs only.
+- Reproduce a fresh import with a temporary bundle containing only compact output plus the two canonical input artifact files; verify the output reports 25 artifacts and four metrics.
+
+### Technical details
+- Real output root: `sources/real-attempt-003/`.
+- Custody source identity: `rag-ttc-v3-sweep` / `ttc-real-qualification-003`.
+- Import identity: `run_00000000000000000000000003` / `attempt_00000000000000000000000003`.
+- Import export digest: `sha256:86399c8e99dbd4dddddc8b19c3d66fa49aac4b1ad1c074c24cc545b7a994da41`.
+- The real sweep's retained evidence scan covered compact artifacts only; the canonical corpus/evaluation source artifacts were used solely in a temporary researchctl input-verification bundle and were removed afterward.

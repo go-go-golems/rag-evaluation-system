@@ -155,3 +155,43 @@ Step 13: cumulative authority stopped the second real attempt at 61 after one re
 
 Commit 072ddd4 adds durable per-cell and failure custody after cumulative request exhaustion
 
+
+## 2026-07-22
+
+Step 20: recovered Pinocchio-backed Umans provider host and Mac loopback tunnels; all roles validate without inference, while canonical specification compilation remains required
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/profile.go — Canonical qualification gate
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/pkg/ragproviders/provider_set.go — Provider construction gate
+
+
+## 2026-07-22
+
+Step 21: compiled current Umans Flash TTC canonical specification and passed no-submit preflight with 16 frozen chunks and the explicit 129-request cumulative ceiling
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/cmd/rag-ttc-v3-sweep/profile.go — Preflight profile/model/artifact gate
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-qualification/specifications/sha256 — 53a4934fba2135e2515e2f8b30d7108d3e21d4e349f867f5b7bf369be1ffb9b1.json:Current canonical immutable specification
+
+
+## 2026-07-22
+
+Step 22: completed the authorized 8-cell real Umans qualification (60 planned requests, 125 cumulative admissions), clean compact-evidence scan, and fresh researchctl custody import
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/scripts/08-build-operation-custody-export.go — Post-hoc custody export builder
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-attempt-003/evidence.json — Real aggregate evidence
+
+
+## 2026-07-22
+
+Superseded the shallow initial result note with a full operation-ledger audit; corrected retry-safe elapsed, embedded reviewed graphs, and reconciled the ticket index/final task
+
+### Related Files
+
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-PIPELINE-CONSOLIDATION-AUDIT--assess-improve-and-consolidate-the-rag-evaluation-pipeline/analysis/01-ttc-real-run-performance-audit-and-pipeline-consolidation-assessment.md — Corrected authoritative performance analysis
+- /home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/index.md — Updated completed status and links
+

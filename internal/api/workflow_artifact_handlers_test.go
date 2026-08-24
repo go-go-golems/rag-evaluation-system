@@ -9,13 +9,15 @@ import (
 	"testing"
 
 	"github.com/go-go-golems/rag-evaluation-system/internal/db"
-	workflowservice "github.com/go-go-golems/rag-evaluation-system/internal/workflow"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragintakeworkflow"
+	"github.com/go-go-golems/scraper/pkg/workflowv3"
 )
 
 func TestWorkflowAndArtifactVisibilityEndpoints(t *testing.T) {
 	ctx := context.Background()
 	appDBPath := filepath.Join(t.TempDir(), "app.db")
-	engineDBPath := filepath.Join(t.TempDir(), "engine.db")
+	workflowDBPath := filepath.Join(t.TempDir(), "workflow.db")
+	artifactRoot := filepath.Join(t.TempDir(), "artifacts")
 	database, err := db.OpenDB(appDBPath)
 	if err != nil {
 		t.Fatalf("open db: %v", err)
@@ -27,28 +29,32 @@ func TestWorkflowAndArtifactVisibilityEndpoints(t *testing.T) {
 	queries := db.NewQueries(database)
 	seedAPIVisibilityData(t, queries)
 
-	if _, err := workflowservice.SubmitIntakeWorkflow(ctx, workflowservice.SubmitIntakeRequest{
-		EngineDB:            engineDBPath,
-		DBPath:              appDBPath,
-		WorkflowID:          "wf-api-visibility",
-		DocumentIDs:         []string{"doc-1"},
-		Strategy:            "fixed",
-		ChunkSize:           20,
-		Overlap:             5,
-		SkipPreprocessing:   true,
-		SkipEmbeddings:      true,
-		SkipBM25:            true,
-		SkipChunkEnrichment: true,
-	}); err != nil {
-		t.Fatalf("submit workflow: %v", err)
+	config := ragintakeworkflow.DefaultConfig(appDBPath)
+	config.WorkflowDatabase, config.ArtifactRoot = workflowDBPath, artifactRoot
+	app, err := ragintakeworkflow.Open(ctx, config)
+	if err != nil {
+		t.Fatalf("open intake: %v", err)
+	}
+	request, err := ragintakeworkflow.PrepareRequest(ctx, config.Runtime, ragintakeworkflow.Request{IndexID: "unused", SkipPreprocessing: true, SkipEmbeddings: true, SkipBM25: true, SkipChunkEnrichment: true}, ragintakeworkflow.Selection{DocumentIDs: []string{"doc-1"}})
+	if err != nil {
+		t.Fatalf("prepare intake: %v", err)
+	}
+	if _, err = app.SubmitRequest(ctx, request, workflowv3.RunID("wf-api-visibility")); err != nil {
+		t.Fatalf("submit intake: %v", err)
+	}
+	if _, err = app.RunUntilTerminal(ctx, workflowv3.RunID("wf-api-visibility")); err != nil {
+		t.Fatalf("run intake: %v", err)
+	}
+	if err = app.Close(); err != nil {
+		t.Fatalf("close intake: %v", err)
 	}
 
 	mux := http.NewServeMux()
-	RegisterHandlersWithOptions(mux, database, Options{EngineDB: engineDBPath})
+	RegisterHandlersWithOptions(mux, database, Options{DatabasePath: appDBPath, WorkflowDB: workflowDBPath, WorkflowArtifactRoot: artifactRoot})
 
-	assertStatus(t, mux, "/api/v1/workflows", http.StatusOK)
-	assertStatus(t, mux, "/api/v1/workflows/wf-api-visibility", http.StatusOK)
-	assertStatus(t, mux, "/api/v1/workflows/wf-api-visibility/ops", http.StatusOK)
+	assertStatus(t, mux, "/api/v1/intake/runs", http.StatusOK)
+	assertStatus(t, mux, "/api/v1/intake/runs/wf-api-visibility", http.StatusOK)
+	assertStatus(t, mux, "/api/v1/intake/runs/wf-api-visibility/observations", http.StatusOK)
 	assertStatus(t, mux, "/api/v1/artifacts/document-processing/coverage?artifact_type=clean_text&prompt_version=v1&provider=fake&model=fake-document-processor", http.StatusOK)
 	assertStatus(t, mux, "/api/v1/documents/doc-1/processing-artifacts", http.StatusOK)
 	assertStatus(t, mux, "/api/v1/artifacts/chunk-enrichment/coverage?strategy_id=fixed-20-5&prompt_version=v1", http.StatusOK)
@@ -89,5 +95,28 @@ func seedAPIVisibilityData(t *testing.T, queries *db.Queries) {
 	}
 	if err := queries.UpsertChunkEnrichment(db.ChunkEnrichment{ChunkID: "chunk-1", StrategyID: "fixed-20-5", PromptVersion: "v1", Provider: "fake", Model: "fake-chunk-enricher", ShortSummary: "summary", LongSummary: "long", KeyTopicsJSON: "[]", EntitiesJSON: "[]", HypotheticalQuestionsJSON: "[]", QualityScore: 0.9, TextHash: "hash"}); err != nil {
 		t.Fatalf("upsert chunk enrichment: %v", err)
+	}
+}
+
+func TestApplyIntakeEmbeddingDefaultsRestoresProviderSettings(t *testing.T) {
+	// Omitted fields fall back to the conventional defaults when embeddings run.
+	input := &intakeSubmitRequest{SkipEmbeddings: false}
+	applyIntakeEmbeddingDefaults(input)
+	if input.EmbeddingType != "ollama" || input.EmbeddingEngine != "nomic-embed-text" || input.Dimensions != 768 {
+		t.Fatalf("defaults not restored: type=%q engine=%q dimensions=%d", input.EmbeddingType, input.EmbeddingEngine, input.Dimensions)
+	}
+
+	// Explicit values are preserved.
+	explicit := &intakeSubmitRequest{SkipEmbeddings: false, EmbeddingType: "openai", EmbeddingEngine: "text-embedding-3-small", Dimensions: 1536}
+	applyIntakeEmbeddingDefaults(explicit)
+	if explicit.EmbeddingType != "openai" || explicit.EmbeddingEngine != "text-embedding-3-small" || explicit.Dimensions != 1536 {
+		t.Fatalf("explicit values overwritten: type=%q engine=%q dimensions=%d", explicit.EmbeddingType, explicit.EmbeddingEngine, explicit.Dimensions)
+	}
+
+	// Skipping embeddings leaves the provider fields untouched.
+	skipped := &intakeSubmitRequest{SkipEmbeddings: true}
+	applyIntakeEmbeddingDefaults(skipped)
+	if skipped.EmbeddingType != "" || skipped.EmbeddingEngine != "" || skipped.Dimensions != 0 {
+		t.Fatalf("skipped embeddings should not be defaulted: type=%q engine=%q dimensions=%d", skipped.EmbeddingType, skipped.EmbeddingEngine, skipped.Dimensions)
 	}
 }

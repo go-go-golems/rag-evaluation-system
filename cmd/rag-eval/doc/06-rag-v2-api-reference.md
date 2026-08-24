@@ -8,7 +8,8 @@ Topics:
 - contracts
 Commands:
 - rag-eval study validate
-- rag-eval preview
+- rag-eval study compile
+- rag-workflow-runner
 - rag-product-server
 Flags: []
 IsTopLevel: true
@@ -25,7 +26,9 @@ RAG v2 has one canonical contract/compiler/operator stack with separate study an
 - `rag-product-plan/v2`: online bindings and policies.
 - `rag-study/v2`: variants, factors, dataset and measures.
 - `rag-pipeline-execution/v2`: one expanded cell.
-- `rag-query-trace/v2`: authoritative evidence and usage.
+- `scraper-workflow-execution/v2`: production Workflow runner input.
+- `rag-workflow-study-bundle/v1`: compiled study bundle and plan manifest.
+- `rag-query-trace/v2`: authoritative domain evidence and usage.
 - `rag-product-qualification/v1`: exact deployment qualification.
 
 ## Packages
@@ -33,11 +36,12 @@ RAG v2 has one canonical contract/compiler/operator stack with separate study an
 - contracts: `pkg/ragcontract`;
 - normalization/targets: `pkg/ragcompiler`;
 - pure authoring: `pkg/ragmodel`, `pkg/gojamodules/rag`;
-- native behavior: `pkg/ragoperators`, `pkg/ragengine`;
-- studies: `pkg/researchctladapter`, `cmd/rag-worker`;
+- native behavior: `pkg/ragoperators`; `pkg/ragengine` is retained as a semantic harness, not a scheduler;
+- study input resolution: `pkg/researchctladapter`;
+- production lowering and tasks: `pkg/ragworkflow`, `pkg/ragworkflowops`, `cmd/rag-workflow-runner`;
 - products: `pkg/ragproduct`, `cmd/rag-product-server`.
 
-Only the study adapter imports researchctl.
+RAG-eval compiles immutable Workflow cases; Researchctl executes the generated experiment plan. No RAG command owns replicate scheduling, process retries, or run persistence.
 
 ## Evidence invariants
 

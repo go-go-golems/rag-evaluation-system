@@ -68,10 +68,6 @@ func Migrate(db *sql.DB) error {
 		}
 	}
 
-	if err := ensureChunksStrategyID(db); err != nil {
-		return fmt.Errorf("ensure chunks strategy_id: %w", err)
-	}
-
 	return nil
 }
 

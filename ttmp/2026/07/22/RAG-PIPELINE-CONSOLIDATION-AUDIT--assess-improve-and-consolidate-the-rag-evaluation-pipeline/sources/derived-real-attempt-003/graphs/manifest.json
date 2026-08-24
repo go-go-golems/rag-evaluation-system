@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "rag-ttc-pipeline-audit-graphs/v1",
+  "sourceRunRoot": "/home/manuel/workspaces/2026-07-13/rag-eval-ttc/rag-evaluation-system/ttmp/2026/07/22/RAG-TTC-V3-SWEEP--workflow-v3-umans-batching-and-concurrency-study/sources/real-attempt-003",
+  "graphs": [
+    "01-elapsed-boundary.png",
+    "01-elapsed-boundary.svg",
+    "02-throughput-speedup.png",
+    "02-throughput-speedup.svg",
+    "03-generation-latency.png",
+    "03-generation-latency.svg",
+    "04-occupancy-retries.png",
+    "04-occupancy-retries.svg",
+    "05-provider-timelines.png",
+    "05-provider-timelines.svg"
+  ]
+}

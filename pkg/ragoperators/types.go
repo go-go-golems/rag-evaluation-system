@@ -138,7 +138,7 @@ type Embedder interface {
 	Embed(context.Context, string, []string) ([][]float64, Usage, error)
 }
 type Reranker interface {
-	Rerank(context.Context, RerankRequest) ([]RerankScore, error)
+	Rerank(context.Context, RerankRequest) (RerankResult, error)
 }
 type RerankRequest struct {
 	Model, InputTemplate, Truncation, Tokenization string
@@ -149,6 +149,11 @@ type RerankRequest struct {
 type RerankScore struct {
 	ChunkID string
 	Score   float64
+}
+type RerankResult struct {
+	Scores      []RerankScore
+	InputTokens int64
+	Cost        *float64
 }
 
 type ManifestResolver interface {
@@ -171,6 +176,7 @@ type Environment struct {
 	Usage                         Usage
 	GenerationConcurrency         int
 	GenerationSettingsFingerprint string
+	ProviderBudgetUsage           func() map[string]int64
 	EmitEvent                     func(context.Context, Event) error
 }
 type Cache interface {

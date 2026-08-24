@@ -170,3 +170,5 @@ status:
       description: Work completed
     - slug: archived
       description: Archived/completed work
+    - slug: on-hold
+      description: Work intentionally paused pending a prerequisite or explicit resumption decision

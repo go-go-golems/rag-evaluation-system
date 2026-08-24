@@ -32,6 +32,8 @@
 			"!**/node_modules",
 			"!**/dist",
 			"!examples/xgoja/**/assets/public",
+			"!examples/rag-workflow",
+			"!examples/rag-workflow-provider",
 			"!**/ttmp",
 			"!**/*.min.js",
 			"!**/*.min.css",

@@ -229,6 +229,44 @@ func ApplyInputs(study ragcontract.Study, resolved ResolvedInputs) (ragcontract.
 	return study, nil
 }
 
+func LoadDomainArtifacts(artifactRoot string, resolved ResolvedInputs) (ragoperators.CorpusArtifact, ragoperators.EvaluationArtifact, error) {
+	corpusInput, ok := resolved.ByRole["corpus"]
+	if !ok {
+		return ragoperators.CorpusArtifact{}, ragoperators.EvaluationArtifact{}, fmt.Errorf("RAG_INPUT_CORPUS_REQUIRED")
+	}
+	evaluationInput, ok := resolved.ByRole["evaluation-dataset"]
+	if !ok {
+		evaluationInput, ok = resolved.ByRole["judgments"]
+	}
+	if !ok {
+		return ragoperators.CorpusArtifact{}, ragoperators.EvaluationArtifact{}, fmt.Errorf("RAG_INPUT_EVALUATION_REQUIRED")
+	}
+	var corpus ragoperators.CorpusArtifact
+	if err := decodeStagedArtifact(artifactRoot, corpusInput.Reference, &corpus); err != nil {
+		return corpus, ragoperators.EvaluationArtifact{}, err
+	}
+	var evaluation ragoperators.EvaluationArtifact
+	if err := decodeStagedArtifact(artifactRoot, evaluationInput.Reference, &evaluation); err != nil {
+		return corpus, evaluation, err
+	}
+	return corpus, evaluation, nil
+}
+
+func decodeStagedArtifact(root string, reference lab.ArtifactRef, target any) error {
+	path, err := lab.PrepareArtifactPath(root, reference.URI)
+	if err != nil {
+		return err
+	}
+	body, err := os.ReadFile(path) // #nosec G703 -- PrepareArtifactPath confines the URI to root.
+	if err != nil {
+		return err
+	}
+	if lab.DigestBytes(body) != reference.Digest {
+		return fmt.Errorf("RAG_INPUT_DIGEST: %s", reference.Role)
+	}
+	return strictJSON(body, target)
+}
+
 func Expand(study ragcontract.Study, resolved ResolvedInputs) (ragcontract.Study, []ragcontract.ExpandedCell, error) {
 	updated, err := ApplyInputs(study, resolved)
 	if err != nil {
@@ -236,35 +274,4 @@ func Expand(study ragcontract.Study, resolved ResolvedInputs) (ragcontract.Study
 	}
 	cells, err := ragcompiler.ExpandStudy(updated, nil)
 	return updated, cells, err
-}
-
-func WrapExecution(execution ragcontract.PipelineExecution, resolved ResolvedInputs, displayName string) (lab.SpecificationRecord, error) {
-	domainConfig, err := ragcontract.CanonicalJSON(execution)
-	if err != nil {
-		return lab.SpecificationRecord{}, err
-	}
-	inputs := make([]lab.ArtifactRef, 0, len(resolved.ByRole))
-	for _, value := range resolved.ByRole {
-		inputs = append(inputs, value.Reference)
-	}
-	sort.Slice(inputs, func(i, j int) bool { return inputs[i].Role < inputs[j].Role })
-	measures := make([]lab.MeasureDefinition, len(execution.Measures))
-	for index, value := range execution.Measures {
-		measures[index] = lab.MeasureDefinition{Name: value.Name, ValueKind: value.ValueKind, Unit: value.Unit, Required: value.Required, Config: value.Config}
-	}
-	factorValues := map[string]any{}
-	for _, selection := range execution.Factors {
-		factorValues[selection.FactorID] = map[string]any{"id": selection.ValueID, "value": json.RawMessage(selection.Value)}
-	}
-	factors, _ := ragcontract.CanonicalJSON(factorValues)
-	identity := lab.ExecutionIdentity{SchemaVersion: lab.ExecutionSpecSchemaVersion, IdentityScheme: lab.ExecutionIdentityScheme, Domain: ragcontract.Domain, DomainSchemaVersion: ragcontract.DomainSchemaVersion, Inputs: inputs, DomainConfig: domainConfig, RequestedMeasures: measures, Factors: factors}
-	if err := lab.ValidateExecutionIdentity(identity); err != nil {
-		return lab.SpecificationRecord{}, err
-	}
-	id, _, err := lab.ExecutionID(identity)
-	if err != nil {
-		return lab.SpecificationRecord{}, err
-	}
-	provenance, _ := ragcontract.CanonicalJSON(map[string]any{"cellId": execution.CellID, "variantId": execution.VariantID, "factors": execution.Factors})
-	return lab.SpecificationRecord{ID: id, IdentityScheme: lab.ExecutionIdentityScheme, CanonicalIdentity: identity, DisplayName: displayName, Provenance: provenance, Labels: map[string]string{"rag.cell": execution.CellID, "rag.variant": execution.VariantID, "evaluation.status": execution.Dataset.Status, "evaluation.split": execution.Dataset.Split}}, nil
 }

@@ -52,11 +52,18 @@ rag-eval study validate experiments/rag-sol2/study.js \
   --inputs experiments/rag-sol2/inputs.json \
   --ttc-database data/rag-eval.db
 
-rag-eval study run experiments/rag-sol2/study.js \
+artifact_root="$PWD/laboratory/artifacts"
+rag-eval study compile experiments/rag-sol2/study.js \
   --inputs experiments/rag-sol2/inputs.json \
   --ttc-database data/rag-eval.db \
-  --project project.yaml \
+  --artifact-root "$artifact_root" \
+  --output-dir "$artifact_root/inputs/rag-sol2" \
   --experiment-id EXP-RAG-PARITY \
-  --researchctl-command researchctl \
-  --worker-command rag-worker
+  --provider-config experiments/real-provider-v2/provider-config.yaml
+
+researchctl experiment run-plan "$artifact_root/inputs/rag-sol2/researchctl-plan.js" \
+  --project project.js \
+  --runner-command rag-workflow-runner \
+  --runner-name scraper-workflow-runner \
+  --runner-version v1
 ```

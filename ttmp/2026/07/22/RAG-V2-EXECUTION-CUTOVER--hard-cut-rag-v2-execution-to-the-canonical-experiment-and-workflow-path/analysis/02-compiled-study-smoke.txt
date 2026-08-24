@@ -1,0 +1,1 @@
+{"bundleSchema": "rag-workflow-study-bundle/v1", "executed": 2, "externalOperations": 0, "metric": "rag.mrr", "resumed": 2, "status": "succeeded", "validatedCases": 1}

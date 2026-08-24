@@ -1,98 +1,79 @@
-# RAG study playbook
+# RAG v2 study playbook
 
-This playbook takes a pure JavaScript study from authoring to scientifically honest researchctl evidence.
+A RAG study is pure domain authoring. It describes canonical variants, RAG factors, immutable input bindings, requested measures, and desired replicate counts. It does not schedule processes, contact providers, retry work, or persist scientific runs.
 
-## Author
+## Ownership
 
-Start from `experiments/rag-sol2/study.js` or `examples/rag-v2/06-raw-study.js`. JavaScript composes typed values only; it does not open catalogs, call providers, allocate runs, or persist results.
-
-Keep fixed variables explicit in the pipeline. Use variants for coherent pipeline alternatives and factors for controlled substitutions. Check expected cell count before running.
-
-## Bind immutable inputs
-
-`inputs.json` may contain RAG-owned catalog references for author convenience. `rag-eval` resolves these to immutable envelope bytes and manifests before generic submission. Record:
-
-- corpus manifest and record count;
-- evaluation manifest, split, status and relevance target;
-- exact model/prompt/embedding/reranker manifests;
-- operator versions and configs;
-- replicate/seed policy;
-- requested measure versions/configs.
-
-A candidate, smoke or preview dataset is not an adjudicated benchmark.
+- RAG-eval validates authoring, resolves immutable domain inputs, expands semantic cells, and lowers each execution into Workflow V3.
+- Researchctl owns cases, replicates, ordering, concurrency, resume, and laboratory custody.
+- Scraper Workflow V3 owns node scheduling, attempts, leases, retries, cancellation, effects, provider operations, and execution artifacts.
+- Geppetto remains behind RAG-owned provider adapters.
 
 ## Validate and explain
 
 ```bash
-rag-eval study validate study.js \
-  --inputs inputs.json --ttc-database data/rag-eval.db --output json
-
-rag-eval study explain study.js \
-  --inputs inputs.json --ttc-database data/rag-eval.db --output json
+rag-eval study validate study.js --inputs inputs.json
+rag-eval study explain study.js --inputs inputs.json
 ```
 
-Validation checks typed graphs, configs, bindings, lineage policies, factors, measures and stable cell identities. Explain output should be reviewed for variants, factor combinations, representation channels, collapse scope, provider requirements and expected cell count.
+## Compile
 
-## Compile without executing
+```bash
+artifact_root="$PWD/laboratory/artifacts"
+
+rag-eval study compile study.js \
+  --inputs inputs.json \
+  --artifact-root "$artifact_root" \
+  --output-dir "$artifact_root/inputs/my-study" \
+  --experiment-id EXP-RAG
+```
+
+Compilation creates `manifest.json`, `researchctl-plan.js`, and one immutable case directory per expanded RAG cell. The bundle is byte-stable for the same canonical study, inputs, provider authority, and compiler version.
+
+For provider-backed operators, pass reviewed host authority at compile time:
 
 ```bash
 rag-eval study compile study.js \
-  --inputs inputs.json --ttc-database data/rag-eval.db \
-  --output-dir compiled-specs --output json
+  --inputs inputs.json \
+  --artifact-root "$artifact_root" \
+  --output-dir "$artifact_root/inputs/my-study" \
+  --experiment-id EXP-RAG \
+  --provider-config provider-config.yaml
 ```
 
-Retain canonical specifications when peer review or delayed execution matters. Recompilation from identical authoring and immutable inputs must reproduce identity.
+`--provider-fixture` exists only for deterministic tests. Provider credentials and request content are not embedded in the plan.
 
-## Preview
+## Validate and execute the plan
 
 ```bash
-rag-eval preview study.js \
-  --inputs inputs.json --ttc-database data/rag-eval.db \
-  --query 'What is reciprocal rank fusion?' --variant raw \
-  --researchctl-command researchctl --worker-command rag-worker
+researchctl experiment validate-plan \
+  "$artifact_root/inputs/my-study/researchctl-plan.js"
+
+researchctl experiment run-plan \
+  "$artifact_root/inputs/my-study/researchctl-plan.js" \
+  --project project.js \
+  --database laboratory.db \
+  --runner-command rag-workflow-runner \
+  --runner-name scraper-workflow-runner \
+  --runner-version v1 \
+  --runner-arg=--state-root \
+  --runner-arg="$PWD/workflow-state" \
+  --runner-arg=--artifact-root \
+  --runner-arg="$PWD/workflow-artifacts" \
+  --max-attempts 2 \
+  --output json
 ```
 
-Preview creates a one-query candidate dataset but uses the normal compiler, adapter, worker and researchctl laboratory. It is diagnostic evidence, never a benchmark result.
+Repeat the same command to resume. Do not write a RAG-owned loop around cases or replicates.
 
-## Execute
+## Removed paths
 
-```bash
-rag-eval study run study.js \
-  --inputs inputs.json --ttc-database data/rag-eval.db \
-  --project project.yaml --experiment-id EXP-RAG \
-  --researchctl-command researchctl --worker-command rag-worker \
-  --spec-output-dir compiled-specs --output json
-```
+The following are intentionally unavailable:
 
-The adapter checks worker capability before allocation. Researchctl verifies generic input/artifact custody and owns run/attempt/retry/timestamp/persistence/export lifecycle. The worker revalidates canonical RAG config, envelope bytes and lineage before executing.
+- `rag-eval study run`;
+- `rag-eval preview`;
+- `rag-worker`;
+- the old RAG preparation Workflow package;
+- post-hoc direct-worker progress and run adapters.
 
-## Inspect and export
-
-Use researchctl's generic commands:
-
-```bash
-researchctl lab runs list --project project.yaml --output json
-researchctl lab runs show RUN_ID --project project.yaml --output json
-researchctl lab export RUN_ID --project project.yaml --output run-export.json
-```
-
-Check terminal status, attempt count, requested measures, failure counts, trace kind, artifact digests/sizes and candidate/frozen labels. A clean terminal state alone is insufficient—inspect aggregate metrics and invariants.
-
-## Scientific review
-
-Before any quality claim:
-
-1. verify relevance target maps to evaluated identity;
-2. confirm generated representations are not cited evidence;
-3. confirm one vote per collapse key/channel before fusion;
-4. inspect hydration and source citations;
-5. inspect provider/model/prompt/tokenization/truncation/request identities;
-6. report failures, abstentions, latency, cost and storage;
-7. separate exploratory candidate queries from holdouts;
-8. compare only runs with compatible immutable inputs and measurement definitions.
-
-## Reproducibility and custody
-
-Generic file digest and RAG manifest digest are separate and both matter. Input files are read-only; acceptance tests compare staged bytes before/after worker execution. Export reconstruction must reproduce canonical specification bytes.
-
-Do not copy researchctl state into RAG tables, bypass the worker for previews, or introduce a second study runner.
+For a one-query investigation, compile a one-query evaluation dataset as one Researchctl case. Do not restore a second preview lifecycle.

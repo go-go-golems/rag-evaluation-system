@@ -1,0 +1,103 @@
+{
+  "schemaVersion": "rag-v2-execution-cutover-manifest/v1",
+  "entries": [
+    {
+      "path": "cmd/rag-eval/cmds/study",
+      "classification": "canonical-core-change",
+      "action": "retain compile-only domain authoring; remove run lifecycle",
+      "replacement": "Researchctl experiment plans plus scraper-workflow-runner",
+      "proof": ["study command tests", "forbidden-command guard", "Researchctl plan smoke"]
+    },
+    {
+      "path": "cmd/rag-eval/cmds/preview",
+      "classification": "superseded-delete",
+      "action": "delete direct execution command",
+      "replacement": "bounded one-case Researchctl plan",
+      "proof": ["root help excludes preview", "forbidden-command guard"]
+    },
+    {
+      "path": "cmd/rag-worker",
+      "classification": "superseded-delete",
+      "action": "delete direct ragengine Researchctl runner",
+      "replacement": "cmd/rag-workflow-runner",
+      "proof": ["deterministic workflow parity", "provider workflow parity", "Researchctl plan smoke"]
+    },
+    {
+      "path": "cmd/rag-preparation-smoke",
+      "classification": "superseded-delete",
+      "action": "delete old Scraper workflow smoke",
+      "replacement": "rag-workflow fixture and provider fixture smokes",
+      "proof": ["provider-free preparation parity", "provider preparation parity"]
+    },
+    {
+      "path": "internal/preparationworkflow",
+      "classification": "superseded-delete",
+      "action": "delete old Scraper workflow preparation package",
+      "replacement": "pkg/ragworkflow preparation nodes",
+      "proof": ["prepared bundle restart tests", "preparation cache and reuse tests"]
+    },
+    {
+      "path": "pkg/researchctladapter/run.go",
+      "classification": "superseded-delete",
+      "action": "delete RAG-owned process execution and retry lifecycle",
+      "replacement": "Researchctl experiment run-plan",
+      "proof": ["no execute-spec call from RAG", "multi-case multi-replicate resume smoke"]
+    },
+    {
+      "path": "pkg/researchctladapter/progress.go",
+      "classification": "superseded-delete",
+      "action": "delete direct-worker progress projection",
+      "replacement": "Researchctl and Scraper canonical observations",
+      "proof": ["canonical observation smoke", "no direct runner"]
+    },
+    {
+      "path": "pkg/researchctladapter/adapter.go",
+      "classification": "canonical-core-change",
+      "action": "retain immutable input resolution and RAG semantic expansion only",
+      "replacement": "n/a",
+      "proof": ["input digest tests", "study compile tests"]
+    },
+    {
+      "path": "pkg/researchctladapter/ttc.go",
+      "classification": "canonical-domain-input",
+      "action": "retain read-only TTC catalog resolution",
+      "replacement": "n/a",
+      "proof": ["TTC catalog tests", "bounded TTC acceptance"]
+    },
+    {
+      "path": "pkg/ragengine",
+      "classification": "canonical-semantic-harness",
+      "action": "retain operator sequencing only behind product/query and Workflow task boundaries; forbid production command import",
+      "replacement": "Workflow V3 owns production scheduling",
+      "proof": ["production import guard", "direct versus Workflow parity tests"]
+    },
+    {
+      "path": "internal/workflow",
+      "classification": "canonical-product-deferred",
+      "action": "retain temporarily as non-study document-intake product path; rename separately during intake V3 cutover",
+      "replacement": "Scraper Workflow V3 intake task package",
+      "proof": ["not imported by RAG v2 study commands", "RAG-EVAL-LEGACY-CLEANUP deletion gate"]
+    },
+    {
+      "path": "cmd/rag-eval/cmds/workflow",
+      "classification": "superseded-delete",
+      "action": "remove ambiguous workflow command name",
+      "replacement": "cmd/rag-eval/cmds/intake for separately gated document intake",
+      "proof": ["root help has no workflow command", "canonical study command is unambiguous"]
+    },
+    {
+      "path": "cmd/rag-eval/cmds/intake",
+      "classification": "canonical-product-deferred",
+      "action": "retain temporarily as explicitly named document-intake operations, not study execution",
+      "replacement": "V3 intake product commands",
+      "proof": ["help declares product-local intake boundary", "separate intake cutover gate"]
+    },
+    {
+      "path": "internal/api/workflow_artifact_handlers.go",
+      "classification": "canonical-product-deferred",
+      "action": "retain old intake API until frontend and API consumers move",
+      "replacement": "Workflow V3 read and submission API",
+      "proof": ["RAG-EVAL-LEGACY-CLEANUP API deletion gate"]
+    }
+  ]
+}

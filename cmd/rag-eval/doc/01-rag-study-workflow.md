@@ -1,106 +1,117 @@
 ---
-Title: "Compile and run RAG v2 studies"
+Title: "Compile RAG v2 studies for Researchctl and Workflow V3"
 Slug: "rag-study-workflow"
-Short: "Validate, explain, compile, and execute pure RAG studies through researchctl."
+Short: "Validate, explain, and compile pure RAG studies into immutable Workflow V3 experiment plans."
 Topics:
 - rag
 - studies
 - evaluation
 - researchctl
+- workflow-v3
 Commands:
 - rag-eval study validate
 - rag-eval study explain
 - rag-eval study compile
-- rag-eval study run
 Flags:
 - inputs
 - artifact-root
 - ttc-database
+- output-dir
 - experiment-id
-- worker-command
+- provider-config
+- provider-fixture
 IsTopLevel: true
 IsTemplate: false
 ShowPerDefault: true
 SectionType: Tutorial
 ---
 
-RAG studies keep semantic authoring in JavaScript while Go owns compilation and execution. `rag-eval` loads a pure `rag-study/v2` export, resolves immutable domain inputs, expands stable cells, wraps each cell in researchctl's generic execution identity, and invokes the generic laboratory command. Researchctl never imports or decodes a RAG package.
+RAG-eval owns domain authoring and semantic compilation. Researchctl owns cases, factors, replicates, ordering, resume, and laboratory custody. Scraper Workflow V3 owns production execution, node attempts, retries, leases, cancellation, provider operations, and artifacts.
 
-## Author a study
+There is no direct `rag-eval study run`, `rag-eval preview`, or `rag-worker` path. Compilation emits one immutable bundle and a pure Researchctl experiment plan targeting `scraper-workflow-execution/v2`.
 
-Export the result of `study.compileStudy(...)`; do not call a lifecycle method from JavaScript. `examples/rag-v2/06-raw-study.js` is the smallest native BM25 example.
+## Author and inspect a study
 
-```javascript
-const rag = require("rag");
-// Build pipeline, query plan, and study with Go-backed builders.
-module.exports = study.compileStudy({ inputs: placeholderBindings });
-```
-
-The `--inputs` document replaces placeholder bindings before cell expansion. A file reference points to a v2 manifest envelope. A TTC alias names a catalog object that the RAG-owned adapter materializes under researchctl artifact custody.
-
-```json
-{
-  "inputs": {
-    "corpus": {
-      "catalog": {"namespace": "rag-eval-ttc", "id": "sha256:..."}
-    },
-    "evaluation-dataset": {
-      "catalog": {"namespace": "rag-eval-ttc", "id": "candidate:..."}
-    }
-  }
-}
-```
-
-## Validate and explain before allocating runs
-
-Validation resolves manifests and deeply expands every cell. Explanation adds the ordered variants, factors, and registered operator IDs.
+A study script must export pure `rag-study/v2` data through `require("rag")`. It may describe domain variants, factors, requested measures, and desired replicate counts. It must not contact providers or start execution.
 
 ```bash
-rag-eval study validate study.js --inputs inputs.json --ttc-database rag-eval.db
-rag-eval study explain study.js --inputs inputs.json --ttc-database rag-eval.db
+rag-eval study validate study.js --inputs inputs.json
+rag-eval study explain study.js --inputs inputs.json
 ```
 
-Failures here occur before researchctl allocates a run. Missing aliases, digest mismatches, malformed manifests, unsafe collapse, and unsupported operators never degrade silently.
+## Compile the Workflow bundle
 
-## Compile generic specifications
+Both the resolved input envelopes and generated Workflow inputs live under the Researchctl artifact root. The output directory must be contained by that root; path escapes are rejected.
 
-Compilation writes one canonical researchctl specification per stable cell. The opaque `domainConfig` remains `rag-pipeline-execution/v2`; researchctl validates only its generic envelope.
+```bash
+artifact_root="$PWD/laboratory/artifacts"
+
+rag-eval study compile study.js \
+  --inputs inputs.json \
+  --artifact-root "$artifact_root" \
+  --output-dir "$artifact_root/inputs/my-study" \
+  --experiment-id EXP-RAG
+```
+
+The output directory contains:
+
+```text
+manifest.json
+researchctl-plan.js
+cell-.../execution.json
+cell-.../corpus.json
+cell-.../queries.json
+cell-.../domain-config.json
+```
+
+`execution.json` is canonical `rag-pipeline-execution/v2`. `domain-config.json` is canonical `scraper-workflow-execution/v2`. Query inputs use the bounded set-input archive contract. Every file carries a digest and byte count in `manifest.json`.
+
+Provider-required operators must be bound during compilation:
 
 ```bash
 rag-eval study compile study.js \
   --inputs inputs.json \
-  --ttc-database rag-eval.db \
-  --spec-output-dir ./compiled
+  --artifact-root "$artifact_root" \
+  --output-dir "$artifact_root/inputs/my-study" \
+  --experiment-id EXP-RAG \
+  --provider-config provider-config.yaml
 ```
 
-## Execute cells and replicates
+`--provider-fixture` is deterministic test-only authority. It is mutually exclusive with `--provider-config`. Provider secrets and request bodies are never written into the Workflow input bundle.
 
-Initialize the laboratory, then let the RAG CLI invoke researchctl's generic external-runner command. Capability probing happens before run allocation, and the worker revalidates domain/version, canonical execution identity, manifests, and lineage.
+## Execute with Researchctl
+
+Initialize the laboratory with a project that declares the same experiment ID, then execute the generated plan through the RAG-owned Workflow runner:
 
 ```bash
-researchctl lab init --project project.yaml
-rag-eval study run study.js \
-  --inputs inputs.json \
-  --ttc-database rag-eval.db \
-  --project project.yaml \
-  --experiment-id EXP-RAG \
-  --researchctl-command researchctl \
-  --worker-command rag-worker
+researchctl lab init --project project.js --database laboratory.db
+
+researchctl experiment run-plan \
+  "$artifact_root/inputs/my-study/researchctl-plan.js" \
+  --project project.js \
+  --database laboratory.db \
+  --runner-command rag-workflow-runner \
+  --runner-name scraper-workflow-runner \
+  --runner-version v1 \
+  --runner-arg=--state-root \
+  --runner-arg="$PWD/workflow-state" \
+  --runner-arg=--artifact-root \
+  --runner-arg="$PWD/workflow-artifacts" \
+  --max-attempts 2 \
+  --output json
 ```
 
-Researchctl owns run/attempt IDs, retry and timeout policy, timestamps, artifact custody, observation ordering, required-measure checks, and terminal summaries. The worker owns only RAG execution and observations.
+For provider-backed bundles, pass the matching host configuration to the runner with `--runner-arg=--provider-config` and a separate path argument. Researchctl process retries remain scientific-attempt custody; Workflow node and provider-operation retries remain inside each subordinate Workflow run.
 
-## Troubleshooting
+Re-running the same `run-plan` command resumes immutable plan items rather than creating a RAG-owned replicate loop.
 
-| Problem | Cause | Solution |
-|---|---|---|
-| `RAG_CATALOG_RESOLVER_REQUIRED` | An input uses a catalog alias without a TTC database. | Pass `--ttc-database` or replace the alias with a manifest-envelope URI. |
-| `RAG_WORKER_CAPABILITY` | The executable did not advertise the exact generic protocol/runner identity. | Build the current `cmd/rag-worker` and check `--worker-command`. |
-| `RAG_WORKER_INPUT_LINEAGE` | Corpus/evaluation manifests do not match the execution bindings or each other. | Regenerate envelopes from the same immutable corpus snapshot. |
-| Researchctl reports missing required measures | The worker failed before evaluating all requested measures. | Inspect the preserved attempt events, artifacts, traces, and terminal payload. |
+## Hard-cut diagnostics
 
-## See Also
+| Error | Meaning |
+|---|---|
+| `RAG_WORKFLOW_PROVIDER_REQUIRED` | The study contains a provider operator but compilation did not bind provider authority. |
+| `RAG_WORKFLOW_STUDY_OUTPUT_BOUNDARY` | The output directory escapes the Researchctl artifact root. |
+| `RAG_INPUT_DIGEST` | A resolved or staged immutable input no longer matches its declared digest. |
+| `RAG_WORKFLOW_DATASET_DIGEST` | The query dataset does not match the canonical execution identity. |
 
-- `rag-eval help rag-preview-workflow`
-- `examples/rag-v2/06-raw-study.js`
-- `examples/rag-v2/inputs-ttc-catalog.json`
+Use `researchctl experiment validate-plan` before execution and `rag-workflow-inspect` for canonical Workflow observation reprojection.

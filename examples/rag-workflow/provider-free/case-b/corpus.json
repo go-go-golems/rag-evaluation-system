@@ -1,0 +1,1 @@
+{"records":[{"id":"s1","ordinal":1,"role":"user","sessionId":"session","text":"weighted reciprocal rank fusion decision"},{"id":"s2","ordinal":2,"role":"assistant","sessionId":"session","text":"vector retrieval uses deterministic embeddings"},{"id":"s3","ordinal":3,"role":"assistant","sessionId":"session","text":"second irrelevant fixture"}],"schemaVersion":"rag-corpus-data/v1"}

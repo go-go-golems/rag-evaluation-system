@@ -190,7 +190,7 @@ func TestGeneratorHonorsCancellationAndRedactsProviderError(t *testing.T) {
 		defer server.Close()
 
 		_, err := newTestGenerator(t, server.URL+"/v1").Generate(context.Background(), ragoperators.GenerationRequest{Kind: "representations.structured-summary", Model: "qwen3:8b", Prompt: "summary", OutputSchema: "summary/v1", Text: "test"})
-		if err == nil || !strings.Contains(err.Error(), "RAG_GEPPETTO_GENERATOR_PROVIDER") || strings.Contains(err.Error(), providerBody) {
+		if err == nil || !strings.Contains(err.Error(), "PROVIDER_SERVER_ERROR") || strings.Contains(err.Error(), providerBody) {
 			t.Fatalf("Generate() error = %v; provider response body must be redacted", err)
 		}
 	})

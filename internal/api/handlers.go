@@ -18,7 +18,10 @@ import (
 )
 
 type Options struct {
-	EngineDB string
+	DatabasePath         string
+	WorkflowDB           string
+	WorkflowArtifactRoot string
+	IndexRoot            string
 }
 
 // RegisterHandlers wires all API routes into the given mux.
@@ -29,10 +32,19 @@ func RegisterHandlers(mux *http.ServeMux, database *sql.DB) {
 // RegisterHandlersWithOptions wires API routes with optional workflow engine settings.
 func RegisterHandlersWithOptions(mux *http.ServeMux, database *sql.DB, opts Options) {
 	queries := db.NewQueries(database)
-	if opts.EngineDB == "" {
-		opts.EngineDB = "state/rag-eval-workflows.db"
+	if opts.DatabasePath == "" {
+		opts.DatabasePath = "data/rag-eval.db"
 	}
-	h := &handler{queries: queries, engineDB: opts.EngineDB}
+	if opts.WorkflowDB == "" {
+		opts.WorkflowDB = "state/rag-eval-intake-v3.db"
+	}
+	if opts.WorkflowArtifactRoot == "" {
+		opts.WorkflowArtifactRoot = "state/rag-eval-intake-v3-artifacts"
+	}
+	if opts.IndexRoot == "" {
+		opts.IndexRoot = "data/indexes"
+	}
+	h := &handler{queries: queries, intakeConfig: opts}
 
 	// Health check
 	mux.HandleFunc("GET /api/v1/health", h.handleHealth)
@@ -68,15 +80,12 @@ func RegisterHandlersWithOptions(mux *http.ServeMux, database *sql.DB, opts Opti
 	mux.HandleFunc("POST /api/v1/search/vector", h.handleSearchVector)
 	mux.HandleFunc("POST /api/v1/search/hybrid", h.handleSearchHybrid)
 
-	// Workflow and derived artifact visibility
-	mux.HandleFunc("GET /api/v1/workflows", h.handleListWorkflows)
-	mux.HandleFunc("GET /api/v1/workflows/{id}", h.handleGetWorkflow)
-	mux.HandleFunc("GET /api/v1/workflows/{id}/ops", h.handleWorkflowOps)
-	mux.HandleFunc("GET /api/v1/workflows/{id}/results/{opId}", h.handleGetOpResult)
-	mux.HandleFunc("POST /api/v1/workflows/{id}/retry/{opId}", h.handleRetryOp)
-	mux.HandleFunc("POST /api/v1/workflows/{id}/cancel", h.handleCancelWorkflow)
-	mux.HandleFunc("POST /api/v1/workflows/intake", h.handleSubmitIntake)
-	mux.HandleFunc("GET /api/v1/queues", h.handleListQueues)
+	// Workflow V3 document intake and derived artifact visibility
+	mux.HandleFunc("GET /api/v1/intake/runs", h.handleListIntakeRuns)
+	mux.HandleFunc("POST /api/v1/intake/runs", h.handleSubmitIntakeRun)
+	mux.HandleFunc("GET /api/v1/intake/runs/{id}", h.handleGetIntakeRun)
+	mux.HandleFunc("GET /api/v1/intake/runs/{id}/observations", h.handleIntakeObservations)
+	mux.HandleFunc("POST /api/v1/intake/runs/{id}/cancel", h.handleCancelIntakeRun)
 	mux.HandleFunc("GET /api/v1/artifacts/document-processing/identities", h.handleDocumentProcessingIdentities)
 	mux.HandleFunc("GET /api/v1/artifacts/document-processing/coverage", h.handleDocumentProcessingCoverage)
 	mux.HandleFunc("GET /api/v1/artifacts/chunk-enrichment/identities", h.handleChunkEnrichmentIdentities)
@@ -93,8 +102,8 @@ func RegisterHandlersWithOptions(mux *http.ServeMux, database *sql.DB, opts Opti
 }
 
 type handler struct {
-	queries  *db.Queries
-	engineDB string
+	queries      *db.Queries
+	intakeConfig Options
 }
 
 func (h *handler) handleHealth(w http.ResponseWriter, r *http.Request) {

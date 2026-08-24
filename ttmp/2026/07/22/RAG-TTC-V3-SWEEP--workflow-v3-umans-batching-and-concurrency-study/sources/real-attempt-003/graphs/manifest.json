@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "rag-ttc-v3-sweep-graph-manifest/v2",
+  "evidencePlanDigest": "sha256:aa68bcce77cf8a8434a37121e63e76405c96828a7c569611fa823f840aee0dc3",
+  "graphs": [
+    "chunks-throughput.png",
+    "chunks-throughput.svg",
+    "cost-efficiency.png",
+    "cost-efficiency.svg",
+    "generation-embedding-overlap.png",
+    "generation-embedding-overlap.svg",
+    "makespan.png",
+    "makespan.svg",
+    "provider-latency.png",
+    "provider-latency.svg",
+    "request-throughput.png",
+    "request-throughput.svg",
+    "request-timeline.png",
+    "request-timeline.svg",
+    "token-rate.png",
+    "token-rate.svg"
+  ]
+}

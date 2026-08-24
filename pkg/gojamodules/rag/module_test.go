@@ -277,7 +277,7 @@ JSON.stringify(study.compileStudy({inputs:{corpus:{role:"corpus",kind:"manifest"
 }
 
 func TestRunnableExamples(t *testing.T) {
-	for _, name := range []string{"01-product.js", "02-five-variant-study.js", "03-fragment.js", "04-explain.js", "05-preview.js"} {
+	for _, name := range []string{"01-product.js", "02-five-variant-study.js", "03-fragment.js", "04-explain.js", "06-raw-study.js"} {
 		t.Run(name, func(t *testing.T) {
 			path := filepath.Join("..", "..", "..", "examples", "rag-v2", name)
 			data, err := os.ReadFile(path)
