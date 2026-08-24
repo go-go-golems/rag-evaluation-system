@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-go-golems/rag-evaluation-system/internal/db"
+	chunkservice "github.com/go-go-golems/rag-evaluation-system/internal/services/chunking"
 	"github.com/go-go-golems/scraper/pkg/workflowv3"
 	"github.com/go-go-golems/scraper/pkg/workflowv3product"
 )
@@ -92,7 +93,12 @@ func PrepareRequest(ctx context.Context, config RuntimeConfig, request Request, 
 		if limit <= 0 {
 			limit = 1
 		}
-		chunks, err := selectChunks(ctx, config.DatabasePath, fmt.Sprintf("%s-%d-%d", strategy, size, overlap), documents, limit)
+		// Enrichment targets must reference chunks the chunk task will create, but
+		// those chunks do not exist yet at submission time. Materialize the future
+		// chunk identities deterministically (chunk IDs are derived from
+		// documentID+strategyID+index) so CompilePlan emits one enrich task per real
+		// chunk instead of silently emitting none.
+		chunks, err := materializeChunkIDs(ctx, config.DatabasePath, strategy, size, overlap, documents, limit)
 		if err != nil {
 			return Request{}, err
 		}
@@ -161,7 +167,7 @@ func selectDocumentIDs(ctx context.Context, path string, sources []string, limit
 	}
 	return ret, nil
 }
-func selectChunks(ctx context.Context, path, strategy string, documents []string, limit int) ([]string, error) {
+func materializeChunkIDs(ctx context.Context, path, strategy string, size, overlap int, documents []string, perDocumentLimit int) ([]string, error) {
 	database, err := db.OpenDB(path)
 	if err != nil {
 		return nil, err
@@ -170,13 +176,14 @@ func selectChunks(ctx context.Context, path, strategy string, documents []string
 	if err := db.Migrate(database); err != nil {
 		return nil, err
 	}
-	chunks, err := db.NewQueries(database).ListChunksForDocuments(strategy, documents, limit)
-	if err != nil {
-		return nil, err
-	}
-	ret := make([]string, len(chunks))
-	for i, chunk := range chunks {
-		ret[i] = chunk.ID
+	service := chunkservice.NewService(db.NewQueries(database))
+	ret := []string{}
+	for _, documentID := range documents {
+		ids, err := service.ComputeChunkIDs(ctx, chunkservice.ApplyRequest{DocumentID: documentID, Strategy: strategy, ChunkSize: size, Overlap: overlap}, perDocumentLimit)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, ids...)
 	}
 	return ret, nil
 }

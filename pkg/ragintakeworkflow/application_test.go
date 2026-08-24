@@ -13,6 +13,7 @@ import (
 
 	geppettoembeddings "github.com/go-go-golems/geppetto/pkg/embeddings"
 	"github.com/go-go-golems/rag-evaluation-system/internal/db"
+	chunkservice "github.com/go-go-golems/rag-evaluation-system/internal/services/chunking"
 	embeddingservice "github.com/go-go-golems/rag-evaluation-system/internal/services/embedding"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/scraper/pkg/workflowv3"
@@ -203,6 +204,39 @@ func TestRequestStrictIdentityAndPlanStability(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, first.Digest, second.Digest)
 	require.Equal(t, []string{"a", "b"}, request.DocumentIDs)
+}
+
+func TestPrepareRequestMaterializesEnrichmentTargetsForUnchunkedDocuments(t *testing.T) {
+	ctx := context.Background()
+	root := t.TempDir()
+	databasePath := seedDocument(t, root)
+	config := DefaultConfig(databasePath)
+	// doc-1 is ingested but not yet chunked, so the previous selectChunks path
+	// returned no enrichment targets and CompilePlan silently emitted zero enrich
+	// nodes. Materialization must derive the future chunk identities instead.
+	request, err := PrepareRequest(ctx, config.Runtime, Request{IndexID: "enrich-test", SkipPreprocessing: true, SkipEmbeddings: true, SkipBM25: true}, Selection{DocumentIDs: []string{"doc-1"}, ChunksPerDocumentToEnrich: 1})
+	require.NoError(t, err)
+	require.NotEmpty(t, request.ChunkIDs, "enrichment targets must be materialized before chunking runs")
+
+	// The materialized IDs must match the deterministic IDs the chunk task will persist.
+	database, err := db.OpenDB(databasePath)
+	require.NoError(t, err)
+	defer func() { _ = database.Close() }()
+	require.NoError(t, db.Migrate(database))
+	expected, err := chunkservice.NewService(db.NewQueries(database)).ComputeChunkIDs(ctx, chunkservice.ApplyRequest{DocumentID: "doc-1", Strategy: "fixed", ChunkSize: 1200, Overlap: 150}, 1)
+	require.NoError(t, err)
+	require.Equal(t, expected, request.ChunkIDs)
+
+	// CompilePlan must emit one enrich node per materialized chunk, not zero.
+	plan, err := CompilePlan(ctx, request, config.Runtime)
+	require.NoError(t, err)
+	enrichNodes := 0
+	for _, node := range plan.Nodes {
+		if node.Implementation.Kind == TaskEnrich.Kind {
+			enrichNodes++
+		}
+	}
+	require.Equal(t, len(request.ChunkIDs), enrichNodes, "plan must enrich every materialized chunk")
 }
 
 func seedDocument(t *testing.T, root string) string {
