@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
+	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,6 +56,36 @@ func TestQueryArchiveBindsEveryItemToDatasetManifest(t *testing.T) {
 	fixture.Dataset.Queries[0].Text += " stale"
 	_, err = BuildQueryArchive(fixture.Execution, fixture.Dataset)
 	require.ErrorContains(t, err, "RAG_WORKFLOW_DATASET_DIGEST")
+}
+
+func TestQueryArchiveAcceptsUnsortedUniqueQueriesAndRejectsDuplicates(t *testing.T) {
+	fixture, err := NewProviderFreeFixture(false)
+	require.NoError(t, err)
+	// Declaration order is reversed (q2 before q1) but IDs are unique and non-empty.
+	// A canonical dataset may be authored in declaration order, so the archive
+	// must accept it and emit items in a deterministic sorted order.
+	unsorted := ragoperators.EvaluationDataset{SchemaVersion: "rag-evaluation-data/v1", Queries: []ragoperators.Query{{ID: "q2", Text: "deterministic embeddings"}, {ID: "q1", Text: "reciprocal rank fusion"}}}
+	fixture.Execution.Dataset.ManifestDigest, err = ragcontract.Digest(unsorted)
+	require.NoError(t, err)
+	archive, err := BuildQueryArchive(fixture.Execution, unsorted)
+	require.NoError(t, err)
+	require.Len(t, archive.Items, 2)
+	require.Equal(t, "q1", archive.Items[0].Key)
+	require.Equal(t, "q2", archive.Items[1].Key)
+
+	// Duplicate IDs are rejected even when the manifest digest matches.
+	duplicate := ragoperators.EvaluationDataset{SchemaVersion: "rag-evaluation-data/v1", Queries: []ragoperators.Query{{ID: "q1", Text: "first"}, {ID: "q1", Text: "second"}}}
+	fixture.Execution.Dataset.ManifestDigest, err = ragcontract.Digest(duplicate)
+	require.NoError(t, err)
+	_, err = BuildQueryArchive(fixture.Execution, duplicate)
+	require.ErrorContains(t, err, "RAG_WORKFLOW_QUERY_DUPLICATE")
+
+	// Empty IDs are rejected as identity errors.
+	emptyID := ragoperators.EvaluationDataset{SchemaVersion: "rag-evaluation-data/v1", Queries: []ragoperators.Query{{ID: "", Text: "no id"}, {ID: "q1", Text: "reciprocal rank fusion"}}}
+	fixture.Execution.Dataset.ManifestDigest, err = ragcontract.Digest(emptyID)
+	require.NoError(t, err)
+	_, err = BuildQueryArchive(fixture.Execution, emptyID)
+	require.ErrorContains(t, err, "RAG_WORKFLOW_QUERY_IDENTITY")
 }
 
 func TestOperatorRegistryIsClosedVersionedAndDeclaresProviderAttachments(t *testing.T) {

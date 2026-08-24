@@ -2,6 +2,7 @@ package ragworkflow
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragcontract"
 	"github.com/go-go-golems/rag-evaluation-system/pkg/ragoperators"
@@ -44,17 +45,29 @@ func BuildQueryArchive(execution ragcontract.PipelineExecution, dataset ragopera
 		return researchrunner.SetInputArchive{}, fmt.Errorf("RAG_WORKFLOW_DATASET_DIGEST: got %s want %s", datasetDigest, execution.Dataset.ManifestDigest)
 	}
 	archive := researchrunner.SetInputArchive{SchemaVersion: researchrunner.SetInputArchiveSchema, ItemSchema: QuerySchema, ManifestSchema: workflowv3.ItemManifestSchemaV1}
-	previous := ""
+	// Evaluation datasets are canonical when query IDs are unique and non-empty,
+	// but they may be declared in any order. Reject only empty/duplicate IDs and
+	// build the archive from a sorted copy so downstream map/reduce (which also
+	// sorts by query ID) receives a deterministic item order regardless of the
+	// author's declaration order.
+	seen := map[string]bool{}
 	for _, query := range dataset.Queries {
-		if query.ID == "" || query.Text == "" || query.ID <= previous {
-			return researchrunner.SetInputArchive{}, fmt.Errorf("RAG_WORKFLOW_QUERY_ORDER")
+		if query.ID == "" || query.Text == "" {
+			return researchrunner.SetInputArchive{}, fmt.Errorf("RAG_WORKFLOW_QUERY_IDENTITY")
 		}
+		if seen[query.ID] {
+			return researchrunner.SetInputArchive{}, fmt.Errorf("RAG_WORKFLOW_QUERY_DUPLICATE")
+		}
+		seen[query.ID] = true
+	}
+	queries := append([]ragoperators.Query(nil), dataset.Queries...)
+	sort.Slice(queries, func(i, j int) bool { return queries[i].ID < queries[j].ID })
+	for _, query := range queries {
 		body, err := ragcontract.CanonicalJSON(QueryItem{SchemaVersion: QuerySchema, DatasetManifestDigest: datasetDigest, Query: query})
 		if err != nil {
 			return researchrunner.SetInputArchive{}, err
 		}
 		archive.Items = append(archive.Items, researchrunner.SetInputArchiveItem{Key: query.ID, MediaType: "application/json", Data: body})
-		previous = query.ID
 	}
 	return archive, nil
 }
