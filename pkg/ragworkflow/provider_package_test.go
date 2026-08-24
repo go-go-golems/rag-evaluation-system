@@ -82,7 +82,7 @@ func runProviderPackageFixtureWithServices(t *testing.T, variant string, expecte
 	store, err := workflowv3sqlite.Open(ctx, filepath.Join(root, "workflow.db"))
 	require.NoError(t, err)
 	defer func() { _ = store.Close() }()
-	engine := &workflowv3runtime.Engine{Store: store, Registry: registry, Artifacts: artifacts, Modules: modules, LeaseDuration: time.Second}
+	engine := &workflowv3runtime.Engine{Store: store, Registry: registry, Artifacts: artifacts, Modules: modules, LeaseDuration: 30 * time.Second}
 	inputs := stageWorkflowInputs(t, ctx, artifacts, fixture.Execution, fixture.Corpus, fixture.Dataset)
 	require.NoError(t, engine.Submit(ctx, "provider-fixture", lowered.Plan, inputs))
 	dispatcher := &workflowv3runtime.Dispatcher{Engine: engine, Capacities: map[string]int{"cpu.rag.prepare": 1, "cpu.rag.query": 1, "cpu.rag.reduce": 1}, PollInterval: time.Millisecond}
