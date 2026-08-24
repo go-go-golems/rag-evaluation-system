@@ -97,3 +97,26 @@ func seedAPIVisibilityData(t *testing.T, queries *db.Queries) {
 		t.Fatalf("upsert chunk enrichment: %v", err)
 	}
 }
+
+func TestApplyIntakeEmbeddingDefaultsRestoresProviderSettings(t *testing.T) {
+	// Omitted fields fall back to the conventional defaults when embeddings run.
+	input := &intakeSubmitRequest{SkipEmbeddings: false}
+	applyIntakeEmbeddingDefaults(input)
+	if input.EmbeddingType != "ollama" || input.EmbeddingEngine != "nomic-embed-text" || input.Dimensions != 768 {
+		t.Fatalf("defaults not restored: type=%q engine=%q dimensions=%d", input.EmbeddingType, input.EmbeddingEngine, input.Dimensions)
+	}
+
+	// Explicit values are preserved.
+	explicit := &intakeSubmitRequest{SkipEmbeddings: false, EmbeddingType: "openai", EmbeddingEngine: "text-embedding-3-small", Dimensions: 1536}
+	applyIntakeEmbeddingDefaults(explicit)
+	if explicit.EmbeddingType != "openai" || explicit.EmbeddingEngine != "text-embedding-3-small" || explicit.Dimensions != 1536 {
+		t.Fatalf("explicit values overwritten: type=%q engine=%q dimensions=%d", explicit.EmbeddingType, explicit.EmbeddingEngine, explicit.Dimensions)
+	}
+
+	// Skipping embeddings leaves the provider fields untouched.
+	skipped := &intakeSubmitRequest{SkipEmbeddings: true}
+	applyIntakeEmbeddingDefaults(skipped)
+	if skipped.EmbeddingType != "" || skipped.EmbeddingEngine != "" || skipped.Dimensions != 0 {
+		t.Fatalf("skipped embeddings should not be defaulted: type=%q engine=%q dimensions=%d", skipped.EmbeddingType, skipped.EmbeddingEngine, skipped.Dimensions)
+	}
+}

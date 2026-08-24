@@ -99,6 +99,27 @@ type intakeSubmitRequest struct {
 	ForceIndex          bool     `json:"force_index"`
 }
 
+// applyIntakeEmbeddingDefaults restores the conventional embedding provider
+// defaults (ollama / nomic-embed-text / 768) when a submission enables
+// embeddings but omits the provider fields, mirroring resolveSearchProvider.
+// Without this, the intake runtime resolves an empty zero-dimension model and
+// the embedding task fails. Explicit values and skip_embeddings=true are left
+// untouched.
+func applyIntakeEmbeddingDefaults(input *intakeSubmitRequest) {
+	if input.SkipEmbeddings {
+		return
+	}
+	if input.EmbeddingType == "" {
+		input.EmbeddingType = "ollama"
+	}
+	if input.EmbeddingEngine == "" {
+		input.EmbeddingEngine = "nomic-embed-text"
+	}
+	if input.Dimensions == 0 {
+		input.Dimensions = 768
+	}
+}
+
 func (h *handler) handleSubmitIntakeRun(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20))
 	decoder.DisallowUnknownFields()
@@ -118,6 +139,10 @@ func (h *handler) handleSubmitIntakeRun(w http.ResponseWriter, r *http.Request) 
 	if input.IndexID == "" {
 		input.IndexID = "bm25-" + input.RunID
 	}
+	// When embeddings are enabled, restore the same provider defaults the search
+	// handlers apply (ollama / nomic-embed-text / 768) so omitting the fields no
+	// longer resolves an empty zero-dimension model that fails at embedding time.
+	applyIntakeEmbeddingDefaults(&input)
 	config := ragintakeworkflow.DefaultConfig(h.intakeConfig.DatabasePath)
 	config.WorkflowDatabase = h.intakeConfig.WorkflowDB
 	config.ArtifactRoot = h.intakeConfig.WorkflowArtifactRoot

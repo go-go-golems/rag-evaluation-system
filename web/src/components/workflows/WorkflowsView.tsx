@@ -15,6 +15,9 @@ const SubmitIntake: React.FC<{ onSubmitted: (id: string) => void }> = ({ onSubmi
 	const [documents, setDocuments] = useState("");
 	const [sources, setSources] = useState("");
 	const [skipEmbeddings, setSkipEmbeddings] = useState(true);
+	const [embeddingType, setEmbeddingType] = useState("ollama");
+	const [embeddingEngine, setEmbeddingEngine] = useState("nomic-embed-text");
+	const [embeddingDimensions, setEmbeddingDimensions] = useState(768);
 	const [submit, state] = useSubmitIntakeRunMutation();
 	const run = async () => {
 		const request: SubmitIntakeRequest = {
@@ -30,6 +33,11 @@ const SubmitIntake: React.FC<{ onSubmitted: (id: string) => void }> = ({ onSubmi
 			skip_chunk_enrichment: true,
 			skip_embeddings: skipEmbeddings,
 		};
+		if (!skipEmbeddings) {
+			request.embeddings_type = embeddingType;
+			request.embeddings_engine = embeddingEngine;
+			request.embeddings_dimensions = embeddingDimensions;
+		}
 		const result = await submit(request).unwrap();
 		onSubmitted(result.submission.runId);
 	};
@@ -62,6 +70,37 @@ const SubmitIntake: React.FC<{ onSubmitted: (id: string) => void }> = ({ onSubmi
 					/>{" "}
 					Skip embeddings
 				</label>
+				{!skipEmbeddings && (
+					<>
+						<label>
+							Embedding type{" "}
+							<input
+								className={styles.fullInput}
+								value={embeddingType}
+								onChange={(e) => setEmbeddingType(e.target.value)}
+								placeholder="ollama"
+							/>
+						</label>
+						<label>
+							Embedding engine{" "}
+							<input
+								className={styles.fullInput}
+								value={embeddingEngine}
+								onChange={(e) => setEmbeddingEngine(e.target.value)}
+								placeholder="nomic-embed-text"
+							/>
+						</label>
+						<label>
+							Dimensions{" "}
+							<input
+								className={styles.fullInput}
+								type="number"
+								value={embeddingDimensions}
+								onChange={(e) => setEmbeddingDimensions(Number(e.target.value))}
+							/>
+						</label>
+					</>
+				)}
 				<Button onClick={run} disabled={state.isLoading || (!documents.trim() && !sources.trim())}>
 					Submit intake
 				</Button>
